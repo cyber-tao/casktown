@@ -1,0 +1,95 @@
+{
+  "pack": "CaskTown_regenerated_sprite_pack_v1",
+  "description": "Regenerated sprite-sheet package for CaskTown, with PNG atlases and accompanying JSON metadata.",
+  "files": [
+    {
+      "image": "01_characters_main.png",
+      "json": "01_characters_main.json",
+      "category": "characters",
+      "sprite_count": 48,
+      "grid": {
+        "cols": 8,
+        "rows": 6,
+        "cellW": 181,
+        "cellH": 181
+      }
+    },
+    {
+      "image": "02_npcs_bosses_creatures.png",
+      "json": "02_npcs_bosses_creatures.json",
+      "category": "npcs_bosses",
+      "sprite_count": 29,
+      "grid": {
+        "cols": 8,
+        "rows": 4,
+        "cellW": 181,
+        "cellH": 271
+      }
+    },
+    {
+      "image": "03_monsters.png",
+      "json": "03_monsters.json",
+      "category": "monsters",
+      "sprite_count": 39,
+      "grid": {
+        "cols": 8,
+        "rows": 5,
+        "cellW": 181,
+        "cellH": 217
+      }
+    },
+    {
+      "image": "04_town_world_objects.png",
+      "json": "04_town_world_objects.json",
+      "category": "world_objects",
+      "sprite_count": 24,
+      "grid": {
+        "cols": 6,
+        "rows": 4,
+        "cellW": 241,
+        "cellH": 271
+      }
+    },
+    {
+      "image": "05_nature_environment_tiles.png",
+      "json": "05_nature_environment_tiles.json",
+      "category": "environment",
+      "sprite_count": 80,
+      "grid": {
+        "cols": 10,
+        "rows": 8,
+        "cellW": 144,
+        "cellH": 135
+      }
+    },
+    {
+      "image": "06_holy_temple_tiles.png",
+      "json": "06_holy_temple_tiles.json",
+      "category": "holy_temple",
+      "sprite_count": 55,
+      "grid": {
+        "cols": 12,
+        "rows": 6,
+        "cellW": 120,
+        "cellH": 181
+      }
+    },
+    {
+      "image": "07_dark_fantasy_tiles.png",
+      "json": "07_dark_fantasy_tiles.json",
+      "category": "dark_fantasy",
+      "sprite_count": 48,
+      "grid": {
+        "cols": 8,
+        "rows": 6,
+        "cellW": 181,
+        "cellH": 181
+      }
+    }
+  ],
+  "notes": [
+    "All metadata uses top-left origin.",
+    "JSON files use regular-grid slicing metadata to match the regenerated atlas sheets.",
+    "Images are the regenerated cut-friendly sheets requested after rejecting the earlier setting-book style sheets."
+  ]
+}

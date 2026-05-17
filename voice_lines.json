@@ -1,0 +1,1197 @@
+[
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "慧慧",
+    "text": "T！你还在磨蹭吗？今天可是盛典！"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "T",
+    "text": "听见了，听见了。盛典又不会长脚跑掉。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "慧慧",
+    "text": "会跑掉的是你。去年你睡到镇长念完开场词才到。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "T",
+    "text": "那不正好？省下我站着听大伯咳嗽半天。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "慧慧",
+    "text": "不许这么说镇长！还有，菠萝大叔让你帮他整理菜园子。你弄完就早点去会场。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "T",
+    "text": "为什么是我？"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "慧慧",
+    "text": "因为你答应过。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "T",
+    "text": "我什么时候答应的？"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "慧慧",
+    "text": "昨天你吃了他三个菠萝饭团的时候。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "T",
+    "text": "……那叫交易，不叫答应。"
+  },
+  {
+    "diaId": "DIA_001_START",
+    "speaker": "慧慧",
+    "text": "交易也要付钱。你没钱，所以去干活。"
+  },
+  {
+    "diaId": "DIA_002_HUIHUI",
+    "speaker": "慧慧",
+    "text": "你终于来了。盛典就要开始了，别又迟到。"
+  },
+  {
+    "diaId": "DIA_002_HUIHUI_A",
+    "speaker": "慧慧",
+    "text": "这才是我认识的T。快去菜园吧，菠萝大叔在等你。"
+  },
+  {
+    "diaId": "DIA_002_HUIHUI_B",
+    "speaker": "慧慧",
+    "text": "喂！至少先去打个招呼啊！"
+  },
+  {
+    "diaId": "DIA_003_A",
+    "speaker": "阿博",
+    "text": "盛典……每年都一样。"
+  },
+  {
+    "diaId": "DIA_003_A",
+    "speaker": "T",
+    "text": "那你为什么还来？"
+  },
+  {
+    "diaId": "DIA_003_A",
+    "speaker": "阿博",
+    "text": "因为有免费的菠萝饭团。"
+  },
+  {
+    "diaId": "DIA_003_A",
+    "speaker": "T",
+    "text": "……挺诚实的。"
+  },
+  {
+    "diaId": "DIA_003_A",
+    "speaker": "阿博",
+    "text": "诚实是美德。对了，镇长找你。"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "镇长",
+    "text": "T，你来了。"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "T",
+    "text": "大伯，盛典的致辞准备好了吗？"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "镇长",
+    "text": "准备好了……虽然每年都是那几句。"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "镇长",
+    "text": "不过今年不一样。预言之书显示，黑暗正在靠近。"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "T",
+    "text": "黑暗？"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "镇长",
+    "text": "二十年前，你的父母就是为了对抗它而离开的。"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "T",
+    "text": "……"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "镇长",
+    "text": "去会场吧。有些事情，该让你知道了。"
+  },
+  {
+    "diaId": "DIA_005_BARREL",
+    "speaker": "木桶精灵",
+    "text": "咳咳，二十年一次的重大场合，请大家看天，不要看我鞋。"
+  },
+  {
+    "diaId": "DIA_005_BARREL",
+    "speaker": "T",
+    "text": "它鞋真的很长。"
+  },
+  {
+    "diaId": "DIA_005_BARREL",
+    "speaker": "木桶精灵",
+    "text": "我听见了！"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "木桶精灵",
+    "text": "预言宣读——"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "阿博",
+    "text": "什么意思？"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "镇长",
+    "text": "……大概是，很重要的意思。"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "T",
+    "text": "大伯你也没看懂吧。"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "xiaoai",
+    "text": "生命之泉……终究要归还给黑暗。"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "慧慧",
+    "text": "这个声音！"
+  },
+  {
+    "diaId": "DIA_006_FESTIVAL",
+    "speaker": "镇长",
+    "text": "所有人退到会场后方！"
+  },
+  {
+    "diaId": "DIA_003_DREAM",
+    "speaker": "T",
+    "text": "五分钟。真的就五分钟。"
+  },
+  {
+    "diaId": "DIA_003_DREAM",
+    "speaker": "T",
+    "text": "谁？"
+  },
+  {
+    "diaId": "DIA_003_DREAM",
+    "speaker": "T",
+    "text": "等等，我连菜园都差点没整理完。"
+  },
+  {
+    "diaId": "DIA_003_DREAM",
+    "speaker": "T",
+    "text": "我不喜欢别人替我决定命运。"
+  },
+  {
+    "diaId": "DIA_003_DREAM",
+    "speaker": "T",
+    "text": "戒指？"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "慧慧",
+    "text": "我以为你又要迟到了呢！"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "阿博",
+    "text": "这次不算迟。只能算很危险。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "T",
+    "text": "你们两个是不是约好每天轮流损我？"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "阿博",
+    "text": "不用约好，这是常识。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "镇长",
+    "text": "都安静。盛典开始。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "木桶精灵",
+    "text": "咳咳，二十年一次的重大场合，请大家看天，不要看我鞋。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "T",
+    "text": "它鞋真的很长。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "慧慧",
+    "text": "严肃点！"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "木桶精灵",
+    "text": "预言宣读——"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "阿博",
+    "text": "什么意思？"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "镇长",
+    "text": "……大概是，很重要的意思。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "T",
+    "text": "大伯你也没看懂吧。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "xiaoai",
+    "text": "生命之泉……终究要归还给黑暗。"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "慧慧",
+    "text": "这个声音！"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL",
+    "speaker": "镇长",
+    "text": "所有人退到会场后方！"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "你来了。把门关上。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "T",
+    "text": "大伯，你怎么翻得像小偷一样？"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "严肃点。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "这是预言之书。它能记录你的任务、地图、怪物信息和还没被你理解的预言。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "木桶精灵",
+    "text": "也能记录你迟到的次数。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "T",
+    "text": "你怎么又出来了？"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "木桶精灵",
+    "text": "我是书灵，不是书签。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "这是你父亲曾经用过的剑和战袍。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "T",
+    "text": "我父亲……"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "他们当年为了保护木桶镇战死。我一直在想，是否应该让你远离这些。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "T",
+    "text": "那为什么现在又给我？"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "因为有些东西不是藏起来就不存在。T，你可以害怕，但不要装作什么都不在乎。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "镇长",
+    "text": "还有这个，七彩木桶。它可以提升你的战斗力和防御力，也能带你返回迷宫起点。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "T",
+    "text": "为什么这么厉害的东西长得像木桶？"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "木桶精灵",
+    "text": "你对木桶有什么偏见？"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "木桶精灵",
+    "text": "重建家园需要三件神物：奇妙森林的千年树种，圣水殿的神水，神殿的太阳桂冠。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "T",
+    "text": "听起来一个比一个麻烦。"
+  },
+  {
+    "diaId": "DIA_005_MAYOR",
+    "speaker": "木桶精灵",
+    "text": "恭喜你，理解正确。"
+  },
+  {
+    "diaId": "DIA_101_FOREST",
+    "speaker": "慧慧",
+    "text": "这些藤蔓会动。"
+  },
+  {
+    "diaId": "DIA_101_FOREST",
+    "speaker": "T",
+    "text": "你确定不是风吹的？"
+  },
+  {
+    "diaId": "DIA_101_FOREST",
+    "speaker": "阿博",
+    "text": "风不会把路牌勒断。"
+  },
+  {
+    "diaId": "DIA_104_SEED",
+    "speaker": "T",
+    "text": "我要去生命之泉。"
+  },
+  {
+    "diaId": "DIA_104_SEED",
+    "speaker": "阿博",
+    "text": "现在不行。"
+  },
+  {
+    "diaId": "DIA_104_SEED",
+    "speaker": "T",
+    "text": "xiaoai 在那里等我。"
+  },
+  {
+    "diaId": "DIA_104_SEED",
+    "speaker": "慧慧",
+    "text": "可是木桶镇也在等我们。"
+  },
+  {
+    "diaId": "DIA_104_SEED",
+    "speaker": "阿博",
+    "text": "先重建家园。否则我们赢了，也没有地方回去。"
+  },
+  {
+    "diaId": "DIA_105_TREE_1",
+    "speaker": "木桶精灵",
+    "text": "第一棵树的种子还没睡醒。敲一敲？"
+  },
+  {
+    "diaId": "DIA_105_TREE_1",
+    "speaker": "慧慧",
+    "text": "不要乱敲神圣的树！"
+  },
+  {
+    "diaId": "DIA_105_TREE_1",
+    "speaker": "T",
+    "text": "那温柔地敲？"
+  },
+  {
+    "diaId": "DIA_105_TREE_2",
+    "speaker": "阿博",
+    "text": "水声从树里面传出来。"
+  },
+  {
+    "diaId": "DIA_105_TREE_2",
+    "speaker": "慧慧",
+    "text": "也许树在哭。"
+  },
+  {
+    "diaId": "DIA_105_TREE_2",
+    "speaker": "T",
+    "text": "也许树喝太多了。"
+  },
+  {
+    "diaId": "DIA_105_TREE_3",
+    "speaker": "木桶精灵",
+    "text": "这棵树讨厌阴影。让光照到种子符号上。"
+  },
+  {
+    "diaId": "DIA_105_TREE_3",
+    "speaker": "慧慧",
+    "text": "怎么让光照过去？"
+  },
+  {
+    "diaId": "DIA_105_TREE_3",
+    "speaker": "T",
+    "text": "推倒旁边的木桶当镜子？"
+  },
+  {
+    "diaId": "DIA_106_ALTAR",
+    "speaker": "T",
+    "text": "那就是千年树种？"
+  },
+  {
+    "diaId": "DIA_106_ALTAR",
+    "speaker": "慧慧",
+    "text": "它在发光。"
+  },
+  {
+    "diaId": "DIA_106_ALTAR",
+    "speaker": "阿博",
+    "text": "小心。越安静的地方越危险。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "船夫",
+    "text": "去圣水殿和神殿？风向不太好。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "T",
+    "text": "会沉吗？"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "船夫",
+    "text": "不会。就是会摇。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "慧慧",
+    "text": "T，你脸色怎么变了？"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "T",
+    "text": "我在思考人生。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "阿博",
+    "text": "他晕船。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "慧慧",
+    "text": "左边就是圣水殿，直走是神殿。先去哪？"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "T",
+    "text": "随便了。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "木桶精灵",
+    "text": "预言之书建议先去圣水殿。理由：你们现在打不过神殿守卫。"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "T",
+    "text": "你说话能不能委婉点？"
+  },
+  {
+    "diaId": "DIA_107_SAILOR",
+    "speaker": "木桶精灵",
+    "text": "不能。"
+  },
+  {
+    "diaId": "DIA_202_PINE",
+    "speaker": "菠萝大叔",
+    "text": "千年树种！快，放在菜园旁边！"
+  },
+  {
+    "diaId": "DIA_202_PINE",
+    "speaker": "T",
+    "text": "大叔你比我们还急。"
+  },
+  {
+    "diaId": "DIA_202_PINE",
+    "speaker": "菠萝大叔",
+    "text": "急？我等了二十年！"
+  },
+  {
+    "diaId": "DIA_203_MAYOR",
+    "speaker": "镇长",
+    "text": "你们真的带回来了。"
+  },
+  {
+    "diaId": "DIA_203_MAYOR",
+    "speaker": "T",
+    "text": "大伯，别光站着，来帮忙。"
+  },
+  {
+    "diaId": "DIA_203_MAYOR",
+    "speaker": "镇长",
+    "text": "好，好。重建开始。"
+  },
+  {
+    "diaId": "DIA_204_BARREL",
+    "speaker": "木桶精灵",
+    "text": "预言之书最后一页写着：饭团管够。"
+  },
+  {
+    "diaId": "DIA_204_BARREL",
+    "speaker": "T",
+    "text": "谁写的？"
+  },
+  {
+    "diaId": "DIA_204_BARREL",
+    "speaker": "木桶精灵",
+    "text": "预言。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "熙苑",
+    "text": "你们来了。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "T",
+    "text": "你是圣水殿的主人？"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "熙苑",
+    "text": "我是熙苑。我知道你们要神水。可我不能把它交给只会挥剑的人。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "阿博",
+    "text": "我们刚刚才挥过。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "慧慧",
+    "text": "闭嘴啦。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "熙苑",
+    "text": "回答我的问题。答完，我给你们神水。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN",
+    "speaker": "熙苑",
+    "text": "问题一：水晶不说谎，但会倒映谎言。你看见四面水晶，哪一面没有倒影？"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_Q1_W",
+    "speaker": "熙苑",
+    "text": "错了。被布盖住的水晶才没有倒影。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_Q1_W",
+    "speaker": "T",
+    "text": "……好吧，再来。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_Q2",
+    "speaker": "熙苑",
+    "text": "正确。问题二：一只木桶装满水需要三刻，一只破木桶漏光水需要两刻。如果同时开始，什么时候它既不是满的，也不是空的？"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_Q2_W",
+    "speaker": "熙苑",
+    "text": "错了。第一刻时它既不是满的也不是空的。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_Q3",
+    "speaker": "熙苑",
+    "text": "正确。问题三：我是不是长得很丑？"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_KIND",
+    "speaker": "熙苑",
+    "text": "……谢谢你。很久没有人这样说过。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_KIND",
+    "speaker": "熙苑",
+    "text": "神水拿去吧。愿你们重建的不只是房子，还有愿意相信彼此的心。"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_END",
+    "speaker": "熙苑",
+    "text": "神水拿去吧。"
+  },
+  {
+    "diaId": "DIA_302_MIST",
+    "speaker": "慧慧",
+    "text": "怎么会有七条路？"
+  },
+  {
+    "diaId": "DIA_302_MIST",
+    "speaker": "葱葱",
+    "text": "这是神铺下的七色路。心怀恶意的人会被引向罪恶深渊。"
+  },
+  {
+    "diaId": "DIA_302_MIST",
+    "speaker": "阿博",
+    "text": "既然你这么了解，应该知道走哪条。"
+  },
+  {
+    "diaId": "DIA_302_MIST",
+    "speaker": "葱葱",
+    "text": "今天蓝色路力量最弱。但是神知道这件事，所以一定有守卫。"
+  },
+  {
+    "diaId": "DIA_302_MIST",
+    "speaker": "T",
+    "text": "那就蓝色。"
+  },
+  {
+    "diaId": "DIA_302_MIST",
+    "speaker": "葱葱",
+    "text": "等一下，我还没说完——"
+  },
+  {
+    "diaId": "DIA_304_GET_LAUREL",
+    "speaker": "sun",
+    "text": "这是神之桂冠。神允许你们重建木桶镇。"
+  },
+  {
+    "diaId": "DIA_304_GET_LAUREL",
+    "speaker": "T",
+    "text": "神允许？"
+  },
+  {
+    "diaId": "DIA_304_GET_LAUREL",
+    "speaker": "sun",
+    "text": "你可以理解为，神不阻止。"
+  },
+  {
+    "diaId": "DIA_304_GET_LAUREL",
+    "speaker": "T",
+    "text": "那我就当他帮忙了。"
+  },
+  {
+    "diaId": "DIA_102_TIGER",
+    "speaker": "白虎",
+    "text": "你们是魔头的人吧。"
+  },
+  {
+    "diaId": "DIA_102_TIGER",
+    "speaker": "慧慧",
+    "text": "不是！我们是木桶镇的——"
+  },
+  {
+    "diaId": "DIA_102_TIGER",
+    "speaker": "白虎",
+    "text": "魔头的手下也会说自己无辜。"
+  },
+  {
+    "diaId": "DIA_102_TIGER",
+    "speaker": "阿博",
+    "text": "它听不进去。"
+  },
+  {
+    "diaId": "DIA_102_TIGER",
+    "speaker": "T",
+    "text": "那就先让它冷静下来。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "白虎",
+    "text": "这是……jojo大神的守护戒？你是守护者？"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "T",
+    "text": "你终于愿意听人说话了？"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "白虎",
+    "text": "……抱歉。伤让我失去了判断。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "xiaoai",
+    "text": "判断？守护者最不该相信的就是自己的判断。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "白虎",
+    "text": "xiaoai！"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "xiaoai",
+    "text": "你已经守不住森林了。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "T",
+    "text": "住手！"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "xiaoai",
+    "text": "T，你进步了不少。我在生命之泉等你。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "慧慧",
+    "text": "白虎！我来治疗你！"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "慧慧",
+    "text": "唔……这是什么伤？它在拒绝恢复。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "白虎",
+    "text": "那是心魔留下的痕。孩子们，听好。森林深处藏着千年树种。"
+  },
+  {
+    "diaId": "DIA_103_TIGER_AFTER",
+    "speaker": "白虎",
+    "text": "拿着这个。白虎之铠。还有我的拳与盾。"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "水瑶",
+    "text": "你们是谁？"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "T",
+    "text": "木桶镇的人。我们来取神水。"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "风赤",
+    "text": "取神水？"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "水瑶",
+    "text": "为什么？"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "T",
+    "text": "重建我们的家园。"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "水瑶",
+    "text": "不行，不行。"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "阿博",
+    "text": "不给就抢。"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "慧慧",
+    "text": "A！你这样说只会更麻烦！"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "风赤",
+    "text": "你们要抢？"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "水瑶",
+    "text": "我们看管神水。想拿走，就证明你们不是又一批贪婪的人。"
+  },
+  {
+    "diaId": "DIA_201_SHUIYAO",
+    "speaker": "风赤",
+    "text": "证明方法很简单——打败我们。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "哈哈，美女，我来帮你们吧！不过要报酬。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "慧慧",
+    "text": "你是谁？是不是你把石头放在这里的？"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "那又怎样？本少爷愿意！"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "慧慧",
+    "text": "你找打！"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "定情信物！这是定情信物！"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "慧慧",
+    "text": "谁跟你定情！"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "阿博",
+    "text": "等一下。这个家伙不是一般人。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "T",
+    "text": "说不定是xiaoai手下的魑魅魍魉之一。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "什么魑魅魍魉？本少爷这么英俊，哪里像？"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "阿博",
+    "text": "你帮我们移开石头，我们给你报酬。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "我要你们身上一半的钱。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "T",
+    "text": "你胃口真大。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "阿博",
+    "text": "成交。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "你们说话不算数！"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "慧慧",
+    "text": "谁叫你勒索我们。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "我错了！我只是迷路好几天没吃饭。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "T",
+    "text": "知道了。带路。"
+  },
+  {
+    "diaId": "DIA_301_CONGCONG",
+    "speaker": "葱葱",
+    "text": "你们反应也太冷淡了吧！"
+  },
+  {
+    "diaId": "DIA_303_PHOENIX",
+    "speaker": "凤凰",
+    "text": "你们并非心底邪恶之人。回去吧。"
+  },
+  {
+    "diaId": "DIA_303_PHOENIX",
+    "speaker": "T",
+    "text": "我们要取得神之桂冠。"
+  },
+  {
+    "diaId": "DIA_303_PHOENIX",
+    "speaker": "凤凰",
+    "text": "神物不是给执念之人的奖赏。"
+  },
+  {
+    "diaId": "DIA_303_PHOENIX",
+    "speaker": "慧慧",
+    "text": "我们是为了重建木桶镇！"
+  },
+  {
+    "diaId": "DIA_303_PHOENIX",
+    "speaker": "凤凰",
+    "text": "许多人都说自己为了正确之事。"
+  },
+  {
+    "diaId": "DIA_303_PHOENIX",
+    "speaker": "葱葱",
+    "text": "谈不拢了。"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "sun",
+    "text": "你们先四处看看。我去禀报。"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "T",
+    "text": "这里……是我梦见的地方。"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "sun",
+    "text": "为何不忘记那个梦？"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "T",
+    "text": "因为它不像梦。xiaoai是神界的人，对吧？"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "sun",
+    "text": "她是人间界的警世者。看遍了罪恶的脸孔，心底被黑暗势力牵引，从此堕入魔界。"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "T",
+    "text": "神只是看着？"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "sun",
+    "text": "神看到的是因果，不是每个人的疼痛。"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "T",
+    "text": "那我不喜欢神的看法。"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "sun",
+    "text": "也许这正是你被选中原因。"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "镇长",
+    "text": "你们真的带回来了。"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "菠萝大叔",
+    "text": "千年树种！快，放在菜园旁边！"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "慧慧",
+    "text": "神水要倒进水井吗？"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "木桶精灵",
+    "text": "还有桂冠，放到会场中央。"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "T",
+    "text": "这才像个可以回来的地方。"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "阿博",
+    "text": "还差很多，但已经开始了。"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "葱葱",
+    "text": "为了庆祝，能不能先吃饭？"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "慧慧",
+    "text": "你除了吃还会想什么？"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "葱葱",
+    "text": "想你。"
+  },
+  {
+    "diaId": "DIA_305_REBUILD",
+    "speaker": "慧慧",
+    "text": "你还是吃吧。"
+  },
+  {
+    "diaId": "DIA_401_SPRING",
+    "speaker": "T",
+    "text": "气壁消失了。"
+  },
+  {
+    "diaId": "DIA_401_SPRING",
+    "speaker": "慧慧",
+    "text": "四封印都解除了……"
+  },
+  {
+    "diaId": "DIA_401_SPRING",
+    "speaker": "木桶精灵",
+    "text": "预言说：善恶同根，一念之间。"
+  },
+  {
+    "diaId": "DIA_401_SPRING",
+    "speaker": "T",
+    "text": "什么意思？"
+  },
+  {
+    "diaId": "DIA_401_SPRING",
+    "speaker": "木桶精灵",
+    "text": "意思是你该进去了。"
+  },
+  {
+    "diaId": "DIA_501_MASK",
+    "speaker": "T",
+    "text": "这是陷阱吗？"
+  },
+  {
+    "diaId": "DIA_501_MASK",
+    "speaker": "阿博",
+    "text": "在魔宫，踩到什么都是陷阱。"
+  },
+  {
+    "diaId": "DIA_501_MASK",
+    "speaker": "葱葱",
+    "text": "不踩也是陷阱。"
+  },
+  {
+    "diaId": "DIA_501_MASK",
+    "speaker": "木桶精灵",
+    "text": "所以别想了，直接走。"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "xiaoai",
+    "text": "来喝下午茶吗？"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "慧慧",
+    "text": "xiaoai！你在这里做什么？"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "xiaoai",
+    "text": "等你们啊。茶凉了就不好喝了。"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "T",
+    "text": "你把A怎么了？"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "xiaoai",
+    "text": "他？在旁边呢。"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "阿博",
+    "text": "……那不是我。"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "T",
+    "text": "两个A？"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "木桶精灵",
+    "text": "预言之书提示：这不是真正的xiaoai。"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "T",
+    "text": "果然是假的。"
+  },
+  {
+    "diaId": "DIA_503_FAKE_XIAOAI",
+    "speaker": "xiaoai",
+    "text": "真假有那么重要吗？你们心里都清楚，你们害怕的不是我。"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "无相",
+    "text": "你们来了。我等了很久。"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "T",
+    "text": "你是谁？"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "无相",
+    "text": "我是你们每个人的影子。是你们不敢承认的恐惧、嫉妒和愤怒。"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "慧慧",
+    "text": "人心之渊……这就是它的本质吗？"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "无相",
+    "text": "xiaoai看到人心的黑暗，于是堕落。你们呢？"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "T",
+    "text": "我们不会堕落。"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "无相",
+    "text": "每一个堕落者都这么说过。"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "sun",
+    "text": "T，用戒指的力量。光不在外面，在你的心里。"
+  },
+  {
+    "diaId": "DIA_601_WUXIANG",
+    "speaker": "T",
+    "text": "我知道。我从来就不是一个人。"
+  }
+]

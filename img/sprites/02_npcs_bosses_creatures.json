@@ -1,0 +1,720 @@
+{
+  "frames": {
+    "mayor": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "uncle_boluo": {
+      "frame": {
+        "x": 181,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "barrel_spirit": {
+      "frame": {
+        "x": 362,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "white_tiger_idle": {
+      "frame": {
+        "x": 543,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "shuiyao": {
+      "frame": {
+        "x": 724,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "fengchi": {
+      "frame": {
+        "x": 905,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "xiyuan": {
+      "frame": {
+        "x": 1086,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "rainbow_phoenix": {
+      "frame": {
+        "x": 1267,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "phoenix_idle": {
+      "frame": {
+        "x": 0,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "qilin_idle": {
+      "frame": {
+        "x": 181,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "priestess_sun": {
+      "frame": {
+        "x": 362,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "white_tiger_roar": {
+      "frame": {
+        "x": 543,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "white_tiger_leap": {
+      "frame": {
+        "x": 724,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "white_tiger_slam": {
+      "frame": {
+        "x": 905,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "white_tiger_charge": {
+      "frame": {
+        "x": 1086,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "white_tiger_dash": {
+      "frame": {
+        "x": 1267,
+        "y": 271,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "barrel_spirit_idle": {
+      "frame": {
+        "x": 0,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "barrel_spirit_guard": {
+      "frame": {
+        "x": 181,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "barrel_spirit_flower": {
+      "frame": {
+        "x": 362,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "barrel_spirit_leafcloak": {
+      "frame": {
+        "x": 543,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "xiyuan_idle": {
+      "frame": {
+        "x": 724,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "xiyuan_spell": {
+      "frame": {
+        "x": 905,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "xiyuan_umbrella": {
+      "frame": {
+        "x": 1086,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "xiyuan_magic_ring": {
+      "frame": {
+        "x": 1267,
+        "y": 542,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "phoenix_flame": {
+      "frame": {
+        "x": 0,
+        "y": 813,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "phoenix_spread": {
+      "frame": {
+        "x": 181,
+        "y": 813,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "qilin_aura": {
+      "frame": {
+        "x": 362,
+        "y": 813,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "qilin_charge": {
+      "frame": {
+        "x": 543,
+        "y": 813,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "qilin_idle_alt": {
+      "frame": {
+        "x": 724,
+        "y": 813,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "OpenAI Ghostwriter",
+    "version": "1.0",
+    "image": "02_npcs_bosses_creatures.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1448,
+      "h": 1086
+    },
+    "scale": "1",
+    "origin": "top-left",
+    "grid": {
+      "cols": 8,
+      "rows": 4,
+      "cellW": 181,
+      "cellH": 271
+    },
+    "category": "npcs_bosses",
+    "note": "Regular grid sprite metadata generated to accompany the regenerated atlas-style sheets."
+  }
+}
