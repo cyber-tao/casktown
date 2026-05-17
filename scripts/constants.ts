@@ -1,0 +1,12 @@
+export const PROJECT_ROOT_PARENT_SEGMENT = '..'
+export const SOURCE_SPRITE_PACK_DIR = 'img/sprites'
+export const TARGET_SPRITE_DIR = 'assets/sprites'
+export const SPRITE_PACK_MANIFEST_FILE = 'pack_manifest.json'
+export const OUTPUT_MISC_DIRECTORY = 'misc'
+export const PNG_FILE_EXTENSION = '.png'
+export const POSIX_PATH_SEPARATOR = '/'
+export const UTF8_FILE_ENCODING = 'utf8'
+export const ROOT_FRAME_SEGMENT_COUNT = 1
+export const INITIAL_GENERATED_FILE_COUNT = 0
+export const PROCESS_SUCCESS_EXIT_CODE = 0
+export const PROCESS_FAILURE_EXIT_CODE = 1
