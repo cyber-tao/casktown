@@ -1,0 +1,99 @@
+import { beforeEach, describe, expect, test } from 'bun:test'
+import { GameData } from '../../src/core/GameData.ts'
+import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
+import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
+import {
+  REBUILD_VISUAL_MAP_THRESHOLD,
+  REBUILT_TOWN_MAP_ID,
+  START_INVENTORY_ITEMS,
+  START_MAP_ID,
+  START_PARTY,
+  TRUE_ROUTE_MIN_MERCY,
+  TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
+} from '../../src/utils/constants.ts'
+
+describe('GameData', () => {
+  beforeEach(() => {
+    GameData.getInstance().reset()
+  })
+
+  test('reset creates a playable new-game state', () => {
+    const gd = GameData.getInstance()
+
+    expect(gd.currentMap).toBe(START_MAP_ID)
+    expect(gd.party).toEqual([...START_PARTY])
+    expect(gd.characters.size).toBe(Object.keys(INITIAL_CHARACTERS).length)
+
+    for (const item of START_INVENTORY_ITEMS) {
+      expect(gd.inventory.items[item.itemId]).toBe(item.quantity)
+    }
+
+    const hero = gd.characters.get('T')
+    expect(hero).toBeDefined()
+    expect(hero!.stats.atk).toBeGreaterThan(INITIAL_CHARACTERS.T!.stats.atk)
+  })
+
+  test('join flags add initialized companions to party or reserve', () => {
+    const gd = GameData.getInstance()
+
+    gd.setFlag('huihui_joined', true)
+    gd.setFlag('a_joined', true)
+    gd.setFlag('congcong_joined', true)
+    gd.setFlag('sun_joined', true)
+
+    expect(gd.party).toEqual(['T', 'HUIHUI', 'A', 'CONGCONG'])
+    expect(gd.reserve).toEqual(['SUN'])
+    expect(gd.characters.get('SUN')?.name).toBe('sun')
+  })
+
+  test('serialize returns an isolated snapshot and deserialize restores maps', () => {
+    const gd = GameData.getInstance()
+    const originalHp = gd.characters.get('T')!.stats.hp
+    const originalItems = gd.inventory.items.heal_grass
+    const snapshot = gd.serialize()
+
+    gd.characters.get('T')!.stats.hp = 1
+    gd.inventory.items.heal_grass = 99
+    gd.addPartyMember('HUIHUI')
+
+    gd.deserialize(snapshot)
+
+    expect(gd.characters).toBeInstanceOf(Map)
+    expect(gd.quests).toBeInstanceOf(Map)
+    expect(gd.characters.get('T')!.stats.hp).toBe(originalHp)
+    expect(gd.inventory.items.heal_grass).toBe(originalItems)
+    expect(gd.party).toEqual([...START_PARTY])
+  })
+
+  test('true route unlock syncs from branch and flag state', () => {
+    const gd = GameData.getInstance()
+
+    gd.setFlag('white_tiger_respected', true)
+    gd.setFlag('answered_xiyuan_kindly', true)
+    gd.setFlag('released_four_seals', true)
+    gd.setFlag('xiaoai_purified', true)
+    gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
+    gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+
+    expect(gd.branches.true_route_unlocked).toBe(true)
+    expect(gd.getFlag('true_route_unlocked')).toBe(true)
+  })
+})
+
+describe('RebuildSystem', () => {
+  beforeEach(() => {
+    GameData.getInstance().reset()
+  })
+
+  test('setLevel syncs branch, flags, facilities, and rebuilt town map', () => {
+    const gd = GameData.getInstance()
+    gd.currentMap = START_MAP_ID
+
+    RebuildSystem.getInstance().setLevel(REBUILD_VISUAL_MAP_THRESHOLD)
+
+    expect(gd.rebuildLevel).toBe(REBUILD_VISUAL_MAP_THRESHOLD)
+    expect(gd.branches.rebuild_level).toBe(REBUILD_VISUAL_MAP_THRESHOLD)
+    expect(gd.currentMap).toBe(REBUILT_TOWN_MAP_ID)
+    expect(RebuildSystem.getInstance().getUnlockedFacilities().length).toBeGreaterThan(0)
+  })
+})
