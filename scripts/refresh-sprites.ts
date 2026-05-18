@@ -92,6 +92,10 @@ async function refreshSpritePackFile(packFile: SpritePackFile): Promise<number> 
   const sourceJsonPath = resolveInside(sourceSpritePackDir, packFile.json)
   const targetCategoryDir = resolveInside(targetSpriteDir, packFile.category)
   const atlas = await readJsonFile<SpriteAtlasMetadata>(sourceJsonPath)
+  const sourceMetadata = await sharp(sourceImagePath).metadata()
+  if (!sourceMetadata.width || !sourceMetadata.height || !sourceMetadata.hasAlpha) {
+    throw new Error(`Source atlas must be a transparent PNG: ${packFile.image}`)
+  }
 
   await rm(targetCategoryDir, { recursive: true, force: true })
 
@@ -99,6 +103,16 @@ async function refreshSpritePackFile(packFile: SpritePackFile): Promise<number> 
   for (const [frameName, metadata] of Object.entries(atlas.frames)) {
     if (metadata.rotated) {
       throw new Error(`Rotated frames are not supported: ${frameName}`)
+    }
+    if (
+      metadata.frame.w <= 0 ||
+      metadata.frame.h <= 0 ||
+      metadata.frame.x < 0 ||
+      metadata.frame.y < 0 ||
+      metadata.frame.x + metadata.frame.w > sourceMetadata.width ||
+      metadata.frame.y + metadata.frame.h > sourceMetadata.height
+    ) {
+      throw new Error(`Frame is outside atlas bounds: ${frameName}`)
     }
 
     const outputPath = resolveInside(targetSpriteDir, ...getOutputSegments(packFile.category, frameName))

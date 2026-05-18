@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "sprites:refresh": "bun run scripts/refresh-sprites.ts"
+    "sprites:repair": "bun run scripts/repair-sprite-atlases.ts",
+    "sprites:refresh": "bun run scripts/repair-sprite-atlases.ts && bun run scripts/refresh-sprites.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

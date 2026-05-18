@@ -30,7 +30,7 @@
       "image": "03_monsters.png",
       "json": "03_monsters.json",
       "category": "monsters",
-      "sprite_count": 39,
+      "sprite_count": 53,
       "grid": {
         "cols": 8,
         "rows": 5,
