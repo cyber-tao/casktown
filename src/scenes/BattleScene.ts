@@ -7,8 +7,9 @@ import { BarrelSystem } from '../core/BarrelSystem'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { ENEMIES } from '../data/enemies'
 import { ENCOUNTERS } from '../data/encounters'
+import { ITEMS } from '../data/items'
 import { SKILLS } from '../data/skills'
-import { ELEMENT_WEAKNESS, COMBO_TP_COST } from '../utils/constants'
+import { ELEMENT_WEAKNESS, COMBO_TP_COST, BATTLE_RESULT_PANEL, GAME_WIDTH, GAME_HEIGHT } from '../utils/constants'
 import type { CharacterData, EnemyData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -43,11 +44,18 @@ interface BattleUnit {
   data: CharacterData | EnemyData
 }
 
+interface BattleResultSummary {
+  victory: boolean
+  escaped: boolean
+  title: string
+  lines: string[]
+}
+
 export class BattleScene extends Phaser.Scene {
   private units: BattleUnit[] = []
   private turnOrder: number[] = []
   private currentTurn = 0
-  private phase: 'intro' | 'player' | 'enemy' | 'victory' | 'defeat' = 'intro'
+  private phase: 'intro' | 'player' | 'enemy' | 'victory' | 'defeat' | 'result' = 'intro'
   private enemyData: EnemyData[] = []
   private bg!: Phaser.GameObjects.Rectangle
   private logText!: Phaser.GameObjects.Text
@@ -62,6 +70,8 @@ export class BattleScene extends Phaser.Scene {
   private encounterId = ''
   private mapEventId = ''
   private turnCount = 0
+  private resultSummary: BattleResultSummary | null = null
+  private resultPanel: Phaser.GameObjects.Container | null = null
 
   constructor() {
     super({ key: 'BattleScene', active: false })
@@ -79,6 +89,8 @@ export class BattleScene extends Phaser.Scene {
     this.encounterId = data.encounterId
     this.mapEventId = data.mapEventId || ''
     this.turnCount = 0
+    this.resultSummary = null
+    this.resultPanel = null
 
     // Apply settings
     const gd = GameData.getInstance()
@@ -373,6 +385,7 @@ export class BattleScene extends Phaser.Scene {
       else this.moveMenu(1)
     })
     this.input.keyboard?.on('keydown-ENTER', () => {
+      if (this.phase === 'result') { this.finishBattleResult(); return }
       if (this.inSkillMenu) this.selectSkill()
       else if (this.inItemMenu) this.selectItem()
       else if (this.inBarrelMenu) this.selectBarrel()
@@ -380,6 +393,7 @@ export class BattleScene extends Phaser.Scene {
       else this.selectMenu()
     })
     this.input.keyboard?.on('keydown-SPACE', () => {
+      if (this.phase === 'result') { this.finishBattleResult(); return }
       if (this.inSkillMenu) this.selectSkill()
       else if (this.inItemMenu) this.selectItem()
       else if (this.inBarrelMenu) this.selectBarrel()
@@ -1071,7 +1085,7 @@ export class BattleScene extends Phaser.Scene {
     const success = Math.random() > 0.5
     if (success) {
       this.log('成功逃跑了！')
-      this.time.delayedCall(Math.floor(1000 / this.speedMult), () => this.endBattle(false))
+      this.time.delayedCall(Math.floor(1000 / this.speedMult), () => this.endBattle(false, true))
     } else {
       this.log('逃跑失败！')
       this.nextTurn()
@@ -1758,82 +1772,153 @@ export class BattleScene extends Phaser.Scene {
     return this.units[idx] || null
   }
 
-  private endBattle(victory: boolean): void {
-    if (victory) {
-      AudioManager.getInstance().playVictoryBGM()
-      // Grant exp
-      const gd = GameData.getInstance()
-      this.syncPlayerState()
-      let totalExp = 0
-      for (const ed of this.enemyData) {
-        gd.setFlag(`defeated_${ed.id}`, true)
-        totalExp += ed.exp
-      }
-      totalExp = Math.floor(totalExp * this.difficultyMult.exp)
-      this.log(`获得 ${totalExp} 经验值！`)
-      for (const id of gd.party) {
-        const char = gd.characters.get(id)
-        if (char) {
-          char.stats.exp += totalExp
-          // Simple level up check
-          if (char.stats.exp >= char.stats.expToNext) {
-            char.stats.level++
-            char.stats.exp -= char.stats.expToNext
-            char.stats.expToNext = Math.floor(char.stats.expToNext * 1.5)
-            this.log(`${char.name} 升到了 ${char.stats.level} 级！`)
-          }
-        }
-      }
+  private endBattle(victory: boolean, escaped = false): void {
+    if (this.phase === 'result') return
+    const summary = victory ? this.applyVictoryResult() : this.createNonVictoryResult(escaped)
+    this.showBattleResult(summary)
+  }
 
-      const qs = QuestSystem.getInstance()
-      const encounter = ENCOUNTERS[this.encounterId]
-      if (encounter?.victoryFlag) {
-        gd.setFlag(encounter.victoryFlag, true)
-      }
-      if (encounter?.questId && encounter.questProgress) {
-        if (!qs.isQuestActive(encounter.questId) && !qs.isQuestCompleted(encounter.questId)) {
-          qs.startQuest(encounter.questId)
-        }
-        if (encounter.questProgress === 'complete') {
-          qs.completeQuest(encounter.questId)
-        } else {
-          qs.advanceQuest(encounter.questId)
-        }
-      }
-      if (encounter?.rewards) {
-        for (const reward of encounter.rewards) {
-          if (reward.itemId) {
-            gd.addItem(reward.itemId, reward.itemQty ?? 1)
-          }
-          if (reward.flag) {
-            gd.setFlag(reward.flag, reward.value ?? true)
-          }
-          if (reward.branch) {
-            gd.updateBranch(reward.branch, reward.branchValue ?? true)
-          }
-        }
-      }
+  private applyVictoryResult(): BattleResultSummary {
+    AudioManager.getInstance().playVictoryBGM()
+    const gd = GameData.getInstance()
+    this.syncPlayerState()
+    let totalExp = 0
+    let totalGold = 0
+    const levelUps: string[] = []
+    const rewardLines: string[] = []
+    const dropLines: string[] = []
 
-      if (this.mapEventId) {
-        gd.setFlag(`defeated_${this.mapEventId}`, true)
-      }
+    for (const ed of this.enemyData) {
+      gd.setFlag(`defeated_${ed.id}`, true)
+      totalExp += ed.exp
+      totalGold += ed.gold
+    }
+    totalExp = Math.floor(totalExp * this.difficultyMult.exp)
+    gd.addGold(totalGold)
 
-      for (const ed of this.enemyData) {
-        for (const drop of ed.drops) {
-          if (Math.random() < drop.rate) {
-            gd.addItem(drop.itemId, 1)
-            this.log(`获得 ${drop.itemId}！`)
-          }
+    for (const id of gd.party) {
+      const char = gd.characters.get(id)
+      if (!char) continue
+      char.stats.exp += totalExp
+      if (char.stats.exp >= char.stats.expToNext) {
+        char.stats.level++
+        char.stats.exp -= char.stats.expToNext
+        char.stats.expToNext = Math.floor(char.stats.expToNext * 1.5)
+        levelUps.push(`${char.name} Lv.${char.stats.level}`)
+      }
+    }
+
+    const qs = QuestSystem.getInstance()
+    const encounter = ENCOUNTERS[this.encounterId]
+    if (encounter?.victoryFlag) {
+      gd.setFlag(encounter.victoryFlag, true)
+      rewardLines.push('关键战斗标记已更新')
+    }
+    if (encounter?.questId && encounter.questProgress) {
+      if (!qs.isQuestActive(encounter.questId) && !qs.isQuestCompleted(encounter.questId)) {
+        qs.startQuest(encounter.questId)
+      }
+      if (encounter.questProgress === 'complete') {
+        qs.completeQuest(encounter.questId)
+        rewardLines.push('任务已完成')
+      } else {
+        qs.advanceQuest(encounter.questId)
+        rewardLines.push('任务已推进')
+      }
+    }
+    if (encounter?.rewards) {
+      for (const reward of encounter.rewards) {
+        if (reward.itemId) {
+          gd.addItem(reward.itemId, reward.itemQty ?? 1)
+          rewardLines.push(`${this.getItemName(reward.itemId)} x${reward.itemQty ?? 1}`)
+        }
+        if (reward.flag) {
+          gd.setFlag(reward.flag, reward.value ?? true)
+          rewardLines.push('剧情进度已更新')
+        }
+        if (reward.branch) {
+          gd.updateBranch(reward.branch, reward.branchValue ?? true)
+          rewardLines.push('分支状态已更新')
         }
       }
     }
 
-    if (!victory) {
-      AudioManager.getInstance().playGameOverBGM()
+    if (this.mapEventId) {
+      gd.setFlag(`defeated_${this.mapEventId}`, true)
     }
 
-    EventBus.emit(GameEvents.BATTLE_END, victory)
+    for (const ed of this.enemyData) {
+      for (const drop of ed.drops) {
+        if (Math.random() < drop.rate) {
+          gd.addItem(drop.itemId, 1)
+          dropLines.push(`${this.getItemName(drop.itemId)} x1`)
+        }
+      }
+    }
+
+    const lines = [`EXP +${totalExp}`, `金币 +${totalGold}`]
+    if (dropLines.length > 0) lines.push(`掉落：${dropLines.join('、')}`)
+    if (levelUps.length > 0) lines.push(`升级：${levelUps.join('、')}`)
+    if (rewardLines.length > 0) lines.push(...rewardLines)
+    return { victory: true, escaped: false, title: '战斗结算', lines }
+  }
+
+  private createNonVictoryResult(escaped: boolean): BattleResultSummary {
+    if (escaped) {
+      return { victory: false, escaped: true, title: '撤退成功', lines: ['没有获得经验、金币或掉落。'] }
+    }
+    AudioManager.getInstance().playGameOverBGM()
+    return { victory: false, escaped: false, title: '队伍全灭', lines: ['全队倒下，冒险暂时中断。'] }
+  }
+
+  private showBattleResult(summary: BattleResultSummary): void {
+    this.phase = 'result'
+    this.resultSummary = summary
+    this.log(summary.title)
+
+    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, BATTLE_RESULT_PANEL.overlayAlpha)
+    const panel = this.add.rectangle(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y, BATTLE_RESULT_PANEL.width, BATTLE_RESULT_PANEL.height, 0x1a1a2e, 0.96)
+    panel.setStrokeStyle(2, summary.victory ? 0xf1c40f : 0x9b59b6)
+    const title = this.add.text(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.titleOffsetY, summary.title, {
+      fontSize: '28px',
+      color: summary.victory ? '#f1c40f' : '#e8e8f0',
+      fontFamily: 'serif',
+    }).setOrigin(0.5)
+    const objects: Phaser.GameObjects.GameObject[] = [overlay, panel, title]
+    const visibleLines = summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines)
+    for (let i = 0; i < visibleLines.length; i++) {
+      const line = this.add.text(BATTLE_RESULT_PANEL.x - BATTLE_RESULT_PANEL.width / 2 + BATTLE_RESULT_PANEL.contentPaddingX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.lineStartOffsetY + i * BATTLE_RESULT_PANEL.lineGap, visibleLines[i]!, {
+        fontSize: '18px',
+        color: '#e8e8f0',
+        wordWrap: { width: BATTLE_RESULT_PANEL.width - BATTLE_RESULT_PANEL.contentPaddingX * 2 },
+      })
+      objects.push(line)
+    }
+    const confirmLabel = summary.victory || summary.escaped ? '继续' : 'GAME OVER'
+    const confirm = this.add.text(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.confirmOffsetY, confirmLabel, {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#5a5a7e',
+      padding: { x: BATTLE_RESULT_PANEL.confirmPaddingX, y: BATTLE_RESULT_PANEL.confirmPaddingY },
+    }).setOrigin(0.5)
+    objects.push(confirm)
+    this.resultPanel = this.add.container(0, 0, objects)
+    this.resultPanel.setDepth(500)
+    this.resultPanel.setScrollFactor(0)
+  }
+
+  private finishBattleResult(): void {
+    if (!this.resultSummary) return
+    const summary = this.resultSummary
+    this.resultPanel?.destroy()
+    this.resultPanel = null
+    this.resultSummary = null
+    EventBus.emit(GameEvents.BATTLE_END, summary.victory, { escaped: summary.escaped })
     this.scene.stop()
+  }
+
+  private getItemName(itemId: string): string {
+    return ITEMS[itemId]?.name ?? this.getItemData(itemId)?.name ?? itemId
   }
 
   private syncPlayerState(): void {

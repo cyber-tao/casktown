@@ -8,17 +8,27 @@ import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
 import { getMap } from '../data/maps'
 import { ENCOUNTERS } from '../data/encounters'
+import { ENEMIES } from '../data/enemies'
 import { TILE_SPRITES } from '../data/tileSprites'
 import {
   DEFAULT_ENEMY_SPRITE_KEY,
+  FIELD_ENCOUNTER_RATE_THRESHOLDS,
+  FIELD_ENCOUNTER_SPAWN_COUNTS,
+  FIELD_ENTITY_BEHAVIOR,
+  FIELD_ENTITY_BEHAVIOR_PRESETS,
   FOLLOWER_MIN_DISTANCE_FACTOR,
+  MAP_ENCOUNTER_RATES,
   MAP_MOVE_SPEED_TILES_PER_SECOND,
+  REBUILD_VISUAL_MAP_THRESHOLD,
+  REBUILT_TOWN_MAP_ID,
+  RUINED_TOWN_MAP_ID,
   TILE_SIZE,
+  TOWN_MAP_IDS,
   GAME_WIDTH,
   GAME_HEIGHT,
   DIRECTION_VECTORS,
 } from '../utils/constants'
-import type { MapData, MapEvent, EventAction } from '../data/types'
+import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
 
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
@@ -47,6 +57,9 @@ export class MapScene extends Phaser.Scene {
   private gpCancelPrev = false
   private gpMenuPrev = false
   private battleEnemies: Map<string, Phaser.GameObjects.Sprite> = new Map()
+  private battleEnemyEvents: Map<string, MapEvent> = new Map()
+  private fieldEntityBehaviors: Map<string, FieldEntityBehavior> = new Map()
+  private fieldEntityOrigins: Map<string, { x: number; y: number }> = new Map()
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
@@ -65,6 +78,16 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  private handleFlagSet = (key: string, value: unknown): void => {
+    if (key !== 'rebuild_level' || typeof value !== 'number') return
+    if (!TOWN_MAP_IDS.some(mapId => mapId === this.mapData.id)) return
+
+    const gd = GameData.getInstance()
+    const nextMapId = value >= REBUILD_VISUAL_MAP_THRESHOLD ? REBUILT_TOWN_MAP_ID : RUINED_TOWN_MAP_ID
+    gd.currentMap = nextMapId
+    this.scene.restart({ mapId: nextMapId })
+  }
+
   init(data: { mapId?: string }): void {
     const mapId = data.mapId || GameData.getInstance().currentMap
     this.mapData = getMap(mapId)
@@ -80,6 +103,9 @@ export class MapScene extends Phaser.Scene {
     this.eventObjects = []
     this.uiTexts = []
     this.battleEnemies = new Map()
+    this.battleEnemyEvents = new Map()
+    this.fieldEntityBehaviors = new Map()
+    this.fieldEntityOrigins = new Map()
     this.enemyPatrolTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
@@ -108,6 +134,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.on(GameEvents.DIALOGUE_END, this.onDialogueEnd, this)
     EventBus.on(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.on(GameEvents.MENU_CLOSE, this.onMenuClose, this)
+    EventBus.on(GameEvents.FLAG_SET, this.handleFlagSet, this)
     window.addEventListener('game-quicksave', this.handleQuickSave)
     window.addEventListener('game-quickload', this.handleQuickLoad)
 
@@ -117,6 +144,9 @@ export class MapScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     if (this.inEvent) return
+
+    this.updateBattleEnemyBehavior(delta)
+    if (!this.isMoving && this.checkBattleEnemyTouch()) return
 
     this.pollGamepadButtons()
 
@@ -226,7 +256,6 @@ export class MapScene extends Phaser.Scene {
   }
 
   private spawnNPCs(): void {
-    const gd = GameData.getInstance()
     for (const event of this.mapData.events) {
       if (event.type === 'npc' && event.sprite) {
         const sx = event.x * TILE_SIZE + TILE_SIZE / 2
@@ -235,45 +264,217 @@ export class MapScene extends Phaser.Scene {
         npc.setDisplaySize(TILE_SIZE, TILE_SIZE)
         npc.setDepth(10)
         this.npcs.set(event.id, npc)
+        this.fieldEntityBehaviors.set(event.id, this.getNpcFieldBehavior(event))
+        this.fieldEntityOrigins.set(event.id, { x: sx, y: sy })
       }
     }
 
     for (const event of this.mapData.events) {
       if (event.type !== 'battle') continue
-      const defeatedFlag = `defeated_${event.id}`
-      if (gd.getFlag(defeatedFlag) === true) continue
-
-      const sx = event.x * TILE_SIZE + TILE_SIZE / 2
-      const sy = event.y * TILE_SIZE + TILE_SIZE / 2
-      const encounterId = event.actions.find(a => a.type === 'battle')?.encounterId as string | undefined
-      const spriteKey = this.getEnemySpriteKey(encounterId)
-      const textureKey = this.textures.exists(spriteKey) ? spriteKey : DEFAULT_ENEMY_SPRITE_KEY
-      const enemySprite = this.add.sprite(sx, sy, textureKey)
-      enemySprite.setDisplaySize(TILE_SIZE, TILE_SIZE)
-      enemySprite.setDepth(10)
-      this.battleEnemies.set(event.id, enemySprite)
-
-      const originX = sx
-      const originY = sy
-      const timer = this.time.addEvent({
-        delay: 2000 + Math.random() * 3000,
-        loop: true,
-        callback: () => {
-          const dx = (Math.random() - 0.5) * TILE_SIZE * 2
-          const dy = (Math.random() - 0.5) * TILE_SIZE * 2
-          const nx = Phaser.Math.Clamp(originX + dx, originX - TILE_SIZE, originX + TILE_SIZE)
-          const ny = Phaser.Math.Clamp(originY + dy, originY - TILE_SIZE, originY + TILE_SIZE)
-          this.tweens.add({
-            targets: enemySprite,
-            x: nx,
-            y: ny,
-            duration: 800,
-            ease: 'Linear',
-          })
-        },
-      })
-      this.enemyPatrolTimers.push(timer)
+      this.spawnBattleEnemy(event)
     }
+
+    this.spawnRoamingBattleEnemies()
+  }
+
+  private spawnBattleEnemy(event: MapEvent): void {
+    const gd = GameData.getInstance()
+    const defeatedFlag = `defeated_${event.id}`
+    if (gd.getFlag(defeatedFlag) === true) return
+    if (!this.areEventConditionsMet(event)) return
+
+    const sx = event.x * TILE_SIZE + event.width * TILE_SIZE / 2
+    const sy = event.y * TILE_SIZE + event.height * TILE_SIZE / 2
+    const encounterId = this.getBattleEncounterId(event)
+    const spriteKey = this.getEnemySpriteKey(encounterId)
+    const textureKey = this.textures.exists(spriteKey) ? spriteKey : DEFAULT_ENEMY_SPRITE_KEY
+    const enemySprite = this.add.sprite(sx, sy, textureKey)
+    enemySprite.setDisplaySize(TILE_SIZE, TILE_SIZE)
+    enemySprite.setDepth(10)
+    this.battleEnemies.set(event.id, enemySprite)
+    this.battleEnemyEvents.set(event.id, event)
+    this.fieldEntityOrigins.set(event.id, { x: sx, y: sy })
+
+    const behavior = this.getBattleFieldBehavior(event)
+    this.fieldEntityBehaviors.set(event.id, behavior)
+    this.scheduleFieldPatrol(event.id, enemySprite, behavior, this.enemyPatrolTimers)
+  }
+
+  private spawnRoamingBattleEnemies(): void {
+    if (!this.mapData.encounters || this.mapData.encounters.length === 0) return
+
+    const count = this.getRoamingEncounterSpawnCount()
+    for (let i = 0; i < count; i++) {
+      const encounterId = this.mapData.encounters[i % this.mapData.encounters.length]!
+      const tile = this.findRoamingEncounterSpawnTile()
+      if (!tile) continue
+      const event: MapEvent = {
+        id: `ROAM_${this.mapData.id}_${i}_${encounterId}`,
+        x: tile.x,
+        y: tile.y,
+        width: 1,
+        height: 1,
+        type: 'battle',
+        trigger: 'touch',
+        actions: [{ type: 'battle', encounterId }],
+      }
+      this.spawnBattleEnemy(event)
+    }
+  }
+
+  private getRoamingEncounterSpawnCount(): number {
+    const gd = GameData.getInstance()
+    const setting = gd.settings.encounterRate as string
+    if (this.mapData.encounterRate <= MAP_ENCOUNTER_RATES.NONE) return FIELD_ENCOUNTER_SPAWN_COUNTS.NONE
+    if (setting === 'none') return FIELD_ENCOUNTER_SPAWN_COUNTS.NONE
+    if (setting === 'reduced') return FIELD_ENCOUNTER_SPAWN_COUNTS.REDUCED
+    if (this.mapData.encounterRate >= FIELD_ENCOUNTER_RATE_THRESHOLDS.DANGEROUS) return FIELD_ENCOUNTER_SPAWN_COUNTS.DANGEROUS
+    if (this.mapData.encounterRate >= FIELD_ENCOUNTER_RATE_THRESHOLDS.DENSE) return FIELD_ENCOUNTER_SPAWN_COUNTS.DENSE
+    return FIELD_ENCOUNTER_SPAWN_COUNTS.DEFAULT
+  }
+
+  private findRoamingEncounterSpawnTile(): { x: number; y: number } | null {
+    const margin = FIELD_ENTITY_BEHAVIOR.SPAWN_MARGIN_TILES
+    const minX = Math.min(margin, this.mapData.width - 1)
+    const minY = Math.min(margin, this.mapData.height - 1)
+    const maxX = Math.max(minX, this.mapData.width - margin - 1)
+    const maxY = Math.max(minY, this.mapData.height - margin - 1)
+    const playerX = Math.floor(this.player.x / TILE_SIZE)
+    const playerY = Math.floor(this.player.y / TILE_SIZE)
+
+    for (let i = 0; i < FIELD_ENTITY_BEHAVIOR.SPAWN_TARGET_ATTEMPTS; i++) {
+      const x = Phaser.Math.Between(minX, maxX)
+      const y = Phaser.Math.Between(minY, maxY)
+      const dist = Phaser.Math.Distance.Between(playerX, playerY, x, y)
+      if (dist < FIELD_ENTITY_BEHAVIOR.PLAYER_SPAWN_CLEAR_RADIUS_TILES) continue
+      if (!this.canFieldEntityOccupyTile(x, y)) continue
+      if (this.isTileReservedByEvent(x, y)) continue
+      return { x, y }
+    }
+    return null
+  }
+
+  private isTileReservedByEvent(x: number, y: number): boolean {
+    for (const event of this.mapData.events) {
+      if (this.checkEventCollision(event, x, y)) return true
+    }
+    for (const sprite of this.battleEnemies.values()) {
+      if (Math.floor(sprite.x / TILE_SIZE) === x && Math.floor(sprite.y / TILE_SIZE) === y) return true
+    }
+    return false
+  }
+
+  private getNpcFieldBehavior(event: MapEvent): FieldEntityBehavior {
+    const preset = event.sprite?.startsWith('env_')
+      ? FIELD_ENTITY_BEHAVIOR_PRESETS.NPC_IDLE
+      : FIELD_ENTITY_BEHAVIOR_PRESETS.NPC_WANDER
+    return { ...preset, ...event.fieldBehavior } as FieldEntityBehavior
+  }
+
+  private getBattleFieldBehavior(event: MapEvent): FieldEntityBehavior {
+    const encounterId = this.getBattleEncounterId(event)
+    const enemyIds = encounterId ? ENCOUNTERS[encounterId]?.enemies ?? [] : []
+    const enemies = enemyIds.map(id => ENEMIES[id]).filter(Boolean)
+    const hasBoss = enemies.some(enemy => enemy!.isBoss)
+    const hasAmbush = enemies.some(enemy => enemy!.id === 'barrel_fake')
+    const hasGuardian = enemies.some(enemy => enemy!.aiType === 'defensive')
+    const hasFastEnemy = enemies.some(enemy => enemy!.stats.speed >= FIELD_ENTITY_BEHAVIOR.FAST_ENEMY_SPEED_MIN)
+    const preset = hasBoss
+      ? FIELD_ENTITY_BEHAVIOR_PRESETS.BOSS
+      : hasAmbush
+        ? FIELD_ENTITY_BEHAVIOR_PRESETS.AMBUSH
+        : hasGuardian
+          ? FIELD_ENTITY_BEHAVIOR_PRESETS.GUARDIAN
+          : hasFastEnemy
+            ? FIELD_ENTITY_BEHAVIOR_PRESETS.FAST_MONSTER
+            : FIELD_ENTITY_BEHAVIOR_PRESETS.MONSTER
+    return { ...preset, ...event.fieldBehavior } as FieldEntityBehavior
+  }
+
+  private scheduleFieldPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior, timers: Phaser.Time.TimerEvent[]): void {
+    if (behavior.patrolRangeTiles <= 0 || behavior.idleMaxMs <= 0) return
+    const timer = this.time.addEvent({
+      delay: Phaser.Math.Between(behavior.idleMinMs, behavior.idleMaxMs),
+      loop: true,
+      callback: () => {
+        if (this.inEvent) return
+        if (this.isBattleEnemyChasing(id, sprite, behavior)) return
+        this.moveFieldEntityWithinPatrol(id, sprite, behavior)
+      },
+    })
+    timers.push(timer)
+  }
+
+  private moveFieldEntityWithinPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior): void {
+    const origin = this.fieldEntityOrigins.get(id)
+    if (!origin) return
+    const range = behavior.patrolRangeTiles * TILE_SIZE
+    for (let i = 0; i < FIELD_ENTITY_BEHAVIOR.PATROL_TARGET_ATTEMPTS; i++) {
+      const nx = Phaser.Math.Between(origin.x - range, origin.x + range)
+      const ny = Phaser.Math.Between(origin.y - range, origin.y + range)
+      if (!this.canFieldEntityOccupyPixel(nx, ny)) continue
+      this.tweens.add({
+        targets: sprite,
+        x: nx,
+        y: ny,
+        duration: behavior.moveDurationMs,
+        ease: 'Linear',
+      })
+      return
+    }
+  }
+
+  private updateBattleEnemyBehavior(delta: number): void {
+    for (const [id, sprite] of this.battleEnemies) {
+      const behavior = this.fieldEntityBehaviors.get(id)
+      if (!behavior || behavior.chaseDistanceTiles <= 0) continue
+      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
+      if (dist > behavior.chaseDistanceTiles * TILE_SIZE) continue
+      if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) continue
+      this.tweens.killTweensOf(sprite)
+      const angle = Phaser.Math.Angle.Between(sprite.x, sprite.y, this.player.x, this.player.y)
+      const step = FIELD_ENTITY_BEHAVIOR.CHASE_SPEED_TILES_PER_SECOND * TILE_SIZE * delta / 1000
+      const nx = sprite.x + Math.cos(angle) * Math.min(step, dist)
+      const ny = sprite.y + Math.sin(angle) * Math.min(step, dist)
+      if (this.canFieldEntityOccupyPixel(nx, ny)) {
+        sprite.x = nx
+        sprite.y = ny
+        sprite.setFlipX(Math.cos(angle) < 0)
+      }
+    }
+  }
+
+  private isBattleEnemyChasing(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior): boolean {
+    if (!this.battleEnemies.has(id) || behavior.chaseDistanceTiles <= 0) return false
+    const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
+    return dist <= behavior.chaseDistanceTiles * TILE_SIZE
+  }
+
+  private checkBattleEnemyTouch(): boolean {
+    for (const [id, sprite] of this.battleEnemies) {
+      const event = this.battleEnemyEvents.get(id)
+      if (!event) continue
+      const behavior = this.fieldEntityBehaviors.get(id) ?? this.getBattleFieldBehavior(event)
+      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
+      if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) {
+        this.triggerEvent(event)
+        return true
+      }
+    }
+    return false
+  }
+
+  private canFieldEntityOccupyPixel(x: number, y: number): boolean {
+    return this.canFieldEntityOccupyTile(Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE))
+  }
+
+  private canFieldEntityOccupyTile(x: number, y: number): boolean {
+    if (x < 0 || x >= this.mapData.width || y < 0 || y >= this.mapData.height) return false
+    return !this.collisionGrid[y]![x]
+  }
+
+  private getBattleEncounterId(event: MapEvent): string | undefined {
+    return event.actions.find(action => action.type === 'battle')?.encounterId
   }
 
   private createEvents(): void {
@@ -479,9 +680,8 @@ export class MapScene extends Phaser.Scene {
   private canMoveTo(x: number, y: number): boolean {
     if (x < 0 || x >= this.mapData.width || y < 0 || y >= this.mapData.height) return false
     if (this.collisionGrid[y]![x]) return false
-    // Check NPCs
-    for (const event of this.mapData.events) {
-      if (event.type === 'npc' && event.x === x && event.y === y) return false
+    for (const npc of this.npcs.values()) {
+      if (Math.floor(npc.x / TILE_SIZE) === x && Math.floor(npc.y / TILE_SIZE) === y) return false
     }
     return true
   }
@@ -556,35 +756,15 @@ export class MapScene extends Phaser.Scene {
     const px = Math.floor(this.player.x / TILE_SIZE)
     const py = Math.floor(this.player.y / TILE_SIZE)
 
+    if (this.checkBattleEnemyTouch()) return
+
     for (const event of this.mapData.events) {
-      if (event.type === 'battle') {
-        const enemySprite = this.battleEnemies.get(event.id)
-        if (enemySprite) {
-          const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemySprite.x, enemySprite.y)
-          if (dist < TILE_SIZE * 0.8) {
-            this.triggerEvent(event)
-            return
-          }
-        }
-        continue
-      }
+      if (event.type === 'battle') continue
       if (event.trigger !== 'touch' && event.trigger !== 'autorun') continue
       if (this.checkEventCollision(event, px, py)) {
         this.triggerEvent(event)
         return
       }
-    }
-
-    // Random encounter
-    const gd = GameData.getInstance()
-    const encRate = gd.settings.encounterRate as string
-    let encounterMultiplier = 1.0
-    if (encRate === 'low') encounterMultiplier = 0.5
-    else if (encRate === 'off') encounterMultiplier = 0.0
-    if (this.mapData.encounters && this.mapData.encounters.length > 0 && Math.random() < this.mapData.encounterRate * encounterMultiplier) {
-      const encounterId = this.mapData.encounters[Math.floor(Math.random() * this.mapData.encounters.length)]!
-      AudioManager.getInstance().playSFX('encounter')
-      this.startBattle(encounterId)
     }
   }
 
@@ -600,16 +780,40 @@ export class MapScene extends Phaser.Scene {
 
     for (const event of this.mapData.events) {
       if (event.trigger !== 'action') continue
-      if (this.checkEventCollision(event, fx, fy) || this.checkEventCollision(event, px, py)) {
+      if (this.canInteractWithEvent(event, px, py, fx, fy)) {
         this.triggerEvent(event)
         return
       }
     }
   }
 
+  private canInteractWithEvent(event: MapEvent, px: number, py: number, fx: number, fy: number): boolean {
+    const sprite = event.type === 'npc' ? this.npcs.get(event.id) : event.type === 'battle' ? this.battleEnemies.get(event.id) : undefined
+    if (sprite) {
+      const behavior = this.fieldEntityBehaviors.get(event.id)
+      const distanceTiles = behavior?.interactionDistanceTiles ?? FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_DISTANCE_TILES
+      const playerDist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
+      const facingDist = Phaser.Math.Distance.Between(fx * TILE_SIZE + TILE_SIZE / 2, fy * TILE_SIZE + TILE_SIZE / 2, sprite.x, sprite.y)
+      return playerDist <= distanceTiles * TILE_SIZE || facingDist <= distanceTiles * TILE_SIZE
+    }
+    return this.checkEventCollision(event, fx, fy) || this.checkEventCollision(event, px, py)
+  }
+
   private checkEventCollision(event: MapEvent, x: number, y: number): boolean {
     return x >= event.x && x < event.x + event.width &&
            y >= event.y && y < event.y + event.height
+  }
+
+  private areEventConditionsMet(event: MapEvent): boolean {
+    if (!event.conditions || event.conditions.length === 0) return true
+    const gd = GameData.getInstance()
+    for (const cond of event.conditions) {
+      if (cond.flag !== undefined) {
+        const flagValue = gd.getFlag(cond.flag) ?? false
+        if (flagValue !== cond.value) return false
+      }
+    }
+    return true
   }
 
   private checkAutorunEvents(): void {
@@ -658,16 +862,9 @@ export class MapScene extends Phaser.Scene {
       }
     }
 
-    if (event.conditions && event.conditions.length > 0) {
-      for (const cond of event.conditions) {
-        if (cond.flag !== undefined) {
-          const flagValue = gd.getFlag(cond.flag) ?? false
-          if (flagValue !== cond.value) {
-            this.inEvent = false
-            return
-          }
-        }
-      }
+    if (!this.areEventConditionsMet(event)) {
+      this.inEvent = false
+      return
     }
 
     this.executeActions(event.actions, event.type === 'battle' ? event.id : undefined)
@@ -797,8 +994,19 @@ export class MapScene extends Phaser.Scene {
     this.inEvent = false
   }
 
-  private onBattleEnd(victory: boolean): void {
+  private onBattleEnd(victory: boolean, result?: { escaped?: boolean }): void {
+    if (!victory && !result?.escaped) {
+      this.pendingActions = []
+      this.pendingMapEventId = ''
+      this.inEvent = false
+      EventBus.emit(GameEvents.GAME_OVER)
+      this.scene.start('GameOverScene')
+      return
+    }
+
     this.scene.resume()
+    AudioManager.getInstance().setScene(this)
+    AudioManager.getInstance().playBGMForMap(this.mapData.id)
 
     if (this.pendingMapEventId) {
       const dv = DIRECTION_VECTORS[this.currentDir]!
@@ -852,26 +1060,8 @@ export class MapScene extends Phaser.Scene {
       if (event.type !== 'npc' || !event.sprite) continue
       const npc = this.npcs.get(event.id)
       if (!npc) continue
-      const originX = npc.x
-      const originY = npc.y
-      const timer = this.time.addEvent({
-        delay: 3000 + Math.random() * 4000,
-        loop: true,
-        callback: () => {
-          const dx = (Math.random() - 0.5) * TILE_SIZE * 2
-          const dy = (Math.random() - 0.5) * TILE_SIZE * 2
-          const nx = Phaser.Math.Clamp(originX + dx, originX - TILE_SIZE * 2, originX + TILE_SIZE * 2)
-          const ny = Phaser.Math.Clamp(originY + dy, originY - TILE_SIZE * 2, originY + TILE_SIZE * 2)
-          this.tweens.add({
-            targets: npc,
-            x: nx,
-            y: ny,
-            duration: 1000,
-            ease: 'Linear',
-          })
-        },
-      })
-      this.npcTimers.push(timer)
+      const behavior = this.fieldEntityBehaviors.get(event.id) ?? this.getNpcFieldBehavior(event)
+      this.scheduleFieldPatrol(event.id, npc, behavior, this.npcTimers)
     }
   }
 
@@ -928,7 +1118,12 @@ export class MapScene extends Phaser.Scene {
     EventBus.off(GameEvents.DIALOGUE_END, this.onDialogueEnd, this)
     EventBus.off(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.off(GameEvents.MENU_CLOSE, this.onMenuClose, this)
+    EventBus.off(GameEvents.FLAG_SET, this.handleFlagSet, this)
     window.removeEventListener('game-quicksave', this.handleQuickSave)
     window.removeEventListener('game-quickload', this.handleQuickLoad)
+    for (const timer of this.enemyPatrolTimers) timer.remove(false)
+    for (const timer of this.npcTimers) timer.remove(false)
+    this.enemyPatrolTimers = []
+    this.npcTimers = []
   }
 }

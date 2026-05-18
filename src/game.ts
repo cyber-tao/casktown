@@ -3,6 +3,7 @@ import { BootScene } from './scenes/BootScene'
 import { TitleScene } from './scenes/TitleScene'
 import { MapScene } from './scenes/MapScene'
 import { BattleScene } from './scenes/BattleScene'
+import { GameOverScene } from './scenes/GameOverScene'
 import { MenuOverlay } from './scenes/MenuOverlay'
 import { DialogueOverlay } from './scenes/DialogueOverlay'
 import { SettingsScene } from './scenes/SettingsScene'
@@ -33,7 +34,7 @@ export class CaskTownGame extends Phaser.Game {
           debug: false,
         },
       },
-      scene: [BootScene, TitleScene, MapScene, BattleScene, DialogueOverlay, MenuOverlay, SettingsScene, ShopOverlay, TrainingOverlay, RebuildOverlay, CodexOverlay, WorldMapOverlay],
+      scene: [BootScene, TitleScene, MapScene, BattleScene, GameOverScene, DialogueOverlay, MenuOverlay, SettingsScene, ShopOverlay, TrainingOverlay, RebuildOverlay, CodexOverlay, WorldMapOverlay],
       input: {
         keyboard: true,
         gamepad: true,

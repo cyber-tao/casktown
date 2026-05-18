@@ -110,6 +110,19 @@ export interface MapEvent {
   direction?: number
   actions: EventAction[]
   conditions?: EventCondition[]
+  fieldBehavior?: Partial<FieldEntityBehavior>
+}
+
+export type FieldEntityMode = 'idle' | 'wander' | 'guard' | 'chase' | 'ambush'
+
+export interface FieldEntityBehavior {
+  mode: FieldEntityMode
+  patrolRangeTiles: number
+  chaseDistanceTiles: number
+  interactionDistanceTiles: number
+  idleMinMs: number
+  idleMaxMs: number
+  moveDurationMs: number
 }
 
 export type EventAction =
