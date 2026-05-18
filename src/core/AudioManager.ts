@@ -88,6 +88,7 @@ export class AudioManager {
   private sfxMuted = false
   private voiceMuted = false
   private currentVoice: Phaser.Sound.BaseSound | null = null
+  private requestedVoiceKey = ''
   private sfxSynth: SFXSynth | null = null
 
   private constructor() {
@@ -229,11 +230,12 @@ export class AudioManager {
 
     const path = `audio/voice/${voiceKey}.ogg`
     const key = `voice_${voiceKey}`
+    this.requestedVoiceKey = key
 
     if (!this.scene.cache.audio.exists(key)) {
       this.scene.load.audio(key, path)
       this.scene.load.once(`filecomplete-audio-${key}`, () => {
-        if (this.scene) {
+        if (this.scene && this.requestedVoiceKey === key) {
           this.currentVoice = this.scene.sound.add(key, { volume, loop: false })
           this.currentVoice.play()
         }
@@ -253,6 +255,7 @@ export class AudioManager {
       this.currentVoice.stop()
     }
     this.currentVoice = null
+    this.requestedVoiceKey = ''
   }
 
   playBGMForMap(mapId: string): void {

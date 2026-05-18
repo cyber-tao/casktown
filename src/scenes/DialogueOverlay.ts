@@ -2,10 +2,22 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { TEXT_SPEED } from '../utils/constants'
+import {
+  DIALOGUE_BOX,
+  DIALOGUE_CHOICE,
+  DIALOGUE_FACE,
+  DIALOGUE_NAME_POSITION,
+  DIALOGUE_TEXT_POSITION,
+  DIALOGUE_TEXT_WIDTH,
+  DIALOGUE_TEXT_WRAP_CHARS,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  TEXT_SPEED,
+} from '../utils/constants'
 import { DIALOGUES } from '../data/dialogues'
 import { QuestSystem } from '../core/QuestSystem'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
+import voiceLines from '../../voice_lines.json'
 
 export interface DialogueScript {
   id: string
@@ -31,6 +43,37 @@ const SPEAKER_FACE_MAP: Record<string, string> = {
   预言: 'npc_priestess_sun',
   旁白: 'npc_barrel_spirit',
   系统: 'npc_qilin',
+}
+
+type VoiceLine = {
+  diaId: string
+  speaker: string
+  text: string
+  assetKey?: string
+}
+
+const VOICE_LINE_KEYS = (voiceLines as VoiceLine[]).reduce<Record<string, string[]>>((acc, line, index) => {
+  const mapKey = `${line.diaId}\n${line.speaker}\n${line.text}`
+  ;(acc[mapKey] ??= []).push(line.assetKey ?? `${line.diaId}_${index + 1}`)
+  return acc
+}, {})
+
+function wrapDialogueText(text: string): string[] {
+  const lines: string[] = []
+  for (const paragraph of text.split('\n')) {
+    let line = ''
+    for (const char of paragraph) {
+      line += char
+      if (line.length >= DIALOGUE_TEXT_WRAP_CHARS) {
+        lines.push(line)
+        line = ''
+      }
+    }
+    if (line.length > 0 || paragraph.length === 0) {
+      lines.push(line)
+    }
+  }
+  return lines
 }
 
 export class DialogueOverlay extends Phaser.Scene {
@@ -72,31 +115,31 @@ export class DialogueOverlay extends Phaser.Scene {
     this.currentScript = script
 
     // Darken background
-    this.bg = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.3)
+    this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.3)
     this.bg.setDepth(200)
     this.bg.setScrollFactor(0)
 
     // Dialogue box
-    const box = this.add.rectangle(480, 440, 900, 160, 0x2a2a3e, 0.95)
+    const box = this.add.rectangle(DIALOGUE_BOX.x, DIALOGUE_BOX.y, DIALOGUE_BOX.width, DIALOGUE_BOX.height, 0x2a2a3e, 0.95)
     box.setStrokeStyle(2, 0x5a5a7e)
     box.setDepth(201)
     box.setScrollFactor(0)
 
     // Face placeholder
-    this.faceRect = this.add.rectangle(110, 440, 120, 120, 0x3a3a4e)
+    this.faceRect = this.add.rectangle(DIALOGUE_FACE.x, DIALOGUE_FACE.y, DIALOGUE_FACE.size, DIALOGUE_FACE.size, 0x3a3a4e)
     this.faceRect.setStrokeStyle(2, 0x5a5a7e)
     this.faceRect.setDepth(201)
     this.faceRect.setScrollFactor(0)
 
     // Face image
-    this.faceImage = this.add.image(110, 440, '')
-    this.faceImage.setDisplaySize(120, 120)
+    this.faceImage = this.add.image(DIALOGUE_FACE.x, DIALOGUE_FACE.y, '')
+    this.faceImage.setDisplaySize(DIALOGUE_FACE.size, DIALOGUE_FACE.size)
     this.faceImage.setDepth(202)
     this.faceImage.setScrollFactor(0)
     this.faceImage.setVisible(false)
 
     // Name
-    this.nameText = this.add.text(50, 360, '', {
+    this.nameText = this.add.text(DIALOGUE_NAME_POSITION.x, DIALOGUE_NAME_POSITION.y, '', {
       fontSize: '18px',
       color: '#f1c40f',
       backgroundColor: '#2a2a3e',
@@ -106,11 +149,12 @@ export class DialogueOverlay extends Phaser.Scene {
     this.nameText.setScrollFactor(0)
 
     // Text
-    this.textObj = this.add.text(180, 380, '', {
+    this.textObj = this.add.text(DIALOGUE_TEXT_POSITION.x, DIALOGUE_TEXT_POSITION.y, '', {
       fontSize: '18px',
       color: '#e8e8f0',
-      wordWrap: { width: 720 },
+      wordWrap: { width: DIALOGUE_TEXT_WIDTH, useAdvancedWrap: true, callback: wrapDialogueText },
       lineSpacing: 6,
+      fixedWidth: DIALOGUE_TEXT_WIDTH,
     })
     this.textObj.setDepth(202)
     this.textObj.setScrollFactor(0)
@@ -138,14 +182,17 @@ export class DialogueOverlay extends Phaser.Scene {
     if (faceKey && this.textures.exists(faceKey)) {
       this.faceImage.setTexture(faceKey)
       this.faceImage.setVisible(true)
-      this.faceImage.setDisplaySize(120, 120)
+      this.faceImage.setDisplaySize(DIALOGUE_FACE.size, DIALOGUE_FACE.size)
     } else {
       this.faceImage.setVisible(false)
     }
 
-    // Play voice line
-    const voiceKey = `${this.currentScript.id}_${this.lineIndex}`
-    AudioManager.getInstance().playVoice(voiceKey, line.text)
+    const voiceKey = this.resolveVoiceKey(line)
+    if (voiceKey) {
+      AudioManager.getInstance().playVoice(voiceKey, line.text)
+    } else {
+      AudioManager.getInstance().stopVoice()
+    }
 
     this.charIndex = 0
     this.textObj.setText('')
@@ -196,29 +243,73 @@ export class DialogueOverlay extends Phaser.Scene {
   private showChoices(choices: DialogueChoice[]): void {
     this.inChoice = true
     this.choiceIndex = 0
-    const spacing = 26
-    const startY = Math.min(490, 530 - (choices.length - 1) * spacing)
+    const boxTop = DIALOGUE_BOX.y - DIALOGUE_BOX.height / 2
+    const boxBottom = DIALOGUE_BOX.y + DIALOGUE_BOX.height / 2
+    const minY = boxTop + DIALOGUE_BOX.padding
+    const maxBottom = boxBottom - DIALOGUE_BOX.padding
+    const availableHeight = maxBottom - minY
+    let gap: number = DIALOGUE_CHOICE.gap
 
     for (let i = 0; i < choices.length; i++) {
-      const text = this.add.text(200, startY + i * spacing, `  ${choices[i]!.text}`, {
-        fontSize: '15px',
+      const text = this.add.text(DIALOGUE_CHOICE.x, minY, `  ${choices[i]!.text}`, {
+        fontSize: `${DIALOGUE_CHOICE.fontSize}px`,
         color: '#c0c0d0',
-        wordWrap: { width: 500 },
+        wordWrap: { width: DIALOGUE_CHOICE.width, useAdvancedWrap: true },
+        fixedWidth: DIALOGUE_CHOICE.width,
       })
       text.setDepth(203)
       text.setScrollFactor(0)
       this.choices.push(text)
     }
 
-    this.cursor = this.add.rectangle(190, startY + 6, 8, 8, 0xf1c40f)
+    let totalHeight = this.getChoicesHeight(gap)
+    if (totalHeight > availableHeight) {
+      gap = DIALOGUE_CHOICE.minGap
+      totalHeight = this.getChoicesHeight(gap)
+    }
+    if (totalHeight > availableHeight) {
+      const fontSize = Math.max(DIALOGUE_CHOICE.minFontSize, Math.floor(DIALOGUE_CHOICE.fontSize * availableHeight / totalHeight))
+      for (const text of this.choices) {
+        text.setFontSize(fontSize)
+      }
+      totalHeight = this.getChoicesHeight(gap)
+    }
+    let currentY = Math.max(minY, maxBottom - totalHeight)
+    for (const text of this.choices) {
+      text.setY(currentY)
+      currentY += text.height + gap
+    }
+
+    this.cursor = this.add.rectangle(DIALOGUE_CHOICE.cursorX, this.getChoiceCursorY(), DIALOGUE_CHOICE.cursorSize, DIALOGUE_CHOICE.cursorSize, 0xf1c40f)
     this.cursor.setDepth(204)
     this.cursor.setScrollFactor(0)
+  }
+
+  private resolveVoiceKey(line: DialogueLine): string | null {
+    const mapKey = `${this.currentScript.id}\n${line.speaker}\n${line.text}`
+    const keys = VOICE_LINE_KEYS[mapKey]
+    if (!keys) return null
+    const occurrence = this.currentScript.lines
+      .slice(0, this.lineIndex + 1)
+      .filter(item => item.speaker === line.speaker && item.text === line.text)
+      .length - 1
+    return keys[occurrence] ?? null
+  }
+
+  private getChoicesHeight(gap: number): number {
+    return this.choices.reduce((sum, text) => sum + text.height, 0) + gap * Math.max(0, this.choices.length - 1)
+  }
+
+  private getChoiceCursorY(): number {
+    const choice = this.choices[this.choiceIndex]
+    if (!choice) return DIALOGUE_BOX.y
+    return choice.y + Math.min(choice.height, DIALOGUE_CHOICE.fontSize) / 2
   }
 
   private moveChoice(dir: number): void {
     if (!this.inChoice || this.choices.length === 0) return
     this.choiceIndex = (this.choiceIndex + dir + this.choices.length) % this.choices.length
-    this.cursor.setY(this.choices[this.choiceIndex]!.y + 6)
+    this.cursor.setY(this.getChoiceCursorY())
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -266,28 +357,31 @@ export class DialogueOverlay extends Phaser.Scene {
     const qs = QuestSystem.getInstance()
     for (const act of actions) {
       if (act.type === 'setFlag') {
-        gd.setFlag(act.flag as string, act.value)
+        gd.setFlag(act.flag, act.value)
+      }
+      if (act.type === 'setBranch') {
+        gd.updateBranch(act.branch, act.value)
       }
       if (act.type === 'addItem') {
-        gd.addItem(act.itemId as string, (act.quantity as number) || 1)
+        gd.addItem(act.itemId, act.quantity || 1)
       }
       if (act.type === 'addParty') {
-        gd.addPartyMember(act.characterId as string)
+        gd.addPartyMember(act.characterId)
       }
       if (act.type === 'questStart') {
-        qs.startQuest(act.questId as string)
+        qs.startQuest(act.questId)
       }
       if (act.type === 'questAdvance') {
-        qs.advanceQuest(act.questId as string, (act.amount as number) || 1)
+        qs.advanceQuest(act.questId, act.amount || 1)
       }
       if (act.type === 'questComplete') {
-        qs.completeQuest(act.questId as string)
+        qs.completeQuest(act.questId)
       }
       if (act.type === 'adjustTrust') {
-        gd.adjustTrust(act.characterId as string, (act.amount as number) || 1)
+        gd.adjustTrust(act.characterId, act.amount || 1)
       }
       if (act.type === 'adjustMercy') {
-        gd.adjustMercy((act.amount as number) || 1)
+        gd.adjustMercy(act.amount || 1)
       }
     }
   }

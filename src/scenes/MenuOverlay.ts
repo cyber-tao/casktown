@@ -7,7 +7,7 @@ import { AudioManager } from '../core/AudioManager'
 import { QUESTS } from '../data/quests'
 import { SKILLS } from '../data/skills'
 import { ITEMS } from '../data/items'
-import { GAME_WIDTH, GAME_HEIGHT } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, SAVE_SLOTS } from '../utils/constants'
 import type { CharacterData, ItemData } from '../data/types'
 
 export class MenuOverlay extends Phaser.Scene {
@@ -116,7 +116,7 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'load') {
-      const count = this.loadMode ? 4 : 5
+      const count = this.getSaveLoadMenuCount()
       this.loadCursorIndex = (this.loadCursorIndex - 1 + count) % count
       this.refreshLoadCursor()
       AudioManager.getInstance().playSFX('cursor')
@@ -142,7 +142,7 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'load') {
-      const count = this.loadMode ? 4 : 5
+      const count = this.getSaveLoadMenuCount()
       this.loadCursorIndex = (this.loadCursorIndex + 1) % count
       this.refreshLoadCursor()
       AudioManager.getInstance().playSFX('cursor')
@@ -231,7 +231,7 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'load') {
-      const maxIdx = this.loadMode ? 3 : 4
+      const maxIdx = this.getSaveLoadMenuCount() - 1
       if (this.loadCursorIndex > maxIdx) {
         this.showMainMenu()
         return
@@ -643,7 +643,11 @@ export class MenuOverlay extends Phaser.Scene {
     this.menuItems = []
 
     const sm = SaveManager.getInstance()
-    const items = ['保存到槽位1', '保存到槽位2', '保存到槽位3', '读取存档', '返回']
+    const items = [
+      ...Array.from({ length: SAVE_SLOTS }, (_, i) => `保存到槽位${i + 1}`),
+      '读取存档',
+      '返回',
+    ]
     for (let i = 0; i < items.length; i++) {
       this.addMenuText(items[i]!, 100 + i * 44)
     }
@@ -654,7 +658,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.cursor.setScrollFactor(0)
 
     this.contentArea.removeAll(true)
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= SAVE_SLOTS; i++) {
       const meta = sm.getMeta(i)
       const text = meta
         ? `槽位${i}: ${meta.preview} ${this.formatTime(meta.playTime)}`
@@ -670,9 +674,12 @@ export class MenuOverlay extends Phaser.Scene {
 
   private doSave(slot: number): void {
     const sm = SaveManager.getInstance()
-    if (slot === 3) {
-      // Load mode
+    if (slot === SAVE_SLOTS) {
       this.showLoadSlots()
+      return
+    }
+    if (slot > SAVE_SLOTS) {
+      this.showMainMenu()
       return
     }
     const success = sm.save(slot + 1)
@@ -681,7 +688,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.time.delayedCall(1000, () => {
       this.contentArea.removeAll(true)
       const sm2 = SaveManager.getInstance()
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= SAVE_SLOTS; i++) {
         const meta = sm2.getMeta(i)
         const text = meta
           ? `槽位${i}: ${meta.preview} ${this.formatTime(meta.playTime)}`
@@ -698,12 +705,12 @@ export class MenuOverlay extends Phaser.Scene {
     this.menuItems = []
 
     const sm = SaveManager.getInstance()
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= SAVE_SLOTS; i++) {
       const meta = sm.getMeta(i)
       const label = meta ? `读取槽位${i}` : `槽位${i} (空)`
       this.addMenuText(label, 100 + (i - 1) * 44)
     }
-    this.addMenuText('返回', 100 + 3 * 44)
+    this.addMenuText('返回', 100 + SAVE_SLOTS * 44)
 
     this.loadCursorIndex = 0
     this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
@@ -716,7 +723,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private doLoad(slot: number): void {
     const sm = SaveManager.getInstance()
-    if (slot >= 3) {
+    if (slot >= SAVE_SLOTS) {
       this.showSaveLoad()
       return
     }
@@ -741,6 +748,10 @@ export class MenuOverlay extends Phaser.Scene {
       this.contentArea.removeAll(true)
       this.addContentText('读取失败', 0)
     }
+  }
+
+  private getSaveLoadMenuCount(): number {
+    return SAVE_SLOTS + (this.loadMode ? 1 : 2)
   }
 
   private useSelectedItem(): void {

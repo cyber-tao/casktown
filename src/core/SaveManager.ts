@@ -1,5 +1,5 @@
 import { GameData } from './GameData'
-import { SAVE_SLOTS } from '../utils/constants'
+import { QUICK_SAVE_SLOT, SAVE_SLOTS } from '../utils/constants'
 
 const SAVE_KEY = 'casktown_save'
 
@@ -26,8 +26,12 @@ export class SaveManager {
     return SaveManager.instance
   }
 
+  private isValidSlot(slot: number): boolean {
+    return (slot >= 1 && slot <= SAVE_SLOTS) || slot === QUICK_SAVE_SLOT
+  }
+
   save(slot: number): boolean {
-    if (slot < 1 || slot > SAVE_SLOTS) return false
+    if (!this.isValidSlot(slot)) return false
     try {
       const data = this.gameData.serialize()
       const meta: SaveMeta = {
@@ -47,7 +51,7 @@ export class SaveManager {
   }
 
   load(slot: number): boolean {
-    if (slot < 1 || slot > SAVE_SLOTS) return false
+    if (!this.isValidSlot(slot)) return false
     try {
       const raw = localStorage.getItem(`${SAVE_KEY}_data_${slot}`)
       if (!raw) return false
@@ -74,18 +78,18 @@ export class SaveManager {
   }
 
   deleteSave(slot: number): boolean {
-    if (slot < 1 || slot > SAVE_SLOTS) return false
+    if (!this.isValidSlot(slot)) return false
     localStorage.removeItem(`${SAVE_KEY}_data_${slot}`)
     localStorage.removeItem(`${SAVE_KEY}_meta_${slot}`)
     return true
   }
 
   quickSave(): boolean {
-    return this.save(0)
+    return this.save(QUICK_SAVE_SLOT)
   }
 
   quickLoad(): boolean {
-    return this.load(0)
+    return this.load(QUICK_SAVE_SLOT)
   }
 
   exportSave(slot: number): string | null {
