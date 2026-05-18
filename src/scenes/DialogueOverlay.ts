@@ -35,6 +35,7 @@ const SPEAKER_FACE_MAP: Record<string, string> = {
   镇长: 'npc_mayor',
   木桶精灵: 'npc_barrel_spirit',
   菠萝大叔: 'npc_uncle_boluo',
+  船夫: 'npc_sailor',
   白虎: 'npc_white_tiger',
   凤凰: 'npc_phoenix',
   水瑶: 'npc_shuiyao',
@@ -54,6 +55,12 @@ type VoiceLine = {
 
 const VOICE_LINE_KEYS = (voiceLines as VoiceLine[]).reduce<Record<string, string[]>>((acc, line, index) => {
   const mapKey = `${line.diaId}\n${line.speaker}\n${line.text}`
+  ;(acc[mapKey] ??= []).push(line.assetKey ?? `${line.diaId}_${index + 1}`)
+  return acc
+}, {})
+
+const VOICE_LINE_TEXT_KEYS = (voiceLines as VoiceLine[]).reduce<Record<string, string[]>>((acc, line, index) => {
+  const mapKey = `${line.speaker}\n${line.text}`
   ;(acc[mapKey] ??= []).push(line.assetKey ?? `${line.diaId}_${index + 1}`)
   return acc
 }, {})
@@ -286,14 +293,15 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   private resolveVoiceKey(line: DialogueLine): string | null {
-    const mapKey = `${this.currentScript.id}\n${line.speaker}\n${line.text}`
-    const keys = VOICE_LINE_KEYS[mapKey]
-    if (!keys) return null
     const occurrence = this.currentScript.lines
       .slice(0, this.lineIndex + 1)
       .filter(item => item.speaker === line.speaker && item.text === line.text)
       .length - 1
-    return keys[occurrence] ?? null
+    const mapKey = `${this.currentScript.id}\n${line.speaker}\n${line.text}`
+    const keys = VOICE_LINE_KEYS[mapKey]
+    if (keys) return keys[occurrence] ?? keys[0] ?? null
+    const textKeys = VOICE_LINE_TEXT_KEYS[`${line.speaker}\n${line.text}`]
+    return textKeys?.[occurrence] ?? textKeys?.[0] ?? null
   }
 
   private getChoicesHeight(gap: number): number {
