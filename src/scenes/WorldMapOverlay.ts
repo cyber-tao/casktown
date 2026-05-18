@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_CONNECTION_LAYOUTS, WORLD_MAP_NODE_LAYOUTS } from '../utils/constants'
 
 interface MapNode {
   id: string
@@ -10,31 +10,14 @@ interface MapNode {
   x: number
   y: number
   requires: string[]
+  spawn: { x: number; y: number }
 }
 
-const MAP_NODES: MapNode[] = [
-  { id: 'MAP_001', name: '木桶镇', x: 200, y: 280, requires: [] },
-  { id: 'MAP_002', name: '木桶镇·广场', x: 240, y: 240, requires: ['festival_started'] },
-  { id: 'MAP_010', name: '奇妙森林入口', x: 360, y: 220, requires: [] },
-  { id: 'MAP_011', name: '奇妙森林围湖', x: 440, y: 180, requires: [] },
-  { id: 'MAP_012', name: '千年树种祭台', x: 520, y: 160, requires: [] },
-  { id: 'MAP_020', name: '码头航路', x: 200, y: 160, requires: [] },
-  { id: 'MAP_030', name: '圣水殿外路', x: 120, y: 100, requires: ['has_sacred_water'] },
-  { id: 'MAP_031', name: '圣水殿大厅', x: 80, y: 60, requires: ['has_sacred_water'] },
-  { id: 'MAP_040', name: '神殿山路', x: 600, y: 120, requires: [] },
-  { id: 'MAP_041', name: '七色路', x: 660, y: 80, requires: [] },
-  { id: 'MAP_042', name: '神殿', x: 720, y: 50, requires: [] },
-  { id: 'MAP_050', name: '生命之泉入口', x: 480, y: 340, requires: [] },
-  { id: 'MAP_051', name: '青龙潭', x: 420, y: 380, requires: ['has_millennium_seed'] },
-  { id: 'MAP_052', name: '白虎穴', x: 480, y: 400, requires: ['has_sacred_water'] },
-  { id: 'MAP_053', name: '朱雀林', x: 540, y: 380, requires: ['has_divine_laurel'] },
-  { id: 'MAP_054', name: '玄武殿', x: 600, y: 400, requires: ['defeated_chi_mei_wang'] },
-  { id: 'MAP_055', name: '轮回道', x: 560, y: 440, requires: ['released_four_seals'] },
-  { id: 'MAP_060', name: '魔宫入口', x: 720, y: 300, requires: [] },
-  { id: 'MAP_061', name: '黑暗沼泽', x: 760, y: 340, requires: ['fake_xiaoai_defeated'] },
-  { id: 'MAP_063', name: '地下魔宫', x: 800, y: 380, requires: ['fake_xiaoai_defeated'] },
-  { id: 'MAP_070', name: '人心之渊', x: 400, y: 480, requires: ['true_route_unlocked'] },
-]
+const MAP_NODES: MapNode[] = WORLD_MAP_NODE_LAYOUTS.map(node => ({
+  ...node,
+  requires: [...node.requires],
+  spawn: { ...node.spawn },
+}))
 
 export class WorldMapOverlay extends Phaser.Scene {
   private cursorIndex = 0
@@ -68,19 +51,8 @@ export class WorldMapOverlay extends Phaser.Scene {
     })
     hint.setOrigin(0.5).setScrollFactor(0).setDepth(201)
 
-    // Draw connections
-    const connections: [string, string][] = [
-      ['MAP_001', 'MAP_010'], ['MAP_001', 'MAP_020'], ['MAP_001', 'MAP_050'],
-      ['MAP_010', 'MAP_011'], ['MAP_011', 'MAP_012'],
-      ['MAP_020', 'MAP_030'], ['MAP_030', 'MAP_031'],
-      ['MAP_001', 'MAP_040'], ['MAP_040', 'MAP_041'], ['MAP_041', 'MAP_042'],
-      ['MAP_050', 'MAP_051'], ['MAP_051', 'MAP_052'], ['MAP_052', 'MAP_053'],
-      ['MAP_053', 'MAP_054'], ['MAP_054', 'MAP_055'],
-      ['MAP_001', 'MAP_060'], ['MAP_060', 'MAP_061'], ['MAP_061', 'MAP_063'],
-      ['MAP_001', 'MAP_070'],
-    ]
     const nodeMap = new Map(MAP_NODES.map(n => [n.id, n]))
-    for (const [fromId, toId] of connections) {
+    for (const [fromId, toId] of WORLD_MAP_CONNECTION_LAYOUTS) {
       const from = nodeMap.get(fromId)
       const to = nodeMap.get(toId)
       if (from && to) {
@@ -96,7 +68,7 @@ export class WorldMapOverlay extends Phaser.Scene {
     this.cursorIndex = 0
     for (let i = 0; i < MAP_NODES.length; i++) {
       const n = MAP_NODES[i]!
-      const unlocked = n.requires.length === 0 || n.requires.some(r => gd.getFlag(r) === true)
+      const unlocked = n.requires.length === 0 || n.requires.every(r => gd.getFlag(r) === true)
       const color = unlocked ? (n.id === gd.currentMap ? 0x2ecc71 : 0x3498db) : 0x7f8c8d
       const radius = unlocked ? 8 : 6
 
@@ -170,7 +142,7 @@ export class WorldMapOverlay extends Phaser.Scene {
 
     AudioManager.getInstance().playSFX('warp')
     gd.currentMap = n.data.id
-    gd.playerPosition = { x: 10, y: 10 }
+    gd.playerPosition = { ...n.data.spawn }
 
     this.scene.stop('WorldMapOverlay')
     this.scene.stop('MapScene')

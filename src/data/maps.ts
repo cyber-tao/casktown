@@ -1,4 +1,5 @@
-import type { MapData, MapLayer } from './types'
+import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
+import { REDESIGNED_MAP_LAYOUTS } from '../utils/constants'
 
 const T = {
   GRASS: 1, DIRT: 2, WATER: 3, TREE: 4, FLOWERS: 5,
@@ -22,6 +23,140 @@ function rect(layer: MapLayer, w: number, x: number, y: number, rw: number, rh: 
         layer.data[ny * w + nx] = val
       }
     }
+  }
+}
+
+type RedesignedMapId = keyof typeof REDESIGNED_MAP_LAYOUTS
+type TileName = keyof typeof T
+type EventBounds = { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+type LayoutArea = EventBounds & { readonly tile: string }
+type LayoutObject = { readonly x: number; readonly y: number; readonly tile: string }
+type LayoutTransfer = EventBounds & { readonly id: string; readonly targetMap: string; readonly targetX: number; readonly targetY: number; readonly direction: number }
+type RedesignLayout = {
+  readonly width: number
+  readonly height: number
+  readonly baseTile: string
+  readonly frameTile?: string
+  readonly frameThickness?: number
+  readonly groundRects: readonly LayoutArea[]
+  readonly objectRects?: readonly LayoutArea[]
+  readonly objectClearRects?: readonly EventBounds[]
+  readonly objects?: readonly LayoutObject[]
+  readonly eventPositions: Record<string, EventBounds>
+  readonly transfers: readonly LayoutTransfer[]
+  readonly encounters: readonly string[]
+  readonly encounterRate: number
+}
+
+const COLLISION_OBJECT_TILES = new Set<number>([
+  T.TREE, T.ROCK, T.FENCE, T.HOUSE, T.WELL, T.BUSH, T.STUMP, T.RUIN, T.BARREL, T.CAMPFIRE,
+])
+
+function tile(name: string): number {
+  return T[name as TileName]
+}
+
+function clearRect(layer: MapLayer, w: number, x: number, y: number, rw: number, rh: number): void {
+  rect(layer, w, x, y, rw, rh, 0)
+}
+
+function applyFrame(layer: MapLayer, w: number, h: number, frameTile: string | undefined, frameThickness: number | undefined): void {
+  if (!frameTile || !frameThickness) return
+  const val = tile(frameTile)
+  rect(layer, w, 0, 0, w, frameThickness, val)
+  rect(layer, w, 0, h - frameThickness, w, frameThickness, val)
+  rect(layer, w, 0, 0, frameThickness, h, val)
+  rect(layer, w, w - frameThickness, 0, frameThickness, h, val)
+}
+
+function collectCollisions(ground: MapLayer, objects: MapLayer): number[] {
+  const collisions: number[] = []
+  for (let i = 0; i < objects.data.length; i++) {
+    const objectTile = objects.data[i] ?? 0
+    const groundTile = ground.data[i] ?? 0
+    if ((groundTile === T.WATER && objectTile !== T.BRIDGE) || COLLISION_OBJECT_TILES.has(objectTile)) {
+      collisions.push(i)
+    }
+  }
+  return collisions
+}
+
+function applyEventBounds(event: MapEvent, bounds: EventBounds): MapEvent {
+  return { ...event, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+}
+
+function createTransferEvent(transfer: EventBounds & { readonly id: string; readonly targetMap: string; readonly targetX: number; readonly targetY: number }, existing?: MapEvent): MapEvent {
+  return {
+    ...existing,
+    id: transfer.id,
+    x: transfer.x,
+    y: transfer.y,
+    width: transfer.width,
+    height: transfer.height,
+    type: 'transfer',
+    trigger: 'touch',
+    actions: [{ type: 'transfer', targetMap: transfer.targetMap, targetX: transfer.targetX, targetY: transfer.targetY }],
+  }
+}
+
+function applyRedesignedLayout(map: MapData): MapData {
+  const layout = REDESIGNED_MAP_LAYOUTS[map.id as RedesignedMapId] as RedesignLayout | undefined
+  if (!layout) return map
+
+  const ground = createLayer(layout.width, layout.height, tile(layout.baseTile))
+  const objects = createLayer(layout.width, layout.height, 0)
+  ground.name = 'ground'
+  objects.name = 'objects'
+
+  applyFrame(objects, layout.width, layout.height, layout.frameTile, layout.frameThickness)
+
+  for (const area of layout.groundRects) {
+    rect(ground, layout.width, area.x, area.y, area.width, area.height, tile(area.tile))
+  }
+  for (const area of layout.objectRects ?? []) {
+    rect(objects, layout.width, area.x, area.y, area.width, area.height, tile(area.tile))
+  }
+  for (const area of layout.objectClearRects ?? []) {
+    clearRect(objects, layout.width, area.x, area.y, area.width, area.height)
+  }
+  for (const object of layout.objects ?? []) {
+    objects.data[object.y * layout.width + object.x] = tile(object.tile)
+  }
+
+  const eventPositions = layout.eventPositions
+  const transferById = new Map<string, LayoutTransfer>(layout.transfers.map(transfer => [transfer.id, transfer]))
+  const preservedEvents = map.events
+    .filter(event => event.type !== 'transfer' || transferById.has(event.id))
+    .map(event => {
+      const transfer = transferById.get(event.id)
+      if (transfer) return createTransferEvent(transfer, event)
+      const bounds = eventPositions[event.id]
+      return bounds ? applyEventBounds(event, bounds) : event
+    })
+  const preservedIds = new Set(preservedEvents.map(event => event.id))
+  for (const transfer of layout.transfers) {
+    if (!preservedIds.has(transfer.id)) {
+      preservedEvents.push(createTransferEvent(transfer))
+    }
+  }
+
+  const connections: MapConnection[] = layout.transfers.map(transfer => ({
+    targetMap: transfer.targetMap,
+    targetX: transfer.targetX,
+    targetY: transfer.targetY,
+    direction: transfer.direction,
+  }))
+
+  return {
+    ...map,
+    width: layout.width,
+    height: layout.height,
+    layers: [ground, objects],
+    collisions: collectCollisions(ground, objects),
+    events: preservedEvents,
+    encounters: [...layout.encounters],
+    encounterRate: layout.encounterRate,
+    connections,
   }
 }
 
@@ -1928,28 +2063,28 @@ function buildMap063(): MapData {
 }
 
 export const MAPS: Record<string, MapData> = {
-  MAP_001: buildMap001(),
-  MAP_002: buildMap002(),
-  MAP_010: buildMap010(),
-  MAP_011: buildMap011(),
-  MAP_012: buildMap012(),
-  MAP_020: buildMap020(),
-  MAP_030: buildMap030(),
-  MAP_031: buildMap031(),
-  MAP_040: buildMap040(),
-  MAP_041: buildMap041(),
-  MAP_042: buildMap042(),
-  MAP_050: buildMap050(),
-  MAP_051: buildMap051(),
-  MAP_052: buildMap052(),
-  MAP_053: buildMap053(),
-  MAP_054: buildMap054(),
-  MAP_055: buildMap055(),
-  MAP_060: buildMap060(),
-  MAP_061: buildMap061(),
-  MAP_062: buildMap062(),
-  MAP_063: buildMap063(),
-  MAP_070: buildMap070(),
+  MAP_001: applyRedesignedLayout(buildMap001()),
+  MAP_002: applyRedesignedLayout(buildMap002()),
+  MAP_010: applyRedesignedLayout(buildMap010()),
+  MAP_011: applyRedesignedLayout(buildMap011()),
+  MAP_012: applyRedesignedLayout(buildMap012()),
+  MAP_020: applyRedesignedLayout(buildMap020()),
+  MAP_030: applyRedesignedLayout(buildMap030()),
+  MAP_031: applyRedesignedLayout(buildMap031()),
+  MAP_040: applyRedesignedLayout(buildMap040()),
+  MAP_041: applyRedesignedLayout(buildMap041()),
+  MAP_042: applyRedesignedLayout(buildMap042()),
+  MAP_050: applyRedesignedLayout(buildMap050()),
+  MAP_051: applyRedesignedLayout(buildMap051()),
+  MAP_052: applyRedesignedLayout(buildMap052()),
+  MAP_053: applyRedesignedLayout(buildMap053()),
+  MAP_054: applyRedesignedLayout(buildMap054()),
+  MAP_055: applyRedesignedLayout(buildMap055()),
+  MAP_060: applyRedesignedLayout(buildMap060()),
+  MAP_061: applyRedesignedLayout(buildMap061()),
+  MAP_062: applyRedesignedLayout(buildMap062()),
+  MAP_063: applyRedesignedLayout(buildMap063()),
+  MAP_070: applyRedesignedLayout(buildMap070()),
 }
 
 export function getMap(id: string): MapData {
