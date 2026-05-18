@@ -6,9 +6,9 @@
 
 ## 项目起源
 
-《木桶镇 / CaskTown》起源于作者 Hoker.JT 学生时代参加“火客论坛”（Hoker）时，一群朋友共同产生的游戏想法。游戏里的角色都来自当时论坛里的朋友，那些昵称、性格和彼此之间的玩笑，构成了最早版本的角色关系与冒险气质。
+《木桶镇 / CaskTown》的灵感来自 Hoker.JT 学生时代参加“火客论坛”（Hoker）时，一群朋友共同产生的游戏想法。游戏里的角色都来自当时论坛里的朋友，那些昵称、性格和彼此之间的玩笑，构成了最早版本的角色关系与冒险气质。
 
-项目最初是在 DOS 环境下使用 QUICKBASIC 编写的。当前版本将这个学生时代的作品重制为网页形式，让它更容易被分享、打开和游玩，也让旧日设想能够以更完整的剧情、系统和美术资源重新呈现。
+最开始的游戏项目并不是 Hoker.JT 开发的，而是论坛里的其他朋友在 DOS 环境下使用 QUICKBASIC 编写的。当前仓库是 Hoker.JT 开发的网页重制版本，让这个学生时代的作品更容易被分享、打开和游玩，也让旧日设想能够以更完整的剧情、系统和美术资源重新呈现。
 
 ## 游戏介绍
 
@@ -81,6 +81,22 @@ doc/         游戏设计、剧情脚本、分支和战斗点文档
 [img/desiges](img/desiges) 收录项目的美术设定集与整合预览图，用于统一角色、敌人、地图和环境美术方向。当前包括主角与伙伴、NPC 与守护者、敌人设计、木桶镇俯视地图、世界地图，以及自然环境、圣殿和暗黑幻想区域的 tiles 参考。
 
 这些图片是开发与重制过程中的设计参考，不会被游戏运行时代码直接加载。运行时可用的切分资源位于 [assets/sprites](assets/sprites)，其来源和切分元数据位于 [img/sprites](img/sprites)。
+
+### 角色、NPC 与敌人
+
+| 主角与伙伴 | NPC 与守护者 | 敌人设计 |
+| --- | --- | --- |
+| ![主角与伙伴设定](img/desiges/char-heroes.png) | ![NPC 与守护者设定](img/desiges/char-npcs-guardians.png) | ![敌人设定](img/desiges/char-enemies.png) |
+
+### 地图与环境
+
+| 木桶镇俯视图 | 世界地图 |
+| --- | --- |
+| ![木桶镇俯视地图](img/desiges/map-town-overhead.png) | ![世界地图](img/desiges/map-world.png) |
+
+| 自然环境 tiles | 圣殿 tiles | 暗黑幻想 tiles |
+| --- | --- | --- |
+| ![自然环境 tiles 设定](img/desiges/env-nature-tiles.png) | ![圣殿 tiles 设定](img/desiges/env-holy-tiles.png) | ![暗黑幻想 tiles 设定](img/desiges/env-dark-tiles.png) |
 
 ## 美术资源流程
 
