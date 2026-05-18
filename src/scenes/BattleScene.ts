@@ -6,6 +6,7 @@ import { AudioManager } from '../core/AudioManager'
 import { BarrelSystem } from '../core/BarrelSystem'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { ENEMIES } from '../data/enemies'
+import { ENCOUNTERS } from '../data/encounters'
 import { SKILLS } from '../data/skills'
 import { ELEMENT_WEAKNESS, COMBO_TP_COST } from '../utils/constants'
 import type { CharacterData, EnemyData, SkillData } from '../data/types'
@@ -236,51 +237,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private getEnemiesForEncounter(encounterId: string): string[] {
-    switch (encounterId) {
-      case 'ENC_FOREST_1': return ['xiao_yao', 'xiao_yao']
-      case 'ENC_FOREST_2': return ['teng_yao', 'du_ye_chong']
-      case 'ENC_HOLY_1': return ['xiao_shuidi', 'xiao_shuidi']
-      case 'ENC_HOLY_2': return ['feng_defender', 'crystal_parasite']
-      case 'ENC_MOUNTAIN_1': return ['xiao_yao', 'teng_yao']
-      case 'ENC_MAZE_1': return ['miwang_ying', 'miwang_ying']
-      case 'BTL_001': return ['barrel_fake']
-      case 'BTL_002': return ['xiao_yao', 'xiao_yao', 'xiao_yao']
-      case 'BTL_101': return ['xiao_yao', 'xiao_yao']
-      case 'BTL_102': return ['teng_yao', 'teng_yao']
-      case 'BTL_103': return ['du_ye_chong', 'du_ye_chong', 'du_ye_chong']
-      case 'BTL_110': return ['baihu']
-      case 'BTL_111': return ['teng_yao', 'teng_yao', 'du_ye_chong', 'du_ye_chong']
-      case 'BTL_113': return ['barrel_fake', 'barrel_fake', 'xiao_yao']
-      case 'BTL_201': return ['shui_yao', 'feng_chi']
-      case 'BTL_310': return ['miwang_ying', 'miwang_ying', 'miwang_ying', 'miwang_ying']
-      case 'BTL_311A': return ['fenghuang']
-      case 'BTL_311B': return ['fenghuang', 'qilin']
-      case 'BTL_CHI': return ['chi']
-      case 'BTL_MEI': return ['mei']
-      case 'BTL_WANG': return ['wang']
-      case 'BTL_LIANG': return ['liang']
-      case 'BTL_FAKE_XIAOAI': return ['fake_xiaoai']
-      case 'BTL_XIAOAI_TRUE': return ['xiaoai_true']
-      case 'BTL_WUXIANG': return ['wuxiang']
-      case 'BTL_202A': return ['shui_yao']
-      case 'BTL_202B': return ['feng_chi']
-      case 'BTL_202C': return ['shui_yao', 'feng_chi']
-      case 'BTL_411': return ['chi']
-      case 'BTL_412': return ['mei']
-      case 'BTL_413': return ['wang']
-      case 'BTL_414': return ['liang']
-      case 'BTL_430': return ['fake_xiaoai']
-      case 'BTL_510': return ['miwang_ying', 'miwang_ying']
-      case 'BTL_512': return ['fake_xiaoai']
-      case 'BTL_520': return ['xiaoai_true']
-      case 'BTL_530': return ['wuxiang']
-      case 'BTL_601': return ['miwang_ying', 'bewilder_shadow', 'horned_wraith']
-      case 'BTL_602': return ['miwang_ying', 'bewilder_shadow', 'horned_wraith']
-      case 'BTL_603': return ['miwang_ying', 'bewilder_shadow', 'horned_wraith']
-      case 'BTL_604': return ['miwang_ying', 'bewilder_shadow', 'horned_wraith']
-      case 'BTL_605': return ['miwang_ying', 'bewilder_shadow', 'horned_wraith']
-      default: return ['xiao_yao']
+    const encounter = ENCOUNTERS[encounterId]
+    if (!encounter) {
+      console.warn(`Encounter ${encounterId} not found`)
+      return ['xiao_yao']
     }
+    return encounter.enemies
   }
 
   private createUnitUI(unit: BattleUnit, x: number, y: number): void {
@@ -1801,8 +1763,10 @@ export class BattleScene extends Phaser.Scene {
       AudioManager.getInstance().playVictoryBGM()
       // Grant exp
       const gd = GameData.getInstance()
+      this.syncPlayerState()
       let totalExp = 0
       for (const ed of this.enemyData) {
+        gd.setFlag(`defeated_${ed.id}`, true)
         totalExp += ed.exp
       }
       totalExp = Math.floor(totalExp * this.difficultyMult.exp)
@@ -1821,45 +1785,40 @@ export class BattleScene extends Phaser.Scene {
         }
       }
 
-      // Boss quest progression & flags
       const qs = QuestSystem.getInstance()
+      const encounter = ENCOUNTERS[this.encounterId]
+      if (encounter?.victoryFlag) {
+        gd.setFlag(encounter.victoryFlag, true)
+      }
+      if (encounter?.questId && encounter.questProgress) {
+        if (!qs.isQuestActive(encounter.questId) && !qs.isQuestCompleted(encounter.questId)) {
+          qs.startQuest(encounter.questId)
+        }
+        if (encounter.questProgress === 'complete') {
+          qs.completeQuest(encounter.questId)
+        } else {
+          qs.advanceQuest(encounter.questId)
+        }
+      }
+      if (encounter?.rewards) {
+        for (const reward of encounter.rewards) {
+          if (reward.itemId) {
+            gd.addItem(reward.itemId, reward.itemQty ?? 1)
+          }
+          if (reward.flag) {
+            gd.setFlag(reward.flag, reward.value ?? true)
+          }
+          if (reward.branch) {
+            gd.updateBranch(reward.branch, reward.branchValue ?? true)
+          }
+        }
+      }
+
+      if (this.mapEventId) {
+        gd.setFlag(`defeated_${this.mapEventId}`, true)
+      }
+
       for (const ed of this.enemyData) {
-        if (ed.isBoss) {
-          if (ed.id === 'baihu' && qs.isQuestActive('QST_003')) {
-            qs.completeQuest('QST_003')
-            gd.setFlag('white_tiger_respected', true)
-          }
-          if (ed.id === 'shui_yao' || ed.id === 'feng_chi') {
-            if (qs.isQuestActive('QST_006')) qs.advanceQuest('QST_006')
-          }
-          if ((ed.id === 'fenghuang' || ed.id === 'qilin') && qs.isQuestActive('QST_007')) {
-            qs.advanceQuest('QST_007')
-          }
-          if (ed.id === 'chi' || ed.id === 'mei' || ed.id === 'wang') {
-            gd.setFlag('defeated_chi_mei_wang', true)
-            if (qs.isQuestActive('QST_010')) qs.advanceQuest('QST_010')
-          }
-          if (ed.id === 'liang') {
-            gd.setFlag('released_four_seals', true)
-            if (qs.isQuestActive('QST_010')) qs.completeQuest('QST_010')
-          }
-          if (ed.id === 'fake_xiaoai') {
-            gd.setFlag('defeated_fake_xiaoai', true)
-            if (qs.isQuestActive('QST_012')) qs.advanceQuest('QST_012')
-          }
-          if (ed.id === 'xiaoai_true') {
-            gd.setFlag('xiaoai_purified', true)
-            if (qs.isQuestActive('QST_012')) qs.advanceQuest('QST_012')
-          }
-          if (ed.id === 'wuxiang') {
-            if (qs.isQuestActive('QST_013')) qs.completeQuest('QST_013')
-            gd.setFlag('game_cleared', true)
-          }
-        }
-        if (this.mapEventId) {
-          gd.setFlag(`defeated_${this.mapEventId}`, true)
-        }
-        // Enemy drops
         for (const drop of ed.drops) {
           if (Math.random() < drop.rate) {
             gd.addItem(drop.itemId, 1)
@@ -1875,6 +1834,16 @@ export class BattleScene extends Phaser.Scene {
 
     EventBus.emit(GameEvents.BATTLE_END, victory)
     this.scene.stop()
+  }
+
+  private syncPlayerState(): void {
+    for (const unit of this.units) {
+      if (!unit.isPlayer) continue
+      const char = unit.data as CharacterData
+      char.stats.hp = unit.stats.hp
+      char.stats.mp = unit.stats.mp
+      char.tp = unit.tp
+    }
   }
 
   private log(msg: string): void {

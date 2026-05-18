@@ -11,6 +11,14 @@ export const DIRECTION = {
   LEFT: 3,
 } as const
 
+export const START_MAP_ID = 'MAP_001'
+export const START_PLAYER_POSITION = { x: 15, y: 12 } as const
+export const START_PLAYER_DIRECTION = DIRECTION.DOWN
+export const START_PARTY = ['T'] as const
+export const DEFAULT_ENEMY_SPRITE_KEY = 'env_rock_large'
+export const MAP_MOVE_SPEED_TILES_PER_SECOND = 4
+export const FOLLOWER_MIN_DISTANCE_FACTOR = 0.5
+
 export const DIRECTION_VECTORS = [
   { x: 0, y: -1 },
   { x: 1, y: 0 },
@@ -33,7 +41,43 @@ export const TEXT_SPEED = {
   instant: 0,
 } as const
 
+export const DIALOGUE_TEXT_WIDTH = 720
+export const DIALOGUE_TEXT_WRAP_CHARS = 33
+export const DIALOGUE_BOX = {
+  x: GAME_WIDTH / 2,
+  y: 440,
+  width: 900,
+  height: 160,
+  padding: 18,
+} as const
+export const DIALOGUE_FACE = {
+  x: 110,
+  y: DIALOGUE_BOX.y,
+  size: 120,
+} as const
+export const DIALOGUE_NAME_POSITION = {
+  x: 50,
+  y: DIALOGUE_BOX.y - DIALOGUE_BOX.height / 2,
+} as const
+export const DIALOGUE_TEXT_POSITION = {
+  x: 180,
+  y: 380,
+} as const
+export const DIALOGUE_CHOICE = {
+  x: 200,
+  cursorX: 190,
+  cursorSize: 8,
+  width: 700,
+  fontSize: 15,
+  minFontSize: 12,
+  gap: 6,
+  minGap: 2,
+} as const
+
 export const SAVE_SLOTS = 3
+export const QUICK_SAVE_SLOT = SAVE_SLOTS + 1
+export const TRUE_ROUTE_MIN_MERCY = 3
+export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3
 
 export const ELEMENTS = {
   FIRE: 'fire',

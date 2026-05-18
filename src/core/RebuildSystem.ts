@@ -42,7 +42,7 @@ export class RebuildSystem {
     const gd = GameData.getInstance()
     const oldLevel = gd.rebuildLevel
     gd.rebuildLevel += amount
-    gd.branches.rebuild_level = gd.rebuildLevel
+    gd.updateBranch('rebuild_level', gd.rebuildLevel)
     if (gd.rebuildLevel !== oldLevel) {
       EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', gd.rebuildLevel)
       this.checkFacilityUnlocks()
@@ -52,7 +52,7 @@ export class RebuildSystem {
   setLevel(level: number): void {
     const gd = GameData.getInstance()
     gd.rebuildLevel = level
-    gd.branches.rebuild_level = level
+    gd.updateBranch('rebuild_level', level)
     EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', level)
     this.checkFacilityUnlocks()
   }

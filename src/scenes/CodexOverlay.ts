@@ -197,7 +197,8 @@ export class CodexOverlay extends Phaser.Scene {
       }
       for (let i = 0; i < PROPHECIES.length; i++) {
         const prophecy = PROPHECIES[i]!
-        const conditionMet = !prophecy.condition || gd.getFlag(prophecy.condition) === true || gd.hasFlag(prophecy.condition)
+        const conditionValue = prophecy.condition ? gd.getFlag(prophecy.condition) : true
+        const conditionMet = !prophecy.condition || conditionValue === true || (typeof conditionValue === 'number' && conditionValue > 0)
         const label = conditionMet ? `📖 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
         const color = conditionMet ? '#f39c12' : '#5a5a5a'
         const t = this.add.text(150, 90 + (STORY_BRANCH_COUNT + i) * 26, label, {

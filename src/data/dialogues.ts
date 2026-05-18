@@ -2674,3 +2674,54 @@ export const DIALOGUES: Record<string, DialogueScript> = {
     ],
   },
 }
+
+const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boolean }> = {
+  DIA_002_HUIHUI: { target: 'DIA_001_HELP' },
+  DIA_003_A: { target: 'DIA_101_COLD' },
+  DIA_004_MAYOR: { target: 'DIA_005_MAYOR' },
+  DIA_005_BARREL: { target: 'DIA_REBUILD_BOARD' },
+  DIA_006_FESTIVAL: { target: 'DIA_004_FESTIVAL', includeOnComplete: true },
+  DIA_202_PINE: { target: 'DIA_NPC_REBUILD1_PINE', includeOnComplete: true },
+  DIA_203_MAYOR: { target: 'DIA_NPC_REBUILD2_MAYOR' },
+  DIA_204_BARREL: { target: 'DIA_REBUILD_BOARD' },
+  DIA_205_SHOP: { target: 'DIA_SHOP_PINE', includeOnComplete: true },
+  DIA_206_TRAIN: { target: 'DIA_TRAINING', includeOnComplete: true },
+  DIA_105_TREE_1: { target: 'DIA_104_TREE_1', includeOnComplete: true },
+  DIA_105_TREE_2: { target: 'DIA_104_TREE_2' },
+  DIA_105_TREE_3: { target: 'DIA_104_TREE_3' },
+  DIA_106_ALTAR: { target: 'DIA_104_SEED' },
+  DIA_107_SAILOR: { target: 'DIA_201_BOAT' },
+  DIA_201_SHUIYAO: { target: 'DIA_202_SHUIYAO', includeOnComplete: true },
+  DIA_304_GET_LAUREL: { target: 'DIA_304_TEMPLE' },
+  DIA_511_POISON_GAS: { target: 'DIA_411_CHI_PRE' },
+  DIA_512_DRAGON_SEAL: { target: 'DIA_411_CHI_PRE' },
+  DIA_521_TIGER_MEMORY: { target: 'DIA_412_MEI_PRE' },
+  DIA_522_MEI_BATTLE: { target: 'DIA_412_MEI_PRE' },
+  DIA_531_WANG_BATTLE: { target: 'DIA_413_WANG_PRE' },
+  DIA_541_LIANG_BATTLE: { target: 'DIA_414_LIANG_PRE' },
+  DIA_542_GIANT_BEAST: { target: 'DIA_414_LIANG_PRE' },
+  DIA_551_DREAM_START: { target: 'DIA_420_REINCARNATION' },
+  DIA_552_MEMORY_1: { target: 'DIA_420_R2' },
+  DIA_553_MEMORY_2: { target: 'DIA_420_R3' },
+  DIA_554_MEMORY_3: { target: 'DIA_420_END' },
+  DIA_555_MEMORY_FINAL: { target: 'DIA_420_END' },
+  DIA_501_MASK: { target: 'DIA_501_CAPTURED' },
+  DIA_611_CHAIN_1: { target: 'DIA_510_SWAMP' },
+  DIA_612_CHAIN_2: { target: 'DIA_510_SWAMP_MOSS' },
+  DIA_613_CHAIN_3: { target: 'DIA_510_SWAMP_MECH' },
+  DIA_503_FAKE_XIAOAI: { target: 'DIA_520_PALACE', includeOnComplete: true },
+  DIA_631_XIAOAI_CONFRONT: { target: 'DIA_530_CHOICE' },
+  DIA_632_PURIFICATION: { target: 'DIA_530_PURIFY_SUCCESS' },
+  DIA_601_WUXIANG: { target: 'DIA_710_ENTER' },
+}
+
+for (const [alias, config] of Object.entries(DIALOGUE_ALIASES)) {
+  const target = DIALOGUES[config.target]
+  if (target) {
+    DIALOGUES[alias] = {
+      id: alias,
+      lines: target.lines,
+      ...(config.includeOnComplete && target.onComplete ? { onComplete: target.onComplete } : {}),
+    }
+  }
+}

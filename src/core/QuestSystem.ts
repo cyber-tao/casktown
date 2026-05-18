@@ -51,6 +51,7 @@ export class QuestSystem {
     const gd = GameData.getInstance()
     const state = gd.quests.get(questId)
     if (!state) return
+    if (state.status === 'completed') return
     state.status = 'completed'
     state.progress = state.maxProgress
     EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)

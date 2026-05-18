@@ -231,7 +231,7 @@ function buildMap010(): MapData {
     {
       id: 'CHEST_FOREST_1', x: 8, y: 6, width: 1, height: 1,
       type: 'chest', trigger: 'action',
-      actions: [{ type: 'addItem', itemId: 'heal_herb', quantity: 3 }],
+      actions: [{ type: 'addItem', itemId: 'heal_grass', quantity: 3 }],
     },
   ]
 
@@ -635,19 +635,19 @@ function buildMap030(): MapData {
     },
     {
       id: 'EVT_SHUIYAO_GATE', x: 14, y: 6, width: 4, height: 3,
-      type: 'battle', trigger: 'touch',
+      type: 'trigger', trigger: 'touch',
       actions: [{ type: 'dialogue', dialogueId: 'DIA_201_SHUIYAO' }],
     },
     {
       id: 'EVT_SHUIYAO_FENGCHI_BOSS', x: 15, y: 7, width: 2, height: 2,
       type: 'battle', trigger: 'touch',
       conditions: [{ flag: 'shuiyao_fengchi_defeated', value: false }],
-      actions: [{ type: 'battle', battleId: 'BTL_310', encounterId: 'ENC_SHUIYAO_FENGCHI' }],
+      actions: [{ type: 'battle', encounterId: 'ENC_SHUIYAO_FENGCHI' }],
     },
     {
       id: 'CHEST_HOLY_1', x: 26, y: 20, width: 1, height: 1,
       type: 'chest', trigger: 'action',
-      actions: [{ type: 'addItem', itemId: 'mp_potion', quantity: 2 }],
+      actions: [{ type: 'addItem', itemId: 'holy_drop', quantity: 2 }],
     },
     {
       id: 'CHEST_HOLY_2', x: 5, y: 6, width: 1, height: 1,
@@ -717,7 +717,7 @@ function buildMap031(): MapData {
       id: 'EVT_XIYUAN_QUIZ_BATTLE', x: 13, y: 9, width: 1, height: 1,
       type: 'battle', trigger: 'action',
       conditions: [{ flag: 'xiyuan_quiz_completed', value: false }],
-      actions: [{ type: 'battle', battleId: 'BTL_202A', encounterId: 'ENC_XIYUAN_QUIZ' }],
+      actions: [{ type: 'battle', encounterId: 'ENC_XIYUAN_QUIZ' }],
     },
   ]
 
@@ -797,7 +797,7 @@ function buildMap040(): MapData {
     {
       id: 'CHEST_MOUNTAIN_2', x: 5, y: 15, width: 1, height: 1,
       type: 'chest', trigger: 'action',
-      actions: [{ type: 'addItem', itemId: 'heal_herb', quantity: 5 }],
+      actions: [{ type: 'addItem', itemId: 'heal_grass', quantity: 5 }],
     },
   ]
 
@@ -875,14 +875,14 @@ function buildMap041(): MapData {
     },
     {
       id: 'EVT_PHOENIX_GATE', x: 12, y: 4, width: 4, height: 3,
-      type: 'battle', trigger: 'touch',
+      type: 'trigger', trigger: 'touch',
       actions: [{ type: 'dialogue', dialogueId: 'DIA_303_PHOENIX' }],
     },
     {
       id: 'EVT_PHOENIX_QILIN_BOSS', x: 13, y: 5, width: 2, height: 2,
       type: 'battle', trigger: 'touch',
       conditions: [{ flag: 'phoenix_qilin_defeated', value: false }],
-      actions: [{ type: 'battle', battleId: 'BTL_303', encounterId: 'ENC_PHOENIX_QILIN' }],
+      actions: [{ type: 'battle', encounterId: 'ENC_PHOENIX_QILIN' }],
     },
   ]
 
@@ -1175,7 +1175,7 @@ function buildMap062(): MapData {
       id: 'EVT_FAKE_XIAOAI_BOSS', x: 13, y: 10, width: 2, height: 2,
       type: 'battle', trigger: 'action',
       conditions: [{ flag: 'fake_xiaoai_defeated', value: false }],
-      actions: [{ type: 'battle', battleId: 'BTL_520', encounterId: 'ENC_FAKE_XIAOAI' }],
+      actions: [{ type: 'battle', encounterId: 'ENC_FAKE_XIAOAI' }],
     },
   ]
 
@@ -1709,7 +1709,7 @@ function buildMap055(): MapData {
     {
       id: 'CHEST_DREAM_1', x: 14, y: 9, width: 1, height: 1,
       type: 'chest', trigger: 'action',
-      actions: [{ type: 'addItem', itemId: 'xiaoai_fragment', quantity: 1 }],
+      actions: [{ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }],
     },
   ]
 

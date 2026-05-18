@@ -31,9 +31,9 @@ const MAP_NODES: MapNode[] = [
   { id: 'MAP_054', name: '玄武殿', x: 600, y: 400, requires: ['defeated_chi_mei_wang'] },
   { id: 'MAP_055', name: '轮回道', x: 560, y: 440, requires: ['released_four_seals'] },
   { id: 'MAP_060', name: '魔宫入口', x: 720, y: 300, requires: [] },
-  { id: 'MAP_061', name: '黑暗沼泽', x: 760, y: 340, requires: ['defeated_fake_xiaoai'] },
-  { id: 'MAP_063', name: '地下魔宫', x: 800, y: 380, requires: ['defeated_fake_xiaoai'] },
-  { id: 'MAP_070', name: '人心之渊', x: 400, y: 480, requires: ['xiaoai_purified'] },
+  { id: 'MAP_061', name: '黑暗沼泽', x: 760, y: 340, requires: ['fake_xiaoai_defeated'] },
+  { id: 'MAP_063', name: '地下魔宫', x: 800, y: 380, requires: ['fake_xiaoai_defeated'] },
+  { id: 'MAP_070', name: '人心之渊', x: 400, y: 480, requires: ['true_route_unlocked'] },
 ]
 
 export class WorldMapOverlay extends Phaser.Scene {

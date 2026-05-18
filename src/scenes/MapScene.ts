@@ -5,47 +5,33 @@ import { QuestSystem } from '../core/QuestSystem'
 import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
+import { SaveManager } from '../core/SaveManager'
 import { getMap } from '../data/maps'
-import { TILE_SIZE, GAME_WIDTH, GAME_HEIGHT, DIRECTION_VECTORS } from '../utils/constants'
+import { ENCOUNTERS } from '../data/encounters'
+import { TILE_SPRITES } from '../data/tileSprites'
+import {
+  DEFAULT_ENEMY_SPRITE_KEY,
+  FOLLOWER_MIN_DISTANCE_FACTOR,
+  MAP_MOVE_SPEED_TILES_PER_SECOND,
+  TILE_SIZE,
+  GAME_WIDTH,
+  GAME_HEIGHT,
+  DIRECTION_VECTORS,
+} from '../utils/constants'
 import type { MapData, MapEvent, EventAction } from '../data/types'
-
-export const TILE_SPRITES: Record<number, string> = {
-  1: 'env_grass_plain',
-  2: 'env_dirt_plain',
-  3: 'env_pond_round',
-  4: 'env_tree_round',
-  5: 'env_flowers_patch_pink',
-  6: 'env_rock_large',
-  7: 'env_fence_long',
-  8: 'env_wood_bridge',
-  9: 'obj_cottage',
-  10: 'env_well_small',
-  11: 'env_dirt_pebbles',
-  12: 'env_bush_round',
-  13: 'env_stump_plain',
-  14: 'obj_festival_plaza',
-  15: 'env_signpost',
-  16: 'env_barrel',
-  17: 'env_campfire',
-  18: 'env_bench',
-  19: 'env_lamp_post',
-  20: 'env_grass_clump_01',
-  21: 'env_flowers_patch_white',
-  22: 'env_sapling',
-  23: 'env_wheat',
-  24: 'env_cabbage',
-  25: 'env_farmland_plain',
-}
 
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
   private player!: Phaser.GameObjects.Sprite
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key }
+  private actionKeys!: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key }
   private isMoving = false
+  private moveStart = { x: 0, y: 0 }
   private moveTarget = { x: 0, y: 0 }
-  private moveProgress = 0
-  private moveSpeed = 4 // tiles per second
+  private moveElapsed = 0
+  private moveDuration = 0
+  private moveSpeed = MAP_MOVE_SPEED_TILES_PER_SECOND
   private currentDir = 2 // down
   private tileSprites: Phaser.GameObjects.Image[][] = []
   private npcs: Map<string, Phaser.GameObjects.Sprite> = new Map()
@@ -62,18 +48,31 @@ export class MapScene extends Phaser.Scene {
   private gpMenuPrev = false
   private battleEnemies: Map<string, Phaser.GameObjects.Sprite> = new Map()
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
+  private pendingActions: EventAction[] = []
+  private pendingMapEventId = ''
 
   constructor() {
     super({ key: 'MapScene' })
   }
 
+  private handleQuickSave = (): void => {
+    SaveManager.getInstance().quickSave()
+  }
+
+  private handleQuickLoad = (): void => {
+    if (SaveManager.getInstance().quickLoad()) {
+      this.scene.restart({ mapId: GameData.getInstance().currentMap })
+    }
+  }
+
   init(data: { mapId?: string }): void {
     const mapId = data.mapId || GameData.getInstance().currentMap
     this.mapData = getMap(mapId)
-    GameData.getInstance().currentMap = mapId
+    GameData.getInstance().currentMap = this.mapData.id
   }
 
   create(): void {
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this)
     this.inEvent = false
     this.isMoving = false
     this.tileSprites = []
@@ -82,6 +81,8 @@ export class MapScene extends Phaser.Scene {
     this.uiTexts = []
     this.battleEnemies = new Map()
     this.enemyPatrolTimers = []
+    this.pendingActions = []
+    this.pendingMapEventId = ''
 
     this.cameras.main.setBackgroundColor('#2d4a22')
     this.cameras.main.setBounds(0, 0, this.mapData.width * TILE_SIZE, this.mapData.height * TILE_SIZE)
@@ -107,6 +108,8 @@ export class MapScene extends Phaser.Scene {
     EventBus.on(GameEvents.DIALOGUE_END, this.onDialogueEnd, this)
     EventBus.on(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.on(GameEvents.MENU_CLOSE, this.onMenuClose, this)
+    window.addEventListener('game-quicksave', this.handleQuickSave)
+    window.addEventListener('game-quickload', this.handleQuickLoad)
 
     // Autorun events
     this.checkAutorunEvents()
@@ -244,7 +247,7 @@ export class MapScene extends Phaser.Scene {
       const sy = event.y * TILE_SIZE + TILE_SIZE / 2
       const encounterId = event.actions.find(a => a.type === 'battle')?.encounterId as string | undefined
       const spriteKey = this.getEnemySpriteKey(encounterId)
-      const textureKey = this.textures.exists(spriteKey) ? spriteKey : 'env_rock_large'
+      const textureKey = this.textures.exists(spriteKey) ? spriteKey : DEFAULT_ENEMY_SPRITE_KEY
       const enemySprite = this.add.sprite(sx, sy, textureKey)
       enemySprite.setDisplaySize(TILE_SIZE, TILE_SIZE)
       enemySprite.setDepth(10)
@@ -302,6 +305,7 @@ export class MapScene extends Phaser.Scene {
 
   private setupInput(): void {
     const kb = this.input.keyboard!
+    const bindings = InputManager.getInstance().getBindings()
     this.cursors = kb.createCursorKeys()
     this.wasd = {
       W: kb.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -309,11 +313,21 @@ export class MapScene extends Phaser.Scene {
       S: kb.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       D: kb.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     }
+    this.actionKeys = {
+      up: kb.addKey(bindings.up),
+      down: kb.addKey(bindings.down),
+      left: kb.addKey(bindings.left),
+      right: kb.addKey(bindings.right),
+    }
 
-    kb.on('keydown-SPACE', () => this.interact())
-    kb.on('keydown-ENTER', () => this.interact())
-    kb.on('keydown-TAB', () => this.openMenu())
-    kb.on('keydown-ESC', () => this.openMenu())
+    kb.on('keydown', (event: KeyboardEvent) => {
+      const input = InputManager.getInstance()
+      if (input.isConfirm(event.code)) {
+        this.interact()
+      } else if (input.isMenu(event.code) || input.isCancel(event.code)) {
+        this.openMenu()
+      }
+    })
   }
 
   private createUI(): void {
@@ -380,18 +394,16 @@ export class MapScene extends Phaser.Scene {
     let dy = 0
     let dir = this.currentDir
 
-    const wDown = this.wasd.W.isDown
-    const upDown = !!this.cursors.up?.isDown
-    if (upDown || wDown) {
+    if (!!this.cursors.up?.isDown || this.wasd.W.isDown || this.actionKeys.up.isDown) {
       dy = -1
       dir = 0
-    } else if (!!this.cursors.down?.isDown || this.wasd.S.isDown) {
+    } else if (!!this.cursors.down?.isDown || this.wasd.S.isDown || this.actionKeys.down.isDown) {
       dy = 1
       dir = 2
-    } else if (!!this.cursors.left?.isDown || this.wasd.A.isDown) {
+    } else if (!!this.cursors.left?.isDown || this.wasd.A.isDown || this.actionKeys.left.isDown) {
       dx = -1
       dir = 3
-    } else if (!!this.cursors.right?.isDown || this.wasd.D.isDown) {
+    } else if (!!this.cursors.right?.isDown || this.wasd.D.isDown || this.actionKeys.right.isDown) {
       dx = 1
       dir = 1
     }
@@ -476,35 +488,32 @@ export class MapScene extends Phaser.Scene {
 
   private startMove(tx: number, ty: number, dir: number): void {
     this.isMoving = true
+    this.moveStart = { x: this.player.x, y: this.player.y }
     this.moveTarget = { x: tx * TILE_SIZE + TILE_SIZE / 2, y: ty * TILE_SIZE + TILE_SIZE / 2 }
-    this.moveProgress = 0
+    this.moveElapsed = 0
+    const distance = Phaser.Math.Distance.Between(this.moveStart.x, this.moveStart.y, this.moveTarget.x, this.moveTarget.y)
+    this.moveDuration = distance / (this.moveSpeed * TILE_SIZE)
     this.currentDir = dir
     this.updatePlayerFrame()
   }
 
   private updateMovement(delta: number): void {
     const dt = delta / 1000
-    this.moveProgress += this.moveSpeed * TILE_SIZE * dt
+    this.moveElapsed += dt
 
-    const totalDist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.moveTarget.x, this.moveTarget.y)
-
-    // Save player's previous position for followers
     const prevPx = this.player.x
     const prevPy = this.player.y
+    const progress = this.moveDuration > 0 ? Math.min(1, this.moveElapsed / this.moveDuration) : 1
 
-    if (this.moveProgress >= totalDist) {
-      this.player.x = this.moveTarget.x
-      this.player.y = this.moveTarget.y
+    this.player.x = Phaser.Math.Linear(this.moveStart.x, this.moveTarget.x, progress)
+    this.player.y = Phaser.Math.Linear(this.moveStart.y, this.moveTarget.y, progress)
+
+    if (progress >= 1) {
       this.isMoving = false
       this.savePosition()
       this.checkTouchEvents()
-    } else {
-      const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.moveTarget.x, this.moveTarget.y)
-      this.player.x += Math.cos(angle) * this.moveSpeed * TILE_SIZE * dt
-      this.player.y += Math.sin(angle) * this.moveSpeed * TILE_SIZE * dt
     }
 
-    // Update followers - each follows the one ahead
     if (this.followers.length > 0) {
       let leadX = prevPx
       let leadY = prevPy
@@ -512,10 +521,11 @@ export class MapScene extends Phaser.Scene {
         const fPrevX = follower.x
         const fPrevY = follower.y
         const dist = Phaser.Math.Distance.Between(follower.x, follower.y, leadX, leadY)
-        if (dist > TILE_SIZE * 0.5) {
+        if (dist > TILE_SIZE * FOLLOWER_MIN_DISTANCE_FACTOR) {
           const angle = Phaser.Math.Angle.Between(follower.x, follower.y, leadX, leadY)
-          follower.x += Math.cos(angle) * this.moveSpeed * TILE_SIZE * dt
-          follower.y += Math.sin(angle) * this.moveSpeed * TILE_SIZE * dt
+          const step = Math.min(dist, this.moveSpeed * TILE_SIZE * dt)
+          follower.x += Math.cos(angle) * step
+          follower.y += Math.sin(angle) * step
           follower.setFlipX(Math.cos(angle) < 0)
         }
         leadX = fPrevX
@@ -651,7 +661,7 @@ export class MapScene extends Phaser.Scene {
     if (event.conditions && event.conditions.length > 0) {
       for (const cond of event.conditions) {
         if (cond.flag !== undefined) {
-          const flagValue = gd.getFlag(cond.flag)
+          const flagValue = gd.getFlag(cond.flag) ?? false
           if (flagValue !== cond.value) {
             this.inEvent = false
             return
@@ -698,72 +708,104 @@ export class MapScene extends Phaser.Scene {
 
   private onDialogueEnd(data?: { actions?: EventAction[] }): void {
     this.scene.resume()
-    this.inEvent = false
+    const pending = [...(data?.actions || []), ...this.pendingActions]
+    const mapEventId = this.pendingMapEventId
+    this.pendingActions = []
+    this.pendingMapEventId = ''
 
-    if (data?.actions && data.actions.length > 0) {
-      this.executeActions(data.actions)
+    if (pending.length > 0) {
+      this.inEvent = true
+      this.executeActions(pending, mapEventId)
+      return
     }
+    this.inEvent = false
   }
 
-  private executeActions(actions: EventAction[], mapEventId?: string): void {
+  private executeActions(actions: EventAction[], mapEventId = ''): void {
     const gd = GameData.getInstance()
     const qs = QuestSystem.getInstance()
-    for (const action of actions) {
+    for (let i = 0; i < actions.length; i++) {
+      const action = actions[i]!
       switch (action.type) {
         case 'dialogue':
-          this.startDialogue(action.dialogueId as string)
+          this.pendingActions = actions.slice(i + 1)
+          this.pendingMapEventId = mapEventId
+          this.startDialogue(action.dialogueId)
           return
         case 'battle':
-          this.startBattle(action.encounterId as string, mapEventId)
+          this.pendingActions = actions.slice(i + 1)
+          this.pendingMapEventId = mapEventId
+          this.startBattle(action.encounterId, mapEventId)
           return
         case 'transfer':
-          this.transferMap(action.targetMap as string, action.targetX as number, action.targetY as number)
+          this.pendingActions = []
+          this.pendingMapEventId = ''
+          this.transferMap(action.targetMap, action.targetX, action.targetY)
           return
         case 'questStart':
-          qs.startQuest(action.questId as string)
+          qs.startQuest(action.questId)
           break
         case 'questAdvance':
-          qs.advanceQuest(action.questId as string, (action.amount as number) || 1)
+          qs.advanceQuest(action.questId, action.amount || 1)
           break
         case 'questComplete':
-          qs.completeQuest(action.questId as string)
+          qs.completeQuest(action.questId)
           break
         case 'setFlag':
-          gd.setFlag(action.flag as string, action.value)
+          gd.setFlag(action.flag, action.value)
+          break
+        case 'setBranch':
+          gd.updateBranch(action.branch, action.value)
+          break
+        case 'adjustTrust':
+          gd.adjustTrust(action.characterId, action.amount || 1)
+          break
+        case 'adjustMercy':
+          gd.adjustMercy(action.amount || 1)
           break
         case 'addItem':
-          gd.addItem(action.itemId as string, (action.quantity as number) || 1)
+          gd.addItem(action.itemId, action.quantity || 1)
           break
         case 'addParty':
-          gd.addPartyMember(action.characterId as string)
+          gd.addPartyMember(action.characterId)
           break
         case 'rebuild':
-          RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, (action.level as number) || 0))
+          RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level || 0))
           break
         case 'shop':
+          this.pendingActions = actions.slice(i + 1)
+          this.pendingMapEventId = mapEventId
           this.scene.launch('ShopOverlay')
           this.scene.pause()
           return
         case 'training':
+          this.pendingActions = actions.slice(i + 1)
+          this.pendingMapEventId = mapEventId
           this.scene.launch('TrainingOverlay')
           this.scene.pause()
           return
         case 'rebuildMenu':
+          this.pendingActions = actions.slice(i + 1)
+          this.pendingMapEventId = mapEventId
           this.scene.launch('RebuildOverlay')
           this.scene.pause()
           return
       }
     }
+    this.pendingActions = []
+    this.pendingMapEventId = ''
+    this.inEvent = false
   }
 
-  private onBattleEnd(): void {
+  private onBattleEnd(victory: boolean): void {
     this.scene.resume()
-    this.inEvent = false
 
-    const dv = DIRECTION_VECTORS[this.currentDir]!
-    this.player.x -= dv.x * TILE_SIZE
-    this.player.y -= dv.y * TILE_SIZE
-    this.savePosition()
+    if (this.pendingMapEventId) {
+      const dv = DIRECTION_VECTORS[this.currentDir]!
+      this.player.x -= dv.x * TILE_SIZE
+      this.player.y -= dv.y * TILE_SIZE
+      this.savePosition()
+    }
 
     for (const [eventId, sprite] of this.battleEnemies) {
       const defeatedFlag = `defeated_${eventId}`
@@ -772,10 +814,30 @@ export class MapScene extends Phaser.Scene {
         this.battleEnemies.delete(eventId)
       }
     }
+
+    const pending = this.pendingActions
+    const mapEventId = this.pendingMapEventId
+    this.pendingActions = []
+    this.pendingMapEventId = ''
+    if (victory && pending.length > 0) {
+      this.inEvent = true
+      this.executeActions(pending, mapEventId)
+      return
+    }
+    this.inEvent = false
   }
 
   private onMenuClose(): void {
     this.scene.resume()
+    const pending = this.pendingActions
+    const mapEventId = this.pendingMapEventId
+    this.pendingActions = []
+    this.pendingMapEventId = ''
+    if (pending.length > 0) {
+      this.inEvent = true
+      this.executeActions(pending, mapEventId)
+      return
+    }
     this.inEvent = false
   }
 
@@ -814,36 +876,9 @@ export class MapScene extends Phaser.Scene {
   }
 
   private getEnemySpriteKey(encounterId?: string): string {
-    if (!encounterId) return 'env_rock_large'
-    const enemyMap: Record<string, string> = {
-      ENC_FOREST_1: 'xiao_yao',
-      ENC_FOREST_2: 'teng_yao',
-      ENC_HOLY_1: 'xiao_shuidi',
-      ENC_HOLY_2: 'feng_defender',
-      ENC_MOUNTAIN_1: 'xiao_yao',
-      ENC_MAZE_1: 'miwang_ying',
-      ENC_SPRING_POISON: 'xiao_shuidi',
-      ENC_SPRING_DARK: 'miwang_ying',
-      ENC_SPRING_FIRE: 'teng_yao',
-      ENC_SPRING_EARTH: 'feng_defender',
-      ENC_SPRING_FLYING: 'xiao_yao',
-      ENC_SWAMP_1: 'teng_yao',
-      ENC_SWAMP_AMBUSH: 'xiao_yao',
-    }
-    const enemyKey = enemyMap[encounterId]
-    if (enemyKey) return `mon_${enemyKey}_01`
-    if (encounterId.startsWith('BTL_')) {
-      const numericPart = encounterId.replace('BTL_', '')
-      if (/^\d/.test(numericPart)) return 'mon_xiao_yao_01'
-      if (numericPart.startsWith('CHI')) return 'mon_chi_01'
-      if (numericPart.startsWith('MEI')) return 'mon_mei_01'
-      if (numericPart.startsWith('WANG')) return 'mon_wang_01'
-      if (numericPart.startsWith('LIANG')) return 'mon_liang_01'
-      if (numericPart.startsWith('FAKE_XIAOAI')) return 'mon_fake_xiaoai_01'
-      if (numericPart.startsWith('XIAOAI_TRUE')) return 'mon_xiaoai_true_01'
-      if (numericPart.startsWith('WUXIANG')) return 'mon_wuxiang_01'
-    }
-    return 'mon_xiao_yao_01'
+    if (!encounterId) return DEFAULT_ENEMY_SPRITE_KEY
+    const enemyId = ENCOUNTERS[encounterId]?.enemies[0]
+    return enemyId ? `mon_${enemyId}_01` : DEFAULT_ENEMY_SPRITE_KEY
   }
 
   private createWeather(): void {
@@ -893,5 +928,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.off(GameEvents.DIALOGUE_END, this.onDialogueEnd, this)
     EventBus.off(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.off(GameEvents.MENU_CLOSE, this.onMenuClose, this)
+    window.removeEventListener('game-quicksave', this.handleQuickSave)
+    window.removeEventListener('game-quickload', this.handleQuickLoad)
   }
 }

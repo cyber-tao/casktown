@@ -70,6 +70,10 @@ export interface EncounterData {
   enemies: string[]
   background: string
   bgm: string
+  victoryFlag?: string
+  questId?: string
+  questProgress?: 'advance' | 'complete'
+  rewards?: { itemId?: string; itemQty?: number; flag?: string; value?: unknown; branch?: keyof BranchState; branchValue?: unknown }[]
 }
 
 export interface MapData {
@@ -108,10 +112,23 @@ export interface MapEvent {
   conditions?: EventCondition[]
 }
 
-export interface EventAction {
-  type: string
-  [key: string]: unknown
-}
+export type EventAction =
+  | { type: 'dialogue'; dialogueId: string }
+  | { type: 'battle'; encounterId: string }
+  | { type: 'transfer'; targetMap: string; targetX: number; targetY: number }
+  | { type: 'questStart'; questId: string }
+  | { type: 'questAdvance'; questId: string; amount?: number }
+  | { type: 'questComplete'; questId: string }
+  | { type: 'setFlag'; flag: string; value: unknown }
+  | { type: 'setBranch'; branch: keyof BranchState; value: unknown }
+  | { type: 'adjustTrust'; characterId: string; amount?: number }
+  | { type: 'adjustMercy'; amount?: number }
+  | { type: 'addItem'; itemId: string; quantity?: number }
+  | { type: 'addParty'; characterId: string }
+  | { type: 'rebuild'; level: number }
+  | { type: 'shop' }
+  | { type: 'training' }
+  | { type: 'rebuildMenu' }
 
 export interface EventCondition {
   flag?: string
