@@ -3,7 +3,6 @@ import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { AudioManager } from '../core/AudioManager'
-import { INITIAL_CHARACTERS } from '../data/characters'
 import { GAME_WIDTH, GAME_HEIGHT, START_MAP_ID } from '../utils/constants'
 
 export class TitleScene extends Phaser.Scene {
@@ -101,15 +100,6 @@ export class TitleScene extends Phaser.Scene {
   private startNewGame(): void {
     const gd = GameData.getInstance()
     gd.reset()
-    for (const id of Object.keys(INITIAL_CHARACTERS)) {
-      if (INITIAL_CHARACTERS[id]) {
-        gd.characters.set(id, JSON.parse(JSON.stringify(INITIAL_CHARACTERS[id])))
-      }
-    }
-    gd.initializeCharacterState()
-    gd.addItem('heal_grass', 3)
-    gd.addItem('pineapple_rice', 1)
-    gd.addItem('antidote', 2)
     this.cameras.main.fadeOut(500)
     this.time.delayedCall(500, () => {
       this.scene.start('MapScene', { mapId: START_MAP_ID })

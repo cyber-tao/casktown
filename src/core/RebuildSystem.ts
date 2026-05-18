@@ -1,4 +1,3 @@
-import { EventBus, GameEvents } from './EventBus'
 import { GameData } from './GameData'
 
 export interface RebuildFacility {
@@ -41,20 +40,19 @@ export class RebuildSystem {
   addProgress(amount: number): void {
     const gd = GameData.getInstance()
     const oldLevel = gd.rebuildLevel
-    gd.rebuildLevel += amount
-    gd.updateBranch('rebuild_level', gd.rebuildLevel)
+    gd.setFlag('rebuild_level', gd.rebuildLevel + amount)
     if (gd.rebuildLevel !== oldLevel) {
-      EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', gd.rebuildLevel)
       this.checkFacilityUnlocks()
     }
   }
 
   setLevel(level: number): void {
     const gd = GameData.getInstance()
-    gd.rebuildLevel = level
-    gd.updateBranch('rebuild_level', level)
-    EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', level)
-    this.checkFacilityUnlocks()
+    const oldLevel = gd.rebuildLevel
+    gd.setFlag('rebuild_level', level)
+    if (gd.rebuildLevel !== oldLevel) {
+      this.checkFacilityUnlocks()
+    }
   }
 
   canRebuild(requirement: number): boolean {

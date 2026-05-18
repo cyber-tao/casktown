@@ -1,6 +1,34 @@
-import Phaser from 'phaser'
+type EventHandler = (...args: unknown[]) => void
+type EventListener = { handler: EventHandler; context?: unknown }
 
-export const EventBus = new Phaser.Events.EventEmitter()
+class EventEmitter {
+  private listeners = new Map<string, EventListener[]>()
+
+  on<T extends unknown[]>(event: string, handler: (...args: T) => void, context?: unknown): this {
+    const listeners = this.listeners.get(event) ?? []
+    listeners.push({ handler: handler as EventHandler, context })
+    this.listeners.set(event, listeners)
+    return this
+  }
+
+  off<T extends unknown[]>(event: string, handler: (...args: T) => void, context?: unknown): this {
+    const listeners = this.listeners.get(event)
+    if (!listeners) return this
+    this.listeners.set(event, listeners.filter(listener => listener.handler !== handler as EventHandler || listener.context !== context))
+    return this
+  }
+
+  emit(event: string, ...args: unknown[]): boolean {
+    const listeners = this.listeners.get(event)
+    if (!listeners || listeners.length === 0) return false
+    for (const listener of [...listeners]) {
+      listener.handler.apply(listener.context, args)
+    }
+    return true
+  }
+}
+
+export const EventBus = new EventEmitter()
 
 export const GameEvents = {
   SAVE_REQUEST: 'save-request',

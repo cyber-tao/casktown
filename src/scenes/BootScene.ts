@@ -1,7 +1,6 @@
 import Phaser from 'phaser'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { INITIAL_CHARACTERS } from '../data/characters'
 import { TILE_SPRITES } from '../data/tileSprites'
 import { TILE_SIZE } from '../utils/constants'
 
@@ -206,17 +205,8 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     const gd = GameData.getInstance()
-    if (gd.party.length === 1 && gd.party[0] === 'T' && gd.characters.size === 0) {
-      for (const id of Object.keys(INITIAL_CHARACTERS)) {
-        if (INITIAL_CHARACTERS[id]) {
-          gd.characters.set(id, JSON.parse(JSON.stringify(INITIAL_CHARACTERS[id])))
-        }
-      }
-      gd.initializeCharacterState()
-      // Give initial items
-      gd.addItem('heal_grass', 3)
-      gd.addItem('pineapple_rice', 1)
-      gd.addItem('antidote', 2)
+    if (gd.characters.size === 0) {
+      gd.reset()
     }
 
     this.processTileTextures()

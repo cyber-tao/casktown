@@ -1,8 +1,12 @@
 import { EventBus, GameEvents } from './EventBus'
 import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, BranchState } from '../data/types'
+import { INITIAL_CHARACTERS, createCharacter } from '../data/characters'
 import {
   INITIAL_GOLD,
+  REBUILD_VISUAL_MAP_THRESHOLD,
+  REBUILT_TOWN_MAP_ID,
   START_MAP_ID,
+  START_INVENTORY_ITEMS,
   START_PARTY,
   START_PLAYER_DIRECTION,
   START_PLAYER_POSITION,
@@ -146,7 +150,7 @@ export class GameData {
     this.playerDirection = START_PLAYER_DIRECTION
     this.party = [...START_PARTY]
     this.reserve = []
-    this.characters = new Map()
+    this.characters = new Map(Object.keys(INITIAL_CHARACTERS).map(id => [id, createCharacter(id)]))
     this.baseStats = new Map()
     this.inventory = { items: {}, equipment: {} }
     this.equipment = {}
@@ -169,6 +173,10 @@ export class GameData {
       pixelSharp: true,
       fullscreen: false,
     }
+    for (const item of START_INVENTORY_ITEMS) {
+      this.inventory.items[item.itemId] = item.quantity
+    }
+    this.initializeCharacterState()
   }
 
   setFlag(key: string, value: unknown): void {
@@ -182,6 +190,9 @@ export class GameData {
     if (key === 'rebuild_level' && typeof value === 'number') {
       this.rebuildLevel = Math.max(this.rebuildLevel, value)
       this.branches.rebuild_level = this.rebuildLevel
+      if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
+        this.currentMap = REBUILT_TOWN_MAP_ID
+      }
     }
     this.syncProgressionFlags()
     EventBus.emit(GameEvents.FLAG_SET, key, value)
@@ -461,25 +472,41 @@ export class GameData {
     this.syncTrueRouteState()
   }
 
+  private cloneCharacter(char: CharacterData): CharacterData {
+    return {
+      ...char,
+      stats: { ...char.stats },
+      skills: [...char.skills],
+      equipment: { ...char.equipment },
+    }
+  }
+
+  private cloneEquipmentIndex(equipment: Record<string, string[]>): Record<string, string[]> {
+    return Object.fromEntries(Object.entries(equipment).map(([charId, itemIds]) => [charId, [...itemIds]]))
+  }
+
   serialize(): object {
     return {
       playTime: this.playTime,
       currentMap: this.currentMap,
-      playerPosition: this.playerPosition,
+      playerPosition: { ...this.playerPosition },
       playerDirection: this.playerDirection,
-      party: this.party,
-      reserve: this.reserve,
-      characters: Object.fromEntries(this.characters),
-      baseStats: Object.fromEntries(this.baseStats),
-      inventory: this.inventory,
-      equipment: this.equipment,
-      quests: Object.fromEntries(this.quests),
-      flags: this.flags,
-      branches: this.branches,
+      party: [...this.party],
+      reserve: [...this.reserve],
+      characters: Object.fromEntries(Array.from(this.characters.entries()).map(([id, char]) => [id, this.cloneCharacter(char)])),
+      baseStats: Object.fromEntries(Array.from(this.baseStats.entries()).map(([id, stats]) => [id, { ...stats }])),
+      inventory: {
+        items: { ...this.inventory.items },
+        equipment: { ...this.inventory.equipment },
+      },
+      equipment: this.cloneEquipmentIndex(this.equipment),
+      quests: Object.fromEntries(Array.from(this.quests.entries()).map(([id, quest]) => [id, { ...quest }])),
+      flags: { ...this.flags },
+      branches: { ...this.branches },
       rebuildLevel: this.rebuildLevel,
       gold: this.gold,
-      unlockedCodex: this.unlockedCodex,
-      settings: this.settings,
+      unlockedCodex: [...this.unlockedCodex],
+      settings: { ...this.settings },
     }
   }
 
@@ -487,23 +514,35 @@ export class GameData {
     const d = data as Record<string, unknown>
     this.playTime = (d.playTime as number) ?? 0
     this.currentMap = (d.currentMap as string) ?? START_MAP_ID
-    this.playerPosition = (d.playerPosition as { x: number; y: number }) ?? { ...START_PLAYER_POSITION }
+    this.playerPosition = { ...START_PLAYER_POSITION, ...((d.playerPosition as Partial<{ x: number; y: number }>) ?? {}) }
     this.playerDirection = (d.playerDirection as number) ?? START_PLAYER_DIRECTION
-    this.party = (d.party as string[]) ?? [...START_PARTY]
-    this.reserve = (d.reserve as string[]) ?? []
-    this.characters = new Map(Object.entries((d.characters as Record<string, CharacterData>) ?? {}))
-    this.inventory = (d.inventory as Inventory) ?? { items: {}, equipment: {} }
-    const serializedEquipment = (d.equipment as Record<string, string[]>) ?? {}
+    this.party = [...((d.party as string[] | undefined) ?? START_PARTY)]
+    this.reserve = [...((d.reserve as string[] | undefined) ?? [])]
+    const characters = d.characters as Record<string, CharacterData> | undefined
+    this.characters = characters && Object.keys(characters).length > 0
+      ? new Map(Object.entries(characters).map(([id, char]) => [id, this.cloneCharacter(char)]))
+      : new Map(Object.keys(INITIAL_CHARACTERS).map(id => [id, createCharacter(id)]))
+    for (const id of [...this.party, ...this.reserve]) {
+      if (!this.characters.has(id) && INITIAL_CHARACTERS[id]) {
+        this.characters.set(id, createCharacter(id))
+      }
+    }
+    const inventory = (d.inventory as Partial<Inventory>) ?? {}
+    this.inventory = {
+      items: { ...(inventory.items ?? {}) },
+      equipment: { ...(inventory.equipment ?? {}) },
+    }
+    const serializedEquipment = this.cloneEquipmentIndex((d.equipment as Record<string, string[]>) ?? {})
     const serializedBaseStats = d.baseStats as Record<string, CharacterStats> | undefined
     this.equipment = serializedEquipment
-    this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {}))
-    this.flags = (d.flags as GameFlags) ?? {}
+    this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {}).map(([id, quest]) => [id, { ...quest }]))
+    this.flags = { ...((d.flags as GameFlags) ?? {}) }
     this.branches = { ...createDefaultBranches(), ...((d.branches as Partial<BranchState>) ?? {}) }
     this.rebuildLevel = (d.rebuildLevel as number) ?? this.branches.rebuild_level
     this.branches.rebuild_level = this.rebuildLevel
     this.gold = (d.gold as number) ?? INITIAL_GOLD
-    this.unlockedCodex = (d.unlockedCodex as string[]) ?? []
-    this.settings = (d.settings as typeof this.settings) ?? this.settings
+    this.unlockedCodex = [...((d.unlockedCodex as string[] | undefined) ?? [])]
+    this.settings = { ...this.settings, ...((d.settings as Partial<typeof this.settings>) ?? {}) }
     this.syncEquipmentIndex(serializedEquipment)
     this.restoreBaseStats(serializedBaseStats, Object.keys(serializedEquipment).length > 0)
     for (const charId of this.characters.keys()) {
