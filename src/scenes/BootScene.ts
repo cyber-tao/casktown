@@ -2,7 +2,15 @@ import Phaser from 'phaser'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { TILE_SPRITES } from '../data/tileSprites'
-import { TILE_SIZE } from '../utils/constants'
+import {
+  CONTINUOUS_TERRAIN_TEXTURE_KEYS,
+  STRETCHED_TILE_TEXTURE_KEYS,
+  TILE_SIZE,
+  TILE_TEXTURE_DETAIL_ALPHA_OVERRIDES,
+  TILE_TEXTURE_INSET_OVERRIDES,
+  TILE_TEXTURE_PROCESSING,
+  TILE_SPRITE_FOOTPRINTS,
+} from '../utils/constants'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -116,6 +124,7 @@ export class BootScene extends Phaser.Scene {
     const npcImages: Record<string, string> = {
       npc_mayor: 'npcs_bosses/misc/mayor.png',
       npc_uncle_boluo: 'npcs_bosses/misc/uncle_boluo.png',
+      npc_sailor: 'npcs_bosses/misc/uncle_boluo.png',
       npc_barrel_spirit: 'npcs_bosses/misc/barrel_spirit.png',
       npc_barrel_spirit_idle: 'npcs_bosses/misc/barrel_spirit_idle.png',
       npc_barrel_spirit_guard: 'npcs_bosses/misc/barrel_spirit_guard.png',
@@ -215,15 +224,12 @@ export class BootScene extends Phaser.Scene {
 
   private processTileTextures(): void {
     const keys = new Set(Object.values(TILE_SPRITES))
-    const groundTiles = new Set([
-      'env_grass_plain',
-      'env_dirt_plain',
-      'env_pond_round',
-      'env_dirt_pebbles',
-      'env_farmland_plain',
-    ])
+    const groundTiles = new Set<string>(CONTINUOUS_TERRAIN_TEXTURE_KEYS)
+    const stretchObjects = new Set<string>(STRETCHED_TILE_TEXTURE_KEYS)
 
     for (const key of keys) {
+      if (TILE_SPRITE_FOOTPRINTS[key]) continue
+
       const texture = this.textures.get(key)
       if (!texture || texture.key === '__MISSING') continue
 
@@ -267,15 +273,22 @@ export class BootScene extends Phaser.Scene {
       ctx.imageSmoothingEnabled = false
 
       const isGround = groundTiles.has(key)
-      const stretchObjects = new Set(['env_fence_long', 'env_wood_bridge'])
 
       if (isGround) {
-        // Sample average color from center region for background fill
         let r = 0, g = 0, b = 0, count = 0
-        const cx = minX + Math.floor(cropW * 0.25)
-        const cy = minY + Math.floor(cropH * 0.25)
-        const cw = Math.floor(cropW * 0.5)
-        const ch = Math.floor(cropH * 0.5)
+        const insetOverride = TILE_TEXTURE_INSET_OVERRIDES[key]
+        const terrainInsetX = Math.floor(cropW * (insetOverride?.x ?? TILE_TEXTURE_PROCESSING.TERRAIN_INSET_RATIO))
+        const terrainInsetY = Math.floor(cropH * (insetOverride?.y ?? TILE_TEXTURE_PROCESSING.TERRAIN_INSET_RATIO))
+        const terrainSourceX = minX + terrainInsetX
+        const terrainSourceY = minY + terrainInsetY
+        const terrainSourceW = Math.max(1, cropW - terrainInsetX * 2)
+        const terrainSourceH = Math.max(1, cropH - terrainInsetY * 2)
+        const sampleInsetX = Math.floor(terrainSourceW * TILE_TEXTURE_PROCESSING.TERRAIN_SAMPLE_INSET_RATIO)
+        const sampleInsetY = Math.floor(terrainSourceH * TILE_TEXTURE_PROCESSING.TERRAIN_SAMPLE_INSET_RATIO)
+        const cx = terrainSourceX + sampleInsetX
+        const cy = terrainSourceY + sampleInsetY
+        const cw = Math.max(1, terrainSourceW - sampleInsetX * 2)
+        const ch = Math.max(1, terrainSourceH - sampleInsetY * 2)
         for (let y = cy; y < cy + ch; y++) {
           for (let x = cx; x < cx + cw; x++) {
             const idx = (y * source.width + x) * 4
@@ -291,14 +304,13 @@ export class BootScene extends Phaser.Scene {
           ctx.fillStyle = `rgb(${Math.floor(r / count)}, ${Math.floor(g / count)}, ${Math.floor(b / count)})`
           ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE)
         }
-        // Draw actual texture content stretched to tile size
-        ctx.drawImage(source, minX, minY, cropW, cropH, 0, 0, TILE_SIZE, TILE_SIZE)
+        ctx.globalAlpha = TILE_TEXTURE_DETAIL_ALPHA_OVERRIDES[key] ?? TILE_TEXTURE_PROCESSING.TERRAIN_DETAIL_ALPHA
+        ctx.drawImage(source, terrainSourceX, terrainSourceY, terrainSourceW, terrainSourceH, 0, 0, TILE_SIZE, TILE_SIZE)
+        ctx.globalAlpha = 1
       } else if (stretchObjects.has(key)) {
-        // Stretch to fill for connecting objects
         ctx.drawImage(source, minX, minY, cropW, cropH, 0, 0, TILE_SIZE, TILE_SIZE)
       } else {
-        // Object tile: center with margin
-        const margin = 2
+        const margin = TILE_TEXTURE_PROCESSING.OBJECT_MARGIN_PX
         const maxSize = TILE_SIZE - margin * 2
         const aspect = cropW / cropH
         let drawW: number

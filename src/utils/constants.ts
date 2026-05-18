@@ -4,6 +4,31 @@ export const GAME_HEIGHT = 540
 export const VIEWPORT_TILES_X = Math.ceil(GAME_WIDTH / TILE_SIZE)
 export const VIEWPORT_TILES_Y = Math.ceil(GAME_HEIGHT / TILE_SIZE)
 
+export const TILE_TEXTURE_PROCESSING = {
+  TERRAIN_INSET_RATIO: 0.24,
+  TERRAIN_SAMPLE_INSET_RATIO: 0.25,
+  TERRAIN_DETAIL_ALPHA: 0.2,
+  OBJECT_MARGIN_PX: 2,
+} as const
+
+export const TILE_TEXTURE_INSET_OVERRIDES: Record<string, { readonly x: number; readonly y: number }> = {
+  env_river_vertical: { x: 0.38, y: 0.12 },
+}
+
+export const TILE_TEXTURE_DETAIL_ALPHA_OVERRIDES: Record<string, number> = {
+  env_river_vertical: 0.12,
+}
+
+export const CONTINUOUS_TERRAIN_TEXTURE_KEYS = [
+  'env_grass_plain',
+  'env_dirt_plain',
+  'env_river_vertical',
+  'env_dirt_pebbles',
+  'env_farmland_plain',
+] as const
+
+export const STRETCHED_TILE_TEXTURE_KEYS = ['env_fence_long', 'env_wood_bridge'] as const
+
 export const DIRECTION = {
   UP: 0,
   RIGHT: 1,
@@ -16,6 +41,21 @@ export const REDESIGNED_TOWN_START_POSITION = { x: 22, y: 23 } as const
 export const START_PLAYER_POSITION = REDESIGNED_TOWN_START_POSITION
 export const START_PLAYER_DIRECTION = DIRECTION.DOWN
 export const START_PARTY = ['T'] as const
+export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
+  T: 't',
+  HUIHUI: 'huihui',
+  A: 'abo',
+  CONGCONG: 'congcong',
+  SUN: 'sun',
+  xiaoai: 'xiaoai',
+} as const
+export const DEFAULT_CHARACTER_SPRITE_BASE_KEY = CHARACTER_SPRITE_BASE_KEYS.T
+export const DEFAULT_CHARACTER_SPRITE_KEY = `${DEFAULT_CHARACTER_SPRITE_BASE_KEY}_front_idle_01`
+export const PARTY_FIELD_EVENT_CHARACTER_IDS: Record<string, string> = {
+  NPC_HUIHUI: 'HUIHUI',
+  NPC_A: 'A',
+  NPC_SUN: 'SUN',
+} as const
 export const RUINED_TOWN_MAP_ID = 'MAP_001'
 export const REBUILT_TOWN_MAP_ID = 'MAP_002'
 export const TOWN_MAP_IDS = [RUINED_TOWN_MAP_ID, REBUILT_TOWN_MAP_ID] as const
@@ -28,6 +68,21 @@ export const START_INVENTORY_ITEMS = [
 export const DEFAULT_ENEMY_SPRITE_KEY = 'env_rock_large'
 export const MAP_MOVE_SPEED_TILES_PER_SECOND = 4
 export const FOLLOWER_MIN_DISTANCE_FACTOR = 0.5
+export const FOLLOWER_TRAIL_OFFSETS = [
+  { x: 0, y: 1 },
+  { x: 0, y: 2 },
+  { x: 0, y: 3 },
+] as const
+export const FIELD_SPRITE_ANIMATION = {
+  FRAME_DURATION_MS: 180,
+  IDLE_FRAME_INDEX: 1,
+  FRAME_VARIANT_COUNT: 2,
+  FRAME_KEY_PAD_LENGTH: 2,
+  MOVEMENT_EPSILON_PX: 0.1,
+} as const
+export const CHARACTER_DIRECTION_FRAME_STEMS = ['back_idle', 'side_walk', 'front_idle', 'side_walk'] as const
+export const CHARACTER_DIRECTION_TEXTURE_PATTERN = /^(.*)_(front_idle|back_idle|side_walk)_0[12]$/
+export const SEQUENCE_TEXTURE_FRAME_PATTERN = /^(.*)_0[12]$/
 
 export const MAP_TILE_KEYS = {
   GRASS: 'GRASS',
@@ -55,6 +110,12 @@ export const MAP_TILE_KEYS = {
   WHEAT: 'WHEAT',
   CABBAGE: 'CABBAGE',
   FARMLAND: 'FARMLAND',
+} as const
+
+export const TILE_SPRITE_FOOTPRINTS: Record<string, { readonly width: number; readonly height: number }> = {
+  obj_cottage: { width: 3, height: 3 },
+  obj_festival_plaza: { width: 3, height: 3 },
+  env_well_small: { width: 2, height: 2 },
 } as const
 
 export const MAP_ENCOUNTER_RATES = {
@@ -108,7 +169,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     ],
     eventPositions: {
       EVT_START: { x: 22, y: 23, width: 1, height: 1 }, NPC_HUIHUI: { x: 24, y: 17, width: 1, height: 1 },
-      NPC_A: { x: 20, y: 17, width: 1, height: 1 }, NPC_MAYOR: { x: 22, y: 8, width: 1, height: 1 },
+      NPC_A: { x: 20, y: 17, width: 1, height: 1 }, NPC_MAYOR: { x: 25, y: 10, width: 1, height: 1 },
       NPC_BARREL: { x: 21, y: 15, width: 1, height: 1 }, EVT_FESTIVAL: { x: 20, y: 13, width: 5, height: 4 },
     },
     transfers: [
@@ -156,8 +217,8 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 3, y: 16, tile: MAP_TILE_KEYS.SIGN }, { x: 40, y: 16, tile: MAP_TILE_KEYS.SIGN }, { x: 22, y: 3, tile: MAP_TILE_KEYS.SIGN },
     ],
     eventPositions: {
-      NPC_PINE: { x: 10, y: 22, width: 1, height: 1 }, NPC_MAYOR_2: { x: 22, y: 8, width: 1, height: 1 },
-      NPC_BARREL_2: { x: 22, y: 16, width: 1, height: 1 }, SHOP_ITEM: { x: 31, y: 23, width: 1, height: 1 },
+      NPC_PINE: { x: 14, y: 23, width: 1, height: 1 }, NPC_MAYOR_2: { x: 25, y: 10, width: 1, height: 1 },
+      NPC_BARREL_2: { x: 21, y: 19, width: 1, height: 1 }, SHOP_ITEM: { x: 34, y: 24, width: 1, height: 1 },
       TRAIN_GROUND: { x: 12, y: 28, width: 2, height: 1 }, EVT_REBUILD_CEREMONY: { x: 19, y: 13, width: 7, height: 6 },
     },
     transfers: [
@@ -676,6 +737,16 @@ export const BATTLE_RESULT_PANEL = {
   overlayAlpha: 0.55,
   confirmPaddingX: 18,
   confirmPaddingY: 8,
+} as const
+
+export const BATTLE_TARGET_INDICATOR = {
+  width: 18,
+  height: 14,
+  offsetY: 46,
+  color: 0xf1c40f,
+  depth: 330,
+  tweenOffsetY: 6,
+  tweenDurationMs: 360,
 } as const
 
 export const GAME_OVER_PANEL = {

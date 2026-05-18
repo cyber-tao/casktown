@@ -1,5 +1,6 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { REDESIGNED_MAP_LAYOUTS } from '../utils/constants'
+import { REDESIGNED_MAP_LAYOUTS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
+import { TILE_SPRITES } from './tileSprites'
 
 const T = {
   GRASS: 1, DIRT: 2, WATER: 3, TREE: 4, FLOWERS: 5,
@@ -69,16 +70,40 @@ function applyFrame(layer: MapLayer, w: number, h: number, frameTile: string | u
   rect(layer, w, w - frameThickness, 0, frameThickness, h, val)
 }
 
-function collectCollisions(ground: MapLayer, objects: MapLayer): number[] {
-  const collisions: number[] = []
+function getTileFootprint(tileId: number): { readonly width: number; readonly height: number } | undefined {
+  const spriteKey = TILE_SPRITES[tileId]
+  return spriteKey ? TILE_SPRITE_FOOTPRINTS[spriteKey] : undefined
+}
+
+function addCollisionRect(collisions: Set<number>, mapWidth: number, mapHeight: number, x: number, y: number, width: number, height: number): void {
+  for (let dy = 0; dy < height; dy++) {
+    for (let dx = 0; dx < width; dx++) {
+      const nx = x + dx
+      const ny = y + dy
+      if (nx >= 0 && nx < mapWidth && ny >= 0 && ny < mapHeight) {
+        collisions.add(ny * mapWidth + nx)
+      }
+    }
+  }
+}
+
+function collectCollisions(ground: MapLayer, objects: MapLayer, mapWidth: number, mapHeight: number, placedObjects: readonly LayoutObject[] = []): number[] {
+  const collisions = new Set<number>()
   for (let i = 0; i < objects.data.length; i++) {
     const objectTile = objects.data[i] ?? 0
     const groundTile = ground.data[i] ?? 0
     if ((groundTile === T.WATER && objectTile !== T.BRIDGE) || COLLISION_OBJECT_TILES.has(objectTile)) {
-      collisions.push(i)
+      collisions.add(i)
     }
   }
-  return collisions
+  for (const object of placedObjects) {
+    const tileId = tile(object.tile)
+    const footprint = getTileFootprint(tileId)
+    if (footprint) {
+      addCollisionRect(collisions, mapWidth, mapHeight, object.x, object.y, footprint.width, footprint.height)
+    }
+  }
+  return [...collisions]
 }
 
 function applyEventBounds(event: MapEvent, bounds: EventBounds): MapEvent {
@@ -152,7 +177,7 @@ function applyRedesignedLayout(map: MapData): MapData {
     width: layout.width,
     height: layout.height,
     layers: [ground, objects],
-    collisions: collectCollisions(ground, objects),
+    collisions: collectCollisions(ground, objects, layout.width, layout.height, layout.objects ?? []),
     events: preservedEvents,
     encounters: [...layout.encounters],
     encounterRate: layout.encounterRate,
@@ -686,7 +711,7 @@ function buildMap020(): MapData {
   map.events = [
     {
       id: 'NPC_SAILOR', x: 18, y: 8, width: 1, height: 1,
-      type: 'npc', trigger: 'action', sprite: 'abo_front_idle_01', direction: 2,
+      type: 'npc', trigger: 'action', sprite: 'npc_sailor', direction: 2,
       actions: [{ type: 'dialogue', dialogueId: 'DIA_107_SAILOR' }],
     },
     {
@@ -845,7 +870,7 @@ function buildMap031(): MapData {
     },
     {
       id: 'NPC_XIYUAN', x: 13, y: 8, width: 1, height: 1,
-      type: 'npc', trigger: 'action', sprite: 'npc_shuiyao', direction: 2,
+      type: 'npc', trigger: 'action', sprite: 'npc_xiyuan', direction: 2,
       actions: [{ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN' }],
     },
     {

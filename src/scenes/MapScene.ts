@@ -11,17 +11,28 @@ import { ENCOUNTERS } from '../data/encounters'
 import { ENEMIES } from '../data/enemies'
 import { TILE_SPRITES } from '../data/tileSprites'
 import {
+  CHARACTER_SPRITE_BASE_KEYS,
+  CHARACTER_DIRECTION_FRAME_STEMS,
+  CHARACTER_DIRECTION_TEXTURE_PATTERN,
+  DEFAULT_CHARACTER_SPRITE_BASE_KEY,
+  DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
+  DIRECTION,
   FIELD_ENCOUNTER_RATE_THRESHOLDS,
   FIELD_ENCOUNTER_SPAWN_COUNTS,
   FIELD_ENTITY_BEHAVIOR,
   FIELD_ENTITY_BEHAVIOR_PRESETS,
+  FIELD_SPRITE_ANIMATION,
   FOLLOWER_MIN_DISTANCE_FACTOR,
+  FOLLOWER_TRAIL_OFFSETS,
   MAP_ENCOUNTER_RATES,
   MAP_MOVE_SPEED_TILES_PER_SECOND,
+  PARTY_FIELD_EVENT_CHARACTER_IDS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
+  SEQUENCE_TEXTURE_FRAME_PATTERN,
   RUINED_TOWN_MAP_ID,
+  TILE_SPRITE_FOOTPRINTS,
   TILE_SIZE,
   TOWN_MAP_IDS,
   GAME_WIDTH,
@@ -42,7 +53,7 @@ export class MapScene extends Phaser.Scene {
   private moveElapsed = 0
   private moveDuration = 0
   private moveSpeed = MAP_MOVE_SPEED_TILES_PER_SECOND
-  private currentDir = 2 // down
+  private currentDir: number = DIRECTION.DOWN
   private tileSprites: Phaser.GameObjects.Image[][] = []
   private npcs: Map<string, Phaser.GameObjects.Sprite> = new Map()
   private eventObjects: Phaser.GameObjects.Rectangle[] = []
@@ -52,6 +63,7 @@ export class MapScene extends Phaser.Scene {
   private mapNameText!: Phaser.GameObjects.Text
 
   private followers: Phaser.GameObjects.Sprite[] = []
+  private followerMemberIds: string[] = []
   private followerPositions: { x: number; y: number }[] = []
   private gpConfirmPrev = false
   private gpCancelPrev = false
@@ -60,9 +72,11 @@ export class MapScene extends Phaser.Scene {
   private battleEnemyEvents: Map<string, MapEvent> = new Map()
   private fieldEntityBehaviors: Map<string, FieldEntityBehavior> = new Map()
   private fieldEntityOrigins: Map<string, { x: number; y: number }> = new Map()
+  private fieldEntityDirections: Map<string, number> = new Map()
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
+  private animationTimeMs = 0
 
   constructor() {
     super({ key: 'MapScene' })
@@ -79,6 +93,11 @@ export class MapScene extends Phaser.Scene {
   }
 
   private handleFlagSet = (key: string, value: unknown): void => {
+    if (value === true && this.isJoinFlag(key)) {
+      this.removeSuppressedFieldEventSprites()
+      this.refreshFollowers()
+    }
+
     if (key !== 'rebuild_level' || typeof value !== 'number') return
     if (!TOWN_MAP_IDS.some(mapId => mapId === this.mapData.id)) return
 
@@ -86,6 +105,28 @@ export class MapScene extends Phaser.Scene {
     const nextMapId = value >= REBUILD_VISUAL_MAP_THRESHOLD ? REBUILT_TOWN_MAP_ID : RUINED_TOWN_MAP_ID
     gd.currentMap = nextMapId
     this.scene.restart({ mapId: nextMapId })
+  }
+
+  private isJoinFlag(key: string): boolean {
+    return key.endsWith('_joined')
+  }
+
+  private getCharacterSpriteBase(characterId: string): string {
+    return CHARACTER_SPRITE_BASE_KEYS[characterId] ?? characterId.toLowerCase()
+  }
+
+  private hasPartyMember(characterId: string): boolean {
+    const gd = GameData.getInstance()
+    return gd.party.includes(characterId) || gd.reserve.includes(characterId)
+  }
+
+  private isSuppressedFieldEvent(event: MapEvent): boolean {
+    const characterId = PARTY_FIELD_EVENT_CHARACTER_IDS[event.id]
+    return characterId ? this.hasPartyMember(characterId) : false
+  }
+
+  private isSpriteUsable(sprite: Phaser.GameObjects.Sprite): boolean {
+    return Boolean(sprite.active && sprite.scene)
   }
 
   init(data: { mapId?: string }): void {
@@ -143,6 +184,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   override update(time: number, delta: number): void {
+    this.animationTimeMs = time
     if (this.inEvent) return
 
     this.updateBattleEnemyBehavior(delta)
@@ -210,9 +252,12 @@ export class MapScene extends Phaser.Scene {
           const idx = resolveTile(raw)
           const spriteKey = TILE_SPRITES[idx]
           if (spriteKey) {
+            const footprint = TILE_SPRITE_FOOTPRINTS[spriteKey]
+            const widthTiles = footprint?.width ?? 1
+            const heightTiles = footprint?.height ?? 1
             const img = this.add.image(x * TILE_SIZE, y * TILE_SIZE, spriteKey)
             img.setOrigin(0, 0)
-            img.setDisplaySize(TILE_SIZE, TILE_SIZE)
+            img.setDisplaySize(widthTiles * TILE_SIZE, heightTiles * TILE_SIZE)
             img.setDepth(1)
           }
         }
@@ -225,39 +270,53 @@ export class MapScene extends Phaser.Scene {
     const px = gd.playerPosition.x
     const py = gd.playerPosition.y
     const leader = gd.party[0] || 'T'
-    const spriteKey = `${leader.toLowerCase()}_front_idle_01`
+    const leaderBase = this.getCharacterSpriteBase(leader)
+    const spriteKey = this.resolveTextureKey(`${leaderBase}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
 
     this.player = this.add.sprite(px * TILE_SIZE + TILE_SIZE / 2, py * TILE_SIZE + TILE_SIZE / 2, spriteKey)
     this.player.setDisplaySize(TILE_SIZE, TILE_SIZE)
     this.player.setDepth(10)
     this.currentDir = gd.playerDirection
-    this.updatePlayerFrame()
-
-    // Spawn party followers
-    this.followers = []
-    this.followerPositions = []
-    const dirs = [[0, 1], [0, 2], [0, 3]] // trail offsets
-    for (let i = 1; i < gd.party.length && i <= 3; i++) {
-      const memberId = gd.party[i]!
-      const key = `${memberId.toLowerCase()}_front_idle_01`
-      const ox = dirs[i - 1]![0]!
-      const oy = dirs[i - 1]![1]!
-      const fx = (px - ox) * TILE_SIZE + TILE_SIZE / 2
-      const fy = (py - oy) * TILE_SIZE + TILE_SIZE / 2
-      const follower = this.add.sprite(fx, fy, key)
-      follower.setDisplaySize(TILE_SIZE, TILE_SIZE)
-      follower.setDepth(9)
-      this.followers.push(follower)
-      this.followerPositions.push({ x: fx, y: fy })
-    }
+    this.updatePlayerFrame(false)
+    this.refreshFollowers()
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
     this.cameras.main.setFollowOffset(0, 0)
   }
 
+  private refreshFollowers(): void {
+    if (!this.player) return
+    for (const follower of this.followers) {
+      this.tweens.killTweensOf(follower)
+      follower.destroy()
+    }
+    this.followers = []
+    this.followerMemberIds = []
+    this.followerPositions = []
+    const gd = GameData.getInstance()
+    const px = Math.floor(this.player.x / TILE_SIZE)
+    const py = Math.floor(this.player.y / TILE_SIZE)
+    for (let i = 1; i < gd.party.length && i <= 3; i++) {
+      const memberId = gd.party[i]!
+      const memberBase = this.getCharacterSpriteBase(memberId)
+      const key = this.resolveTextureKey(`${memberBase}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
+      const offset = FOLLOWER_TRAIL_OFFSETS[i - 1]!
+      const fx = (px - offset.x) * TILE_SIZE + TILE_SIZE / 2
+      const fy = (py - offset.y) * TILE_SIZE + TILE_SIZE / 2
+      const follower = this.add.sprite(fx, fy, key)
+      follower.setDisplaySize(TILE_SIZE, TILE_SIZE)
+      follower.setDepth(9)
+      this.followers.push(follower)
+      this.followerMemberIds.push(memberBase)
+      this.followerPositions.push({ x: fx, y: fy })
+      this.updateDirectionalCharacterFrame(follower, memberBase, this.currentDir, false)
+    }
+  }
+
   private spawnNPCs(): void {
     for (const event of this.mapData.events) {
       if (event.type === 'npc' && event.sprite) {
+        if (this.isSuppressedFieldEvent(event) || !this.areEventConditionsMet(event)) continue
         const sx = event.x * TILE_SIZE + TILE_SIZE / 2
         const sy = event.y * TILE_SIZE + TILE_SIZE / 2
         const npc = this.add.sprite(sx, sy, event.sprite)
@@ -266,6 +325,7 @@ export class MapScene extends Phaser.Scene {
         this.npcs.set(event.id, npc)
         this.fieldEntityBehaviors.set(event.id, this.getNpcFieldBehavior(event))
         this.fieldEntityOrigins.set(event.id, { x: sx, y: sy })
+        this.updateFieldEntityFrame(event.id, npc, event.direction ?? DIRECTION.DOWN, false)
       }
     }
 
@@ -275,6 +335,21 @@ export class MapScene extends Phaser.Scene {
     }
 
     this.spawnRoamingBattleEnemies()
+  }
+
+  private removeSuppressedFieldEventSprites(): void {
+    for (const event of this.mapData.events) {
+      if (!this.isSuppressedFieldEvent(event)) continue
+      const npc = this.npcs.get(event.id)
+      if (npc) {
+        this.tweens.killTweensOf(npc)
+        npc.destroy()
+        this.npcs.delete(event.id)
+      }
+      this.fieldEntityBehaviors.delete(event.id)
+      this.fieldEntityOrigins.delete(event.id)
+      this.fieldEntityDirections.delete(event.id)
+    }
   }
 
   private spawnBattleEnemy(event: MapEvent): void {
@@ -294,6 +369,7 @@ export class MapScene extends Phaser.Scene {
     this.battleEnemies.set(event.id, enemySprite)
     this.battleEnemyEvents.set(event.id, event)
     this.fieldEntityOrigins.set(event.id, { x: sx, y: sy })
+    this.updateFieldEntityFrame(event.id, enemySprite, event.direction ?? DIRECTION.DOWN, false)
 
     const behavior = this.getBattleFieldBehavior(event)
     this.fieldEntityBehaviors.set(event.id, behavior)
@@ -356,6 +432,7 @@ export class MapScene extends Phaser.Scene {
 
   private isTileReservedByEvent(x: number, y: number): boolean {
     for (const event of this.mapData.events) {
+      if (this.isSuppressedFieldEvent(event)) continue
       if (this.checkEventCollision(event, x, y)) return true
     }
     for (const sprite of this.battleEnemies.values()) {
@@ -398,6 +475,7 @@ export class MapScene extends Phaser.Scene {
       loop: true,
       callback: () => {
         if (this.inEvent) return
+        if (!this.isSpriteUsable(sprite)) return
         if (this.isBattleEnemyChasing(id, sprite, behavior)) return
         this.moveFieldEntityWithinPatrol(id, sprite, behavior)
       },
@@ -406,6 +484,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private moveFieldEntityWithinPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior): void {
+    if (!this.isSpriteUsable(sprite)) return
     const origin = this.fieldEntityOrigins.get(id)
     if (!origin) return
     const range = behavior.patrolRangeTiles * TILE_SIZE
@@ -413,12 +492,16 @@ export class MapScene extends Phaser.Scene {
       const nx = Phaser.Math.Between(origin.x - range, origin.x + range)
       const ny = Phaser.Math.Between(origin.y - range, origin.y + range)
       if (!this.canFieldEntityOccupyPixel(nx, ny)) continue
+      const direction = this.getDirectionFromDelta(nx - sprite.x, ny - sprite.y, this.fieldEntityDirections.get(id) ?? DIRECTION.DOWN)
       this.tweens.add({
         targets: sprite,
         x: nx,
         y: ny,
         duration: behavior.moveDurationMs,
         ease: 'Linear',
+        onStart: () => this.updateFieldEntityFrame(id, sprite, direction, true),
+        onUpdate: () => this.updateFieldEntityFrame(id, sprite, direction, true),
+        onComplete: () => this.updateFieldEntityFrame(id, sprite, direction, false),
       })
       return
     }
@@ -426,25 +509,41 @@ export class MapScene extends Phaser.Scene {
 
   private updateBattleEnemyBehavior(delta: number): void {
     for (const [id, sprite] of this.battleEnemies) {
+      if (!this.isSpriteUsable(sprite)) {
+        this.battleEnemies.delete(id)
+        continue
+      }
       const behavior = this.fieldEntityBehaviors.get(id)
       if (!behavior || behavior.chaseDistanceTiles <= 0) continue
       const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
-      if (dist > behavior.chaseDistanceTiles * TILE_SIZE) continue
-      if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) continue
+      const currentDirection = this.fieldEntityDirections.get(id) ?? DIRECTION.DOWN
+      if (dist > behavior.chaseDistanceTiles * TILE_SIZE) {
+        this.updateFieldEntityFrame(id, sprite, currentDirection, false)
+        continue
+      }
+      if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) {
+        this.updateFieldEntityFrame(id, sprite, currentDirection, false)
+        continue
+      }
       this.tweens.killTweensOf(sprite)
       const angle = Phaser.Math.Angle.Between(sprite.x, sprite.y, this.player.x, this.player.y)
       const step = FIELD_ENTITY_BEHAVIOR.CHASE_SPEED_TILES_PER_SECOND * TILE_SIZE * delta / 1000
-      const nx = sprite.x + Math.cos(angle) * Math.min(step, dist)
-      const ny = sprite.y + Math.sin(angle) * Math.min(step, dist)
+      const moveX = Math.cos(angle) * Math.min(step, dist)
+      const moveY = Math.sin(angle) * Math.min(step, dist)
+      const nx = sprite.x + moveX
+      const ny = sprite.y + moveY
       if (this.canFieldEntityOccupyPixel(nx, ny)) {
         sprite.x = nx
         sprite.y = ny
-        sprite.setFlipX(Math.cos(angle) < 0)
+        this.updateFieldEntityFrame(id, sprite, this.getDirectionFromDelta(moveX, moveY, currentDirection), true)
+      } else {
+        this.updateFieldEntityFrame(id, sprite, currentDirection, false)
       }
     }
   }
 
   private isBattleEnemyChasing(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior): boolean {
+    if (!this.isSpriteUsable(sprite)) return false
     if (!this.battleEnemies.has(id) || behavior.chaseDistanceTiles <= 0) return false
     const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
     return dist <= behavior.chaseDistanceTiles * TILE_SIZE
@@ -452,6 +551,10 @@ export class MapScene extends Phaser.Scene {
 
   private checkBattleEnemyTouch(): boolean {
     for (const [id, sprite] of this.battleEnemies) {
+      if (!this.isSpriteUsable(sprite)) {
+        this.battleEnemies.delete(id)
+        continue
+      }
       const event = this.battleEnemyEvents.get(id)
       if (!event) continue
       const behavior = this.fieldEntityBehaviors.get(id) ?? this.getBattleFieldBehavior(event)
@@ -479,6 +582,7 @@ export class MapScene extends Phaser.Scene {
 
   private createEvents(): void {
     for (const event of this.mapData.events) {
+      if (this.isSuppressedFieldEvent(event) || !this.areEventConditionsMet(event)) continue
       if (event.type === 'chest') {
         const opened = GameData.getInstance().getFlag(`chest_opened_${event.id}`) === true
         if (!opened) {
@@ -597,25 +701,25 @@ export class MapScene extends Phaser.Scene {
 
     if (!!this.cursors.up?.isDown || this.wasd.W.isDown || this.actionKeys.up.isDown) {
       dy = -1
-      dir = 0
+      dir = DIRECTION.UP
     } else if (!!this.cursors.down?.isDown || this.wasd.S.isDown || this.actionKeys.down.isDown) {
       dy = 1
-      dir = 2
+      dir = DIRECTION.DOWN
     } else if (!!this.cursors.left?.isDown || this.wasd.A.isDown || this.actionKeys.left.isDown) {
       dx = -1
-      dir = 3
+      dir = DIRECTION.LEFT
     } else if (!!this.cursors.right?.isDown || this.wasd.D.isDown || this.actionKeys.right.isDown) {
       dx = 1
-      dir = 1
+      dir = DIRECTION.RIGHT
     }
 
     if (dx === 0 && dy === 0 && InputManager.getInstance().isGamepadEnabled()) {
       const gp = this.pollGamepadAxes()
       if (gp) {
-        if (gp.dy < -0.3) { dy = -1; dir = 0 }
-        else if (gp.dy > 0.3) { dy = 1; dir = 2 }
-        else if (gp.dx < -0.3) { dx = -1; dir = 3 }
-        else if (gp.dx > 0.3) { dx = 1; dir = 1 }
+        if (gp.dy < -0.3) { dy = -1; dir = DIRECTION.UP }
+        else if (gp.dy > 0.3) { dy = 1; dir = DIRECTION.DOWN }
+        else if (gp.dx < -0.3) { dx = -1; dir = DIRECTION.LEFT }
+        else if (gp.dx > 0.3) { dx = 1; dir = DIRECTION.RIGHT }
       }
     }
 
@@ -629,7 +733,7 @@ export class MapScene extends Phaser.Scene {
         this.startMove(tx, ty, dir)
       } else {
         this.currentDir = dir
-        this.updatePlayerFrame()
+        this.updatePlayerFrame(false)
       }
     }
   }
@@ -694,7 +798,7 @@ export class MapScene extends Phaser.Scene {
     const distance = Phaser.Math.Distance.Between(this.moveStart.x, this.moveStart.y, this.moveTarget.x, this.moveTarget.y)
     this.moveDuration = distance / (this.moveSpeed * TILE_SIZE)
     this.currentDir = dir
-    this.updatePlayerFrame()
+    this.updatePlayerFrame(true)
   }
 
   private updateMovement(delta: number): void {
@@ -707,9 +811,11 @@ export class MapScene extends Phaser.Scene {
 
     this.player.x = Phaser.Math.Linear(this.moveStart.x, this.moveTarget.x, progress)
     this.player.y = Phaser.Math.Linear(this.moveStart.y, this.moveTarget.y, progress)
+    this.updatePlayerFrame(progress < 1)
 
     if (progress >= 1) {
       this.isMoving = false
+      this.updatePlayerFrame(false)
       this.savePosition()
       this.checkTouchEvents()
     }
@@ -717,16 +823,24 @@ export class MapScene extends Phaser.Scene {
     if (this.followers.length > 0) {
       let leadX = prevPx
       let leadY = prevPy
-      for (const follower of this.followers) {
+      for (let i = 0; i < this.followers.length; i++) {
+        const follower = this.followers[i]!
+        const memberId = this.followerMemberIds[i]
         const fPrevX = follower.x
         const fPrevY = follower.y
         const dist = Phaser.Math.Distance.Between(follower.x, follower.y, leadX, leadY)
         if (dist > TILE_SIZE * FOLLOWER_MIN_DISTANCE_FACTOR) {
           const angle = Phaser.Math.Angle.Between(follower.x, follower.y, leadX, leadY)
           const step = Math.min(dist, this.moveSpeed * TILE_SIZE * dt)
-          follower.x += Math.cos(angle) * step
-          follower.y += Math.sin(angle) * step
-          follower.setFlipX(Math.cos(angle) < 0)
+          const moveX = Math.cos(angle) * step
+          const moveY = Math.sin(angle) * step
+          follower.x += moveX
+          follower.y += moveY
+          if (memberId) {
+            this.updateDirectionalCharacterFrame(follower, memberId, this.getDirectionFromDelta(moveX, moveY, this.currentDir), true)
+          }
+        } else if (memberId) {
+          this.updateDirectionalCharacterFrame(follower, memberId, this.currentDir, false)
         }
         leadX = fPrevX
         leadY = fPrevY
@@ -734,13 +848,77 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-  private updatePlayerFrame(): void {
+  private getAnimationFrameIndex(): number {
+    return (
+      Math.floor(this.animationTimeMs / FIELD_SPRITE_ANIMATION.FRAME_DURATION_MS) %
+      FIELD_SPRITE_ANIMATION.FRAME_VARIANT_COUNT
+    ) + FIELD_SPRITE_ANIMATION.IDLE_FRAME_INDEX
+  }
+
+  private formatFrameIndex(frameIndex: number): string {
+    return String(frameIndex).padStart(FIELD_SPRITE_ANIMATION.FRAME_KEY_PAD_LENGTH, '0')
+  }
+
+  private resolveTextureKey(primaryKey: string, fallbackKey: string): string | null {
+    if (this.textures.exists(primaryKey)) return primaryKey
+    if (this.textures.exists(fallbackKey)) return fallbackKey
+    return null
+  }
+
+  private getDirectionFromDelta(dx: number, dy: number, fallback: number): number {
+    if (Math.abs(dx) <= FIELD_SPRITE_ANIMATION.MOVEMENT_EPSILON_PX && Math.abs(dy) <= FIELD_SPRITE_ANIMATION.MOVEMENT_EPSILON_PX) {
+      return fallback
+    }
+    if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? DIRECTION.RIGHT : DIRECTION.LEFT
+    return dy > 0 ? DIRECTION.DOWN : DIRECTION.UP
+  }
+
+  private updateDirectionalCharacterFrame(sprite: Phaser.GameObjects.Sprite, baseKey: string, direction: number, moving: boolean): boolean {
+    if (!this.isSpriteUsable(sprite)) return false
+    const frameStem = CHARACTER_DIRECTION_FRAME_STEMS[direction] ?? CHARACTER_DIRECTION_FRAME_STEMS[DIRECTION.DOWN]
+    const frameIndex = moving ? this.getAnimationFrameIndex() : FIELD_SPRITE_ANIMATION.IDLE_FRAME_INDEX
+    const frameSuffix = this.formatFrameIndex(frameIndex)
+    const idleSuffix = this.formatFrameIndex(FIELD_SPRITE_ANIMATION.IDLE_FRAME_INDEX)
+    const textureKey = this.resolveTextureKey(`${baseKey}_${frameStem}_${frameSuffix}`, `${baseKey}_${frameStem}_${idleSuffix}`)
+    if (!textureKey) return false
+    sprite.setTexture(textureKey)
+    sprite.setFlipX(direction === DIRECTION.LEFT)
+    return true
+  }
+
+  private getDirectionalCharacterBase(textureKey: string): string | null {
+    const match = textureKey.match(CHARACTER_DIRECTION_TEXTURE_PATTERN)
+    return match?.[1] ? match[1] : null
+  }
+
+  private updateSequenceFrame(sprite: Phaser.GameObjects.Sprite, moving: boolean): void {
+    if (!this.isSpriteUsable(sprite)) return
+    const match = sprite.texture.key.match(SEQUENCE_TEXTURE_FRAME_PATTERN)
+    const baseKey = match?.[1]
+    if (!baseKey) return
+    const frameIndex = moving ? this.getAnimationFrameIndex() : FIELD_SPRITE_ANIMATION.IDLE_FRAME_INDEX
+    const textureKey = `${baseKey}_${this.formatFrameIndex(frameIndex)}`
+    if (this.textures.exists(textureKey)) {
+      sprite.setTexture(textureKey)
+    }
+  }
+
+  private updateFieldEntityFrame(id: string, sprite: Phaser.GameObjects.Sprite, direction: number, moving: boolean): void {
+    if (!this.isSpriteUsable(sprite)) return
+    this.fieldEntityDirections.set(id, direction)
+    const directionalBase = this.getDirectionalCharacterBase(sprite.texture.key)
+    if (directionalBase && this.updateDirectionalCharacterFrame(sprite, directionalBase, direction, moving)) {
+      return
+    }
+    this.updateSequenceFrame(sprite, moving)
+    if (direction === DIRECTION.LEFT || direction === DIRECTION.RIGHT) {
+      sprite.setFlipX(direction === DIRECTION.LEFT)
+    }
+  }
+
+  private updatePlayerFrame(moving: boolean): void {
     const leader = GameData.getInstance().party[0] || 'T'
-    const name = leader.toLowerCase()
-    const frames = ['back_idle_01', 'side_walk_01', 'front_idle_01', 'side_walk_01']
-    const frame = frames[this.currentDir]
-    this.player.setTexture(`${name}_${frame}`)
-    this.player.setFlipX(this.currentDir === 3)
+    this.updateDirectionalCharacterFrame(this.player, this.getCharacterSpriteBase(leader), this.currentDir, moving)
   }
 
   private savePosition(): void {
@@ -759,6 +937,7 @@ export class MapScene extends Phaser.Scene {
     if (this.checkBattleEnemyTouch()) return
 
     for (const event of this.mapData.events) {
+      if (this.isSuppressedFieldEvent(event)) continue
       if (event.type === 'battle') continue
       if (event.trigger !== 'touch' && event.trigger !== 'autorun') continue
       if (this.checkEventCollision(event, px, py)) {
@@ -779,6 +958,7 @@ export class MapScene extends Phaser.Scene {
     const fy = py + dy
 
     for (const event of this.mapData.events) {
+      if (this.isSuppressedFieldEvent(event)) continue
       if (event.trigger !== 'action') continue
       if (this.canInteractWithEvent(event, px, py, fx, fy)) {
         this.triggerEvent(event)
@@ -788,6 +968,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private canInteractWithEvent(event: MapEvent, px: number, py: number, fx: number, fy: number): boolean {
+    if (this.isSuppressedFieldEvent(event)) return false
     const sprite = event.type === 'npc' ? this.npcs.get(event.id) : event.type === 'battle' ? this.battleEnemies.get(event.id) : undefined
     if (sprite) {
       const behavior = this.fieldEntityBehaviors.get(event.id)
@@ -822,6 +1003,7 @@ export class MapScene extends Phaser.Scene {
     const py = Math.floor(this.player.y / TILE_SIZE)
 
     for (const event of this.mapData.events) {
+      if (this.isSuppressedFieldEvent(event)) continue
       if (event.trigger === 'autorun' && this.checkEventCollision(event, px, py)) {
         if (event.type !== 'npc') {
           const doneFlag = `event_done_${event.id}`
@@ -834,6 +1016,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private triggerEvent(event: MapEvent): void {
+    if (this.isSuppressedFieldEvent(event)) return
     this.inEvent = true
     const gd = GameData.getInstance()
 
@@ -965,6 +1148,8 @@ export class MapScene extends Phaser.Scene {
           break
         case 'addParty':
           gd.addPartyMember(action.characterId)
+          this.removeSuppressedFieldEventSprites()
+          this.refreshFollowers()
           break
         case 'rebuild':
           RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level || 0))
@@ -1007,6 +1192,8 @@ export class MapScene extends Phaser.Scene {
     this.scene.resume()
     AudioManager.getInstance().setScene(this)
     AudioManager.getInstance().playBGMForMap(this.mapData.id)
+    this.removeSuppressedFieldEventSprites()
+    this.refreshFollowers()
 
     if (this.pendingMapEventId) {
       const dv = DIRECTION_VECTORS[this.currentDir]!

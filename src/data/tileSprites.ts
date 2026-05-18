@@ -1,7 +1,7 @@
 export const TILE_SPRITES: Record<number, string> = {
   1: 'env_grass_plain',
   2: 'env_dirt_plain',
-  3: 'env_pond_round',
+  3: 'env_river_vertical',
   4: 'env_tree_round',
   5: 'env_flowers_patch_pink',
   6: 'env_rock_large',

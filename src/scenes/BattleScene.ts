@@ -9,7 +9,17 @@ import { ENEMIES } from '../data/enemies'
 import { ENCOUNTERS } from '../data/encounters'
 import { ITEMS } from '../data/items'
 import { SKILLS } from '../data/skills'
-import { ELEMENT_WEAKNESS, COMBO_TP_COST, BATTLE_RESULT_PANEL, GAME_WIDTH, GAME_HEIGHT } from '../utils/constants'
+import {
+  BATTLE_RESULT_PANEL,
+  BATTLE_TARGET_INDICATOR,
+  CHARACTER_SPRITE_BASE_KEYS,
+  COMBO_TP_COST,
+  DEFAULT_CHARACTER_SPRITE_KEY,
+  DEFAULT_ENEMY_SPRITE_KEY,
+  ELEMENT_WEAKNESS,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+} from '../utils/constants'
 import type { CharacterData, EnemyData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -64,6 +74,8 @@ export class BattleScene extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Rectangle
   private targetIndex = 0
   private inTargetSelect = false
+  private targetPlayers = false
+  private targetIndicator: Phaser.GameObjects.Triangle | null = null
   private actionStack: string[] = []
   private difficultyMult = { hp: 1.0, dmg: 1.0, exp: 1.0 }
   private speedMult = 1.0
@@ -85,6 +97,8 @@ export class BattleScene extends Phaser.Scene {
     this.menuIndex = 0
     this.targetIndex = 0
     this.inTargetSelect = false
+    this.targetPlayers = false
+    this.targetIndicator = null
     this.actionStack = []
     this.encounterId = data.encounterId
     this.mapEventId = data.mapEventId || ''
@@ -181,7 +195,9 @@ export class BattleScene extends Phaser.Scene {
       if (!char) continue
       const x = 120 + i * 100
       const y = 320
-      const sprite = this.add.sprite(x, y, `${char.id.toLowerCase()}_front_idle_01`)
+      const baseKey = this.getCharacterSpriteBase(char.id)
+      const textureKey = this.resolveTextureKey(`${baseKey}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
+      const sprite = this.add.sprite(x, y, textureKey)
       sprite.setDisplaySize(64, 64)
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
@@ -215,10 +231,8 @@ export class BattleScene extends Phaser.Scene {
       if (!ed) continue
       const x = 700 + i * 100
       const y = 280 + (i % 2) * 80
-      const sprite = this.add.sprite(x, y, `mon_${ed.id}_01`)
-      if (!sprite.texture.key || sprite.texture.key === '__MISSING') {
-        sprite.setTexture('env_rock_large')
-      }
+      const textureKey = this.resolveTextureKey(`mon_${ed.id}_01`, DEFAULT_ENEMY_SPRITE_KEY) ?? DEFAULT_ENEMY_SPRITE_KEY
+      const sprite = this.add.sprite(x, y, textureKey)
       sprite.setDisplaySize(64, 64)
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
@@ -255,6 +269,16 @@ export class BattleScene extends Phaser.Scene {
       return ['xiao_yao']
     }
     return encounter.enemies
+  }
+
+  private getCharacterSpriteBase(characterId: string): string {
+    return CHARACTER_SPRITE_BASE_KEYS[characterId] ?? characterId.toLowerCase()
+  }
+
+  private resolveTextureKey(primaryKey: string, fallbackKey: string): string | null {
+    if (this.textures.exists(primaryKey)) return primaryKey
+    if (this.textures.exists(fallbackKey)) return fallbackKey
+    return null
   }
 
   private createUnitUI(unit: BattleUnit, x: number, y: number): void {
@@ -453,41 +477,80 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  private getSelectableTargets(): BattleUnit[] {
+    if (this.targetPlayers) {
+      if (this.actionStack[0] === 'item' && this.actionStack[1] === 'revive_feather') {
+        return this.units.filter(u => u.isPlayer)
+      }
+      return this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    }
+    return this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+  }
+
+  private updateTargetIndicator(target: BattleUnit): void {
+    if (!target.sprite) return
+    if (!this.targetIndicator) {
+      this.targetIndicator = this.add.triangle(
+        target.sprite.x,
+        target.sprite.y - BATTLE_TARGET_INDICATOR.offsetY,
+        0,
+        0,
+        BATTLE_TARGET_INDICATOR.width,
+        0,
+        BATTLE_TARGET_INDICATOR.width / 2,
+        BATTLE_TARGET_INDICATOR.height,
+        BATTLE_TARGET_INDICATOR.color,
+      )
+      this.targetIndicator.setOrigin(0.5)
+      this.targetIndicator.setDepth(BATTLE_TARGET_INDICATOR.depth)
+      this.targetIndicator.setScrollFactor(0)
+    }
+    this.targetIndicator.setVisible(true)
+    this.targetIndicator.setPosition(target.sprite.x, target.sprite.y - BATTLE_TARGET_INDICATOR.offsetY)
+    this.tweens.killTweensOf(this.targetIndicator)
+    this.tweens.add({
+      targets: this.targetIndicator,
+      y: this.targetIndicator.y - BATTLE_TARGET_INDICATOR.tweenOffsetY,
+      duration: Math.floor(BATTLE_TARGET_INDICATOR.tweenDurationMs / this.speedMult),
+      yoyo: true,
+      repeat: -1,
+    })
+  }
+
+  private hideTargetIndicator(): void {
+    if (this.targetIndicator) {
+      this.tweens.killTweensOf(this.targetIndicator)
+    }
+    this.targetIndicator?.setVisible(false)
+  }
+
   private startTargetSelect(targetPlayers: boolean): void {
     this.inTargetSelect = true
-    const targets = targetPlayers
-      ? this.units.filter(u => u.isPlayer && u.stats.hp > 0)
-      : this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+    this.targetPlayers = targetPlayers
+    const targets = this.getSelectableTargets()
     if (targets.length === 0) {
-      if (targetPlayers) {
-        // Allow targeting dead players for revive items
-        const deadPlayers = this.units.filter(u => u.isPlayer)
-        if (deadPlayers.length > 0 && this.actionStack[0] === 'item' && this.actionStack[1] === 'revive_feather') {
-          this.targetIndex = 0
-          this.log(`选择目标: ${deadPlayers[0]!.name}`)
-          return
-        }
-      }
       this.inTargetSelect = false
+      this.hideTargetIndicator()
       return
     }
     this.targetIndex = 0
     this.log(`选择目标: ${targets[0]!.name}`)
+    this.updateTargetIndicator(targets[0]!)
   }
 
   private moveTarget(dir: number): void {
     if (!this.inTargetSelect) return
-    const isItem = this.actionStack[0] === 'item'
-    const targets = isItem
-      ? this.units.filter(u => u.isPlayer && (u.stats.hp > 0 || this.actionStack[1] === 'revive_feather'))
-      : this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+    const targets = this.getSelectableTargets()
+    if (targets.length === 0) return
     this.targetIndex = (this.targetIndex + dir + targets.length) % targets.length
     this.log(`选择目标: ${targets[this.targetIndex]!.name}`)
+    this.updateTargetIndicator(targets[this.targetIndex]!)
   }
 
   private cancelTarget(): void {
     if (this.inTargetSelect) {
       this.inTargetSelect = false
+      this.hideTargetIndicator()
       this.log('取消选择')
       AudioManager.getInstance().playSFX('cancel')
     }
@@ -498,14 +561,12 @@ export class BattleScene extends Phaser.Scene {
     if (!actor) return
 
     const action = this.actionStack[0]
-    const isItem = action === 'item'
-    const targets = isItem
-      ? this.units.filter(u => u.isPlayer && (u.stats.hp > 0 || this.actionStack[1] === 'revive_feather'))
-      : this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+    const targets = this.getSelectableTargets()
     const target = targets[this.targetIndex]
 
     if (!target) {
       this.inTargetSelect = false
+      this.hideTargetIndicator()
       return
     }
 
@@ -520,6 +581,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.inTargetSelect = false
+    this.hideTargetIndicator()
     this.nextTurn()
   }
 
