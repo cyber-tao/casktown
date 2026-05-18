@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from './EventBus'
 import { GameData } from './GameData'
 import { SFXSynth } from './SFXSynth'
+import { BGM_FADE_DURATIONS } from '../utils/constants'
 
 interface BGMConfig {
   key: string
@@ -84,6 +85,7 @@ export class AudioManager {
   private scene: Phaser.Scene | null = null
   private currentBgm: Phaser.Sound.BaseSound | null = null
   private currentBgmKey: string = ''
+  private bgmSounds: Set<Phaser.Sound.BaseSound> = new Set()
   private bgmMuted = false
   private sfxMuted = false
   private voiceMuted = false
@@ -112,7 +114,7 @@ export class AudioManager {
     }
   }
 
-  playBGM(bgmId: string, fadeDuration = 1000): void {
+  playBGM(bgmId: string, fadeDuration: number = BGM_FADE_DURATIONS.DEFAULT_MS): void {
     if (!this.scene) return
     const config = BGM_TRACKS[bgmId]
     if (!config) {
@@ -127,17 +129,7 @@ export class AudioManager {
     const musicVol = gd.settings.musicVolume
     const targetVolume = this.bgmMuted ? 0 : config.volume * masterVol * musicVol
 
-    if (this.currentBgm?.isPlaying) {
-      const oldBgm = this.currentBgm
-      this.scene.tweens.add({
-        targets: oldBgm,
-        volume: 0,
-        duration: fadeDuration,
-        onComplete: () => {
-          oldBgm.stop()
-        },
-      })
-    }
+    this.stopBGM(BGM_FADE_DURATIONS.NONE_MS)
 
     if (!this.scene.cache.audio.exists(config.key)) {
       console.warn(`Audio ${config.key} not loaded`)
@@ -148,6 +140,7 @@ export class AudioManager {
       loop: config.loop,
       volume: 0,
     })
+    this.bgmSounds.add(this.currentBgm)
     this.currentBgmKey = bgmId
     this.currentBgm.play()
 
@@ -158,23 +151,36 @@ export class AudioManager {
     })
   }
 
-  stopBGM(fadeDuration = 1000): void {
-    if (!this.currentBgm?.isPlaying) return
-    if (!this.scene) {
-      this.currentBgm.stop()
-      return
+  stopBGM(fadeDuration: number = BGM_FADE_DURATIONS.DEFAULT_MS): void {
+    if (this.bgmSounds.size === 0 && !this.currentBgm) return
+    const sounds = new Set(this.bgmSounds)
+    if (this.currentBgm) sounds.add(this.currentBgm)
+    for (const bgm of sounds) {
+      if (!bgm.isPlaying || !this.scene || fadeDuration <= BGM_FADE_DURATIONS.NONE_MS) {
+        this.destroyBGM(bgm)
+        continue
+      }
+      this.scene.tweens.killTweensOf(bgm)
+      this.scene.tweens.add({
+        targets: bgm,
+        volume: 0,
+        duration: fadeDuration,
+        onComplete: () => this.destroyBGM(bgm),
+      })
     }
-    const oldBgm = this.currentBgm
-    this.scene.tweens.add({
-      targets: oldBgm,
-      volume: 0,
-      duration: fadeDuration,
-      onComplete: () => {
-        oldBgm.stop()
-      },
-    })
     this.currentBgm = null
     this.currentBgmKey = ''
+  }
+
+  private destroyBGM(bgm: Phaser.Sound.BaseSound): void {
+    this.scene?.tweens.killTweensOf(bgm)
+    if (bgm.isPlaying) bgm.stop()
+    bgm.destroy()
+    this.bgmSounds.delete(bgm)
+    if (this.currentBgm === bgm) {
+      this.currentBgm = null
+      this.currentBgmKey = ''
+    }
   }
 
   playSFX(sfxId: string): void {
@@ -270,13 +276,11 @@ export class AudioManager {
   }
 
   playVictoryBGM(): void {
-    this.stopBGM(500)
-    setTimeout(() => this.playBGM('victory'), 500)
+    this.playBGM('victory', BGM_FADE_DURATIONS.FAST_MS)
   }
 
   playGameOverBGM(): void {
-    this.stopBGM(500)
-    setTimeout(() => this.playBGM('game_over'), 500)
+    this.playBGM('game_over', BGM_FADE_DURATIONS.FAST_MS)
   }
 
   updateVolume(): void {

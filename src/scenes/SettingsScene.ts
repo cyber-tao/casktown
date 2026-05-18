@@ -3,7 +3,7 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
-import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED, SETTINGS_PANEL } from '../utils/constants'
 
 interface SettingOption {
   label: string
@@ -18,7 +18,7 @@ interface SettingOption {
 const SETTINGS_CONFIG: SettingOption[] = [
   { label: '文字速度', key: 'textSpeed', type: 'select', options: ['slow', 'normal', 'fast', 'instant'] },
   { label: '战斗速度', key: 'battleSpeed', type: 'select', options: ['normal', 'fast', 'fastest'] },
-  { label: '随机遇敌', key: 'encounterRate', type: 'select', options: ['default', 'reduced', 'none'] },
+  { label: '巡逻怪物', key: 'encounterRate', type: 'select', options: ['default', 'reduced', 'none'] },
   { label: '战斗难度', key: 'difficulty', type: 'select', options: ['story', 'standard', 'hard'] },
   { label: '预言提示', key: 'prophecyHint', type: 'select', options: ['poem', 'light', 'clear'] },
   { label: '主音量', key: 'masterVolume', type: 'slider', min: 0, max: 1, step: 0.1 },
@@ -67,17 +67,17 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private createBackground(): void {
-    this.overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.6)
+    this.overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, SETTINGS_PANEL.overlayAlpha)
     this.overlay.setScrollFactor(0)
     this.overlay.setDepth(500)
 
-    this.panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 510, 0x2a2a3e, 0.98)
-    this.panel.setStrokeStyle(2, 0x5a5a7e)
+    this.panel = this.add.rectangle(SETTINGS_PANEL.x, SETTINGS_PANEL.y, SETTINGS_PANEL.width, SETTINGS_PANEL.height, 0x2a2a3e, SETTINGS_PANEL.alpha)
+    this.panel.setStrokeStyle(SETTINGS_PANEL.strokeWidth, 0x5a5a7e)
     this.panel.setScrollFactor(0)
     this.panel.setDepth(501)
 
-    this.add.text(GAME_WIDTH / 2, 80, '设置', {
-      fontSize: '28px',
+    this.add.text(GAME_WIDTH / 2, SETTINGS_PANEL.titleY, '设置', {
+      fontSize: `${SETTINGS_PANEL.titleFontSize}px`,
       color: '#f1c40f',
       fontFamily: 'sans-serif',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(502)
@@ -85,38 +85,36 @@ export class SettingsScene extends Phaser.Scene {
 
   private createSettingsUI(): void {
     const gd = GameData.getInstance()
-    const startY = 130
-    const lineHeight = 34
 
     for (let i = 0; i < SETTINGS_CONFIG.length; i++) {
       const config = SETTINGS_CONFIG[i]!
-      const container = this.add.container(220, startY + i * lineHeight)
+      const container = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + i * SETTINGS_PANEL.rowHeight)
       container.setDepth(502)
       container.setScrollFactor(0)
 
       const label = this.add.text(0, 0, config.label, {
-        fontSize: '16px',
+        fontSize: `${SETTINGS_PANEL.labelFontSize}px`,
         color: '#c0c0d0',
       }).setDepth(502)
       container.add(label)
 
       const valueText = this.createValueText(config, gd)
-      valueText.setX(280)
+      valueText.setX(SETTINGS_PANEL.valueX)
       valueText.setDepth(502)
       container.add(valueText)
 
       this.menuItems.push(container)
     }
 
-    const backContainer = this.add.container(220, startY + SETTINGS_CONFIG.length * lineHeight + 10)
+    const backContainer = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + SETTINGS_CONFIG.length * SETTINGS_PANEL.rowHeight + SETTINGS_PANEL.backOffsetY)
     backContainer.setDepth(502)
     backContainer.setScrollFactor(0)
-    const backText = this.add.text(0, 0, '返回', { fontSize: '18px', color: '#e74c3c' })
+    const backText = this.add.text(0, 0, '返回', { fontSize: `${SETTINGS_PANEL.backFontSize}px`, color: '#e74c3c' })
     backText.setDepth(502)
     backContainer.add(backText)
     this.menuItems.push(backContainer)
 
-    this.cursor = this.add.rectangle(200, startY + 8, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(SETTINGS_PANEL.cursorX, SETTINGS_PANEL.rowStartY + SETTINGS_PANEL.cursorOffsetY, SETTINGS_PANEL.cursorSize, SETTINGS_PANEL.cursorSize, 0xf1c40f)
     this.cursor.setDepth(503)
     this.cursor.setScrollFactor(0)
   }
@@ -143,7 +141,7 @@ export class SettingsScene extends Phaser.Scene {
     }
 
     return this.add.text(0, 0, displayText, {
-      fontSize: '16px',
+      fontSize: `${SETTINGS_PANEL.valueFontSize}px`,
       color: '#e8e8f0',
     })
   }
@@ -182,7 +180,7 @@ export class SettingsScene extends Phaser.Scene {
     AudioManager.getInstance().playSFX('cursor')
     this.menuIndex = (this.menuIndex + dir + this.menuItems.length) % this.menuItems.length
     const target = this.menuItems[this.menuIndex]!
-    this.cursor.setY(target.y + 8)
+    this.cursor.setY(target.y + SETTINGS_PANEL.cursorOffsetY)
   }
 
   private changeValue(dir: number): void {
