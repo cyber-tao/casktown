@@ -5,7 +5,8 @@ import { AudioManager } from '../core/AudioManager'
 import { ENEMIES } from '../data/enemies'
 import { ITEMS } from '../data/items'
 import { PROPHECIES } from '../data/prophecies'
-import { GAME_WIDTH, GAME_HEIGHT } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 type CodexTab = 'monsters' | 'items' | 'story'
 
@@ -57,8 +58,14 @@ export class CodexOverlay extends Phaser.Scene {
       tab.setOrigin(0.5)
       tab.setScrollFactor(0)
       tab.setDepth(201)
+      bindTouchText(tab, () => this.selectTab(t.key))
       this.tabs.push(tab)
     }
+
+    bindTouchText(this.add.text(GAME_WIDTH / 2, TOUCH_INPUT.OVERLAY_BACK_Y, '返回', {
+      fontSize: `${TOUCH_INPUT.OVERLAY_BACK_FONT_SIZE}px`,
+      color: '#ecf0f1',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(201), () => this.close())
 
     // Collect discovered content
     this.discoveredEnemies = Object.keys(ENEMIES).filter(id => {
@@ -139,6 +146,19 @@ export class CodexOverlay extends Phaser.Scene {
     }
   }
 
+  private selectTab(tab: CodexTab): void {
+    this.tab = tab
+    this.cursorIndex = 0
+    this.updateTabs()
+    this.renderList()
+  }
+
+  private selectListItem(index: number): void {
+    if (index < 0 || index >= this.getListCount()) return
+    this.cursorIndex = index
+    this.updateCursor()
+  }
+
   private renderList(): void {
     for (const item of this.listItems) item.destroy()
     this.listItems = []
@@ -156,6 +176,7 @@ export class CodexOverlay extends Phaser.Scene {
           fontSize: '14px', color: ed.isBoss ? '#e74c3c' : '#ecf0f1',
         })
         t.setScrollFactor(0).setDepth(201)
+        bindTouchText(t, () => this.selectListItem(i))
         this.listItems.push(t)
       }
     } else if (this.tab === 'items') {
@@ -172,6 +193,7 @@ export class CodexOverlay extends Phaser.Scene {
           fontSize: '14px', color: '#ecf0f1',
         })
         t.setScrollFactor(0).setDepth(201)
+        bindTouchText(t, () => this.selectListItem(i))
         this.listItems.push(t)
       }
     } else {
@@ -193,6 +215,7 @@ export class CodexOverlay extends Phaser.Scene {
           fontSize: '14px', color: '#ecf0f1',
         })
         t.setScrollFactor(0).setDepth(201)
+        bindTouchText(t, () => this.selectListItem(i))
         this.listItems.push(t)
       }
       for (let i = 0; i < PROPHECIES.length; i++) {
@@ -205,6 +228,7 @@ export class CodexOverlay extends Phaser.Scene {
           fontSize: '14px', color,
         })
         t.setScrollFactor(0).setDepth(201)
+        bindTouchText(t, () => this.selectListItem(STORY_BRANCH_COUNT + i))
         this.listItems.push(t)
       }
     }

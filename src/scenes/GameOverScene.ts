@@ -3,6 +3,7 @@ import { AudioManager } from '../core/AudioManager'
 import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
 import { GAME_HEIGHT, GAME_OVER_PANEL, GAME_WIDTH, START_MAP_ID } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 export class GameOverScene extends Phaser.Scene {
   private menuIndex = 0
@@ -40,6 +41,7 @@ export class GameOverScene extends Phaser.Scene {
         color: '#c0c0d0',
         fontFamily: 'sans-serif',
       }).setOrigin(0.5)
+      bindTouchText(text, () => this.selectMenuItem(i))
       this.menuItems.push(text)
     }
 
@@ -71,6 +73,12 @@ export class GameOverScene extends Phaser.Scene {
         this.scene.start('TitleScene')
         break
     }
+  }
+
+  private selectMenuItem(index: number): void {
+    this.menuIndex = index
+    this.cursor.setY(this.menuItems[this.menuIndex]!.y)
+    this.selectMenu()
   }
 
   private loadGame(): void {

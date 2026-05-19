@@ -3,7 +3,8 @@ import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, START_MAP_ID } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, PROJECT_GITHUB_URL, START_MAP_ID, TITLE_GITHUB_LINK } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 export class TitleScene extends Phaser.Scene {
   private menuIndex = 0
@@ -53,6 +54,7 @@ export class TitleScene extends Phaser.Scene {
         color: '#c0c0d0',
         fontFamily: 'sans-serif',
       }).setOrigin(0.5)
+      bindTouchText(text, () => this.selectMenuItem(i))
       this.menuItems.push(text)
     }
 
@@ -65,6 +67,14 @@ export class TitleScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
     this.input.keyboard?.on('keydown-SPACE', () => this.selectMenu())
+
+    bindTouchText(this.add.text(TITLE_GITHUB_LINK.x, TITLE_GITHUB_LINK.y, 'GitHub', {
+      fontSize: `${TITLE_GITHUB_LINK.fontSize}px`,
+      color: '#a0a0c0',
+      fontFamily: 'sans-serif',
+      stroke: '#1a1a2e',
+      strokeThickness: 3,
+    }).setOrigin(0.5), () => this.openGithub())
 
     // Fade in
     this.cameras.main.fadeIn(500)
@@ -95,6 +105,17 @@ export class TitleScene extends Phaser.Scene {
         // Exit - nothing in browser
         break
     }
+  }
+
+  private selectMenuItem(index: number): void {
+    this.menuIndex = index
+    this.updateCursor()
+    this.selectMenu()
+  }
+
+  private openGithub(): void {
+    const githubWindow = window.open(PROJECT_GITHUB_URL, TITLE_GITHUB_LINK.target, TITLE_GITHUB_LINK.features)
+    if (!githubWindow) console.warn('Failed to open project GitHub link')
   }
 
   private startNewGame(): void {

@@ -3,6 +3,7 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TRAINING_COST, TRAINING_EXP_BASE, TRAINING_EXP_PER_LEVEL } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 export class TrainingOverlay extends Phaser.Scene {
   private selectedIndex = 0
@@ -42,9 +43,9 @@ export class TrainingOverlay extends Phaser.Scene {
       fontSize: '16px', color: '#f1c40f',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200, '↑↓ Select | Enter Train | Esc Back', {
+    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200, '↑↓ Select | Enter Train | Esc Back', {
       fontSize: '12px', color: '#808090',
-    }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
+    }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
 
     this.renderList()
     this.setupInput()
@@ -71,18 +72,21 @@ export class TrainingOverlay extends Phaser.Scene {
         `${char.name} Lv.${char.stats.level}  EXP ${char.stats.exp}/${char.stats.expToNext} (${expPct}%)`,
         { fontSize: '18px', color },
       ).setDepth(402).setScrollFactor(0)
+      bindTouchText(t1, () => this.selectPartyMember(i))
       this.textObjects.push(t1)
 
       const t2 = this.add.text(GAME_WIDTH / 2 - 240, startY + i * 70 + 24,
         `HP:${char.stats.maxHp} MP:${char.stats.maxMp} ATK:${char.stats.atk} DEF:${char.stats.def} SPD:${char.stats.speed}`,
         { fontSize: '14px', color: '#a0a0b0' },
       ).setDepth(402).setScrollFactor(0)
+      bindTouchText(t2, () => this.selectPartyMember(i))
       this.textObjects.push(t2)
 
       const t3 = this.add.text(GAME_WIDTH / 2 - 240, startY + i * 70 + 42,
         `+${expGain} EXP per session`,
         { fontSize: '12px', color: '#606070' },
       ).setDepth(402).setScrollFactor(0)
+      bindTouchText(t3, () => this.selectPartyMember(i))
       this.textObjects.push(t3)
     }
 
@@ -159,6 +163,13 @@ export class TrainingOverlay extends Phaser.Scene {
 
     this.updateGold()
     this.renderList()
+  }
+
+  private selectPartyMember(index: number): void {
+    const gd = GameData.getInstance()
+    if (index < 0 || index >= gd.party.length) return
+    this.selectedIndex = index
+    this.train()
   }
 
   private close(): void {

@@ -14,6 +14,7 @@ import {
   GAME_WIDTH,
   TEXT_SPEED,
 } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 import { DIALOGUES } from '../data/dialogues'
 import { QuestSystem } from '../core/QuestSystem'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
@@ -125,12 +126,16 @@ export class DialogueOverlay extends Phaser.Scene {
     this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.3)
     this.bg.setDepth(200)
     this.bg.setScrollFactor(0)
+    this.bg.setInteractive()
+    this.bg.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
     // Dialogue box
     const box = this.add.rectangle(DIALOGUE_BOX.x, DIALOGUE_BOX.y, DIALOGUE_BOX.width, DIALOGUE_BOX.height, 0x2a2a3e, 0.95)
     box.setStrokeStyle(2, 0x5a5a7e)
     box.setDepth(201)
     box.setScrollFactor(0)
+    box.setInteractive()
+    box.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
     // Face placeholder
     this.faceRect = this.add.rectangle(DIALOGUE_FACE.x, DIALOGUE_FACE.y, DIALOGUE_FACE.size, DIALOGUE_FACE.size, 0x3a3a4e)
@@ -165,6 +170,8 @@ export class DialogueOverlay extends Phaser.Scene {
     })
     this.textObj.setDepth(202)
     this.textObj.setScrollFactor(0)
+    this.textObj.setInteractive()
+    this.textObj.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
     // Input
     this.input.keyboard?.on('keydown-SPACE', () => this.advance())
@@ -282,8 +289,10 @@ export class DialogueOverlay extends Phaser.Scene {
       totalHeight = this.getChoicesHeight(gap)
     }
     let currentY = Math.max(minY, maxBottom - totalHeight)
-    for (const text of this.choices) {
+    for (let i = 0; i < this.choices.length; i++) {
+      const text = this.choices[i]!
       text.setY(currentY)
+      bindTouchText(text, () => this.selectChoice(i))
       currentY += text.height + gap
     }
 
@@ -319,6 +328,18 @@ export class DialogueOverlay extends Phaser.Scene {
     this.choiceIndex = (this.choiceIndex + dir + this.choices.length) % this.choices.length
     this.cursor.setY(this.getChoiceCursorY())
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private selectChoice(index: number): void {
+    if (!this.inChoice || index >= this.choices.length) return
+    this.choiceIndex = index
+    this.cursor.setY(this.getChoiceCursorY())
+    this.advance()
+  }
+
+  private handleTouchAdvance(): void {
+    if (this.inChoice && !this.isTyping) return
+    this.advance()
   }
 
   private advance(): void {

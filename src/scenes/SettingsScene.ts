@@ -4,6 +4,7 @@ import { AudioManager } from '../core/AudioManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
 import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED, SETTINGS_PANEL } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 interface SettingOption {
   label: string
@@ -96,11 +97,13 @@ export class SettingsScene extends Phaser.Scene {
         fontSize: `${SETTINGS_PANEL.labelFontSize}px`,
         color: '#c0c0d0',
       }).setDepth(502)
+      bindTouchText(label, () => this.selectTouchMenuItem(i))
       container.add(label)
 
       const valueText = this.createValueText(config, gd)
       valueText.setX(SETTINGS_PANEL.valueX)
       valueText.setDepth(502)
+      bindTouchText(valueText, () => this.selectTouchMenuItem(i))
       container.add(valueText)
 
       this.menuItems.push(container)
@@ -111,6 +114,7 @@ export class SettingsScene extends Phaser.Scene {
     backContainer.setScrollFactor(0)
     const backText = this.add.text(0, 0, '返回', { fontSize: `${SETTINGS_PANEL.backFontSize}px`, color: '#e74c3c' })
     backText.setDepth(502)
+    bindTouchText(backText, () => this.selectTouchMenuItem(SETTINGS_CONFIG.length))
     backContainer.add(backText)
     this.menuItems.push(backContainer)
 
@@ -252,6 +256,21 @@ export class SettingsScene extends Phaser.Scene {
     } else if (config.type === 'select') {
       this.changeValue(1)
     }
+  }
+
+  private selectTouchMenuItem(index: number): void {
+    if (index < 0 || index >= this.menuItems.length) return
+    const cursorOffsetY = this.cursor.y - this.menuItems[this.menuIndex]!.y
+    this.menuIndex = index
+    const target = this.menuItems[this.menuIndex]!
+    this.cursor.setY(target.y + cursorOffsetY)
+
+    const config = SETTINGS_CONFIG[this.menuIndex]
+    if (config?.type === 'slider') {
+      this.changeValue(1)
+      return
+    }
+    this.selectMenu()
   }
 
   private goBack(): void {

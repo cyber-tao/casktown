@@ -4,6 +4,7 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { ITEMS } from '../data/items'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 interface ShopItem {
   id: string
@@ -54,9 +55,9 @@ export class ShopOverlay extends Phaser.Scene {
       fontSize: '16px', color: '#f1c40f',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200, '↑↓ Select | Enter Buy | Esc Back', {
+    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200, '↑↓ Select | Enter Buy | Esc Back', {
       fontSize: '12px', color: '#808090',
-    }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
+    }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
 
     this.renderList()
     if (this.shopItems.length > 0) this.updateDesc()
@@ -80,6 +81,7 @@ export class ShopOverlay extends Phaser.Scene {
       const t = this.add.text(GAME_WIDTH / 2 - 260, startY + i * 28, label, {
         fontSize: '18px', color,
       }).setDepth(402).setScrollFactor(0)
+      bindTouchText(t, () => this.selectShopItem(i))
       this.textObjects.push(t)
     }
 
@@ -131,6 +133,13 @@ export class ShopOverlay extends Phaser.Scene {
     this.messageText.setText(`Bought ${ITEMS[si.id]?.name ?? si.id}!`)
     this.updateGold()
     this.renderList()
+  }
+
+  private selectShopItem(index: number): void {
+    if (index < 0 || index >= this.shopItems.length) return
+    this.selectedIndex = index
+    this.updateDesc()
+    this.buy()
   }
 
   private close(): void {

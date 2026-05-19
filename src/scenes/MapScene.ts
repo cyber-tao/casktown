@@ -18,6 +18,7 @@ import {
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
   DIRECTION,
+  COLORS,
   FIELD_ENCOUNTER_RATE_THRESHOLDS,
   FIELD_ENCOUNTER_SPAWN_COUNTS,
   FIELD_ENTITY_BEHAVIOR,
@@ -38,6 +39,7 @@ import {
   GAME_WIDTH,
   GAME_HEIGHT,
   DIRECTION_VECTORS,
+  TOUCH_INPUT,
 } from '../utils/constants'
 import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
 
@@ -77,6 +79,8 @@ export class MapScene extends Phaser.Scene {
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
   private animationTimeMs = 0
+  private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
+  private touchControls: Phaser.GameObjects.GameObject[] = []
 
   constructor() {
     super({ key: 'MapScene' })
@@ -161,6 +165,7 @@ export class MapScene extends Phaser.Scene {
     this.createEvents()
     this.setupInput()
     this.createUI()
+    this.createTouchControls()
 
     // Show map name
     this.showMapName()
@@ -633,6 +638,102 @@ export class MapScene extends Phaser.Scene {
         this.openMenu()
       }
     })
+
+    this.input.on(Phaser.Input.Events.POINTER_UP, this.clearTouchDirectionForPointer, this)
+    this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.clearTouchDirectionForPointer, this)
+  }
+
+  private shouldShowTouchControls(): boolean {
+    return this.sys.game.device.input.touch
+      || navigator.maxTouchPoints > 0
+      || window.matchMedia(TOUCH_INPUT.DEVICE_MEDIA_QUERY).matches
+      || window.innerWidth <= TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH
+  }
+
+  private createTouchControls(): void {
+    if (!this.shouldShowTouchControls()) return
+
+    this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X, TOUCH_INPUT.DPAD_CENTER_Y - TOUCH_INPUT.DPAD_BUTTON_OFFSET, '▲', 0, -1, DIRECTION.UP)
+    this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X, TOUCH_INPUT.DPAD_CENTER_Y + TOUCH_INPUT.DPAD_BUTTON_OFFSET, '▼', 0, 1, DIRECTION.DOWN)
+    this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X - TOUCH_INPUT.DPAD_BUTTON_OFFSET, TOUCH_INPUT.DPAD_CENTER_Y, '◀', -1, 0, DIRECTION.LEFT)
+    this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X + TOUCH_INPUT.DPAD_BUTTON_OFFSET, TOUCH_INPUT.DPAD_CENTER_Y, '▶', 1, 0, DIRECTION.RIGHT)
+    this.createTouchActionButton(TOUCH_INPUT.ACTION_BUTTON_X - TOUCH_INPUT.ACTION_BUTTON_SPACING, TOUCH_INPUT.ACTION_BUTTON_Y, '菜单', () => this.openMenu())
+    this.createTouchActionButton(TOUCH_INPUT.ACTION_BUTTON_X, TOUCH_INPUT.ACTION_BUTTON_Y, '行动', () => this.interact())
+  }
+
+  private createTouchDirectionButton(x: number, y: number, label: string, dx: number, dy: number, dir: number): void {
+    const button = this.add.rectangle(x, y, TOUCH_INPUT.DPAD_BUTTON_SIZE, TOUCH_INPUT.DPAD_BUTTON_SIZE, COLORS.black, TOUCH_INPUT.POINTER_ALPHA)
+    button.setStrokeStyle(TOUCH_INPUT.POINTER_STROKE_WIDTH, COLORS.white, TOUCH_INPUT.POINTER_ALPHA)
+    button.setDepth(TOUCH_INPUT.CONTROLS_DEPTH)
+    button.setScrollFactor(0)
+    button.setInteractive({ useHandCursor: true })
+
+    const text = this.add.text(x, y, label, {
+      fontSize: `${TOUCH_INPUT.DPAD_LABEL_FONT_SIZE}px`,
+      color: TOUCH_INPUT.LABEL_COLOR,
+      fontFamily: TOUCH_INPUT.LABEL_FONT_FAMILY,
+    }).setOrigin(0.5)
+    text.setDepth(TOUCH_INPUT.CONTROLS_DEPTH + TOUCH_INPUT.LABEL_DEPTH_OFFSET)
+    text.setScrollFactor(0)
+    text.setInteractive({ useHandCursor: true })
+
+    const activate = (pointer: Phaser.Input.Pointer): void => {
+      this.setTouchDirection(pointer, dx, dy, dir)
+      button.setAlpha(TOUCH_INPUT.POINTER_HOVER_ALPHA)
+    }
+    const release = (pointer: Phaser.Input.Pointer): void => {
+      this.clearTouchDirectionForPointer(pointer)
+      button.setAlpha(TOUCH_INPUT.POINTER_ALPHA)
+    }
+
+    button.on(Phaser.Input.Events.POINTER_DOWN, activate)
+    button.on(Phaser.Input.Events.POINTER_UP, release)
+    button.on(Phaser.Input.Events.POINTER_OUT, release)
+    text.on(Phaser.Input.Events.POINTER_DOWN, activate)
+    text.on(Phaser.Input.Events.POINTER_UP, release)
+    text.on(Phaser.Input.Events.POINTER_OUT, release)
+    this.touchControls.push(button, text)
+  }
+
+  private createTouchActionButton(x: number, y: number, label: string, onPress: () => void): void {
+    const button = this.add.rectangle(x, y, TOUCH_INPUT.ACTION_BUTTON_SIZE, TOUCH_INPUT.ACTION_BUTTON_SIZE, COLORS.black, TOUCH_INPUT.POINTER_ALPHA)
+    button.setStrokeStyle(TOUCH_INPUT.POINTER_STROKE_WIDTH, COLORS.white, TOUCH_INPUT.POINTER_ALPHA)
+    button.setDepth(TOUCH_INPUT.CONTROLS_DEPTH)
+    button.setScrollFactor(0)
+    button.setInteractive({ useHandCursor: true })
+
+    const text = this.add.text(x, y, label, {
+      fontSize: `${TOUCH_INPUT.ACTION_LABEL_FONT_SIZE}px`,
+      color: TOUCH_INPUT.LABEL_COLOR,
+      fontFamily: TOUCH_INPUT.LABEL_FONT_FAMILY,
+    }).setOrigin(0.5)
+    text.setDepth(TOUCH_INPUT.CONTROLS_DEPTH + TOUCH_INPUT.LABEL_DEPTH_OFFSET)
+    text.setScrollFactor(0)
+    text.setInteractive({ useHandCursor: true })
+
+    const activate = (): void => {
+      button.setAlpha(TOUCH_INPUT.POINTER_HOVER_ALPHA)
+      onPress()
+    }
+    const release = (): void => {
+      button.setAlpha(TOUCH_INPUT.POINTER_ALPHA)
+    }
+
+    button.on(Phaser.Input.Events.POINTER_DOWN, activate)
+    button.on(Phaser.Input.Events.POINTER_UP, release)
+    button.on(Phaser.Input.Events.POINTER_OUT, release)
+    text.on(Phaser.Input.Events.POINTER_DOWN, activate)
+    text.on(Phaser.Input.Events.POINTER_UP, release)
+    text.on(Phaser.Input.Events.POINTER_OUT, release)
+    this.touchControls.push(button, text)
+  }
+
+  private setTouchDirection(pointer: Phaser.Input.Pointer, dx: number, dy: number, dir: number): void {
+    this.touchDirection = { dx, dy, dir, pointerId: pointer.id }
+  }
+
+  private clearTouchDirectionForPointer(pointer: Phaser.Input.Pointer): void {
+    if (this.touchDirection?.pointerId === pointer.id) this.touchDirection = null
   }
 
   private createUI(): void {
@@ -711,6 +812,12 @@ export class MapScene extends Phaser.Scene {
     } else if (!!this.cursors.right?.isDown || this.wasd.D.isDown || this.actionKeys.right.isDown) {
       dx = 1
       dir = DIRECTION.RIGHT
+    }
+
+    if (dx === 0 && dy === 0 && this.touchDirection) {
+      dx = this.touchDirection.dx
+      dy = this.touchDirection.dy
+      dir = this.touchDirection.dir
     }
 
     if (dx === 0 && dy === 0 && InputManager.getInstance().isGamepadEnabled()) {
@@ -1308,6 +1415,11 @@ export class MapScene extends Phaser.Scene {
     EventBus.off(GameEvents.FLAG_SET, this.handleFlagSet, this)
     window.removeEventListener('game-quicksave', this.handleQuickSave)
     window.removeEventListener('game-quickload', this.handleQuickLoad)
+    this.input.off(Phaser.Input.Events.POINTER_UP, this.clearTouchDirectionForPointer, this)
+    this.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.clearTouchDirectionForPointer, this)
+    for (const control of this.touchControls) control.destroy()
+    this.touchControls = []
+    this.touchDirection = null
     for (const timer of this.enemyPatrolTimers) timer.remove(false)
     for (const timer of this.npcTimers) timer.remove(false)
     this.enemyPatrolTimers = []

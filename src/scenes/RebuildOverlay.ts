@@ -3,7 +3,8 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 
 const REBUILD_OPTIONS = [
@@ -67,6 +68,7 @@ export class RebuildOverlay extends Phaser.Scene {
       })
       text.setScrollFactor(0)
       text.setDepth(201)
+      bindTouchText(text, () => this.selectTouchItem(i))
       this.items.push(text)
     }
 
@@ -76,6 +78,11 @@ export class RebuildOverlay extends Phaser.Scene {
     this.descText.setOrigin(0.5)
     this.descText.setScrollFactor(0)
     this.descText.setDepth(201)
+
+    bindTouchText(this.add.text(GAME_WIDTH / 2, TOUCH_INPUT.OVERLAY_BACK_Y, '返回', {
+      fontSize: `${TOUCH_INPUT.OVERLAY_BACK_FONT_SIZE}px`,
+      color: '#ecf0f1',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(201), () => this.close())
 
     this.updateDescription()
 
@@ -139,6 +146,13 @@ export class RebuildOverlay extends Phaser.Scene {
     }
 
     this.descText.setText(`${opt.name} 重建完成！`)
+  }
+
+  private selectTouchItem(index: number): void {
+    if (index < 0 || index >= REBUILD_OPTIONS.length) return
+    this.cursorIndex = index
+    this.updateCursor()
+    this.selectItem()
   }
 
   private close(): void {

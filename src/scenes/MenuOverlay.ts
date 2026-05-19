@@ -8,6 +8,7 @@ import { QUESTS } from '../data/quests'
 import { SKILLS } from '../data/skills'
 import { ITEMS } from '../data/items'
 import { GAME_WIDTH, GAME_HEIGHT, SAVE_SLOTS } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 import type { CharacterData, ItemData } from '../data/types'
 
 export class MenuOverlay extends Phaser.Scene {
@@ -70,13 +71,7 @@ export class MenuOverlay extends Phaser.Scene {
     const items = ['预言之书', '队伍', '背包', '技能', '装备', '图鉴', '地图', '存档', '设置', '返回游戏']
     const startY = 100
     for (let i = 0; i < items.length; i++) {
-      const text = this.add.text(100, startY + i * 44, items[i]!, {
-        fontSize: '20px',
-        color: '#c0c0d0',
-      })
-      text.setDepth(402)
-      text.setScrollFactor(0)
-      this.menuItems.push(text)
+      this.addMenuText(items[i]!, startY + i * 44, '20px')
     }
     this.cursor = this.add.rectangle(85, startY + 10, 10, 10, 0xf1c40f)
     this.cursor.setDepth(403)
@@ -104,7 +99,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private handleUp(): void {
     if (this.submenu === 'equipment' && this.equipSlot) {
-      this.equipCursorIndex = (this.equipCursorIndex - 1 + this.equipList.length) % this.equipList.length
+      this.equipCursorIndex = (this.equipCursorIndex - 1 + this.menuItems.length) % this.menuItems.length
       this.refreshEquipListCursor()
       AudioManager.getInstance().playSFX('cursor')
       return
@@ -130,7 +125,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private handleDown(): void {
     if (this.submenu === 'equipment' && this.equipSlot) {
-      this.equipCursorIndex = (this.equipCursorIndex + 1) % this.equipList.length
+      this.equipCursorIndex = (this.equipCursorIndex + 1) % this.menuItems.length
       this.refreshEquipListCursor()
       AudioManager.getInstance().playSFX('cursor')
       return
@@ -216,6 +211,13 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'equipment' && this.equipSlot) {
+      if (this.equipCursorIndex >= this.equipList.length) {
+        this.equipSlot = null
+        this.equipList = []
+        this.showEquipment()
+        AudioManager.getInstance().playSFX('cancel')
+        return
+      }
       this.equipSelectedItem()
       AudioManager.getInstance().playSFX('confirm')
       return
@@ -359,15 +361,47 @@ export class MenuOverlay extends Phaser.Scene {
     this.contentArea.add(t)
   }
 
-  private addMenuText(text: string, y: number): Phaser.GameObjects.Text {
+  private addMenuText(text: string, y: number, fontSize = '18px'): Phaser.GameObjects.Text {
     const t = this.add.text(100, y, text, {
-      fontSize: '18px',
+      fontSize,
       color: '#c0c0d0',
     })
     t.setDepth(402)
     t.setScrollFactor(0)
+    bindTouchText(t, () => this.selectTouchMenuItem(this.menuItems.indexOf(t)))
     this.menuItems.push(t)
     return t
+  }
+
+  private selectTouchMenuItem(index: number): void {
+    if (index < 0 || index >= this.menuItems.length) return
+
+    if (this.submenu === 'equipment' && this.equipSlot) {
+      this.equipCursorIndex = index
+      this.refreshEquipListCursor()
+      this.handleConfirm()
+      return
+    }
+
+    if (this.submenu === 'items-use') {
+      this.itemCursorIndex = index
+      this.refreshItemCursor()
+      this.handleConfirm()
+      return
+    }
+
+    if (this.submenu === 'load') {
+      this.loadCursorIndex = index
+      this.refreshLoadCursor()
+      this.handleConfirm()
+      return
+    }
+
+    const cursorOffsetY = this.cursor.y - this.menuItems[this.menuIndex]!.y
+    this.menuIndex = index
+    this.cursor.setY(this.menuItems[this.menuIndex]!.y + cursorOffsetY)
+    this.updateContent()
+    this.handleConfirm()
   }
 
   private showProphecyBook(): void {
@@ -580,6 +614,7 @@ export class MenuOverlay extends Phaser.Scene {
       const label = itemId === '__unequip__' ? '（卸下）' : (ITEMS[itemId]?.name || itemId)
       this.addMenuText(label, 100 + i * 36)
     }
+    this.addMenuText('返回', 100 + this.equipList.length * 36)
 
     this.equipCursorIndex = 0
     this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)

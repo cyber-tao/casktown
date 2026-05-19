@@ -20,6 +20,7 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
 } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 import type { CharacterData, EnemyData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -220,6 +221,8 @@ export class BattleScene extends Phaser.Scene {
         status: [],
         data: char,
       }
+      sprite.setInteractive({ useHandCursor: true })
+      sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
       this.createUnitUI(unit, x, y - 55)
     }
@@ -256,6 +259,8 @@ export class BattleScene extends Phaser.Scene {
         status: [],
         data: ed,
       }
+      sprite.setInteractive({ useHandCursor: true })
+      sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
       this.enemyData.push(ed)
       this.createUnitUI(unit, x, y - 55)
@@ -374,6 +379,7 @@ export class BattleScene extends Phaser.Scene {
       })
       text.setDepth(311)
       text.setScrollFactor(0)
+      bindTouchText(text, () => this.selectBattleMenuItem(i))
       this.menuItems.push(text)
     }
 
@@ -440,6 +446,14 @@ export class BattleScene extends Phaser.Scene {
     this.menuIndex = (this.menuIndex + dir + this.menuItems.length) % this.menuItems.length
     this.cursor.setY(this.menuItems[this.menuIndex]!.y + 6)
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private selectBattleMenuItem(index: number): void {
+    if (this.inTargetSelect || this.phase !== 'player' || index >= this.menuItems.length) return
+    const cursorOffsetY = this.cursor.y - this.menuItems[this.menuIndex]!.y
+    this.menuIndex = index
+    this.cursor.setY(this.menuItems[this.menuIndex]!.y + cursorOffsetY)
+    this.selectMenu()
   }
 
   private selectMenu(): void {
@@ -547,6 +561,17 @@ export class BattleScene extends Phaser.Scene {
     this.updateTargetIndicator(targets[this.targetIndex]!)
   }
 
+  private selectTarget(unit: BattleUnit): void {
+    if (!this.inTargetSelect) return
+    const targets = this.getSelectableTargets()
+    const index = targets.indexOf(unit)
+    if (index < 0) return
+    this.targetIndex = index
+    this.log(`选择目标: ${unit.name}`)
+    this.updateTargetIndicator(unit)
+    this.executeAction()
+  }
+
   private cancelTarget(): void {
     if (this.inTargetSelect) {
       this.inTargetSelect = false
@@ -636,6 +661,7 @@ export class BattleScene extends Phaser.Scene {
       })
       text.setDepth(321)
       text.setScrollFactor(0)
+      bindTouchText(text, () => this.selectSkillMenuItem(i))
       this.skillMenuItems.push(text)
     }
     this.skillMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
@@ -648,6 +674,14 @@ export class BattleScene extends Phaser.Scene {
     this.skillMenuIndex = (this.skillMenuIndex + dir + this.skillMenuItems.length) % this.skillMenuItems.length
     this.skillMenuCursor.setY(this.skillMenuItems[this.skillMenuIndex]!.y + 6)
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private selectSkillMenuItem(index: number): void {
+    if (!this.inSkillMenu || index >= this.skillMenuItems.length) return
+    const cursorOffsetY = this.skillMenuCursor.y - this.skillMenuItems[this.skillMenuIndex]!.y
+    this.skillMenuIndex = index
+    this.skillMenuCursor.setY(this.skillMenuItems[this.skillMenuIndex]!.y + cursorOffsetY)
+    this.selectSkill()
   }
 
   private selectSkill(): void {
@@ -714,6 +748,7 @@ export class BattleScene extends Phaser.Scene {
       })
       text.setDepth(321)
       text.setScrollFactor(0)
+      bindTouchText(text, () => this.selectItemMenuItem(i))
       this.itemMenuItems.push(text)
     }
     this.itemMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
@@ -726,6 +761,14 @@ export class BattleScene extends Phaser.Scene {
     this.itemMenuIndex = (this.itemMenuIndex + dir + this.itemMenuItems.length) % this.itemMenuItems.length
     this.itemMenuCursor.setY(this.itemMenuItems[this.itemMenuIndex]!.y + 6)
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private selectItemMenuItem(index: number): void {
+    if (!this.inItemMenu || index >= this.itemMenuItems.length) return
+    const cursorOffsetY = this.itemMenuCursor.y - this.itemMenuItems[this.itemMenuIndex]!.y
+    this.itemMenuIndex = index
+    this.itemMenuCursor.setY(this.itemMenuItems[this.itemMenuIndex]!.y + cursorOffsetY)
+    this.selectItem()
   }
 
   private selectItem(): void {
@@ -792,6 +835,7 @@ export class BattleScene extends Phaser.Scene {
       })
       text.setDepth(321)
       text.setScrollFactor(0)
+      bindTouchText(text, () => this.selectBarrelMenuItem(i))
       this.barrelMenuItems.push(text)
     }
     this.barrelMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
@@ -804,6 +848,14 @@ export class BattleScene extends Phaser.Scene {
     this.barrelMenuIndex = (this.barrelMenuIndex + dir + this.barrelMenuItems.length) % this.barrelMenuItems.length
     this.barrelMenuCursor.setY(this.barrelMenuItems[this.barrelMenuIndex]!.y + 6)
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private selectBarrelMenuItem(index: number): void {
+    if (!this.inBarrelMenu || index >= this.barrelMenuItems.length) return
+    const cursorOffsetY = this.barrelMenuCursor.y - this.barrelMenuItems[this.barrelMenuIndex]!.y
+    this.barrelMenuIndex = index
+    this.barrelMenuCursor.setY(this.barrelMenuItems[this.barrelMenuIndex]!.y + cursorOffsetY)
+    this.selectBarrel()
   }
 
   private selectBarrel(): void {
@@ -878,6 +930,7 @@ export class BattleScene extends Phaser.Scene {
       })
       text.setDepth(321)
       text.setScrollFactor(0)
+      bindTouchText(text, () => this.selectComboMenuItem(i))
       this.comboMenuItems.push(text)
     }
     this.comboMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
@@ -890,6 +943,14 @@ export class BattleScene extends Phaser.Scene {
     this.comboMenuIndex = (this.comboMenuIndex + dir + this.comboMenuItems.length) % this.comboMenuItems.length
     this.comboMenuCursor.setY(this.comboMenuItems[this.comboMenuIndex]!.y + 6)
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private selectComboMenuItem(index: number): void {
+    if (!this.inComboMenu || index >= this.comboMenuItems.length) return
+    const cursorOffsetY = this.comboMenuCursor.y - this.comboMenuItems[this.comboMenuIndex]!.y
+    this.comboMenuIndex = index
+    this.comboMenuCursor.setY(this.comboMenuItems[this.comboMenuIndex]!.y + cursorOffsetY)
+    this.selectCombo()
   }
 
   private selectCombo(): void {
@@ -1963,6 +2024,7 @@ export class BattleScene extends Phaser.Scene {
       backgroundColor: '#5a5a7e',
       padding: { x: BATTLE_RESULT_PANEL.confirmPaddingX, y: BATTLE_RESULT_PANEL.confirmPaddingY },
     }).setOrigin(0.5)
+    bindTouchText(confirm, () => this.finishBattleResult())
     objects.push(confirm)
     this.resultPanel = this.add.container(0, 0, objects)
     this.resultPanel.setDepth(500)

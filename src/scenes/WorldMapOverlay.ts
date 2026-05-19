@@ -2,7 +2,8 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_CONNECTION_LAYOUTS, WORLD_MAP_NODE_LAYOUTS } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_CONNECTION_LAYOUTS, WORLD_MAP_NODE_LAYOUTS, WORLD_MAP_TOUCH_TARGET_ALPHA, WORLD_MAP_TOUCH_TARGET_RADIUS } from '../utils/constants'
+import { bindTouchText } from '../utils/touch'
 
 interface MapNode {
   id: string
@@ -50,6 +51,7 @@ export class WorldMapOverlay extends Phaser.Scene {
       fontSize: '12px', color: '#7f8c8d',
     })
     hint.setOrigin(0.5).setScrollFactor(0).setDepth(201)
+    bindTouchText(hint, () => this.close())
 
     const nodeMap = new Map(MAP_NODES.map(n => [n.id, n]))
     for (const [fromId, toId] of WORLD_MAP_CONNECTION_LAYOUTS) {
@@ -75,11 +77,15 @@ export class WorldMapOverlay extends Phaser.Scene {
       const circle = this.add.circle(n.x, n.y, radius, color)
       circle.setDepth(201).setScrollFactor(0)
       if (!unlocked) circle.setAlpha(0.4)
+      const touchTarget = this.add.circle(n.x, n.y, WORLD_MAP_TOUCH_TARGET_RADIUS, 0x000000, WORLD_MAP_TOUCH_TARGET_ALPHA)
+      touchTarget.setDepth(203).setScrollFactor(0).setInteractive()
+      touchTarget.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectNode(i))
 
       const text = this.add.text(n.x, n.y + 12, n.name, {
         fontSize: '10px', color: unlocked ? '#bdc3c7' : '#555555',
       })
       text.setOrigin(0.5).setScrollFactor(0).setDepth(201)
+      bindTouchText(text, () => this.selectNode(i))
 
       this.nodes.push({ circle, text, data: n, unlocked })
       if (n.id === gd.currentMap) this.cursorIndex = i
@@ -132,6 +138,13 @@ export class WorldMapOverlay extends Phaser.Scene {
     const n = this.nodes[this.cursorIndex]!
     const status = n.unlocked ? (n.data.id === GameData.getInstance().currentMap ? ' [当前位置]' : ' [可前往]') : ' [未解锁]'
     this.nameText.setText(`${n.data.name}${status}`)
+  }
+
+  private selectNode(index: number): void {
+    if (index < 0 || index >= this.nodes.length) return
+    this.cursorIndex = index
+    this.updateCursor()
+    this.travel()
   }
 
   private travel(): void {

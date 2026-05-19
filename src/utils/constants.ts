@@ -3,6 +3,40 @@ export const GAME_WIDTH = 960
 export const GAME_HEIGHT = 540
 export const VIEWPORT_TILES_X = Math.ceil(GAME_WIDTH / TILE_SIZE)
 export const VIEWPORT_TILES_Y = Math.ceil(GAME_HEIGHT / TILE_SIZE)
+export const PROJECT_GITHUB_URL = 'https://github.com/cyber-tao/casktown'
+
+export const TOUCH_INPUT = {
+  ACTIVE_POINTERS: 4,
+  DEVICE_MEDIA_QUERY: '(pointer: coarse)',
+  MOBILE_VIEWPORT_MAX_WIDTH: 768,
+  POINTER_ALPHA: 0.4,
+  POINTER_HOVER_ALPHA: 0.55,
+  POINTER_STROKE_WIDTH: 2,
+  CONTROLS_DEPTH: 620,
+  LABEL_DEPTH_OFFSET: 1,
+  DPAD_CENTER_X: 104,
+  DPAD_CENTER_Y: GAME_HEIGHT - 92,
+  DPAD_BUTTON_SIZE: 54,
+  DPAD_BUTTON_OFFSET: 58,
+  DPAD_LABEL_FONT_SIZE: 24,
+  ACTION_BUTTON_SIZE: 68,
+  ACTION_BUTTON_SPACING: 82,
+  ACTION_BUTTON_X: GAME_WIDTH - 94,
+  ACTION_BUTTON_Y: GAME_HEIGHT - 92,
+  ACTION_LABEL_FONT_SIZE: 16,
+  OVERLAY_BACK_Y: GAME_HEIGHT - 36,
+  OVERLAY_BACK_FONT_SIZE: 16,
+  LABEL_COLOR: '#ffffff',
+  LABEL_FONT_FAMILY: 'sans-serif',
+} as const
+
+export const TITLE_GITHUB_LINK = {
+  x: GAME_WIDTH - 88,
+  y: GAME_HEIGHT - 28,
+  fontSize: 16,
+  target: '_blank',
+  features: 'noopener,noreferrer',
+} as const
 
 export const TILE_TEXTURE_PROCESSING = {
   TERRAIN_INSET_RATIO: 0.24,
@@ -489,6 +523,9 @@ export const WORLD_MAP_NODE_LAYOUTS = [
   { id: 'MAP_063', name: '地下魔宫', x: 65, y: 168, requires: ['fake_xiaoai_defeated'], spawn: { x: 16, y: 23 } },
   { id: 'MAP_070', name: '人心之渊', x: 470, y: 455, requires: ['true_route_unlocked'], spawn: { x: 17, y: 24 } },
 ] as const
+
+export const WORLD_MAP_TOUCH_TARGET_RADIUS = 18
+export const WORLD_MAP_TOUCH_TARGET_ALPHA = 0.001
 
 export const WORLD_MAP_CONNECTION_LAYOUTS = [
   ['MAP_001', 'MAP_002'], ['MAP_001', 'MAP_010'], ['MAP_010', 'MAP_011'], ['MAP_011', 'MAP_012'],
