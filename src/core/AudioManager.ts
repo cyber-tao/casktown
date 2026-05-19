@@ -86,6 +86,7 @@ export class AudioManager {
   private currentBgm: Phaser.Sound.BaseSound | null = null
   private currentBgmKey: string = ''
   private bgmSounds: Set<Phaser.Sound.BaseSound> = new Set()
+  private bgmTweenScenes = new WeakMap<Phaser.Sound.BaseSound, Phaser.Scene>()
   private bgmMuted = false
   private sfxMuted = false
   private voiceMuted = false
@@ -141,6 +142,7 @@ export class AudioManager {
       volume: 0,
     })
     this.bgmSounds.add(this.currentBgm)
+    this.bgmTweenScenes.set(this.currentBgm, this.scene)
     this.currentBgmKey = bgmId
     this.currentBgm.play()
 
@@ -161,6 +163,7 @@ export class AudioManager {
         continue
       }
       this.scene.tweens.killTweensOf(bgm)
+      this.bgmTweenScenes.set(bgm, this.scene)
       this.scene.tweens.add({
         targets: bgm,
         volume: 0,
@@ -173,9 +176,12 @@ export class AudioManager {
   }
 
   private destroyBGM(bgm: Phaser.Sound.BaseSound): void {
-    this.scene?.tweens.killTweensOf(bgm)
+    const tweenScene = this.bgmTweenScenes.get(bgm)
+    tweenScene?.tweens.killTweensOf(bgm)
+    if (this.scene && this.scene !== tweenScene) this.scene.tweens.killTweensOf(bgm)
     if (bgm.isPlaying) bgm.stop()
     bgm.destroy()
+    this.bgmTweenScenes.delete(bgm)
     this.bgmSounds.delete(bgm)
     if (this.currentBgm === bgm) {
       this.currentBgm = null

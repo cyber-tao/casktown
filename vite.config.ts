@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite'
 import path from 'path'
 
+const defaultBasePath = '/'
+const basePath = process.env.VITE_BASE_PATH || defaultBasePath
+
 export default defineConfig({
   root: '.',
+  base: basePath,
   publicDir: 'assets',
   build: {
     outDir: 'dist',
