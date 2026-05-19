@@ -10,10 +10,15 @@ import {
   PROCESS_FAILURE_EXIT_CODE,
   PROCESS_SUCCESS_EXIT_CODE,
   PROJECT_ROOT_PARENT_SEGMENT,
+  ALPHA_CHANNEL_OFFSET,
+  FRAME_SEQUENCE_SUFFIX_PATTERN,
+  RGBA_CHANNEL_COUNT,
   ROOT_FRAME_SEGMENT_COUNT,
   SOURCE_SPRITE_PACK_DIR,
   SPRITE_PACK_MANIFEST_FILE,
   TARGET_SPRITE_DIR,
+  TRANSPARENT_PIXEL,
+  TRIM_PADDING_PX,
   UTF8_FILE_ENCODING,
 } from './constants'
 
@@ -41,6 +46,20 @@ interface SpriteFrame {
   y: number
   w: number
   h: number
+}
+
+interface VisibleBounds {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+interface SpriteRenderPlan {
+  frame: SpriteFrame
+  outputPath: string
+  visibleBounds: VisibleBounds
+  groupKey: string
 }
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -87,6 +106,81 @@ function getPngFileName(fileName: string): string {
   return fileName.endsWith(PNG_FILE_EXTENSION) ? fileName : `${fileName}${PNG_FILE_EXTENSION}`
 }
 
+function getFrameGroupKey(category: string, frameName: string): string {
+  const frameSegments = frameName.split(POSIX_PATH_SEPARATOR).filter(Boolean)
+  if (frameSegments.length > ROOT_FRAME_SEGMENT_COUNT) {
+    return `${category}${POSIX_PATH_SEPARATOR}${frameSegments[0]}`
+  }
+  return `${category}${POSIX_PATH_SEPARATOR}${frameName.replace(FRAME_SEQUENCE_SUFFIX_PATTERN, '')}`
+}
+
+function findVisibleBounds(data: Buffer, width: number, height: number): VisibleBounds | null {
+  let minX = width
+  let minY = height
+  let maxX = -1
+  let maxY = -1
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const offset = (y * width + x) * RGBA_CHANNEL_COUNT
+      if (data[offset + ALPHA_CHANNEL_OFFSET]! === 0) continue
+      if (x < minX) minX = x
+      if (y < minY) minY = y
+      if (x > maxX) maxX = x
+      if (y > maxY) maxY = y
+    }
+  }
+
+  if (maxX < minX || maxY < minY) return null
+  return {
+    left: minX,
+    top: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+  }
+}
+
+async function readVisibleBounds(sourceImagePath: string, frameName: string, frame: SpriteFrame): Promise<VisibleBounds> {
+  const extracted = await sharp(sourceImagePath)
+    .extract({
+      left: frame.x,
+      top: frame.y,
+      width: frame.w,
+      height: frame.h,
+    })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  const visibleBounds = findVisibleBounds(extracted.data, extracted.info.width, extracted.info.height)
+  if (!visibleBounds) {
+    throw new Error(`Frame has no visible pixels: ${frameName}`)
+  }
+  return visibleBounds
+}
+
+async function writeCenteredSprite(sourceImagePath: string, plan: SpriteRenderPlan, side: number): Promise<void> {
+  const { frame, outputPath, visibleBounds } = plan
+  const leftPadding = Math.floor((side - visibleBounds.width) / 2)
+  const topPadding = Math.floor((side - visibleBounds.height) / 2)
+
+  await sharp(sourceImagePath)
+    .extract({
+      left: frame.x + visibleBounds.left,
+      top: frame.y + visibleBounds.top,
+      width: visibleBounds.width,
+      height: visibleBounds.height,
+    })
+    .extend({
+      left: leftPadding,
+      right: side - visibleBounds.width - leftPadding,
+      top: topPadding,
+      bottom: side - visibleBounds.height - topPadding,
+      background: TRANSPARENT_PIXEL,
+    })
+    .png()
+    .toFile(outputPath)
+}
+
 async function refreshSpritePackFile(packFile: SpritePackFile): Promise<number> {
   const sourceImagePath = resolveInside(sourceSpritePackDir, packFile.image)
   const sourceJsonPath = resolveInside(sourceSpritePackDir, packFile.json)
@@ -99,7 +193,8 @@ async function refreshSpritePackFile(packFile: SpritePackFile): Promise<number> 
 
   await rm(targetCategoryDir, { recursive: true, force: true })
 
-  let generatedFileCount = INITIAL_GENERATED_FILE_COUNT
+  const renderPlans: SpriteRenderPlan[] = []
+  const groupSides = new Map<string, number>()
   for (const [frameName, metadata] of Object.entries(atlas.frames)) {
     if (metadata.rotated) {
       throw new Error(`Rotated frames are not supported: ${frameName}`)
@@ -116,16 +211,22 @@ async function refreshSpritePackFile(packFile: SpritePackFile): Promise<number> 
     }
 
     const outputPath = resolveInside(targetSpriteDir, ...getOutputSegments(packFile.category, frameName))
-    await mkdir(dirname(outputPath), { recursive: true })
-    await sharp(sourceImagePath)
-      .extract({
-        left: metadata.frame.x,
-        top: metadata.frame.y,
-        width: metadata.frame.w,
-        height: metadata.frame.h,
-      })
-      .png()
-      .toFile(outputPath)
+    const visibleBounds = await readVisibleBounds(sourceImagePath, frameName, metadata.frame)
+    const groupKey = getFrameGroupKey(packFile.category, frameName)
+    const side = Math.max(visibleBounds.width, visibleBounds.height) + TRIM_PADDING_PX * 2
+    groupSides.set(groupKey, Math.max(groupSides.get(groupKey) ?? INITIAL_GENERATED_FILE_COUNT, side))
+    renderPlans.push({
+      frame: metadata.frame,
+      outputPath,
+      visibleBounds,
+      groupKey,
+    })
+  }
+
+  let generatedFileCount = INITIAL_GENERATED_FILE_COUNT
+  for (const renderPlan of renderPlans) {
+    await mkdir(dirname(renderPlan.outputPath), { recursive: true })
+    await writeCenteredSprite(sourceImagePath, renderPlan, groupSides.get(renderPlan.groupKey)!)
     generatedFileCount += ROOT_FRAME_SEGMENT_COUNT
   }
 
