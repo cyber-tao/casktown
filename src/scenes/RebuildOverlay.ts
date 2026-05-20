@@ -3,7 +3,7 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 
@@ -34,8 +34,8 @@ export class RebuildOverlay extends Phaser.Scene {
     overlay.setDepth(200)
     overlay.setScrollFactor(0)
 
-    this.titleText = this.add.text(GAME_WIDTH / 2, 40, '木桶镇重建', {
-      fontSize: '24px', color: '#f1c40f',
+    this.titleText = this.add.text(GAME_WIDTH / 2, scalePx(40), '木桶镇重建', {
+      fontSize: scaleFont(24), color: '#f1c40f',
     })
     this.titleText.setOrigin(0.5)
     this.titleText.setScrollFactor(0)
@@ -44,27 +44,27 @@ export class RebuildOverlay extends Phaser.Scene {
     const gd = GameData.getInstance()
     const matCount = gd.inventory.items['rebuild_material'] || 0
 
-    const matText = this.add.text(GAME_WIDTH / 2, 70, `建材: ${matCount}`, {
-      fontSize: '16px', color: '#ecf0f1',
+    const matText = this.add.text(GAME_WIDTH / 2, scalePx(70), `建材: ${matCount}`, {
+      fontSize: scaleFont(16), color: '#ecf0f1',
     })
     matText.setOrigin(0.5)
     matText.setScrollFactor(0)
     matText.setDepth(201)
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - 160, 120, 320, 28, 0x3498db, 0.3)
+    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - scalePx(160), scalePx(120), scalePx(320), scalePx(28), 0x3498db, 0.3)
     this.cursor.setOrigin(0, 0.5)
     this.cursor.setDepth(201)
     this.cursor.setScrollFactor(0)
 
     this.items = []
-    const startY = 120
+    const startY = scalePx(120)
     for (let i = 0; i < REBUILD_OPTIONS.length; i++) {
       const opt = REBUILD_OPTIONS[i]!
       const built = gd.getFlag(`rebuilt_${opt.id}`) === true
       const label = built ? `${opt.name} [已完成]` : `${opt.name} (建材x${opt.material})`
       const color = built ? '#7f8c8d' : '#ecf0f1'
-      const text = this.add.text(GAME_WIDTH / 2 - 140, startY + i * 36, label, {
-        fontSize: '16px', color,
+      const text = this.add.text(GAME_WIDTH / 2 - scalePx(140), startY + scalePx(i * 36), label, {
+        fontSize: scaleFont(16), color,
       })
       text.setScrollFactor(0)
       text.setDepth(201)
@@ -72,8 +72,8 @@ export class RebuildOverlay extends Phaser.Scene {
       this.items.push(text)
     }
 
-    this.descText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 80, '', {
-      fontSize: '14px', color: '#bdc3c7',
+    this.descText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - scalePx(80), '', {
+      fontSize: scaleFont(14), color: '#bdc3c7',
     })
     this.descText.setOrigin(0.5)
     this.descText.setScrollFactor(0)
@@ -107,7 +107,7 @@ export class RebuildOverlay extends Phaser.Scene {
   }
 
   private updateCursor(): void {
-    this.cursor.y = 120 + this.cursorIndex * 36
+    this.cursor.y = scalePx(120 + this.cursorIndex * 36)
     this.updateDescription()
   }
 
@@ -139,7 +139,7 @@ export class RebuildOverlay extends Phaser.Scene {
     this.items[this.cursorIndex]!.setColor('#7f8c8d')
 
     const matText = this.titleText.scene.children.list.find(
-      c => c instanceof Phaser.GameObjects.Text && c !== this.titleText && c.y === 70
+      c => c instanceof Phaser.GameObjects.Text && c !== this.titleText && c.y === scalePx(70)
     ) as Phaser.GameObjects.Text | null
     if (matText) {
       matText.setText(`建材: ${gd.inventory.items['rebuild_material'] || 0}`)

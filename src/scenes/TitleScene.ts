@@ -13,8 +13,16 @@ import {
   TITLE_MENU_ACTION_INDEX,
   TITLE_MENU_ITEMS,
   TITLE_MENU_LAYOUT,
+  scaleFont,
+  scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+
+type ViteImportMeta = ImportMeta & {
+  readonly env: {
+    readonly BASE_URL: string
+  }
+}
 
 export class TitleScene extends Phaser.Scene {
   private menuIndex = 0
@@ -40,26 +48,26 @@ export class TitleScene extends Phaser.Scene {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.3)
 
     // Title
-    this.add.text(GAME_WIDTH / 2, 120, '木桶镇', {
-      fontSize: '64px',
+    this.add.text(GAME_WIDTH / 2, scalePx(120), '木桶镇', {
+      fontSize: scaleFont(64),
       color: '#e8e8f0',
       fontFamily: 'serif',
       stroke: '#1a1a2e',
-      strokeThickness: 6,
+      strokeThickness: scalePx(6),
     }).setOrigin(0.5)
 
-    this.add.text(GAME_WIDTH / 2, 190, 'CaskTown', {
-      fontSize: '28px',
+    this.add.text(GAME_WIDTH / 2, scalePx(190), 'CaskTown', {
+      fontSize: scaleFont(28),
       color: '#a0a0c0',
       fontFamily: 'sans-serif',
       stroke: '#1a1a2e',
-      strokeThickness: 4,
+      strokeThickness: scalePx(4),
     }).setOrigin(0.5)
 
     // Menu
     for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
       const text = this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
-        fontSize: '24px',
+        fontSize: scaleFont(24),
         color: '#c0c0d0',
         fontFamily: 'sans-serif',
       }).setOrigin(0.5)
@@ -82,7 +90,7 @@ export class TitleScene extends Phaser.Scene {
       color: '#a0a0c0',
       fontFamily: 'sans-serif',
       stroke: '#1a1a2e',
-      strokeThickness: 3,
+      strokeThickness: scalePx(3),
     }).setOrigin(0.5), () => this.openGithub())
 
     // Fade in
@@ -137,8 +145,23 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private openEditor(): void {
-    const editorWindow = window.open(EDITOR_PAGE_LINK.url, EDITOR_PAGE_LINK.target, EDITOR_PAGE_LINK.features)
-    if (!editorWindow) console.warn('Failed to open configuration editor')
+    const editorUrl = this.getEditorUrl()
+    const editorWindow = window.open(editorUrl, EDITOR_PAGE_LINK.target)
+    if (editorWindow) {
+      editorWindow.opener = null
+      return
+    }
+
+    try {
+      window.location.assign(editorUrl)
+    } catch {
+      console.warn('Failed to open configuration editor')
+    }
+  }
+
+  private getEditorUrl(): string {
+    const baseUrl = new URL((import.meta as ViteImportMeta).env.BASE_URL, window.location.href)
+    return new URL(EDITOR_PAGE_LINK.url, baseUrl).toString()
   }
 
   private startNewGame(): void {
@@ -170,8 +193,8 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private showMessage(msg: string): void {
-    const text = this.add.text(GAME_WIDTH / 2, 480, msg, {
-      fontSize: '20px',
+    const text = this.add.text(GAME_WIDTH / 2, scalePx(480), msg, {
+      fontSize: scaleFont(20),
       color: '#e74c3c',
     }).setOrigin(0.5)
     this.time.delayedCall(1500, () => text.destroy())

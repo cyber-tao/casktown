@@ -136,8 +136,9 @@ const DARK_TILES = [
 ] as const
 
 const imageAssets: Record<string, string> = {
-  ui_title_bg: 'title_bg_001.jpg',
-  ui_battle_bg_field: 'battle_bg_field_001.jpg',
+  ui_title_bg: 'title_bg_1080p.jpg',
+  ui_battle_bg_field: 'battle_bg_field_1080p.jpg',
+  ui_world_map: 'map-world.png',
 }
 
 for (const [character, poses] of Object.entries(CHARACTER_POSES)) {

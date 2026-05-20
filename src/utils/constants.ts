@@ -1,6 +1,12 @@
-export const TILE_SIZE = 32
-export const GAME_WIDTH = 960
-export const GAME_HEIGHT = 540
+export const BASE_TILE_SIZE = 32
+export const BASE_GAME_WIDTH = 960
+export const BASE_GAME_HEIGHT = 540
+export const GAME_SCALE = 2
+export const TILE_SIZE = BASE_TILE_SIZE * GAME_SCALE
+export const GAME_WIDTH = BASE_GAME_WIDTH * GAME_SCALE
+export const GAME_HEIGHT = BASE_GAME_HEIGHT * GAME_SCALE
+export const scalePx = (value: number): number => Math.round(value * GAME_SCALE)
+export const scaleFont = (value: number): string => `${scalePx(value)}px`
 export const VIEWPORT_TILES_X = Math.ceil(GAME_WIDTH / TILE_SIZE)
 export const VIEWPORT_TILES_Y = Math.ceil(GAME_HEIGHT / TILE_SIZE)
 export const PROJECT_GITHUB_URL = 'https://github.com/cyber-tao/casktown'
@@ -11,29 +17,34 @@ export const TOUCH_INPUT = {
   MOBILE_VIEWPORT_MAX_WIDTH: 768,
   POINTER_ALPHA: 0.4,
   POINTER_HOVER_ALPHA: 0.55,
-  POINTER_STROKE_WIDTH: 2,
+  POINTER_STROKE_WIDTH: scalePx(2),
+  TEXT_HIT_AREA_MIN_CSS_WIDTH: 48,
+  TEXT_HIT_AREA_MIN_CSS_HEIGHT: 44,
+  TEXT_HIT_AREA_MAX_GAME_HEIGHT: scalePx(40),
+  TEXT_HIT_AREA_PADDING_CSS: 8,
+  MIN_DISPLAY_SCALE: 0.1,
   CONTROLS_DEPTH: 620,
   LABEL_DEPTH_OFFSET: 1,
-  DPAD_CENTER_X: 104,
-  DPAD_CENTER_Y: GAME_HEIGHT - 92,
-  DPAD_BUTTON_SIZE: 54,
-  DPAD_BUTTON_OFFSET: 58,
-  DPAD_LABEL_FONT_SIZE: 24,
-  ACTION_BUTTON_SIZE: 68,
-  ACTION_BUTTON_SPACING: 82,
-  ACTION_BUTTON_X: GAME_WIDTH - 94,
-  ACTION_BUTTON_Y: GAME_HEIGHT - 92,
-  ACTION_LABEL_FONT_SIZE: 16,
-  OVERLAY_BACK_Y: GAME_HEIGHT - 36,
-  OVERLAY_BACK_FONT_SIZE: 16,
+  DPAD_CENTER_X: scalePx(104),
+  DPAD_CENTER_Y: GAME_HEIGHT - scalePx(92),
+  DPAD_BUTTON_SIZE: scalePx(54),
+  DPAD_BUTTON_OFFSET: scalePx(58),
+  DPAD_LABEL_FONT_SIZE: scalePx(24),
+  ACTION_BUTTON_SIZE: scalePx(68),
+  ACTION_BUTTON_SPACING: scalePx(82),
+  ACTION_BUTTON_X: GAME_WIDTH - scalePx(94),
+  ACTION_BUTTON_Y: GAME_HEIGHT - scalePx(92),
+  ACTION_LABEL_FONT_SIZE: scalePx(16),
+  OVERLAY_BACK_Y: GAME_HEIGHT - scalePx(36),
+  OVERLAY_BACK_FONT_SIZE: scalePx(16),
   LABEL_COLOR: '#ffffff',
   LABEL_FONT_FAMILY: 'sans-serif',
 } as const
 
 export const TITLE_GITHUB_LINK = {
-  x: GAME_WIDTH - 88,
-  y: GAME_HEIGHT - 28,
-  fontSize: 16,
+  x: GAME_WIDTH - scalePx(88),
+  y: GAME_HEIGHT - scalePx(28),
+  fontSize: scalePx(16),
   target: '_blank',
   features: 'noopener,noreferrer',
 } as const
@@ -47,15 +58,14 @@ export const TITLE_MENU_ACTION_INDEX = {
   EXIT: 4,
 } as const
 export const TITLE_MENU_LAYOUT = {
-  START_Y: 284,
-  GAP_Y: 44,
-  CURSOR_OFFSET_X: 80,
-  CURSOR_SIZE: 12,
+  START_Y: scalePx(284),
+  GAP_Y: scalePx(44),
+  CURSOR_OFFSET_X: scalePx(80),
+  CURSOR_SIZE: scalePx(12),
 } as const
 export const EDITOR_PAGE_LINK = {
-  url: '/editor.html',
+  url: 'editor.html',
   target: '_blank',
-  features: 'noopener,noreferrer',
 } as const
 
 export const TILE_TEXTURE_PROCESSING = {
@@ -529,33 +539,71 @@ export const REDESIGNED_MAP_LAYOUTS = {
   },
 } as const
 
+export const WORLD_MAP_BACKGROUND_LAYOUT = {
+  KEY: 'ui_world_map',
+  SOURCE_WIDTH: 1448,
+  SOURCE_HEIGHT: 1086,
+  X: GAME_WIDTH / 2,
+  Y: GAME_HEIGHT / 2,
+  DISPLAY_HEIGHT: GAME_HEIGHT,
+  BACKDROP_COLOR: 0x1a1a2e,
+  BACKDROP_ALPHA: 1,
+  BACKDROP_DEPTH: 198,
+  MAP_DEPTH: 199,
+} as const
+
+const WORLD_MAP_DISPLAY_SCALE = WORLD_MAP_BACKGROUND_LAYOUT.DISPLAY_HEIGHT / WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_HEIGHT
+export const WORLD_MAP_BACKGROUND_DISPLAY_WIDTH = WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_WIDTH * WORLD_MAP_DISPLAY_SCALE
+const WORLD_MAP_LEFT = WORLD_MAP_BACKGROUND_LAYOUT.X - WORLD_MAP_BACKGROUND_DISPLAY_WIDTH / 2
+const WORLD_MAP_TOP = WORLD_MAP_BACKGROUND_LAYOUT.Y - WORLD_MAP_BACKGROUND_LAYOUT.DISPLAY_HEIGHT / 2
+const worldMapPoint = (x: number, y: number) => ({
+  x: Math.round(WORLD_MAP_LEFT + x * WORLD_MAP_DISPLAY_SCALE),
+  y: Math.round(WORLD_MAP_TOP + y * WORLD_MAP_DISPLAY_SCALE),
+})
+
 export const WORLD_MAP_NODE_LAYOUTS = [
-  { id: 'MAP_001', name: '木桶镇', x: 470, y: 260, requires: [], spawn: { x: 22, y: 17 } },
-  { id: 'MAP_002', name: '木桶镇·广场', x: 505, y: 238, requires: ['festival_started'], spawn: { x: 22, y: 17 } },
-  { id: 'MAP_010', name: '奇妙森林入口', x: 610, y: 245, requires: [], spawn: { x: 2, y: 16 } },
-  { id: 'MAP_011', name: '奇妙森林围湖', x: 710, y: 205, requires: [], spawn: { x: 2, y: 15 } },
-  { id: 'MAP_012', name: '千年树种祭台', x: 805, y: 168, requires: [], spawn: { x: 2, y: 13 } },
-  { id: 'MAP_020', name: '码头航路', x: 610, y: 330, requires: [], spawn: { x: 4, y: 15 } },
-  { id: 'MAP_030', name: '圣水殿外路', x: 720, y: 350, requires: ['has_sacred_water'], spawn: { x: 2, y: 15 } },
-  { id: 'MAP_031', name: '圣水殿大厅', x: 790, y: 365, requires: ['has_sacred_water'], spawn: { x: 16, y: 25 } },
-  { id: 'MAP_040', name: '神殿山路', x: 470, y: 360, requires: [], spawn: { x: 20, y: 27 } },
-  { id: 'MAP_041', name: '七色路', x: 500, y: 430, requires: [], spawn: { x: 18, y: 27 } },
-  { id: 'MAP_042', name: '神殿', x: 540, y: 500, requires: [], spawn: { x: 16, y: 24 } },
-  { id: 'MAP_050', name: '生命之泉入口', x: 320, y: 245, requires: [], spawn: { x: 38, y: 16 } },
-  { id: 'MAP_051', name: '青龙潭', x: 250, y: 178, requires: ['has_millennium_seed'], spawn: { x: 17, y: 24 } },
-  { id: 'MAP_052', name: '白虎穴', x: 220, y: 285, requires: ['has_sacred_water'], spawn: { x: 16, y: 22 } },
-  { id: 'MAP_053', name: '朱雀林', x: 350, y: 152, requires: ['has_divine_laurel'], spawn: { x: 17, y: 24 } },
-  { id: 'MAP_054', name: '玄武殿', x: 265, y: 378, requires: ['defeated_chi_mei_wang'], spawn: { x: 17, y: 24 } },
-  { id: 'MAP_055', name: '轮回道', x: 355, y: 410, requires: ['released_four_seals'], spawn: { x: 16, y: 22 } },
-  { id: 'MAP_060', name: '魔宫入口', x: 180, y: 250, requires: [], spawn: { x: 35, y: 25 } },
-  { id: 'MAP_061', name: '黑暗沼泽', x: 125, y: 330, requires: ['fake_xiaoai_defeated'], spawn: { x: 2, y: 14 } },
-  { id: 'MAP_062', name: '魔宫大厅', x: 105, y: 225, requires: ['fake_xiaoai_defeated'], spawn: { x: 17, y: 25 } },
-  { id: 'MAP_063', name: '地下魔宫', x: 65, y: 168, requires: ['fake_xiaoai_defeated'], spawn: { x: 16, y: 23 } },
-  { id: 'MAP_070', name: '人心之渊', x: 470, y: 455, requires: ['true_route_unlocked'], spawn: { x: 17, y: 24 } },
+  { id: 'MAP_001', name: '木桶镇', ...worldMapPoint(704, 362), requires: [], spawn: { x: 22, y: 17 } },
+  { id: 'MAP_002', name: '木桶镇·广场', ...worldMapPoint(694, 142), requires: ['festival_started'], spawn: { x: 22, y: 17 } },
+  { id: 'MAP_010', name: '奇妙森林入口', ...worldMapPoint(884, 368), requires: [], spawn: { x: 2, y: 16 } },
+  { id: 'MAP_011', name: '奇妙森林围湖', ...worldMapPoint(1026, 252), requires: [], spawn: { x: 2, y: 15 } },
+  { id: 'MAP_012', name: '千年树种祭台', ...worldMapPoint(974, 296), requires: [], spawn: { x: 2, y: 13 } },
+  { id: 'MAP_020', name: '码头航路', ...worldMapPoint(1268, 320), requires: [], spawn: { x: 4, y: 15 } },
+  { id: 'MAP_030', name: '圣水殿外路', ...worldMapPoint(1262, 678), requires: ['has_sacred_water'], spawn: { x: 2, y: 15 } },
+  { id: 'MAP_031', name: '圣水殿大厅', ...worldMapPoint(1280, 172), requires: ['has_sacred_water'], spawn: { x: 16, y: 25 } },
+  { id: 'MAP_040', name: '神殿山路', ...worldMapPoint(652, 590), requires: [], spawn: { x: 20, y: 27 } },
+  { id: 'MAP_041', name: '七色路', ...worldMapPoint(938, 762), requires: [], spawn: { x: 18, y: 27 } },
+  { id: 'MAP_042', name: '神殿', ...worldMapPoint(706, 690), requires: [], spawn: { x: 16, y: 24 } },
+  { id: 'MAP_050', name: '生命之泉入口', ...worldMapPoint(384, 520), requires: [], spawn: { x: 38, y: 16 } },
+  { id: 'MAP_051', name: '青龙潭', ...worldMapPoint(390, 470), requires: ['has_millennium_seed'], spawn: { x: 17, y: 24 } },
+  { id: 'MAP_052', name: '白虎穴', ...worldMapPoint(326, 612), requires: ['has_sacred_water'], spawn: { x: 16, y: 22 } },
+  { id: 'MAP_053', name: '朱雀林', ...worldMapPoint(500, 426), requires: ['has_divine_laurel'], spawn: { x: 17, y: 24 } },
+  { id: 'MAP_054', name: '玄武殿', ...worldMapPoint(282, 748), requires: ['defeated_chi_mei_wang'], spawn: { x: 17, y: 24 } },
+  { id: 'MAP_055', name: '轮回道', ...worldMapPoint(462, 660), requires: ['released_four_seals'], spawn: { x: 16, y: 22 } },
+  { id: 'MAP_060', name: '魔宫入口', ...worldMapPoint(154, 272), requires: [], spawn: { x: 35, y: 25 } },
+  { id: 'MAP_061', name: '黑暗沼泽', ...worldMapPoint(150, 708), requires: ['fake_xiaoai_defeated'], spawn: { x: 2, y: 14 } },
+  { id: 'MAP_062', name: '魔宫大厅', ...worldMapPoint(160, 250), requires: ['fake_xiaoai_defeated'], spawn: { x: 17, y: 25 } },
+  { id: 'MAP_063', name: '地下魔宫', ...worldMapPoint(126, 340), requires: ['fake_xiaoai_defeated'], spawn: { x: 16, y: 23 } },
+  { id: 'MAP_070', name: '人心之渊', ...worldMapPoint(706, 910), requires: ['true_route_unlocked'], spawn: { x: 17, y: 24 } },
 ] as const
 
-export const WORLD_MAP_TOUCH_TARGET_RADIUS = 18
+export const WORLD_MAP_TOUCH_TARGET_RADIUS = scalePx(18)
 export const WORLD_MAP_TOUCH_TARGET_ALPHA = 0.001
+
+export const WORLD_MAP_UI = {
+  TITLE_Y: scalePx(16),
+  TITLE_FONT_SIZE: scalePx(18),
+  NAME_Y: GAME_HEIGHT - scalePx(30),
+  NAME_FONT_SIZE: scalePx(14),
+  HINT_Y: GAME_HEIGHT - scalePx(55),
+  HINT_FONT_SIZE: scalePx(12),
+  CONNECTION_WIDTH: scalePx(1),
+  NODE_UNLOCKED_RADIUS: scalePx(8),
+  NODE_LOCKED_RADIUS: scalePx(6),
+  NODE_LABEL_OFFSET_Y: scalePx(12),
+  NODE_LABEL_FONT_SIZE: scalePx(10),
+  CURSOR_RING_RADIUS: scalePx(14),
+  CURSOR_RING_WIDTH: scalePx(2),
+} as const
 
 export const WORLD_MAP_CONNECTION_LAYOUTS = [
   ['MAP_001', 'MAP_002'], ['MAP_001', 'MAP_010'], ['MAP_010', 'MAP_011'], ['MAP_011', 'MAP_012'],
@@ -588,37 +636,37 @@ export const TEXT_SPEED = {
   instant: 0,
 } as const
 
-export const DIALOGUE_TEXT_WIDTH = 720
+export const DIALOGUE_TEXT_WIDTH = scalePx(720)
 export const DIALOGUE_TEXT_WRAP_CHARS = 33
 export const DIALOGUE_BOX = {
   x: GAME_WIDTH / 2,
-  y: 440,
-  width: 900,
-  height: 160,
-  padding: 18,
+  y: scalePx(440),
+  width: scalePx(900),
+  height: scalePx(160),
+  padding: scalePx(18),
 } as const
 export const DIALOGUE_FACE = {
-  x: 110,
+  x: scalePx(110),
   y: DIALOGUE_BOX.y,
-  size: 120,
+  size: scalePx(120),
 } as const
 export const DIALOGUE_NAME_POSITION = {
-  x: 50,
+  x: scalePx(50),
   y: DIALOGUE_BOX.y - DIALOGUE_BOX.height / 2,
 } as const
 export const DIALOGUE_TEXT_POSITION = {
-  x: 180,
-  y: 380,
+  x: scalePx(180),
+  y: scalePx(380),
 } as const
 export const DIALOGUE_CHOICE = {
-  x: 200,
-  cursorX: 190,
-  cursorSize: 8,
-  width: 700,
-  fontSize: 15,
-  minFontSize: 12,
-  gap: 6,
-  minGap: 2,
+  x: scalePx(200),
+  cursorX: scalePx(190),
+  cursorSize: scalePx(8),
+  width: scalePx(700),
+  fontSize: scalePx(15),
+  minFontSize: scalePx(12),
+  gap: scalePx(6),
+  minGap: scalePx(2),
 } as const
 
 export const SAVE_SLOTS = 3
@@ -668,26 +716,26 @@ export const MAP_INPUT_CODES = {
 } as const
 
 export const MAP_HUD = {
-  MINIMAP_X: GAME_WIDTH - 154,
-  MINIMAP_Y: 18,
-  MINIMAP_WIDTH: 136,
-  MINIMAP_HEIGHT: 98,
-  INNER_PADDING: 8,
+  MINIMAP_X: GAME_WIDTH - scalePx(154),
+  MINIMAP_Y: scalePx(18),
+  MINIMAP_WIDTH: scalePx(136),
+  MINIMAP_HEIGHT: scalePx(98),
+  INNER_PADDING: scalePx(8),
   PANEL_ALPHA: 0.76,
   MAP_ALPHA: 0.9,
   COLLISION_ALPHA: 0.62,
   EVENT_ALPHA: 0.92,
   BORDER_ALPHA: 0.95,
-  BORDER_WIDTH: 1,
+  BORDER_WIDTH: scalePx(1),
   DEPTH: 140,
   MARKER_DEPTH_OFFSET: 1,
   HIT_AREA_DEPTH_OFFSET: 2,
   LABEL_DEPTH_OFFSET: 3,
-  PLAYER_MARKER_SIZE: 5,
-  EVENT_MARKER_MIN_SIZE: 3,
-  LABEL_FONT_SIZE: 10,
-  LABEL_OFFSET_X: 8,
-  LABEL_OFFSET_Y: 10,
+  PLAYER_MARKER_SIZE: scalePx(5),
+  EVENT_MARKER_MIN_SIZE: scalePx(3),
+  LABEL_FONT_SIZE: scalePx(10),
+  LABEL_OFFSET_X: scalePx(8),
+  LABEL_OFFSET_Y: scalePx(10),
   PROMPT_TEXT: 'Space 调查/对话 | M 地图 | Tab 菜单',
   OPEN_HINT: 'M 地图',
   BACKGROUND_COLOR: COLORS.black,
@@ -722,24 +770,24 @@ export const BGM_FADE_DURATIONS = {
 export const SETTINGS_PANEL = {
   x: GAME_WIDTH / 2,
   y: GAME_HEIGHT / 2,
-  width: 560,
-  height: 510,
+  width: scalePx(560),
+  height: scalePx(510),
   overlayAlpha: 0.6,
   alpha: 0.98,
-  strokeWidth: 2,
-  titleY: 76,
-  titleFontSize: 28,
-  rowX: 220,
-  rowStartY: 112,
-  rowHeight: 26,
-  labelFontSize: 15,
-  valueFontSize: 15,
-  valueX: 280,
-  backOffsetY: 8,
-  backFontSize: 16,
-  cursorX: 200,
-  cursorOffsetY: 7,
-  cursorSize: 10,
+  strokeWidth: scalePx(2),
+  titleY: scalePx(76),
+  titleFontSize: scalePx(28),
+  rowX: scalePx(220),
+  rowStartY: scalePx(112),
+  rowHeight: scalePx(26),
+  labelFontSize: scalePx(15),
+  valueFontSize: scalePx(15),
+  valueX: scalePx(280),
+  backOffsetY: scalePx(8),
+  backFontSize: scalePx(16),
+  cursorX: scalePx(200),
+  cursorOffsetY: scalePx(7),
+  cursorSize: scalePx(10),
 } as const
 
 export const FIELD_ENTITY_BEHAVIOR = {
@@ -836,37 +884,37 @@ export const FIELD_ENCOUNTER_RATE_THRESHOLDS = {
 export const BATTLE_RESULT_PANEL = {
   x: GAME_WIDTH / 2,
   y: GAME_HEIGHT / 2,
-  width: 540,
-  height: 320,
-  titleOffsetY: -118,
-  lineStartOffsetY: -68,
-  lineGap: 30,
-  contentPaddingX: 46,
+  width: scalePx(540),
+  height: scalePx(320),
+  titleOffsetY: scalePx(-118),
+  lineStartOffsetY: scalePx(-68),
+  lineGap: scalePx(30),
+  contentPaddingX: scalePx(46),
   maxLines: 6,
-  confirmOffsetY: 120,
+  confirmOffsetY: scalePx(120),
   overlayAlpha: 0.55,
-  confirmPaddingX: 18,
-  confirmPaddingY: 8,
+  confirmPaddingX: scalePx(18),
+  confirmPaddingY: scalePx(8),
 } as const
 
 export const BATTLE_TARGET_INDICATOR = {
-  width: 18,
-  height: 14,
-  offsetY: 46,
+  width: scalePx(18),
+  height: scalePx(14),
+  offsetY: scalePx(46),
   color: 0xf1c40f,
   depth: 330,
-  tweenOffsetY: 6,
+  tweenOffsetY: scalePx(6),
   tweenDurationMs: 360,
 } as const
 
 export const GAME_OVER_PANEL = {
-  titleY: 132,
-  subtitleY: 198,
-  menuStartY: 290,
-  menuGap: 48,
-  cursorOffsetX: 112,
-  cursorSize: 12,
-  messageY: 484,
+  titleY: scalePx(132),
+  subtitleY: scalePx(198),
+  menuStartY: scalePx(290),
+  menuGap: scalePx(48),
+  cursorOffsetX: scalePx(112),
+  cursorSize: scalePx(12),
+  messageY: scalePx(484),
   messageDurationMs: 1500,
 } as const
 

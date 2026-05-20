@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TRAINING_COST, TRAINING_EXP_BASE, TRAINING_EXP_PER_LEVEL } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, TRAINING_COST, TRAINING_EXP_BASE, TRAINING_EXP_PER_LEVEL, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 export class TrainingOverlay extends Phaser.Scene {
@@ -23,28 +23,28 @@ export class TrainingOverlay extends Phaser.Scene {
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, 0.5)
     overlay.setDepth(400).setScrollFactor(0)
 
-    const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 600, 420, COLORS.uiBg, 0.95)
-    panel.setStrokeStyle(2, COLORS.uiBorder).setDepth(401).setScrollFactor(0)
+    const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, scalePx(600), scalePx(420), COLORS.uiBg, 0.95)
+    panel.setStrokeStyle(scalePx(2), COLORS.uiBorder).setDepth(401).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - 280, GAME_HEIGHT / 2 - 195, 'Training', {
-      fontSize: '24px', color: COLORS.uiText,
+    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(195), 'Training', {
+      fontSize: scaleFont(24), color: COLORS.uiText,
     }).setDepth(402).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - 280, GAME_HEIGHT / 2 - 162, `Cost: ${TRAINING_COST}G / session`, {
-      fontSize: '16px', color: '#a0a0b0',
+    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(162), `Cost: ${TRAINING_COST}G / session`, {
+      fontSize: scaleFont(16), color: '#a0a0b0',
     }).setDepth(402).setScrollFactor(0)
 
-    this.goldText = this.add.text(GAME_WIDTH / 2 + 100, GAME_HEIGHT / 2 - 195, '', {
-      fontSize: '20px', color: '#f1c40f',
+    this.goldText = this.add.text(GAME_WIDTH / 2 + scalePx(100), GAME_HEIGHT / 2 - scalePx(195), '', {
+      fontSize: scaleFont(20), color: '#f1c40f',
     }).setDepth(402).setScrollFactor(0)
     this.updateGold()
 
-    this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 185, '', {
-      fontSize: '16px', color: '#f1c40f',
+    this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(185), '', {
+      fontSize: scaleFont(16), color: '#f1c40f',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200, '↑↓ Select | Enter Train | Esc Back', {
-      fontSize: '12px', color: '#808090',
+    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ Select | Enter Train | Esc Back', {
+      fontSize: scaleFont(12), color: '#808090',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
 
     this.renderList()
@@ -57,7 +57,7 @@ export class TrainingOverlay extends Phaser.Scene {
     this.cursor?.destroy()
 
     const gd = GameData.getInstance()
-    const startY = GAME_HEIGHT / 2 - 115
+    const startY = GAME_HEIGHT / 2 - scalePx(115)
 
     for (let i = 0; i < gd.party.length; i++) {
       const charId = gd.party[i]!
@@ -68,29 +68,29 @@ export class TrainingOverlay extends Phaser.Scene {
       const expPct = char.stats.expToNext > 0 ? Math.floor((char.stats.exp / char.stats.expToNext) * 100) : 0
       const expGain = TRAINING_EXP_BASE + char.stats.level * TRAINING_EXP_PER_LEVEL
 
-      const t1 = this.add.text(GAME_WIDTH / 2 - 260, startY + i * 70,
+      const t1 = this.add.text(GAME_WIDTH / 2 - scalePx(260), startY + scalePx(i * 70),
         `${char.name} Lv.${char.stats.level}  EXP ${char.stats.exp}/${char.stats.expToNext} (${expPct}%)`,
-        { fontSize: '18px', color },
+        { fontSize: scaleFont(18), color },
       ).setDepth(402).setScrollFactor(0)
       bindTouchText(t1, () => this.selectPartyMember(i))
       this.textObjects.push(t1)
 
-      const t2 = this.add.text(GAME_WIDTH / 2 - 240, startY + i * 70 + 24,
+      const t2 = this.add.text(GAME_WIDTH / 2 - scalePx(240), startY + scalePx(i * 70 + 24),
         `HP:${char.stats.maxHp} MP:${char.stats.maxMp} ATK:${char.stats.atk} DEF:${char.stats.def} SPD:${char.stats.speed}`,
-        { fontSize: '14px', color: '#a0a0b0' },
+        { fontSize: scaleFont(14), color: '#a0a0b0' },
       ).setDepth(402).setScrollFactor(0)
       bindTouchText(t2, () => this.selectPartyMember(i))
       this.textObjects.push(t2)
 
-      const t3 = this.add.text(GAME_WIDTH / 2 - 240, startY + i * 70 + 42,
+      const t3 = this.add.text(GAME_WIDTH / 2 - scalePx(240), startY + scalePx(i * 70 + 42),
         `+${expGain} EXP per session`,
-        { fontSize: '12px', color: '#606070' },
+        { fontSize: scaleFont(12), color: '#606070' },
       ).setDepth(402).setScrollFactor(0)
       bindTouchText(t3, () => this.selectPartyMember(i))
       this.textObjects.push(t3)
     }
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - 275, startY + this.selectedIndex * 70 + 9, 8, 8, COLORS.tpBar)
+    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - scalePx(275), startY + scalePx(this.selectedIndex * 70 + 9), scalePx(8), scalePx(8), COLORS.tpBar)
     this.cursor.setDepth(403).setScrollFactor(0)
   }
 

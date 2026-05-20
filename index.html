@@ -11,6 +11,8 @@
       padding: 0;
       width: 100%;
       height: 100%;
+      min-width: 100%;
+      min-height: 100%;
       background: #1a1a2e;
       overflow: hidden;
       display: flex;
@@ -22,7 +24,8 @@
       -webkit-touch-callout: none;
     }
     #game-container {
-      width: min(960px, 100vw, calc(100vh * 16 / 9));
+      width: min(1920px, 100dvw, calc(100dvh * 16 / 9));
+      height: min(1080px, 100dvh, calc(100dvw * 9 / 16));
       aspect-ratio: 16 / 9;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
       touch-action: none;

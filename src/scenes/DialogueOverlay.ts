@@ -13,6 +13,8 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   TEXT_SPEED,
+  scaleFont,
+  scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
@@ -161,7 +163,7 @@ export class DialogueOverlay extends Phaser.Scene {
 
     // Dialogue box
     const box = this.add.rectangle(DIALOGUE_BOX.x, DIALOGUE_BOX.y, DIALOGUE_BOX.width, DIALOGUE_BOX.height, 0x2a2a3e, 0.95)
-    box.setStrokeStyle(2, 0x5a5a7e)
+    box.setStrokeStyle(scalePx(2), 0x5a5a7e)
     box.setDepth(201)
     box.setScrollFactor(0)
     box.setInteractive()
@@ -169,7 +171,7 @@ export class DialogueOverlay extends Phaser.Scene {
 
     // Face placeholder
     this.faceRect = this.add.rectangle(DIALOGUE_FACE.x, DIALOGUE_FACE.y, DIALOGUE_FACE.size, DIALOGUE_FACE.size, 0x3a3a4e)
-    this.faceRect.setStrokeStyle(2, 0x5a5a7e)
+    this.faceRect.setStrokeStyle(scalePx(2), 0x5a5a7e)
     this.faceRect.setDepth(201)
     this.faceRect.setScrollFactor(0)
 
@@ -182,20 +184,20 @@ export class DialogueOverlay extends Phaser.Scene {
 
     // Name
     this.nameText = this.add.text(DIALOGUE_NAME_POSITION.x, DIALOGUE_NAME_POSITION.y, '', {
-      fontSize: '18px',
+      fontSize: scaleFont(18),
       color: '#f1c40f',
       backgroundColor: '#2a2a3e',
-      padding: { x: 8, y: 4 },
+      padding: { x: scalePx(8), y: scalePx(4) },
     })
     this.nameText.setDepth(202)
     this.nameText.setScrollFactor(0)
 
     // Text
     this.textObj = this.add.text(DIALOGUE_TEXT_POSITION.x, DIALOGUE_TEXT_POSITION.y, '', {
-      fontSize: '18px',
+      fontSize: scaleFont(18),
       color: '#e8e8f0',
       wordWrap: { width: DIALOGUE_TEXT_WIDTH, useAdvancedWrap: true, callback: wrapDialogueText },
-      lineSpacing: 6,
+      lineSpacing: scalePx(6),
       fixedWidth: DIALOGUE_TEXT_WIDTH,
     })
     this.textObj.setDepth(202)

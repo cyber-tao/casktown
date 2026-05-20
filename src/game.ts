@@ -25,8 +25,11 @@ export class CaskTownGame extends Phaser.Game {
       pixelArt: true,
       roundPixels: true,
       scale: {
+        parent: 'game-container',
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT,
       },
       physics: {
         default: 'arcade',

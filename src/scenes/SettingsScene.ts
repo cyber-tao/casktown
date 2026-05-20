@@ -3,7 +3,7 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
-import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED, SETTINGS_PANEL } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED, SETTINGS_PANEL, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 interface SettingOption {
@@ -158,7 +158,7 @@ export class SettingsScene extends Phaser.Scene {
     const container = this.menuItems[index]
     if (!container) return
 
-    const oldText = container.list.find(c => c instanceof Phaser.GameObjects.Text && c.x > 100) as Phaser.GameObjects.Text
+    const oldText = container.list.find(c => c instanceof Phaser.GameObjects.Text && c.x > scalePx(100)) as Phaser.GameObjects.Text
     if (oldText) {
       const newText = this.createValueText(config, gd)
       newText.setX(oldText.x)

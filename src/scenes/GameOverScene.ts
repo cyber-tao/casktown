@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { AudioManager } from '../core/AudioManager'
 import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
-import { GAME_HEIGHT, GAME_OVER_PANEL, GAME_WIDTH, START_MAP_ID } from '../utils/constants'
+import { GAME_HEIGHT, GAME_OVER_PANEL, GAME_WIDTH, START_MAP_ID, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 export class GameOverScene extends Phaser.Scene {
@@ -22,14 +22,14 @@ export class GameOverScene extends Phaser.Scene {
 
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x080810, 1)
     this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.titleY, 'GAME OVER', {
-      fontSize: '56px',
+      fontSize: scaleFont(56),
       color: '#e74c3c',
       fontFamily: 'serif',
       stroke: '#000000',
-      strokeThickness: 6,
+      strokeThickness: scalePx(6),
     }).setOrigin(0.5)
     this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.subtitleY, '队伍倒下了，但故事还没有结束。', {
-      fontSize: '22px',
+      fontSize: scaleFont(22),
       color: '#e8e8f0',
       fontFamily: 'sans-serif',
     }).setOrigin(0.5)
@@ -37,7 +37,7 @@ export class GameOverScene extends Phaser.Scene {
     const labels = ['读取存档', '重新开始', '返回标题']
     for (let i = 0; i < labels.length; i++) {
       const text = this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.menuStartY + i * GAME_OVER_PANEL.menuGap, labels[i]!, {
-        fontSize: '24px',
+        fontSize: scaleFont(24),
         color: '#c0c0d0',
         fontFamily: 'sans-serif',
       }).setOrigin(0.5)
@@ -98,7 +98,7 @@ export class GameOverScene extends Phaser.Scene {
 
   private showMessage(message: string): void {
     const text = this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.messageY, message, {
-      fontSize: '20px',
+      fontSize: scaleFont(20),
       color: '#e74c3c',
     }).setOrigin(0.5)
     this.time.delayedCall(GAME_OVER_PANEL.messageDurationMs, () => text.destroy())

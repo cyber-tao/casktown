@@ -3,7 +3,7 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 type CodexTab = 'monsters' | 'items' | 'story'
@@ -35,8 +35,8 @@ export class CodexOverlay extends Phaser.Scene {
     overlay.setScrollFactor(0)
 
     // Title
-    const title = this.add.text(GAME_WIDTH / 2, 20, '预言之书 · 图鉴', {
-      fontSize: '20px', color: '#f1c40f',
+    const title = this.add.text(GAME_WIDTH / 2, scalePx(20), '预言之书 · 图鉴', {
+      fontSize: scaleFont(20), color: '#f1c40f',
     })
     title.setOrigin(0.5, 0)
     title.setScrollFactor(0)
@@ -52,8 +52,8 @@ export class CodexOverlay extends Phaser.Scene {
     for (let i = 0; i < tabNames.length; i++) {
       const t = tabNames[i]!
       const color = t.key === this.tab ? '#f1c40f' : '#95a5a6'
-      const tab = this.add.text(160 + i * 200, 50, t.label, {
-        fontSize: '16px', color,
+      const tab = this.add.text(scalePx(160 + i * 200), scalePx(50), t.label, {
+        fontSize: scaleFont(16), color,
       })
       tab.setOrigin(0.5)
       tab.setScrollFactor(0)
@@ -89,14 +89,14 @@ export class CodexOverlay extends Phaser.Scene {
     })
 
     // List area (left)
-    this.cursor = this.add.rectangle(140, 85, 260, 22, 0x3498db, 0.3)
+    this.cursor = this.add.rectangle(scalePx(140), scalePx(85), scalePx(260), scalePx(22), 0x3498db, 0.3)
     this.cursor.setOrigin(0, 0)
     this.cursor.setDepth(201)
     this.cursor.setScrollFactor(0)
 
     // Detail area (right)
-    this.detailText = this.add.text(430, 80, '', {
-      fontSize: '13px', color: '#ecf0f1', wordWrap: { width: 480 },
+    this.detailText = this.add.text(scalePx(430), scalePx(80), '', {
+      fontSize: scaleFont(13), color: '#ecf0f1', wordWrap: { width: scalePx(480) },
     })
     this.detailText.setScrollFactor(0)
     this.detailText.setDepth(201)
@@ -168,15 +168,15 @@ export class CodexOverlay extends Phaser.Scene {
 
     if (this.tab === 'monsters') {
       if (this.discoveredEnemies.length === 0) {
-        const t = this.add.text(150, 90, '尚未发现任何怪物', { fontSize: '14px', color: '#7f8c8d' })
+        const t = this.add.text(scalePx(150), scalePx(90), '尚未发现任何怪物', { fontSize: scaleFont(14), color: '#7f8c8d' })
         t.setScrollFactor(0).setDepth(201)
         this.listItems.push(t)
       }
       for (let i = 0; i < this.discoveredEnemies.length; i++) {
         const ed = enemies[this.discoveredEnemies[i]!]
         if (!ed) continue
-        const t = this.add.text(150, 90 + i * 26, `${ed.isBoss ? '★' : '·'} ${ed.name}`, {
-          fontSize: '14px', color: ed.isBoss ? '#e74c3c' : '#ecf0f1',
+        const t = this.add.text(scalePx(150), scalePx(90 + i * 26), `${ed.isBoss ? '★' : '·'} ${ed.name}`, {
+          fontSize: scaleFont(14), color: ed.isBoss ? '#e74c3c' : '#ecf0f1',
         })
         t.setScrollFactor(0).setDepth(201)
         bindTouchText(t, () => this.selectListItem(i))
@@ -184,7 +184,7 @@ export class CodexOverlay extends Phaser.Scene {
       }
     } else if (this.tab === 'items') {
       if (this.discoveredItems.length === 0) {
-        const t = this.add.text(150, 90, '尚未获得任何物品', { fontSize: '14px', color: '#7f8c8d' })
+        const t = this.add.text(scalePx(150), scalePx(90), '尚未获得任何物品', { fontSize: scaleFont(14), color: '#7f8c8d' })
         t.setScrollFactor(0).setDepth(201)
         this.listItems.push(t)
       }
@@ -192,8 +192,8 @@ export class CodexOverlay extends Phaser.Scene {
         const item = items[this.discoveredItems[i]!]
         if (!item) continue
         const count = GameData.getInstance().inventory.items[item.id] || 0
-        const t = this.add.text(150, 90 + i * 26, `${item.name} x${count}`, {
-          fontSize: '14px', color: '#ecf0f1',
+        const t = this.add.text(scalePx(150), scalePx(90 + i * 26), `${item.name} x${count}`, {
+          fontSize: scaleFont(14), color: '#ecf0f1',
         })
         t.setScrollFactor(0).setDepth(201)
         bindTouchText(t, () => this.selectListItem(i))
@@ -214,8 +214,8 @@ export class CodexOverlay extends Phaser.Scene {
         `xiaoai净化: ${gd.branches.xiaoai_purified ? '是' : '否'}`,
       ]
       for (let i = 0; i < storyEntries.length; i++) {
-        const t = this.add.text(150, 90 + i * 26, storyEntries[i]!, {
-          fontSize: '14px', color: '#ecf0f1',
+        const t = this.add.text(scalePx(150), scalePx(90 + i * 26), storyEntries[i]!, {
+          fontSize: scaleFont(14), color: '#ecf0f1',
         })
         t.setScrollFactor(0).setDepth(201)
         bindTouchText(t, () => this.selectListItem(i))
@@ -227,8 +227,8 @@ export class CodexOverlay extends Phaser.Scene {
         const conditionMet = !prophecy.condition || conditionValue === true || (typeof conditionValue === 'number' && conditionValue > 0)
         const label = conditionMet ? `📖 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
         const color = conditionMet ? '#f39c12' : '#5a5a5a'
-        const t = this.add.text(150, 90 + (STORY_BRANCH_COUNT + i) * 26, label, {
-          fontSize: '14px', color,
+        const t = this.add.text(scalePx(150), scalePx(90 + (STORY_BRANCH_COUNT + i) * 26), label, {
+          fontSize: scaleFont(14), color,
         })
         t.setScrollFactor(0).setDepth(201)
         bindTouchText(t, () => this.selectListItem(STORY_BRANCH_COUNT + i))
@@ -240,7 +240,7 @@ export class CodexOverlay extends Phaser.Scene {
   }
 
   private updateCursor(): void {
-    this.cursor.y = 85 + this.cursorIndex * 26
+    this.cursor.y = scalePx(85 + this.cursorIndex * 26)
     this.updateDetail()
   }
 

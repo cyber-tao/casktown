@@ -3,7 +3,7 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 interface ShopItem {
@@ -36,28 +36,28 @@ export class ShopOverlay extends Phaser.Scene {
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, 0.5)
     overlay.setDepth(400).setScrollFactor(0)
 
-    const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 600, 420, COLORS.uiBg, 0.95)
-    panel.setStrokeStyle(2, COLORS.uiBorder).setDepth(401).setScrollFactor(0)
+    const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, scalePx(600), scalePx(420), COLORS.uiBg, 0.95)
+    panel.setStrokeStyle(scalePx(2), COLORS.uiBorder).setDepth(401).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - 280, GAME_HEIGHT / 2 - 195, '商店', {
-      fontSize: '24px', color: COLORS.uiText,
+    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(195), '商店', {
+      fontSize: scaleFont(24), color: COLORS.uiText,
     }).setDepth(402).setScrollFactor(0)
 
-    this.goldText = this.add.text(GAME_WIDTH / 2 + 100, GAME_HEIGHT / 2 - 195, '', {
-      fontSize: '20px', color: '#f1c40f',
+    this.goldText = this.add.text(GAME_WIDTH / 2 + scalePx(100), GAME_HEIGHT / 2 - scalePx(195), '', {
+      fontSize: scaleFont(20), color: '#f1c40f',
     }).setDepth(402).setScrollFactor(0)
     this.updateGold()
 
-    this.descText = this.add.text(GAME_WIDTH / 2 - 280, GAME_HEIGHT / 2 + 140, '', {
-      fontSize: '14px', color: '#a0a0b0', wordWrap: { width: 540 },
+    this.descText = this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 + scalePx(140), '', {
+      fontSize: scaleFont(14), color: '#a0a0b0', wordWrap: { width: scalePx(540) },
     }).setDepth(402).setScrollFactor(0)
 
-    this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 185, '', {
-      fontSize: '16px', color: '#f1c40f',
+    this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(185), '', {
+      fontSize: scaleFont(16), color: '#f1c40f',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200, '↑↓ Select | Enter Buy | Esc Back', {
-      fontSize: '12px', color: '#808090',
+    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ Select | Enter Buy | Esc Back', {
+      fontSize: scaleFont(12), color: '#808090',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
 
     this.renderList()
@@ -71,7 +71,7 @@ export class ShopOverlay extends Phaser.Scene {
     this.cursor?.destroy()
 
     const gd = GameData.getInstance()
-    const startY = GAME_HEIGHT / 2 - 145
+    const startY = GAME_HEIGHT / 2 - scalePx(145)
 
     for (let i = 0; i < this.shopItems.length; i++) {
       const si = this.shopItems[i]!
@@ -79,14 +79,14 @@ export class ShopOverlay extends Phaser.Scene {
       const owned = gd.inventory.items[si.id] || 0
       const color = i === this.selectedIndex ? '#f1c40f' : COLORS.uiText
       const label = `${(def?.name ?? si.id).padEnd(10)}  ${si.price}G  x${owned}`
-      const t = this.add.text(GAME_WIDTH / 2 - 260, startY + i * 28, label, {
-        fontSize: '18px', color,
+      const t = this.add.text(GAME_WIDTH / 2 - scalePx(260), startY + scalePx(i * 28), label, {
+        fontSize: scaleFont(18), color,
       }).setDepth(402).setScrollFactor(0)
       bindTouchText(t, () => this.selectShopItem(i))
       this.textObjects.push(t)
     }
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - 275, startY + this.selectedIndex * 28 + 9, 8, 8, COLORS.tpBar)
+    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - scalePx(275), startY + scalePx(this.selectedIndex * 28 + 9), scalePx(8), scalePx(8), COLORS.tpBar)
     this.cursor.setDepth(403).setScrollFactor(0)
   }
 

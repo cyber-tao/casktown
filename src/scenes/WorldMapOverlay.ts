@@ -2,7 +2,18 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_CONNECTION_LAYOUTS, WORLD_MAP_NODE_LAYOUTS, WORLD_MAP_TOUCH_TARGET_ALPHA, WORLD_MAP_TOUCH_TARGET_RADIUS } from '../utils/constants'
+import { queueImageAsset } from '../core/AssetLoader'
+import {
+  GAME_WIDTH,
+  GAME_HEIGHT,
+  WORLD_MAP_BACKGROUND_DISPLAY_WIDTH,
+  WORLD_MAP_BACKGROUND_LAYOUT,
+  WORLD_MAP_CONNECTION_LAYOUTS,
+  WORLD_MAP_NODE_LAYOUTS,
+  WORLD_MAP_TOUCH_TARGET_ALPHA,
+  WORLD_MAP_TOUCH_TARGET_RADIUS,
+  WORLD_MAP_UI,
+} from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 interface MapNode {
@@ -30,25 +41,33 @@ export class WorldMapOverlay extends Phaser.Scene {
     super({ key: 'WorldMapOverlay', active: false })
   }
 
+  preload(): void {
+    queueImageAsset(this, WORLD_MAP_BACKGROUND_LAYOUT.KEY)
+  }
+
   create(): void {
     AudioManager.getInstance().setScene(this)
     const gd = GameData.getInstance()
 
-    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e, 0.95)
-    bg.setDepth(200).setScrollFactor(0)
+    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_COLOR, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_ALPHA)
+    bg.setDepth(WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_DEPTH).setScrollFactor(0)
 
-    const title = this.add.text(GAME_WIDTH / 2, 16, '世界地图 · 快速旅行', {
-      fontSize: '18px', color: '#f1c40f',
+    const mapBackground = this.add.image(WORLD_MAP_BACKGROUND_LAYOUT.X, WORLD_MAP_BACKGROUND_LAYOUT.Y, WORLD_MAP_BACKGROUND_LAYOUT.KEY)
+    mapBackground.setDisplaySize(WORLD_MAP_BACKGROUND_DISPLAY_WIDTH, WORLD_MAP_BACKGROUND_LAYOUT.DISPLAY_HEIGHT)
+    mapBackground.setDepth(WORLD_MAP_BACKGROUND_LAYOUT.MAP_DEPTH).setScrollFactor(0)
+
+    const title = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.TITLE_Y, '世界地图 · 快速旅行', {
+      fontSize: `${WORLD_MAP_UI.TITLE_FONT_SIZE}px`, color: '#f1c40f',
     })
     title.setOrigin(0.5, 0).setScrollFactor(0).setDepth(201)
 
-    this.nameText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30, '', {
-      fontSize: '14px', color: '#ecf0f1',
+    this.nameText = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.NAME_Y, '', {
+      fontSize: `${WORLD_MAP_UI.NAME_FONT_SIZE}px`, color: '#ecf0f1',
     })
     this.nameText.setOrigin(0.5).setScrollFactor(0).setDepth(201)
 
-    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 55, '↑↓ 选择 | Enter 旅行 | Esc 返回', {
-      fontSize: '12px', color: '#7f8c8d',
+    const hint = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.HINT_Y, '↑↓ 选择 | Enter 旅行 | Esc 返回', {
+      fontSize: `${WORLD_MAP_UI.HINT_FONT_SIZE}px`, color: '#7f8c8d',
     })
     hint.setOrigin(0.5).setScrollFactor(0).setDepth(201)
     bindTouchText(hint, () => this.close())
@@ -59,7 +78,7 @@ export class WorldMapOverlay extends Phaser.Scene {
       const to = nodeMap.get(toId)
       if (from && to) {
         const line = this.add.graphics()
-        line.lineStyle(1, 0x34495e, 0.5)
+        line.lineStyle(WORLD_MAP_UI.CONNECTION_WIDTH, 0x34495e, 0.5)
         line.lineBetween(from.x, from.y, to.x, to.y)
         line.setDepth(200).setScrollFactor(0)
       }
@@ -72,7 +91,7 @@ export class WorldMapOverlay extends Phaser.Scene {
       const n = MAP_NODES[i]!
       const unlocked = n.requires.length === 0 || n.requires.every(r => gd.getFlag(r) === true)
       const color = unlocked ? (n.id === gd.currentMap ? 0x2ecc71 : 0x3498db) : 0x7f8c8d
-      const radius = unlocked ? 8 : 6
+      const radius = unlocked ? WORLD_MAP_UI.NODE_UNLOCKED_RADIUS : WORLD_MAP_UI.NODE_LOCKED_RADIUS
 
       const circle = this.add.circle(n.x, n.y, radius, color)
       circle.setDepth(201).setScrollFactor(0)
@@ -81,8 +100,8 @@ export class WorldMapOverlay extends Phaser.Scene {
       touchTarget.setDepth(203).setScrollFactor(0).setInteractive()
       touchTarget.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectNode(i))
 
-      const text = this.add.text(n.x, n.y + 12, n.name, {
-        fontSize: '10px', color: unlocked ? '#bdc3c7' : '#555555',
+      const text = this.add.text(n.x, n.y + WORLD_MAP_UI.NODE_LABEL_OFFSET_Y, n.name, {
+        fontSize: `${WORLD_MAP_UI.NODE_LABEL_FONT_SIZE}px`, color: unlocked ? '#bdc3c7' : '#555555',
       })
       text.setOrigin(0.5).setScrollFactor(0).setDepth(201)
       bindTouchText(text, () => this.selectNode(i))
@@ -93,8 +112,8 @@ export class WorldMapOverlay extends Phaser.Scene {
 
     // Cursor ring
     const cn = this.nodes[this.cursorIndex]!
-    this.cursorRing = this.add.circle(cn.data.x, cn.data.y, 14)
-    this.cursorRing.setStrokeStyle(2, 0xf1c40f)
+    this.cursorRing = this.add.circle(cn.data.x, cn.data.y, WORLD_MAP_UI.CURSOR_RING_RADIUS)
+    this.cursorRing.setStrokeStyle(WORLD_MAP_UI.CURSOR_RING_WIDTH, 0xf1c40f)
     this.cursorRing.setFillStyle(0x000000, 0)
     this.cursorRing.setDepth(202).setScrollFactor(0)
 

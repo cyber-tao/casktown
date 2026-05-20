@@ -5,7 +5,7 @@ import { QuestSystem } from '../core/QuestSystem'
 import { SaveManager } from '../core/SaveManager'
 import { AudioManager } from '../core/AudioManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { GAME_WIDTH, GAME_HEIGHT, SAVE_SLOTS } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, SAVE_SLOTS, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import type { CharacterData, ItemData } from '../data/types'
 
@@ -49,17 +49,17 @@ export class MenuOverlay extends Phaser.Scene {
     overlay.setDepth(400)
     overlay.setScrollFactor(0)
 
-    const panel = this.add.rectangle(200, GAME_HEIGHT / 2, 240, 400, 0x2a2a3e, 0.95)
-    panel.setStrokeStyle(2, 0x5a5a7e)
+    const panel = this.add.rectangle(scalePx(200), GAME_HEIGHT / 2, scalePx(240), scalePx(400), 0x2a2a3e, 0.95)
+    panel.setStrokeStyle(scalePx(2), 0x5a5a7e)
     panel.setDepth(401)
     panel.setScrollFactor(0)
 
-    const contentPanel = this.add.rectangle(620, GAME_HEIGHT / 2, 520, 400, 0x2a2a3e, 0.95)
-    contentPanel.setStrokeStyle(2, 0x5a5a7e)
+    const contentPanel = this.add.rectangle(scalePx(620), GAME_HEIGHT / 2, scalePx(520), scalePx(400), 0x2a2a3e, 0.95)
+    contentPanel.setStrokeStyle(scalePx(2), 0x5a5a7e)
     contentPanel.setDepth(401)
     contentPanel.setScrollFactor(0)
 
-    this.contentArea = this.add.container(420, 80)
+    this.contentArea = this.add.container(scalePx(420), scalePx(80))
     this.contentArea.setDepth(402)
     this.contentArea.setScrollFactor(0)
 
@@ -75,7 +75,7 @@ export class MenuOverlay extends Phaser.Scene {
     for (let i = 0; i < items.length; i++) {
       this.addMenuText(items[i]!, startY + i * 44, '20px')
     }
-    this.cursor = this.add.rectangle(85, startY + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(startY + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
     this.menuIndex = 0
@@ -120,7 +120,7 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     this.menuIndex = (this.menuIndex - 1 + this.menuItems.length) % this.menuItems.length
-    this.cursor.setY(this.menuItems[this.menuIndex]!.y + 10)
+    this.cursor.setY(this.menuItems[this.menuIndex]!.y + scalePx(10))
     AudioManager.getInstance().playSFX('cursor')
     this.updateContent()
   }
@@ -146,7 +146,7 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     this.menuIndex = (this.menuIndex + 1 + this.menuItems.length) % this.menuItems.length
-    this.cursor.setY(this.menuItems[this.menuIndex]!.y + 10)
+    this.cursor.setY(this.menuItems[this.menuIndex]!.y + scalePx(10))
     AudioManager.getInstance().playSFX('cursor')
     this.updateContent()
   }
@@ -355,8 +355,8 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private addContentText(text: string, y: number): void {
-    const t = this.add.text(0, y, text, {
-      fontSize: '16px',
+    const t = this.add.text(0, scalePx(y), text, {
+      fontSize: scaleFont(16),
       color: '#e8e8f0',
     })
     t.setDepth(402)
@@ -364,8 +364,8 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private addMenuText(text: string, y: number, fontSize = '18px'): Phaser.GameObjects.Text {
-    const t = this.add.text(100, y, text, {
-      fontSize,
+    const t = this.add.text(scalePx(100), scalePx(y), text, {
+      fontSize: scaleFont(Number.parseInt(fontSize, 10)),
       color: '#c0c0d0',
     })
     t.setDepth(402)
@@ -472,7 +472,7 @@ export class MenuOverlay extends Phaser.Scene {
     for (let i = 0; i < items.length; i++) {
       this.addMenuText(items[i]!, 100 + i * 44)
     }
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
     this.menuIndex = 0
@@ -512,7 +512,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.addMenuText('返回', 100 + this.itemList.length * 36 + 10)
 
     this.itemCursorIndex = 0
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
 
@@ -527,7 +527,7 @@ export class MenuOverlay extends Phaser.Scene {
 
     this.menuItems = []
     this.addMenuText('返回', 100)
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
     this.menuIndex = 0
@@ -576,7 +576,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.addMenuText(`饰品: ${acc}`, 188)
     this.addMenuText('返回', 232)
 
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
     this.menuIndex = 0
@@ -619,7 +619,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.addMenuText('返回', 100 + this.equipList.length * 36)
 
     this.equipCursorIndex = 0
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
 
@@ -630,7 +630,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private refreshEquipListCursor(): void {
     if (!this.cursor || this.equipList.length === 0) return
-    const y = 100 + this.equipCursorIndex * 36 + 10
+    const y = scalePx(100 + this.equipCursorIndex * 36 + 10)
     this.cursor.setY(y)
   }
 
@@ -690,7 +690,7 @@ export class MenuOverlay extends Phaser.Scene {
     }
 
     this.loadCursorIndex = 0
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
 
@@ -706,7 +706,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private refreshLoadCursor(): void {
     if (!this.cursor) return
-    this.cursor.setY(100 + this.loadCursorIndex * 44 + 10)
+    this.cursor.setY(scalePx(100 + this.loadCursorIndex * 44 + 10))
   }
 
   private doSave(slot: number): void {
@@ -750,7 +750,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.addMenuText('返回', 100 + SAVE_SLOTS * 44)
 
     this.loadCursorIndex = 0
-    this.cursor = this.add.rectangle(85, 100 + 10, 10, 10, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(85), scalePx(100 + 10), scalePx(10), scalePx(10), 0xf1c40f)
     this.cursor.setDepth(403)
     this.cursor.setScrollFactor(0)
 
@@ -849,7 +849,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private refreshItemCursor(): void {
     if (!this.cursor || this.itemList.length === 0) return
-    this.cursor.setY(100 + this.itemCursorIndex * 36 + 10)
+    this.cursor.setY(scalePx(100 + this.itemCursorIndex * 36 + 10))
   }
 
   private showSettings(): void {

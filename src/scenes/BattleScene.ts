@@ -17,6 +17,8 @@ import {
   ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
+  scaleFont,
+  scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
@@ -132,18 +134,18 @@ export class BattleScene extends Phaser.Scene {
     AudioManager.getInstance().setScene(this)
 
     // Background image
-    const bgImg = this.add.image(480, 270, 'ui_battle_bg_field')
-    bgImg.setDisplaySize(960, 540)
+    const bgImg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ui_battle_bg_field')
+    bgImg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
     bgImg.setDepth(299)
     bgImg.setScrollFactor(0)
 
     // Background overlay
-    this.bg = this.add.rectangle(480, 270, 960, 540, 0x1a1a2e, 0.3)
+    this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e, 0.3)
     this.bg.setDepth(300)
     this.bg.setScrollFactor(0)
 
     // Ground
-    const ground = this.add.rectangle(480, 380, 960, 200, 0x2d4a22, 0.5)
+    const ground = this.add.rectangle(GAME_WIDTH / 2, scalePx(380), GAME_WIDTH, scalePx(200), 0x2d4a22, 0.5)
     ground.setDepth(301)
     ground.setScrollFactor(0)
 
@@ -161,7 +163,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Battle intro transition
     const flashColor = isBoss ? 0xff0000 : 0xffffff
-    const introFlash = this.add.rectangle(480, 270, 960, 540, flashColor, 1)
+    const introFlash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, flashColor, 1)
     introFlash.setDepth(400)
     introFlash.setScrollFactor(0)
     this.tweens.add({
@@ -176,7 +178,7 @@ export class BattleScene extends Phaser.Scene {
     for (const unit of this.units) {
       if (!unit.isPlayer && unit.sprite) {
         const targetX = unit.sprite.x
-        unit.sprite.x = targetX + 200
+        unit.sprite.x = targetX + scalePx(200)
         this.tweens.add({
           targets: unit.sprite,
           x: targetX,
@@ -201,12 +203,12 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < party.length; i++) {
       const char = gd.characters.get(party[i]!)
       if (!char) continue
-      const x = 120 + i * 100
-      const y = 320
+      const x = scalePx(120 + i * 100)
+      const y = scalePx(320)
       const baseKey = this.getCharacterSpriteBase(char.id)
       const textureKey = this.resolveTextureKey(`${baseKey}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
-      sprite.setDisplaySize(64, 64)
+      sprite.setDisplaySize(scalePx(64), scalePx(64))
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
 
@@ -231,7 +233,7 @@ export class BattleScene extends Phaser.Scene {
       sprite.setInteractive({ useHandCursor: true })
       sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
-      this.createUnitUI(unit, x, y - 55)
+      this.createUnitUI(unit, x, y - scalePx(55))
     }
 
     // Spawn enemies (demo: use encounterId to pick enemies)
@@ -240,11 +242,11 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < enemyIds.length; i++) {
       const ed = enemies[enemyIds[i]!]
       if (!ed) continue
-      const x = 700 + i * 100
-      const y = 280 + (i % 2) * 80
+      const x = scalePx(700 + i * 100)
+      const y = scalePx(280 + (i % 2) * 80)
       const textureKey = this.resolveTextureKey(`mon_${ed.id}_01`, DEFAULT_ENEMY_SPRITE_KEY) ?? DEFAULT_ENEMY_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
-      sprite.setDisplaySize(64, 64)
+      sprite.setDisplaySize(scalePx(64), scalePx(64))
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
 
@@ -271,7 +273,7 @@ export class BattleScene extends Phaser.Scene {
       sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
       this.enemyData.push(ed)
-      this.createUnitUI(unit, x, y - 55)
+      this.createUnitUI(unit, x, y - scalePx(55))
     }
   }
 
@@ -295,16 +297,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private createUnitUI(unit: BattleUnit, x: number, y: number): void {
-    const barWidth = 70
-    const barHeight = 5
+    const barWidth = scalePx(70)
+    const barHeight = scalePx(5)
     const isPlayer = unit.isPlayer
     const barColors = isPlayer
       ? { hp: 0xe74c3c, mp: 0x3498db, tp: 0xf1c40f }
       : { hp: 0xe74c3c, mp: 0x3498db, tp: 0xf1c40f }
 
     // Name
-    const nameText = this.add.text(x, y - 16, unit.name, {
-      fontSize: '12px',
+    const nameText = this.add.text(x, y - scalePx(16), unit.name, {
+      fontSize: scaleFont(12),
       color: '#ffffff',
     })
     nameText.setOrigin(0.5)
@@ -315,35 +317,35 @@ export class BattleScene extends Phaser.Scene {
 
     // HP bar
     this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-    const hpBar = this.add.rectangle(x - barWidth / 2 + 1, cy, barWidth - 2, barHeight - 2, barColors.hp)
+    const hpBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), barColors.hp)
     hpBar.setOrigin(0, 0.5)
     hpBar.setDepth(307)
     hpBar.setScrollFactor(0)
     unit.hpBar = hpBar
-    cy += barHeight + 1
+    cy += barHeight + scalePx(1)
 
     if (isPlayer) {
       // MP bar
       this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const mpBar = this.add.rectangle(x - barWidth / 2 + 1, cy, barWidth - 2, barHeight - 2, barColors.mp)
+      const mpBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), barColors.mp)
       mpBar.setOrigin(0, 0.5)
       mpBar.setDepth(307)
       mpBar.setScrollFactor(0)
       unit.mpBar = mpBar
-      cy += barHeight + 1
+      cy += barHeight + scalePx(1)
 
       // TP bar
       this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const tpBar = this.add.rectangle(x - barWidth / 2 + 1, cy, barWidth - 2, barHeight - 2, barColors.tp)
+      const tpBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), barColors.tp)
       tpBar.setOrigin(0, 0.5)
       tpBar.setDepth(307)
       tpBar.setScrollFactor(0)
       unit.tpBar = tpBar
-      cy += barHeight + 1
+      cy += barHeight + scalePx(1)
     } else {
       // Break gauge for enemies
       this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const breakBar = this.add.rectangle(x - barWidth / 2 + 1, cy, barWidth - 2, barHeight - 2, 0x9b59b6)
+      const breakBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), 0x9b59b6)
       breakBar.setOrigin(0, 0.5)
       breakBar.setDepth(307)
       breakBar.setScrollFactor(0)
@@ -373,16 +375,16 @@ export class BattleScene extends Phaser.Scene {
 
   private createUI(): void {
     // Command menu background
-    const menuBg = this.add.rectangle(800, 472, 280, 144, 0x2a2a3e, 0.95)
-    menuBg.setStrokeStyle(2, 0x5a5a7e)
+    const menuBg = this.add.rectangle(scalePx(800), scalePx(430), scalePx(280), scalePx(194), 0x2a2a3e, 0.95)
+    menuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
     menuBg.setDepth(310)
     menuBg.setScrollFactor(0)
 
     // Menu items
     const commands = ['攻击', '技能', '连携', '防御', '道具', '木桶', '逃跑']
     for (let i = 0; i < commands.length; i++) {
-      const text = this.add.text(680, 410 + i * 24, commands[i]!, {
-        fontSize: '18px',
+      const text = this.add.text(scalePx(680), scalePx(354 + i * 24), commands[i]!, {
+        fontSize: scaleFont(18),
         color: '#c0c0d0',
       })
       text.setDepth(311)
@@ -391,17 +393,17 @@ export class BattleScene extends Phaser.Scene {
       this.menuItems.push(text)
     }
 
-    this.cursor = this.add.rectangle(670, 410 + 6, 8, 8, 0xf1c40f)
+    this.cursor = this.add.rectangle(scalePx(670), scalePx(354 + 6), scalePx(8), scalePx(8), 0xf1c40f)
     this.cursor.setDepth(312)
     this.cursor.setScrollFactor(0)
 
     // Battle log
-    this.logText = this.add.text(20, 20, '', {
-      fontSize: '14px',
+    this.logText = this.add.text(scalePx(20), scalePx(20), '', {
+      fontSize: scaleFont(14),
       color: '#cccccc',
       backgroundColor: '#00000060',
-      padding: { x: 8, y: 4 },
-      wordWrap: { width: 400 },
+      padding: { x: scalePx(8), y: scalePx(4) },
+      wordWrap: { width: scalePx(400) },
     })
     this.logText.setDepth(310)
     this.logText.setScrollFactor(0)
@@ -452,7 +454,7 @@ export class BattleScene extends Phaser.Scene {
   private moveMenu(dir: number): void {
     if (this.inTargetSelect || this.phase !== 'player') return
     this.menuIndex = (this.menuIndex + dir + this.menuItems.length) % this.menuItems.length
-    this.cursor.setY(this.menuItems[this.menuIndex]!.y + 6)
+    this.cursor.setY(this.menuItems[this.menuIndex]!.y + scalePx(6))
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -656,16 +658,16 @@ export class BattleScene extends Phaser.Scene {
     this.skillMenuItems = []
 
     // Skill menu panel
-    this.skillMenuBg = this.add.rectangle(560, 440, 280, 140, 0x1a1a2e, 0.95)
-    this.skillMenuBg.setStrokeStyle(2, 0x5a5a7e)
+    this.skillMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
+    this.skillMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
     this.skillMenuBg.setDepth(320)
     this.skillMenuBg.setScrollFactor(0)
 
     for (let i = 0; i < skills.length; i++) {
       const sk = skillDefs[skills[i]!]!
       const cost = sk.costTp > 0 ? `TP${sk.costTp}` : `MP${sk.costMp}`
-      const text = this.add.text(430, 390 + i * 22, `${sk.name} [${cost}]`, {
-        fontSize: '14px',
+      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${sk.name} [${cost}]`, {
+        fontSize: scaleFont(14),
         color: '#c0c0d0',
       })
       text.setDepth(321)
@@ -673,7 +675,7 @@ export class BattleScene extends Phaser.Scene {
       bindTouchText(text, () => this.selectSkillMenuItem(i))
       this.skillMenuItems.push(text)
     }
-    this.skillMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
+    this.skillMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
     this.skillMenuCursor.setDepth(322)
     this.skillMenuCursor.setScrollFactor(0)
   }
@@ -681,7 +683,7 @@ export class BattleScene extends Phaser.Scene {
   private moveSkillMenu(dir: number): void {
     if (!this.inSkillMenu) return
     this.skillMenuIndex = (this.skillMenuIndex + dir + this.skillMenuItems.length) % this.skillMenuItems.length
-    this.skillMenuCursor.setY(this.skillMenuItems[this.skillMenuIndex]!.y + 6)
+    this.skillMenuCursor.setY(this.skillMenuItems[this.skillMenuIndex]!.y + scalePx(6))
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -743,8 +745,8 @@ export class BattleScene extends Phaser.Scene {
     this.itemMenuIndex = 0
     this.itemMenuItems = []
 
-    this.itemMenuBg = this.add.rectangle(560, 440, 280, 140, 0x1a1a2e, 0.95)
-    this.itemMenuBg.setStrokeStyle(2, 0x5a5a7e)
+    this.itemMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
+    this.itemMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
     this.itemMenuBg.setDepth(320)
     this.itemMenuBg.setScrollFactor(0)
 
@@ -752,8 +754,8 @@ export class BattleScene extends Phaser.Scene {
       const [itemId, qty] = items[i]!
       const item = this.getItemData(itemId)
       if (!item) continue
-      const text = this.add.text(430, 390 + i * 22, `${item.name} x${qty}`, {
-        fontSize: '14px',
+      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${item.name} x${qty}`, {
+        fontSize: scaleFont(14),
         color: '#c0c0d0',
       })
       text.setDepth(321)
@@ -761,7 +763,7 @@ export class BattleScene extends Phaser.Scene {
       bindTouchText(text, () => this.selectItemMenuItem(i))
       this.itemMenuItems.push(text)
     }
-    this.itemMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
+    this.itemMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
     this.itemMenuCursor.setDepth(322)
     this.itemMenuCursor.setScrollFactor(0)
   }
@@ -769,7 +771,7 @@ export class BattleScene extends Phaser.Scene {
   private moveItemMenu(dir: number): void {
     if (!this.inItemMenu) return
     this.itemMenuIndex = (this.itemMenuIndex + dir + this.itemMenuItems.length) % this.itemMenuItems.length
-    this.itemMenuCursor.setY(this.itemMenuItems[this.itemMenuIndex]!.y + 6)
+    this.itemMenuCursor.setY(this.itemMenuItems[this.itemMenuIndex]!.y + scalePx(6))
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -832,15 +834,15 @@ export class BattleScene extends Phaser.Scene {
     this.barrelMenuItems = []
     this.barrelMenuColors = unlocked
 
-    this.barrelMenuBg = this.add.rectangle(560, 440, 280, 140, 0x1a1a2e, 0.95)
-    this.barrelMenuBg.setStrokeStyle(2, 0x5a5a7e)
+    this.barrelMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
+    this.barrelMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
     this.barrelMenuBg.setDepth(320)
     this.barrelMenuBg.setScrollFactor(0)
 
     for (let i = 0; i < unlocked.length; i++) {
       const ability = bs.getAbility(unlocked[i]!)
-      const text = this.add.text(430, 390 + i * 22, `${ability!.name} - ${ability!.battleDescription}`, {
-        fontSize: '14px',
+      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${ability!.name} - ${ability!.battleDescription}`, {
+        fontSize: scaleFont(14),
         color: '#c0c0d0',
       })
       text.setDepth(321)
@@ -848,7 +850,7 @@ export class BattleScene extends Phaser.Scene {
       bindTouchText(text, () => this.selectBarrelMenuItem(i))
       this.barrelMenuItems.push(text)
     }
-    this.barrelMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
+    this.barrelMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
     this.barrelMenuCursor.setDepth(322)
     this.barrelMenuCursor.setScrollFactor(0)
   }
@@ -856,7 +858,7 @@ export class BattleScene extends Phaser.Scene {
   private moveBarrelMenu(dir: number): void {
     if (!this.inBarrelMenu) return
     this.barrelMenuIndex = (this.barrelMenuIndex + dir + this.barrelMenuItems.length) % this.barrelMenuItems.length
-    this.barrelMenuCursor.setY(this.barrelMenuItems[this.barrelMenuIndex]!.y + 6)
+    this.barrelMenuCursor.setY(this.barrelMenuItems[this.barrelMenuIndex]!.y + scalePx(6))
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -925,8 +927,8 @@ export class BattleScene extends Phaser.Scene {
     this.comboMenuItems = []
     this.availableCombos = combos
 
-    this.comboMenuBg = this.add.rectangle(560, 440, 280, 140, 0x1a1a2e, 0.95)
-    this.comboMenuBg.setStrokeStyle(2, 0x5a5a7e)
+    this.comboMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
+    this.comboMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
     this.comboMenuBg.setDepth(320)
     this.comboMenuBg.setScrollFactor(0)
 
@@ -935,8 +937,8 @@ export class BattleScene extends Phaser.Scene {
       const char1Unit = this.units.find(u => u.isPlayer && u.id === combo.char1)
       const char2Unit = this.units.find(u => u.isPlayer && u.id === combo.char2)
       const label = `${combo.name} [${char1Unit?.name}+${char2Unit?.name}]`
-      const text = this.add.text(430, 390 + i * 22, label, {
-        fontSize: '14px',
+      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), label, {
+        fontSize: scaleFont(14),
         color: '#f1c40f',
       })
       text.setDepth(321)
@@ -944,7 +946,7 @@ export class BattleScene extends Phaser.Scene {
       bindTouchText(text, () => this.selectComboMenuItem(i))
       this.comboMenuItems.push(text)
     }
-    this.comboMenuCursor = this.add.rectangle(420, 390 + 6, 8, 8, 0xf1c40f)
+    this.comboMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
     this.comboMenuCursor.setDepth(322)
     this.comboMenuCursor.setScrollFactor(0)
   }
@@ -952,7 +954,7 @@ export class BattleScene extends Phaser.Scene {
   private moveComboMenu(dir: number): void {
     if (!this.inComboMenu) return
     this.comboMenuIndex = (this.comboMenuIndex + dir + this.comboMenuItems.length) % this.comboMenuItems.length
-    this.comboMenuCursor.setY(this.comboMenuItems[this.comboMenuIndex]!.y + 6)
+    this.comboMenuCursor.setY(this.comboMenuItems[this.comboMenuIndex]!.y + scalePx(6))
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -996,19 +998,19 @@ export class BattleScene extends Phaser.Scene {
 
     AudioManager.getInstance().playSFX('magic_cast')
 
-    const comboText = this.add.text(480, 200, '连携！', {
-      fontSize: '32px',
+    const comboText = this.add.text(GAME_WIDTH / 2, scalePx(200), '连携！', {
+      fontSize: scaleFont(32),
       color: '#ffd700',
       fontStyle: 'bold',
       stroke: '#000000',
-      strokeThickness: 4,
+      strokeThickness: scalePx(4),
     })
     comboText.setOrigin(0.5)
     comboText.setDepth(330)
     comboText.setScrollFactor(0)
     this.tweens.add({
       targets: comboText,
-      y: 150,
+      y: scalePx(150),
       alpha: 0,
       duration: Math.floor(1000 / this.speedMult),
       onComplete: () => comboText.destroy(),
@@ -1432,19 +1434,19 @@ export class BattleScene extends Phaser.Scene {
     this.updateUnitBars(target)
 
     // Damage number popup
-    const dmgText = this.add.text(target.sprite!.x, target.sprite!.y - 40, `-${damage}`, {
-      fontSize: '20px',
+    const dmgText = this.add.text(target.sprite!.x, target.sprite!.y - scalePx(40), `-${damage}`, {
+      fontSize: scaleFont(20),
       color: '#ff4444',
       fontStyle: 'bold',
       stroke: '#000000',
-      strokeThickness: 3,
+      strokeThickness: scalePx(3),
     })
     dmgText.setOrigin(0.5)
     dmgText.setDepth(310)
     dmgText.setScrollFactor(0)
     this.tweens.add({
       targets: dmgText,
-      y: target.sprite!.y - 80,
+      y: target.sprite!.y - scalePx(80),
       alpha: 0,
       duration: Math.floor(800 / this.speedMult),
       onComplete: () => dmgText.destroy(),
@@ -1459,7 +1461,7 @@ export class BattleScene extends Phaser.Scene {
     })
 
     // Flash red
-    const flash = this.add.rectangle(target.sprite!.x, target.sprite!.y, 64, 64, 0xff0000, 0.5)
+    const flash = this.add.rectangle(target.sprite!.x, target.sprite!.y, scalePx(64), scalePx(64), 0xff0000, 0.5)
     flash.setDepth(308)
     flash.setScrollFactor(0)
     this.tweens.add({
@@ -2002,9 +2004,9 @@ export class BattleScene extends Phaser.Scene {
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, BATTLE_RESULT_PANEL.overlayAlpha)
     const panel = this.add.rectangle(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y, BATTLE_RESULT_PANEL.width, BATTLE_RESULT_PANEL.height, 0x1a1a2e, 0.96)
-    panel.setStrokeStyle(2, summary.victory ? 0xf1c40f : 0x9b59b6)
+    panel.setStrokeStyle(scalePx(2), summary.victory ? 0xf1c40f : 0x9b59b6)
     const title = this.add.text(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.titleOffsetY, summary.title, {
-      fontSize: '28px',
+      fontSize: scaleFont(28),
       color: summary.victory ? '#f1c40f' : '#e8e8f0',
       fontFamily: 'serif',
     }).setOrigin(0.5)
@@ -2012,7 +2014,7 @@ export class BattleScene extends Phaser.Scene {
     const visibleLines = summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines)
     for (let i = 0; i < visibleLines.length; i++) {
       const line = this.add.text(BATTLE_RESULT_PANEL.x - BATTLE_RESULT_PANEL.width / 2 + BATTLE_RESULT_PANEL.contentPaddingX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.lineStartOffsetY + i * BATTLE_RESULT_PANEL.lineGap, visibleLines[i]!, {
-        fontSize: '18px',
+        fontSize: scaleFont(18),
         color: '#e8e8f0',
         wordWrap: { width: BATTLE_RESULT_PANEL.width - BATTLE_RESULT_PANEL.contentPaddingX * 2 },
       })
@@ -2020,7 +2022,7 @@ export class BattleScene extends Phaser.Scene {
     }
     const confirmLabel = summary.victory || summary.escaped ? '继续' : 'GAME OVER'
     const confirm = this.add.text(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.confirmOffsetY, confirmLabel, {
-      fontSize: '20px',
+      fontSize: scaleFont(20),
       color: '#ffffff',
       backgroundColor: '#5a5a7e',
       padding: { x: BATTLE_RESULT_PANEL.confirmPaddingX, y: BATTLE_RESULT_PANEL.confirmPaddingY },

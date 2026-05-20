@@ -41,6 +41,8 @@ import {
   GAME_HEIGHT,
   DIRECTION_VECTORS,
   TOUCH_INPUT,
+  scaleFont,
+  scalePx,
 } from '../utils/constants'
 import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
 
@@ -660,6 +662,7 @@ export class MapScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.POINTER_UP, this.clearTouchDirectionForPointer, this)
     this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.clearTouchDirectionForPointer, this)
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.syncTouchControls, this)
   }
 
   private shouldShowTouchControls(): boolean {
@@ -670,7 +673,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private createTouchControls(): void {
-    if (!this.shouldShowTouchControls()) return
+    if (this.touchControls.length > 0 || !this.shouldShowTouchControls()) return
 
     this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X, TOUCH_INPUT.DPAD_CENTER_Y - TOUCH_INPUT.DPAD_BUTTON_OFFSET, '▲', 0, -1, DIRECTION.UP)
     this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X, TOUCH_INPUT.DPAD_CENTER_Y + TOUCH_INPUT.DPAD_BUTTON_OFFSET, '▼', 0, 1, DIRECTION.DOWN)
@@ -678,6 +681,21 @@ export class MapScene extends Phaser.Scene {
     this.createTouchDirectionButton(TOUCH_INPUT.DPAD_CENTER_X + TOUCH_INPUT.DPAD_BUTTON_OFFSET, TOUCH_INPUT.DPAD_CENTER_Y, '▶', 1, 0, DIRECTION.RIGHT)
     this.createTouchActionButton(TOUCH_INPUT.ACTION_BUTTON_X - TOUCH_INPUT.ACTION_BUTTON_SPACING, TOUCH_INPUT.ACTION_BUTTON_Y, '菜单', () => this.openMenu())
     this.createTouchActionButton(TOUCH_INPUT.ACTION_BUTTON_X, TOUCH_INPUT.ACTION_BUTTON_Y, '行动', () => this.interact())
+  }
+
+  private destroyTouchControls(): void {
+    for (const control of this.touchControls) control.destroy()
+    this.touchControls = []
+    this.touchDirection = null
+  }
+
+  private syncTouchControls(): void {
+    if (this.shouldShowTouchControls()) {
+      this.createTouchControls()
+      return
+    }
+
+    this.destroyTouchControls()
   }
 
   private createTouchDirectionButton(x: number, y: number, label: string, dx: number, dy: number, dir: number): void {
@@ -762,11 +780,11 @@ export class MapScene extends Phaser.Scene {
     const char = gd.characters.get(leader)
 
     if (char) {
-      const statusText = this.add.text(10, 10, `${char.name} HP:${char.stats.hp}/${char.stats.maxHp} MP:${char.stats.mp}/${char.stats.maxMp}`, {
-        fontSize: '14px',
+      const statusText = this.add.text(scalePx(10), scalePx(10), `${char.name} HP:${char.stats.hp}/${char.stats.maxHp} MP:${char.stats.mp}/${char.stats.maxMp}`, {
+        fontSize: scaleFont(14),
         color: '#ffffff',
         backgroundColor: '#00000080',
-        padding: { x: 6, y: 3 },
+        padding: { x: scalePx(6), y: scalePx(3) },
       })
       statusText.setScrollFactor(0)
       statusText.setDepth(100)
@@ -774,11 +792,11 @@ export class MapScene extends Phaser.Scene {
     }
 
     // Interaction prompt
-    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30, MAP_HUD.PROMPT_TEXT, {
-      fontSize: '12px',
+    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - scalePx(30), MAP_HUD.PROMPT_TEXT, {
+      fontSize: scaleFont(12),
       color: '#cccccc',
       backgroundColor: '#00000080',
-      padding: { x: 6, y: 3 },
+      padding: { x: scalePx(6), y: scalePx(3) },
     })
     prompt.setOrigin(0.5)
     prompt.setScrollFactor(0)
@@ -865,11 +883,11 @@ export class MapScene extends Phaser.Scene {
   }
 
   private showMapName(): void {
-    this.mapNameText = this.add.text(GAME_WIDTH / 2, 40, this.mapData.name, {
-      fontSize: '24px',
+    this.mapNameText = this.add.text(GAME_WIDTH / 2, scalePx(40), this.mapData.name, {
+      fontSize: scaleFont(24),
       color: '#ffffff',
       backgroundColor: '#00000060',
-      padding: { x: 12, y: 6 },
+      padding: { x: scalePx(12), y: scalePx(6) },
     })
     this.mapNameText.setOrigin(0.5)
     this.mapNameText.setScrollFactor(0)
@@ -1490,7 +1508,7 @@ export class MapScene extends Phaser.Scene {
       quantity: 3,
       scale: { start: 0.1, end: 0 },
       alpha: { start: 0.3, end: 0 },
-      emitZone: { source: new Phaser.Geom.Rectangle(-200, -50, GAME_WIDTH + 400, 10) as any, type: 'random' as const },
+      emitZone: { source: new Phaser.Geom.Rectangle(scalePx(-200), scalePx(-50), GAME_WIDTH + scalePx(400), scalePx(10)) as any, type: 'random' as const },
     })
     particles.setDepth(90)
     particles.setScrollFactor(0)
@@ -1506,7 +1524,7 @@ export class MapScene extends Phaser.Scene {
       quantity: 1,
       scale: { start: 0.05, end: 0 },
       alpha: { start: 0.5, end: 0 },
-      emitZone: { source: new Phaser.Geom.Rectangle(-100, -50, GAME_WIDTH + 200, 10) as any, type: 'random' as const },
+      emitZone: { source: new Phaser.Geom.Rectangle(scalePx(-100), scalePx(-50), GAME_WIDTH + scalePx(200), scalePx(10)) as any, type: 'random' as const },
     })
     particles.setDepth(90)
     particles.setScrollFactor(0)
@@ -1522,9 +1540,8 @@ export class MapScene extends Phaser.Scene {
     window.removeEventListener('game-quickload', this.handleQuickLoad)
     this.input.off(Phaser.Input.Events.POINTER_UP, this.clearTouchDirectionForPointer, this)
     this.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.clearTouchDirectionForPointer, this)
-    for (const control of this.touchControls) control.destroy()
-    this.touchControls = []
-    this.touchDirection = null
+    this.scale.off(Phaser.Scale.Events.RESIZE, this.syncTouchControls, this)
+    this.destroyTouchControls()
     for (const timer of this.enemyPatrolTimers) timer.remove(false)
     for (const timer of this.npcTimers) timer.remove(false)
     this.enemyPatrolTimers = []
