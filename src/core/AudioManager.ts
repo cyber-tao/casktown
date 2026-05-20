@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { GameData } from './GameData'
 import { SFXSynth } from './SFXSynth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { BGM_FADE_DURATIONS } from '../utils/constants'
+import { BGM_FADE_DURATIONS, VOICE_AUDIO_PATH } from '../utils/constants'
 
 export class AudioManager {
   private static instance: AudioManager
@@ -180,7 +180,7 @@ export class AudioManager {
     const masterVol = gd.settings.masterVolume
     const volume = 1.0 * masterVol
 
-    const path = `audio/voice/${voiceKey}.ogg`
+    const path = `${VOICE_AUDIO_PATH.DIRECTORY}/${voiceKey}${VOICE_AUDIO_PATH.EXTENSION}`
     const key = `voice_${voiceKey}`
     this.requestedVoiceKey = key
 

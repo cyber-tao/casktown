@@ -125,7 +125,7 @@ export class CodexOverlay extends Phaser.Scene {
           this.updateTabs()
           this.renderList()
           break
-        case 'Escape': case 'Tab':
+        case 'Escape':
           this.close()
           break
       }

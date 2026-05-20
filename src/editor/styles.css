@@ -512,6 +512,11 @@ canvas {
   width: 100%;
 }
 
+.dialogue-voice-preview {
+  display: grid;
+  gap: 8px;
+}
+
 .bars {
   display: grid;
   gap: 8px;

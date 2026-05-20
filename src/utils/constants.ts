@@ -49,7 +49,7 @@ export const TITLE_GITHUB_LINK = {
   features: 'noopener,noreferrer',
 } as const
 
-export const TITLE_MENU_ITEMS = ['开始游戏', '继续游戏', '配置编辑器', '设置', '退出'] as const
+export const TITLE_MENU_ITEMS = ['开始游戏', '继续游戏', '编辑器', '设置', '退出'] as const
 export const TITLE_MENU_ACTION_INDEX = {
   NEW_GAME: 0,
   LOAD_GAME: 1,
@@ -604,58 +604,54 @@ const worldMapPoint = (x: number, y: number) => ({
   y: Math.round(WORLD_MAP_TOP + y * WORLD_MAP_DISPLAY_SCALE),
 })
 
-export const WORLD_MAP_NODE_LAYOUTS = [
-  { id: 'MAP_001', name: '木桶镇', ...worldMapPoint(704, 362), requires: [], spawn: { x: 22, y: 17 } },
-  { id: 'MAP_002', name: '木桶镇·广场', ...worldMapPoint(694, 142), requires: ['festival_started'], spawn: { x: 22, y: 17 } },
-  { id: 'MAP_010', name: '奇妙森林入口', ...worldMapPoint(884, 368), requires: [], spawn: { x: 2, y: 16 } },
-  { id: 'MAP_011', name: '奇妙森林围湖', ...worldMapPoint(1026, 252), requires: [], spawn: { x: 2, y: 15 } },
-  { id: 'MAP_012', name: '千年树种祭台', ...worldMapPoint(974, 296), requires: [], spawn: { x: 2, y: 13 } },
-  { id: 'MAP_020', name: '码头航路', ...worldMapPoint(1268, 320), requires: [], spawn: { x: 4, y: 15 } },
-  { id: 'MAP_030', name: '圣水殿外路', ...worldMapPoint(1262, 678), requires: ['has_sacred_water'], spawn: { x: 2, y: 15 } },
-  { id: 'MAP_031', name: '圣水殿大厅', ...worldMapPoint(1280, 172), requires: ['has_sacred_water'], spawn: { x: 16, y: 25 } },
-  { id: 'MAP_040', name: '神殿山路', ...worldMapPoint(652, 590), requires: [], spawn: { x: 20, y: 27 } },
-  { id: 'MAP_041', name: '七色路', ...worldMapPoint(938, 762), requires: [], spawn: { x: 18, y: 27 } },
-  { id: 'MAP_042', name: '神殿', ...worldMapPoint(706, 690), requires: [], spawn: { x: 16, y: 24 } },
-  { id: 'MAP_050', name: '生命之泉入口', ...worldMapPoint(384, 520), requires: [], spawn: { x: 38, y: 16 } },
-  { id: 'MAP_051', name: '青龙潭', ...worldMapPoint(390, 470), requires: ['has_millennium_seed'], spawn: { x: 17, y: 24 } },
-  { id: 'MAP_052', name: '白虎穴', ...worldMapPoint(326, 612), requires: ['has_sacred_water'], spawn: { x: 16, y: 22 } },
-  { id: 'MAP_053', name: '朱雀林', ...worldMapPoint(500, 426), requires: ['has_divine_laurel'], spawn: { x: 17, y: 24 } },
-  { id: 'MAP_054', name: '玄武殿', ...worldMapPoint(282, 748), requires: ['defeated_chi_mei_wang'], spawn: { x: 17, y: 24 } },
-  { id: 'MAP_055', name: '轮回道', ...worldMapPoint(462, 660), requires: ['released_four_seals'], spawn: { x: 16, y: 22 } },
-  { id: 'MAP_060', name: '魔宫入口', ...worldMapPoint(154, 272), requires: [], spawn: { x: 35, y: 25 } },
-  { id: 'MAP_061', name: '黑暗沼泽', ...worldMapPoint(150, 708), requires: ['fake_xiaoai_defeated'], spawn: { x: 2, y: 14 } },
-  { id: 'MAP_062', name: '魔宫大厅', ...worldMapPoint(160, 250), requires: ['fake_xiaoai_defeated'], spawn: { x: 17, y: 25 } },
-  { id: 'MAP_063', name: '地下魔宫', ...worldMapPoint(126, 340), requires: ['fake_xiaoai_defeated'], spawn: { x: 16, y: 23 } },
-  { id: 'MAP_070', name: '人心之渊', ...worldMapPoint(706, 910), requires: ['true_route_unlocked'], spawn: { x: 17, y: 24 } },
-] as const
-
-export const WORLD_MAP_TOUCH_TARGET_RADIUS = scalePx(18)
-export const WORLD_MAP_TOUCH_TARGET_ALPHA = 0.001
+export const WORLD_MAP_LOCATION_POINTS: Record<string, { readonly x: number; readonly y: number }> = {
+  MAP_001: worldMapPoint(704, 362),
+  MAP_002: worldMapPoint(694, 142),
+  MAP_010: worldMapPoint(884, 368),
+  MAP_011: worldMapPoint(1026, 252),
+  MAP_012: worldMapPoint(974, 296),
+  MAP_020: worldMapPoint(1268, 320),
+  MAP_030: worldMapPoint(1262, 678),
+  MAP_031: worldMapPoint(1280, 172),
+  MAP_040: worldMapPoint(652, 590),
+  MAP_041: worldMapPoint(938, 762),
+  MAP_042: worldMapPoint(706, 690),
+  MAP_050: worldMapPoint(384, 520),
+  MAP_051: worldMapPoint(390, 470),
+  MAP_052: worldMapPoint(326, 612),
+  MAP_053: worldMapPoint(500, 426),
+  MAP_054: worldMapPoint(282, 748),
+  MAP_055: worldMapPoint(462, 660),
+  MAP_060: worldMapPoint(154, 272),
+  MAP_061: worldMapPoint(150, 708),
+  MAP_062: worldMapPoint(160, 250),
+  MAP_063: worldMapPoint(126, 340),
+  MAP_070: worldMapPoint(706, 910),
+} as const
 
 export const WORLD_MAP_UI = {
   TITLE_Y: scalePx(16),
   TITLE_FONT_SIZE: scalePx(18),
-  NAME_Y: GAME_HEIGHT - scalePx(30),
-  NAME_FONT_SIZE: scalePx(14),
   HINT_Y: GAME_HEIGHT - scalePx(55),
   HINT_FONT_SIZE: scalePx(12),
-  CONNECTION_WIDTH: scalePx(1),
-  NODE_UNLOCKED_RADIUS: scalePx(8),
-  NODE_LOCKED_RADIUS: scalePx(6),
-  NODE_LABEL_OFFSET_Y: scalePx(12),
-  NODE_LABEL_FONT_SIZE: scalePx(10),
-  CURSOR_RING_RADIUS: scalePx(14),
-  CURSOR_RING_WIDTH: scalePx(2),
+  LOCATION_LABEL_Y: GAME_HEIGHT - scalePx(30),
+  LOCATION_LABEL_FONT_SIZE: scalePx(14),
+  LOCATION_LABEL_PADDING_X: scalePx(14),
+  LOCATION_LABEL_PADDING_Y: scalePx(7),
+  LOCATION_LABEL_RADIUS: scalePx(6),
+  LOCATION_LABEL_BG_COLOR: 0x111827,
+  LOCATION_LABEL_BG_ALPHA: 0.82,
+  LOCATION_LABEL_DEPTH: 203,
+  LOCATION_MARKER_DEPTH: 204,
+  LOCATION_PIN_SIZE: scalePx(12),
+  LOCATION_PIN_COLOR: 0xf8c46b,
+  LOCATION_PIN_STROKE_COLOR: 0x1a1a2e,
+  LOCATION_PIN_STROKE_WIDTH: scalePx(2),
+  LOCATION_PULSE_SIZE: scalePx(20),
+  LOCATION_PULSE_ALPHA: 0.7,
+  LOCATION_PULSE_SCALE: 1.85,
+  LOCATION_PULSE_DURATION_MS: 1100,
 } as const
-
-export const WORLD_MAP_CONNECTION_LAYOUTS = [
-  ['MAP_001', 'MAP_002'], ['MAP_001', 'MAP_010'], ['MAP_010', 'MAP_011'], ['MAP_011', 'MAP_012'],
-  ['MAP_001', 'MAP_020'], ['MAP_020', 'MAP_030'], ['MAP_030', 'MAP_031'],
-  ['MAP_001', 'MAP_040'], ['MAP_040', 'MAP_041'], ['MAP_041', 'MAP_042'],
-  ['MAP_001', 'MAP_050'], ['MAP_050', 'MAP_051'], ['MAP_050', 'MAP_052'], ['MAP_050', 'MAP_053'], ['MAP_050', 'MAP_054'], ['MAP_050', 'MAP_055'],
-  ['MAP_001', 'MAP_060'], ['MAP_060', 'MAP_061'], ['MAP_060', 'MAP_062'], ['MAP_061', 'MAP_062'], ['MAP_062', 'MAP_063'],
-  ['MAP_001', 'MAP_070'],
-] as const
 
 export const DIRECTION_VECTORS = [
   { x: 0, y: -1 },
@@ -758,6 +754,11 @@ export const MAP_INPUT_CODES = {
   WORLD_MAP: 'KeyM',
 } as const
 
+export const VOICE_AUDIO_PATH = {
+  DIRECTORY: 'audio/voice',
+  EXTENSION: '.ogg',
+} as const
+
 export const MAP_HUD = {
   MINIMAP_X: GAME_WIDTH - scalePx(154),
   MINIMAP_Y: scalePx(18),
@@ -779,7 +780,7 @@ export const MAP_HUD = {
   LABEL_FONT_SIZE: scalePx(10),
   LABEL_OFFSET_X: scalePx(8),
   LABEL_OFFSET_Y: scalePx(10),
-  PROMPT_TEXT: 'Space 调查/对话 | M 地图 | Tab 菜单',
+  PROMPT_TEXT: 'Space 调查/对话 | M 地图 | Esc 菜单',
   OPEN_HINT: 'M 地图',
   BACKGROUND_COLOR: COLORS.black,
   MAP_COLOR: 0x253244,
@@ -917,6 +918,13 @@ export const FIELD_ENCOUNTER_SPAWN_COUNTS = {
   DENSE: 3,
   DANGEROUS: 4,
   MAX: 4,
+} as const
+
+export const ROAMING_ENCOUNTER_RESPAWN = {
+  EVENT_ID_PREFIX: 'ROAM_',
+  DEFEATED_FLAG_PREFIX: 'defeated_',
+  DEFEATED_AT_FLAG_PREFIX: 'defeated_at_',
+  COOLDOWN_MS: 120000,
 } as const
 
 export const FIELD_ENCOUNTER_RATE_THRESHOLDS = {

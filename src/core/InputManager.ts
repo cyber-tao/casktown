@@ -18,7 +18,7 @@ const DEFAULT_BINDINGS: KeyBindings = {
   right: 'ArrowRight',
   confirm: 'Enter',
   cancel: 'Escape',
-  menu: 'Tab',
+  menu: 'Escape',
   dash: 'ShiftLeft',
 }
 
@@ -29,7 +29,7 @@ const WASD_BINDINGS: KeyBindings = {
   right: 'KeyD',
   confirm: 'Space',
   cancel: 'Escape',
-  menu: 'Tab',
+  menu: 'Escape',
   dash: 'ShiftLeft',
 }
 
@@ -41,7 +41,6 @@ const KEY_DISPLAY_NAMES: Record<string, string> = {
   'Enter': 'Enter',
   'Space': 'Space',
   'Escape': 'Esc',
-  'Tab': 'Tab',
   'ShiftLeft': 'L-Shift',
   'KeyW': 'W',
   'KeyA': 'A',
@@ -115,7 +114,7 @@ export class InputManager {
   }
 
   isMenu(code: string): boolean {
-    return code === this.bindings.menu || code === 'Tab'
+    return code !== 'Tab' && code === this.bindings.menu
   }
 
   isDirection(code: string): 'up' | 'down' | 'left' | 'right' | null {

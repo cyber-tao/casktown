@@ -99,7 +99,7 @@ export class RebuildOverlay extends Phaser.Scene {
         case 'Enter': case 'Space':
           this.selectItem()
           break
-        case 'Escape': case 'Tab':
+        case 'Escape':
           this.close()
           break
       }

@@ -17,6 +17,7 @@ import {
   ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
+  ROAMING_ENCOUNTER_RESPAWN,
   scaleFont,
   scalePx,
 } from '../utils/constants'
@@ -70,6 +71,7 @@ export class BattleScene extends Phaser.Scene {
   private enemyData: EnemyData[] = []
   private bg!: Phaser.GameObjects.Rectangle
   private logText!: Phaser.GameObjects.Text
+  private commandMenuObjects: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text> = []
   private menuIndex = 0
   private menuItems: Phaser.GameObjects.Text[] = []
   private cursor!: Phaser.GameObjects.Rectangle
@@ -107,6 +109,7 @@ export class BattleScene extends Phaser.Scene {
     this.currentTurn = 0
     this.phase = 'intro'
     this.menuIndex = 0
+    this.commandMenuObjects = []
     this.targetIndex = 0
     this.inTargetSelect = false
     this.targetPlayers = false
@@ -382,6 +385,7 @@ export class BattleScene extends Phaser.Scene {
     menuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
     menuBg.setDepth(310)
     menuBg.setScrollFactor(0)
+    this.commandMenuObjects.push(menuBg)
 
     // Menu items
     const commands = ['攻击', '技能', '连携', '防御', '道具', '木桶', '逃跑']
@@ -394,11 +398,13 @@ export class BattleScene extends Phaser.Scene {
       text.setScrollFactor(0)
       bindTouchText(text, () => this.selectBattleMenuItem(i))
       this.menuItems.push(text)
+      this.commandMenuObjects.push(text)
     }
 
     this.cursor = this.add.rectangle(scalePx(670), scalePx(354 + 6), scalePx(8), scalePx(8), 0xf1c40f)
     this.cursor.setDepth(312)
     this.cursor.setScrollFactor(0)
+    this.commandMenuObjects.push(this.cursor)
 
     // Battle log
     this.logText = this.add.text(scalePx(20), scalePx(20), '', {
@@ -553,10 +559,12 @@ export class BattleScene extends Phaser.Scene {
 
   private startTargetSelect(targetPlayers: boolean): void {
     this.inTargetSelect = true
+    this.setCommandMenuVisible(false)
     this.targetPlayers = targetPlayers
     const targets = this.getSelectableTargets()
     if (targets.length === 0) {
       this.inTargetSelect = false
+      this.setCommandMenuVisible(true)
       this.hideTargetIndicator()
       return
     }
@@ -588,6 +596,7 @@ export class BattleScene extends Phaser.Scene {
   private cancelTarget(): void {
     if (this.inTargetSelect) {
       this.inTargetSelect = false
+      this.setCommandMenuVisible(true)
       this.hideTargetIndicator()
       this.log('取消选择')
       AudioManager.getInstance().playSFX('cancel')
@@ -604,6 +613,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (!target) {
       this.inTargetSelect = false
+      this.setCommandMenuVisible(true)
       this.hideTargetIndicator()
       return
     }
@@ -619,8 +629,13 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.inTargetSelect = false
+    this.setCommandMenuVisible(true)
     this.hideTargetIndicator()
     this.nextTurn()
+  }
+
+  private setCommandMenuVisible(visible: boolean): void {
+    for (const object of this.commandMenuObjects) object.setVisible(visible)
   }
 
   private executeDefend(): void {
@@ -1903,6 +1918,7 @@ export class BattleScene extends Phaser.Scene {
 
   private endBattle(victory: boolean, escaped = false): void {
     if (this.phase === 'result') return
+    this.syncPlayerState()
     const summary = victory ? this.applyVictoryResult() : this.createNonVictoryResult(escaped)
     this.showBattleResult(summary)
   }
@@ -1910,7 +1926,6 @@ export class BattleScene extends Phaser.Scene {
   private applyVictoryResult(): BattleResultSummary {
     AudioManager.getInstance().playVictoryBGM()
     const gd = GameData.getInstance()
-    this.syncPlayerState()
     let totalExp = 0
     let totalGold = 0
     const levelUps: string[] = []
@@ -1973,7 +1988,10 @@ export class BattleScene extends Phaser.Scene {
     }
 
     if (this.mapEventId) {
-      gd.setFlag(`defeated_${this.mapEventId}`, true)
+      gd.setFlag(`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}${this.mapEventId}`, true)
+      if (this.mapEventId.startsWith(ROAMING_ENCOUNTER_RESPAWN.EVENT_ID_PREFIX)) {
+        gd.setFlag(`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_AT_FLAG_PREFIX}${this.mapEventId}`, Date.now())
+      }
     }
 
     for (const ed of this.enemyData) {

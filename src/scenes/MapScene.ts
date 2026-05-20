@@ -32,6 +32,7 @@ import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILD_TILE_REPLACEMENTS,
   REBUILT_TOWN_MAP_ID,
+  ROAMING_ENCOUNTER_RESPAWN,
   SEQUENCE_TEXTURE_FRAME_PATTERN,
   RUINED_TOWN_MAP_ID,
   TILE_SPRITE_FOOTPRINTS,
@@ -131,6 +132,36 @@ export class MapScene extends Phaser.Scene {
   private isSuppressedFieldEvent(event: MapEvent): boolean {
     const characterId = PARTY_FIELD_EVENT_CHARACTER_IDS[event.id]
     return characterId ? this.hasPartyMember(characterId) : false
+  }
+
+  private getBattleDefeatedFlag(eventId: string): string {
+    return `${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}${eventId}`
+  }
+
+  private getRoamingDefeatedAtFlag(eventId: string): string {
+    return `${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_AT_FLAG_PREFIX}${eventId}`
+  }
+
+  private isRoamingBattleEvent(eventId: string): boolean {
+    return eventId.startsWith(ROAMING_ENCOUNTER_RESPAWN.EVENT_ID_PREFIX)
+  }
+
+  private isBattleEventDefeated(event: MapEvent): boolean {
+    const gd = GameData.getInstance()
+    const defeatedFlag = this.getBattleDefeatedFlag(event.id)
+    if (gd.getFlag(defeatedFlag) !== true) return false
+    if (!this.isRoamingBattleEvent(event.id)) return true
+
+    const defeatedAt = gd.getFlag(this.getRoamingDefeatedAtFlag(event.id))
+    if (typeof defeatedAt !== 'number') {
+      gd.setFlag(defeatedFlag, false)
+      return false
+    }
+    if (Date.now() - defeatedAt < ROAMING_ENCOUNTER_RESPAWN.COOLDOWN_MS) return true
+
+    gd.setFlag(defeatedFlag, false)
+    gd.setFlag(this.getRoamingDefeatedAtFlag(event.id), false)
+    return false
   }
 
   private isSpriteUsable(sprite: Phaser.GameObjects.Sprite): boolean {
@@ -375,9 +406,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private spawnBattleEnemy(event: MapEvent): void {
-    const gd = GameData.getInstance()
-    const defeatedFlag = `defeated_${event.id}`
-    if (gd.getFlag(defeatedFlag) === true) return
+    if (this.isBattleEventDefeated(event)) return
     if (!this.areEventConditionsMet(event)) return
 
     const sx = event.x * TILE_SIZE + event.width * TILE_SIZE / 2
@@ -1260,8 +1289,7 @@ export class MapScene extends Phaser.Scene {
     }
 
     if (event.type === 'battle') {
-      const defeatedFlag = `defeated_${event.id}`
-      if (gd.getFlag(defeatedFlag) === true) {
+      if (this.isBattleEventDefeated(event)) {
         this.inEvent = false
         return
       }
@@ -1433,10 +1461,11 @@ export class MapScene extends Phaser.Scene {
     }
 
     for (const [eventId, sprite] of this.battleEnemies) {
-      const defeatedFlag = `defeated_${eventId}`
-      if (GameData.getInstance().getFlag(defeatedFlag) === true) {
+      const event = this.battleEnemyEvents.get(eventId)
+      if (event && this.isBattleEventDefeated(event)) {
         sprite.destroy()
         this.battleEnemies.delete(eventId)
+        this.battleEnemyEvents.delete(eventId)
       }
     }
 

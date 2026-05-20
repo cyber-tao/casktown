@@ -21,7 +21,7 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { QuestSystem } from '../core/QuestSystem'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
-import voiceLines from '../../voice_lines.json'
+import { resolveDialogueVoiceKey } from '../utils/voiceLines'
 
 export interface DialogueScript {
   id: string
@@ -49,25 +49,6 @@ const SPEAKER_FACE_MAP: Record<string, string> = {
   旁白: 'npc_barrel_spirit',
   系统: 'npc_qilin',
 }
-
-type VoiceLine = {
-  diaId: string
-  speaker: string
-  text: string
-  assetKey?: string
-}
-
-const VOICE_LINE_KEYS = (voiceLines as VoiceLine[]).reduce<Record<string, string[]>>((acc, line, index) => {
-  const mapKey = `${line.diaId}\n${line.speaker}\n${line.text}`
-  ;(acc[mapKey] ??= []).push(line.assetKey ?? `${line.diaId}_${index + 1}`)
-  return acc
-}, {})
-
-const VOICE_LINE_TEXT_KEYS = (voiceLines as VoiceLine[]).reduce<Record<string, string[]>>((acc, line, index) => {
-  const mapKey = `${line.speaker}\n${line.text}`
-  ;(acc[mapKey] ??= []).push(line.assetKey ?? `${line.diaId}_${index + 1}`)
-  return acc
-}, {})
 
 function wrapDialogueText(text: string): string[] {
   const lines: string[] = []
@@ -233,7 +214,7 @@ export class DialogueOverlay extends Phaser.Scene {
       this.faceImage.setVisible(false)
     }
 
-    const voiceKey = this.resolveVoiceKey(line)
+    const voiceKey = this.resolveVoiceKey()
     if (voiceKey) {
       AudioManager.getInstance().playVoice(voiceKey, line.text)
     } else {
@@ -333,16 +314,8 @@ export class DialogueOverlay extends Phaser.Scene {
     this.cursor.setScrollFactor(0)
   }
 
-  private resolveVoiceKey(line: DialogueLine): string | null {
-    const occurrence = this.currentScript.lines
-      .slice(0, this.lineIndex + 1)
-      .filter(item => item.speaker === line.speaker && item.text === line.text)
-      .length - 1
-    const mapKey = `${this.currentScript.id}\n${line.speaker}\n${line.text}`
-    const keys = VOICE_LINE_KEYS[mapKey]
-    if (keys) return keys[occurrence] ?? keys[0] ?? null
-    const textKeys = VOICE_LINE_TEXT_KEYS[`${line.speaker}\n${line.text}`]
-    return textKeys?.[occurrence] ?? textKeys?.[0] ?? null
+  private resolveVoiceKey(): string | null {
+    return resolveDialogueVoiceKey(this.currentScript.id, this.currentScript.lines, this.lineIndex)
   }
 
   private getChoicesHeight(gap: number): number {

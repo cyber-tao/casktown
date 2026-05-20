@@ -22,8 +22,9 @@ import {
   MAP_LAYER_INDEX,
   SPRITE_CROP_DEFAULTS,
 } from '../utils/constants'
+import { getDialogueVoicePath, resolveDialogueVoiceKey } from '../utils/voiceLines'
 import type { SpriteCropConfig } from '../data/spriteCrops'
-import type { CharacterStats, MapData, MapEvent } from '../data/types'
+import type { CharacterStats, DialogueData, MapData, MapEvent } from '../data/types'
 
 interface RecordEntry {
   id: string
@@ -549,6 +550,10 @@ function renderPreview(entry: RecordEntry | null): void {
     renderMapPreview(entry.value)
     return
   }
+  if (state.activeTable === 'dialogues' && isDialogueData(entry.value)) {
+    renderDialogueRecordEditor(entry)
+    return
+  }
   if (state.activeTable === 'imageAssets' && typeof entry.value === 'string') {
     renderSpriteEditor(entry.id, entry.value)
     return
@@ -572,6 +577,23 @@ function renderPreview(entry: RecordEntry | null): void {
   renderImagePreviews(summary, getRecordImageAssetKeys(state.activeTable, entry.id, entry.value))
   if (isRecordObject(entry.value)) renderObjectEditor(summary, entry.value)
   else appendPrimitiveEditor(summary, entry.value)
+  elements.previewBody.append(summary)
+}
+
+function renderDialogueRecordEditor(entry: RecordEntry): void {
+  if (!isDialogueData(entry.value)) return
+  const dialogue = entry.value
+  const summary = document.createElement('div')
+  summary.className = 'summary'
+  const voiceCount = dialogue.lines.filter((_, index) => resolveDialogueVoiceKey(dialogue.id, dialogue.lines, index)).length
+  const metrics = document.createElement('div')
+  metrics.className = 'metric-grid'
+  appendMetric(metrics, 'ID', entry.id)
+  appendMetric(metrics, '行数', String(dialogue.lines.length))
+  appendMetric(metrics, '语音', String(voiceCount))
+  summary.append(metrics)
+  renderDialogueVoicePreview(summary, dialogue)
+  renderObjectEditor(summary, dialogue as unknown as Record<string, unknown>)
   elements.previewBody.append(summary)
 }
 
@@ -805,15 +827,40 @@ function getRecordImageAssetKeys(tableKey: GameConfigTableKey, id: string, value
 
 function renderAudioPreview(container: HTMLElement, id: string, value: Record<string, unknown>): void {
   if (typeof value.path !== 'string') return
+  renderAudioPathPreview(container, id, value.path)
+}
+
+function renderAudioPathPreview(container: HTMLElement, id: string, path: string, subtitle = ''): void {
   const panel = document.createElement('div')
   panel.className = 'audio-preview'
   const title = document.createElement('span')
   title.textContent = id
+  const subtitleText = document.createElement('span')
+  subtitleText.textContent = subtitle
   const audio = document.createElement('audio')
   audio.controls = true
   audio.preload = 'none'
-  audio.src = `/${value.path}`
-  panel.append(title, audio)
+  audio.src = `/${path}`
+  if (subtitle) panel.append(title, subtitleText, audio)
+  else panel.append(title, audio)
+  container.append(panel)
+}
+
+function renderDialogueVoicePreview(container: HTMLElement, dialogue: DialogueData): void {
+  const panel = document.createElement('div')
+  panel.className = 'dialogue-voice-preview'
+  for (let i = 0; i < dialogue.lines.length; i++) {
+    const line = dialogue.lines[i]!
+    const voiceKey = resolveDialogueVoiceKey(dialogue.id, dialogue.lines, i)
+    if (!voiceKey) continue
+    renderAudioPathPreview(panel, `${i + 1}. ${line.speaker} · ${voiceKey}`, getDialogueVoicePath(voiceKey), line.text)
+  }
+  if (panel.childElementCount === 0) {
+    const empty = document.createElement('div')
+    empty.className = 'empty'
+    empty.textContent = '没有匹配到语音资源'
+    panel.append(empty)
+  }
   container.append(panel)
 }
 
@@ -875,6 +922,12 @@ function isMapData(value: unknown): value is MapData {
     && Array.isArray(value.layers)
 }
 
+function isDialogueData(value: unknown): value is DialogueData {
+  return isRecordObject(value)
+    && typeof value.id === 'string'
+    && Array.isArray(value.lines)
+}
+
 function isSpriteCropConfig(value: unknown): value is SpriteCropConfig {
   return isRecordObject(value) && typeof value.key === 'string'
 }
@@ -889,8 +942,6 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   appendMetric(metrics, '文件', path ? path.split('/').pop() ?? path : '未配置')
   appendMetric(metrics, '图块', getTileSpriteIds(assetKey).join(', ') || '未绑定')
   summary.append(metrics)
-
-  renderImagePreviews(summary, [assetKey])
 
   if (!path) {
     const empty = document.createElement('div')
@@ -928,7 +979,7 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   controls.className = 'sprite-controls'
   const sourceStatus = document.createElement('div')
   sourceStatus.className = 'sprite-source-status'
-  sourceStatus.textContent = '正在读取源图集配置'
+  sourceStatus.textContent = '正在读取 img/sprites 源图集配置'
   const fields = document.createElement('div')
   fields.className = 'sprite-field-grid'
   const fieldInputs = new Map<SpriteCropField, HTMLInputElement>()
@@ -983,7 +1034,7 @@ function renderSpriteEditor(assetKey: string, path: string): void {
 
   const details = document.createElement('div')
   details.className = 'detail-list'
-  appendDetail(details, '运行时路径', `/sprites/${path}`)
+  appendDetail(details, '运行时输出路径', `/sprites/${path}`)
   summary.append(details)
   elements.previewBody.append(summary)
 
@@ -992,7 +1043,8 @@ function renderSpriteEditor(assetKey: string, path: string): void {
     if (!source.available || !source.frame || !source.imageUrl) {
       sourceStatus.textContent = source.message ?? '当前资源没有源图集配置'
       saveButton.disabled = true
-      image.src = `/sprites/${path}`
+      image.removeAttribute('src')
+      clearSpriteEditorCanvases(canvas, outputCanvas, sourceStatus.textContent)
       return
     }
     setDraftFromSpriteFrame(draft, assetKey, source.frame)
@@ -1007,9 +1059,10 @@ function renderSpriteEditor(assetKey: string, path: string): void {
       .then(applySource)
       .catch(error => {
         console.warn('Failed to load sprite atlas source', error)
-        sourceStatus.textContent = '源图集接口不可用，当前仅能预览运行时图片'
+        sourceStatus.textContent = '源图集接口不可用，无法编辑源切图'
         saveButton.disabled = true
-        image.src = `/sprites/${path}`
+        image.removeAttribute('src')
+        clearSpriteEditorCanvases(canvas, outputCanvas, sourceStatus.textContent)
       })
   }
 
@@ -1238,6 +1291,17 @@ function drawSpriteCropCanvases(canvas: HTMLCanvasElement, outputCanvas: HTMLCan
   ctx.fillRect(rect.x + rect.width - CONFIG_EDITOR_SPRITE.HANDLE_SIZE / 2, rect.y + rect.height - CONFIG_EDITOR_SPRITE.HANDLE_SIZE / 2, CONFIG_EDITOR_SPRITE.HANDLE_SIZE, CONFIG_EDITOR_SPRITE.HANDLE_SIZE)
   drawSpriteOutput(outputCanvas, image, draft)
   return viewport
+}
+
+function clearSpriteEditorCanvases(canvas: HTMLCanvasElement, outputCanvas: HTMLCanvasElement, message: string): void {
+  for (const target of [canvas, outputCanvas]) {
+    const ctx = target.getContext('2d')
+    if (!ctx) continue
+    ctx.fillStyle = CONFIG_EDITOR_SPRITE.BACKGROUND_COLOR
+    ctx.fillRect(0, 0, target.width, target.height)
+    ctx.fillStyle = CONFIG_EDITOR_FALLBACK_COLORS.warning
+    ctx.fillText(message, CONFIG_EDITOR_SPRITE.CANVAS_PADDING, CONFIG_EDITOR_SPRITE.CANVAS_PADDING * 2)
+  }
 }
 
 function drawSpriteOutput(canvas: HTMLCanvasElement, image: HTMLImageElement, draft: SpriteCropConfig): void {
