@@ -211,7 +211,7 @@ export class AudioManager {
   }
 
   playBGMForMap(mapId: string): void {
-    const bgmId = GAME_CONFIG_DATABASE.getTable('mapBgm')[mapId]
+    const bgmId = GAME_CONFIG_DATABASE.getTable('maps')[mapId]?.bgm ?? GAME_CONFIG_DATABASE.getTable('mapBgm')[mapId]
     if (bgmId) {
       this.playBGM(bgmId)
     }
