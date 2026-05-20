@@ -3,8 +3,10 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
   CONTINUOUS_TERRAIN_TEXTURE_KEYS,
+  DEFAULT_BATTLE_BACKGROUND_KEY,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
+  MAP_BATTLE_BACKGROUND_KEYS,
   REBUILD_TILE_REPLACEMENTS,
   SPRITE_CROP_DEFAULTS,
   STRETCHED_TILE_TEXTURE_KEYS,
@@ -48,6 +50,26 @@ function getConfiguredTileSprites(): Record<number, string> {
 
 function getConfiguredEncounters(): Record<string, EncounterData> {
   return GAME_CONFIG_DATABASE.getTable('encounters')
+}
+
+function getConfiguredMaps(): Record<string, MapData> {
+  return GAME_CONFIG_DATABASE.getTable('maps')
+}
+
+function normalizeBattleBackgroundKey(background: string | undefined, useLegacyDefault: boolean): string | null {
+  if (!background) return null
+  if (getConfiguredImageAssets()[background]) return background
+  if (background === 'field') return useLegacyDefault ? DEFAULT_BATTLE_BACKGROUND_KEY : null
+  return null
+}
+
+export function resolveBattleBackgroundKey(encounterId: string, mapId?: string): string {
+  const encounter = getConfiguredEncounters()[encounterId]
+  const encounterBackgroundKey = normalizeBattleBackgroundKey(encounter?.background, false)
+  if (encounterBackgroundKey) return encounterBackgroundKey
+
+  const mapBackgroundKey = normalizeBattleBackgroundKey(mapId ? getConfiguredMaps()[mapId]?.battleBackground ?? MAP_BATTLE_BACKGROUND_KEYS[mapId] : undefined, true)
+  return mapBackgroundKey ?? DEFAULT_BATTLE_BACKGROUND_KEY
 }
 
 function getConfiguredSpriteCrop(key: string, sourceWidth: number, sourceHeight: number): SpriteCropConfig | null {
@@ -209,9 +231,9 @@ export function collectMapImageKeys(mapData: MapData, partyIds: readonly string[
   return keys
 }
 
-export function collectBattleImageKeys(encounterId: string, partyIds: readonly string[]): Set<string> {
+export function collectBattleImageKeys(encounterId: string, partyIds: readonly string[], mapId?: string): Set<string> {
   const keys = new Set<string>()
-  addConfiguredKey(keys, 'ui_battle_bg_field')
+  addConfiguredKey(keys, resolveBattleBackgroundKey(encounterId, mapId))
   addConfiguredKey(keys, DEFAULT_CHARACTER_SPRITE_KEY)
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
   for (const characterId of partyIds) {

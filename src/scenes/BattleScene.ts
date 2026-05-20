@@ -6,7 +6,7 @@ import { AudioManager } from '../core/AudioManager'
 import { BarrelSystem } from '../core/BarrelSystem'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { collectBattleImageKeys, queueImageAssets } from '../core/AssetLoader'
+import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
 import {
   BATTLE_RESULT_PANEL,
   BATTLE_TARGET_INDICATOR,
@@ -81,6 +81,7 @@ export class BattleScene extends Phaser.Scene {
   private difficultyMult = { hp: 1.0, dmg: 1.0, exp: 1.0 }
   private speedMult = 1.0
   private encounterId = ''
+  private mapId = ''
   private mapEventId = ''
   private turnCount = 0
   private resultSummary: BattleResultSummary | null = null
@@ -90,16 +91,17 @@ export class BattleScene extends Phaser.Scene {
     super({ key: 'BattleScene', active: false })
   }
 
-  init(data: { encounterId: string; mapEventId?: string }): void {
+  init(data: { encounterId: string; mapId?: string; mapEventId?: string }): void {
     this.encounterId = data.encounterId
+    this.mapId = data.mapId || GameData.getInstance().currentMap
     this.mapEventId = data.mapEventId || ''
   }
 
   preload(): void {
-    queueImageAssets(this, collectBattleImageKeys(this.encounterId, GameData.getInstance().party))
+    queueImageAssets(this, collectBattleImageKeys(this.encounterId, GameData.getInstance().party, this.mapId))
   }
 
-  create(data: { encounterId: string; mapEventId?: string }): void {
+  create(data: { encounterId: string; mapId?: string; mapEventId?: string }): void {
     this.units = []
     this.turnOrder = []
     this.currentTurn = 0
@@ -111,6 +113,7 @@ export class BattleScene extends Phaser.Scene {
     this.targetIndicator = null
     this.actionStack = []
     this.encounterId = data.encounterId
+    this.mapId = data.mapId || GameData.getInstance().currentMap
     this.mapEventId = data.mapEventId || ''
     this.turnCount = 0
     this.resultSummary = null
@@ -134,7 +137,7 @@ export class BattleScene extends Phaser.Scene {
     AudioManager.getInstance().setScene(this)
 
     // Background image
-    const bgImg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ui_battle_bg_field')
+    const bgImg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, resolveBattleBackgroundKey(this.encounterId, this.mapId))
     bgImg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
     bgImg.setDepth(299)
     bgImg.setScrollFactor(0)

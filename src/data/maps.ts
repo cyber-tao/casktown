@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { REDESIGNED_MAP_LAYOUTS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
+import { MAP_BATTLE_BACKGROUND_KEYS, REDESIGNED_MAP_LAYOUTS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -108,6 +108,12 @@ function collectCollisions(ground: MapLayer, objects: MapLayer, mapWidth: number
 
 function applyEventBounds(event: MapEvent, bounds: EventBounds): MapEvent {
   return { ...event, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+}
+
+function finalizeMap(map: MapData): MapData {
+  const redesigned = applyRedesignedLayout(map)
+  const battleBackground = MAP_BATTLE_BACKGROUND_KEYS[redesigned.id]
+  return battleBackground ? { ...redesigned, battleBackground } : redesigned
 }
 
 function createTransferEvent(transfer: EventBounds & { readonly id: string; readonly targetMap: string; readonly targetX: number; readonly targetY: number }, existing?: MapEvent): MapEvent {
@@ -2088,28 +2094,28 @@ function buildMap063(): MapData {
 }
 
 export const MAPS: Record<string, MapData> = {
-  MAP_001: applyRedesignedLayout(buildMap001()),
-  MAP_002: applyRedesignedLayout(buildMap002()),
-  MAP_010: applyRedesignedLayout(buildMap010()),
-  MAP_011: applyRedesignedLayout(buildMap011()),
-  MAP_012: applyRedesignedLayout(buildMap012()),
-  MAP_020: applyRedesignedLayout(buildMap020()),
-  MAP_030: applyRedesignedLayout(buildMap030()),
-  MAP_031: applyRedesignedLayout(buildMap031()),
-  MAP_040: applyRedesignedLayout(buildMap040()),
-  MAP_041: applyRedesignedLayout(buildMap041()),
-  MAP_042: applyRedesignedLayout(buildMap042()),
-  MAP_050: applyRedesignedLayout(buildMap050()),
-  MAP_051: applyRedesignedLayout(buildMap051()),
-  MAP_052: applyRedesignedLayout(buildMap052()),
-  MAP_053: applyRedesignedLayout(buildMap053()),
-  MAP_054: applyRedesignedLayout(buildMap054()),
-  MAP_055: applyRedesignedLayout(buildMap055()),
-  MAP_060: applyRedesignedLayout(buildMap060()),
-  MAP_061: applyRedesignedLayout(buildMap061()),
-  MAP_062: applyRedesignedLayout(buildMap062()),
-  MAP_063: applyRedesignedLayout(buildMap063()),
-  MAP_070: applyRedesignedLayout(buildMap070()),
+  MAP_001: finalizeMap(buildMap001()),
+  MAP_002: finalizeMap(buildMap002()),
+  MAP_010: finalizeMap(buildMap010()),
+  MAP_011: finalizeMap(buildMap011()),
+  MAP_012: finalizeMap(buildMap012()),
+  MAP_020: finalizeMap(buildMap020()),
+  MAP_030: finalizeMap(buildMap030()),
+  MAP_031: finalizeMap(buildMap031()),
+  MAP_040: finalizeMap(buildMap040()),
+  MAP_041: finalizeMap(buildMap041()),
+  MAP_042: finalizeMap(buildMap042()),
+  MAP_050: finalizeMap(buildMap050()),
+  MAP_051: finalizeMap(buildMap051()),
+  MAP_052: finalizeMap(buildMap052()),
+  MAP_053: finalizeMap(buildMap053()),
+  MAP_054: finalizeMap(buildMap054()),
+  MAP_055: finalizeMap(buildMap055()),
+  MAP_060: finalizeMap(buildMap060()),
+  MAP_061: finalizeMap(buildMap061()),
+  MAP_062: finalizeMap(buildMap062()),
+  MAP_063: finalizeMap(buildMap063()),
+  MAP_070: finalizeMap(buildMap070()),
 }
 
 export function getMap(id: string): MapData {

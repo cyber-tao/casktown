@@ -748,7 +748,7 @@ function getReferenceTableForField(fieldKey: string): ReferenceTableKey | null {
   if (fieldKey === 'weapon' || fieldKey === 'armor' || fieldKey === 'accessory' || fieldKey === 'itemId') return 'items'
   if (fieldKey === 'enemies') return 'enemies'
   if (fieldKey === 'encounters' || fieldKey === 'encounterId') return 'encounters'
-  if (fieldKey === 'background' || fieldKey === 'sprite') return 'imageAssets'
+  if (fieldKey === 'background' || fieldKey === 'battleBackground' || fieldKey === 'sprite') return 'imageAssets'
   if (fieldKey === 'bgm') return 'bgmTracks'
   if (fieldKey === 'dialogueId') return 'dialogues'
   if (fieldKey === 'questId') return 'quests'
@@ -797,7 +797,9 @@ function getRecordImageAssetKeys(tableKey: GameConfigTableKey, id: string, value
   if (tableKey === 'items') {
     return [`item_${id}`, `obj_${id}`, `env_${id}`, id].filter(key => Boolean(imageAssets[key]))
   }
-  if (isRecordObject(value) && typeof value.sprite === 'string') return [value.sprite]
+  if (isRecordObject(value)) {
+    return [value.sprite, value.background, value.battleBackground].filter(key => typeof key === 'string' && Boolean(imageAssets[key])) as string[]
+  }
   return []
 }
 

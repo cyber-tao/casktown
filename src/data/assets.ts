@@ -1,3 +1,5 @@
+import { BATTLE_BACKGROUND_KEYS } from '../utils/constants'
+
 const CHARACTER_POSES = {
   T: ['front_idle_01', 'front_idle_02', 'back_idle_01', 'back_idle_02', 'side_walk_01', 'side_walk_02', 'attack_01', 'attack_02'],
   huihui: ['front_idle_01', 'front_idle_02', 'back_idle_01', 'back_idle_02', 'side_walk_01', 'side_walk_02', 'attack_01', 'attack_02'],
@@ -137,8 +139,32 @@ const DARK_TILES = [
 
 const imageAssets: Record<string, string> = {
   ui_title_bg: 'title_bg_1080p.jpg',
-  ui_battle_bg_field: 'battle_bg_field_1080p.jpg',
   ui_world_map: 'map-world.png',
+}
+
+const BATTLE_BACKGROUND_PATHS: Record<string, string> = {
+  [BATTLE_BACKGROUND_KEYS.FIELD]: 'battle_bg_field_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.TOWN_RUINS]: 'battle_bg_town_ruins_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.FOREST]: 'battle_bg_forest_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.FOREST_ALTAR]: 'battle_bg_forest_altar_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.HOLY_WATER]: 'battle_bg_holy_water_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.HOLY_HALL]: 'battle_bg_holy_hall_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.MOUNTAIN]: 'battle_bg_mountain_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.RAINBOW_PATH]: 'battle_bg_rainbow_path_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.LIFE_SPRING]: 'battle_bg_life_spring_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.AZURE_POOL]: 'battle_bg_azure_pool_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.TIGER_CAVE]: 'battle_bg_tiger_cave_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.PHOENIX_GROVE]: 'battle_bg_phoenix_grove_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.BASALT_TEMPLE]: 'battle_bg_basalt_temple_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.REINCARNATION_PATH]: 'battle_bg_reincarnation_path_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.DARK_PALACE]: 'battle_bg_dark_palace_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.DARK_SWAMP]: 'battle_bg_dark_swamp_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.UNDERGROUND_PALACE]: 'battle_bg_underground_palace_1080p.jpg',
+  [BATTLE_BACKGROUND_KEYS.ABYSS]: 'battle_bg_abyss_1080p.jpg',
+}
+
+for (const [key, path] of Object.entries(BATTLE_BACKGROUND_PATHS)) {
+  imageAssets[key] = path
 }
 
 for (const [character, poses] of Object.entries(CHARACTER_POSES)) {

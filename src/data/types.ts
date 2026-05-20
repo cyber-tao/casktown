@@ -68,7 +68,7 @@ export interface EnemyData {
 export interface EncounterData {
   id: string
   enemies: string[]
-  background: string
+  background?: string
   bgm: string
   victoryFlag?: string
   questId?: string
@@ -88,6 +88,7 @@ export interface MapData {
   encounters?: string[]
   encounterRate: number
   bgm: string
+  battleBackground?: string
   connections: MapConnection[]
 }
 
