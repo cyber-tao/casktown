@@ -6,11 +6,16 @@ import {
   type GameConfigTableKey,
 } from '../data/configDatabase'
 import {
+  CONFIG_EDITOR_API,
+  CONFIG_EDITOR_CHARACTER_IMAGE_KEYS,
   CONFIG_EDITOR_EVENT_COLORS,
   CONFIG_EDITOR_FALLBACK_COLORS,
+  CONFIG_EDITOR_HIDDEN_TABLE_KEYS,
   CONFIG_EDITOR_ID_FALLBACK_PREFIX,
   CONFIG_EDITOR_JSON_INDENT,
   CONFIG_EDITOR_PREVIEW,
+  CONFIG_EDITOR_RESOURCE_GROUP_LABELS,
+  CONFIG_EDITOR_RESOURCE_TREE,
   CONFIG_EDITOR_SPRITE,
   CONFIG_EDITOR_TABLE_LABELS,
   CONFIG_EDITOR_TILE_COLORS,
@@ -36,6 +41,32 @@ interface EditorState {
 
 type SpriteCropField = Exclude<keyof SpriteCropConfig, 'key'>
 type SpriteDragMode = 'move' | 'resize' | null
+type ReferenceTableKey = Exclude<GameConfigTableKey, 'prophecies' | 'tileSprites' | 'mapBgm' | 'spriteCrops'>
+
+interface SpriteFrame {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+interface SpriteFrameSource {
+  available: boolean
+  category?: string
+  frame?: SpriteFrame
+  frameName?: string
+  image?: string
+  imageUrl?: string
+  json?: string
+  message?: string
+}
+
+interface ResourceTreeNode {
+  children: Map<string, ResourceTreeNode>
+  count: number
+  entries: RecordEntry[]
+  key: string
+}
 
 interface SpriteViewport {
   scale: number
@@ -93,7 +124,7 @@ root.innerHTML = `
         <div id="record-list" class="record-list"></div>
       </section>
       <section class="preview">
-        <div class="section-head"><h2>可视化预览</h2><span id="selected-pill" class="pill"></span></div>
+        <div class="section-head"><h2>编辑</h2><span id="selected-pill" class="pill"></span></div>
         <div id="preview-body" class="preview-body"></div>
       </section>
       <section class="inspector">
@@ -236,8 +267,9 @@ function renderAll(): void {
 
 function renderTables(): void {
   elements.tableList.replaceChildren()
-  elements.tableTotal.textContent = `${GAME_CONFIG_TABLE_KEYS.length}`
-  for (const key of GAME_CONFIG_TABLE_KEYS) {
+  const visibleTableKeys = GAME_CONFIG_TABLE_KEYS.filter(key => !isHiddenTableKey(key))
+  elements.tableTotal.textContent = `${visibleTableKeys.length}`
+  for (const key of visibleTableKeys) {
     const button = document.createElement('button')
     button.className = `table-button${key === state.activeTable ? ' active' : ''}`
     button.type = 'button'
@@ -271,27 +303,121 @@ function renderRecords(): void {
     empty.textContent = '没有匹配记录'
     elements.recordList.append(empty)
   }
+  if (state.activeTable === 'imageAssets') {
+    renderResourceRecords(entries)
+    renderSelected(entries.find(entry => entry.id === state.selectedId) ?? entries[0] ?? null)
+    return
+  }
   for (const entry of entries) {
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.className = `record-button${entry.id === state.selectedId ? ' active' : ''}`
-    const title = document.createElement('span')
-    title.className = 'record-title'
-    title.textContent = entry.label
-    const type = document.createElement('span')
-    type.className = 'count'
-    type.textContent = getValueKind(entry.value)
-    const subtitle = document.createElement('span')
-    subtitle.className = 'record-subtitle'
-    subtitle.textContent = entry.subtitle
-    button.append(title, type, subtitle)
-    button.addEventListener('click', () => {
-      state.selectedId = entry.id
-      renderRecords()
-    })
-    elements.recordList.append(button)
+    elements.recordList.append(createRecordButton(entry))
   }
   renderSelected(entries.find(entry => entry.id === state.selectedId) ?? entries[0] ?? null)
+}
+
+function renderResourceRecords(entries: RecordEntry[]): void {
+  const rootNode = createResourceTreeNode('')
+  for (const entry of entries) {
+    appendResourceTreeEntry(rootNode, getResourceTreeSegments(entry), entry)
+  }
+  for (const node of sortResourceTreeNodes(rootNode.children.values())) {
+    elements.recordList.append(renderResourceTreeNode(node, 0))
+  }
+}
+
+function createResourceTreeNode(key: string): ResourceTreeNode {
+  return { children: new Map(), count: 0, entries: [], key }
+}
+
+function appendResourceTreeEntry(node: ResourceTreeNode, segments: string[], entry: RecordEntry): void {
+  node.count += 1
+  if (segments.length === 0) {
+    node.entries.push(entry)
+    return
+  }
+  const head = segments[0]
+  if (!head) {
+    node.entries.push(entry)
+    return
+  }
+  const tail = segments.slice(1)
+  const child = node.children.get(head) ?? createResourceTreeNode(head)
+  node.children.set(head, child)
+  appendResourceTreeEntry(child, tail, entry)
+}
+
+function renderResourceTreeNode(node: ResourceTreeNode, depth: number): HTMLElement {
+  const group = document.createElement('details')
+  group.className = `resource-group depth-${depth}`
+  group.open = depth < CONFIG_EDITOR_RESOURCE_TREE.DEFAULT_OPEN_DEPTH
+  const summary = document.createElement('summary')
+  summary.className = 'resource-group-title'
+  const label = document.createElement('span')
+  label.textContent = getResourceTreeLabel(node.key)
+  const count = document.createElement('span')
+  count.className = 'count'
+  count.textContent = String(node.count)
+  summary.append(label, count)
+  group.append(summary)
+  for (const child of sortResourceTreeNodes(node.children.values())) group.append(renderResourceTreeNode(child, depth + 1))
+  for (const entry of node.entries) group.append(createRecordButton(entry))
+  return group
+}
+
+function sortResourceTreeNodes(nodes: Iterable<ResourceTreeNode>): ResourceTreeNode[] {
+  return Array.from(nodes).sort((a, b) => getResourceTreeLabel(a.key).localeCompare(getResourceTreeLabel(b.key)))
+}
+
+function isHiddenTableKey(key: GameConfigTableKey): boolean {
+  return CONFIG_EDITOR_HIDDEN_TABLE_KEYS.some(hiddenKey => hiddenKey === key)
+}
+
+function createRecordButton(entry: RecordEntry): HTMLButtonElement {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.dataset.recordId = entry.id
+  button.className = `record-button${entry.id === state.selectedId ? ' active' : ''}`
+  const title = document.createElement('span')
+  title.className = 'record-title'
+  title.textContent = entry.label
+  const type = document.createElement('span')
+  type.className = 'count'
+  type.textContent = getValueKind(entry.value)
+  const subtitle = document.createElement('span')
+  subtitle.className = 'record-subtitle'
+  subtitle.textContent = entry.subtitle
+  button.append(title, type, subtitle)
+  button.addEventListener('click', () => {
+    selectRecord(entry)
+  })
+  return button
+}
+
+function selectRecord(entry: RecordEntry): void {
+  state.selectedId = entry.id
+  if (state.activeTable !== 'imageAssets') {
+    renderRecords()
+    return
+  }
+  for (const button of elements.recordList.querySelectorAll<HTMLButtonElement>('.record-button')) {
+    button.classList.toggle('active', button.dataset.recordId === entry.id)
+  }
+  renderSelected(entry)
+}
+
+function getResourceTreeSegments(entry: RecordEntry): string[] {
+  const path = typeof entry.value === 'string' ? entry.value : ''
+  const segments = path.split('/').filter(Boolean)
+  if (entry.id.startsWith('ui_')) return ['ui', getUiResourceGroupKey(entry.id)]
+  if (segments.length > 1) return segments.slice(0, -1)
+  return ['uncategorized', 'misc']
+}
+
+function getUiResourceGroupKey(id: string): string {
+  return id.includes('bg') ? 'backgrounds' : 'misc'
+}
+
+function getResourceTreeLabel(key: string): string {
+  return CONFIG_EDITOR_RESOURCE_GROUP_LABELS[key] ?? key
 }
 
 function renderSelected(entry: RecordEntry | null): void {
@@ -344,6 +470,9 @@ function saveSelectedRecord(): void {
       GAME_CONFIG_DATABASE.deleteRecord(state.activeTable, state.selectedId)
     }
     GAME_CONFIG_DATABASE.setRecord(state.activeTable, nextId, parsed)
+    if (state.activeTable === 'maps' && isMapData(parsed)) {
+      GAME_CONFIG_DATABASE.setRecord('mapBgm', nextId, parsed.bgm)
+    }
     state.selectedId = nextId
     renderTables()
     renderRecords()
@@ -412,7 +541,7 @@ function renderPreview(entry: RecordEntry | null): void {
   if (!entry) {
     const empty = document.createElement('div')
     empty.className = 'empty'
-    empty.textContent = '选择记录后显示预览'
+    empty.textContent = '选择记录后开始编辑'
     elements.previewBody.append(empty)
     return
   }
@@ -428,6 +557,10 @@ function renderPreview(entry: RecordEntry | null): void {
     renderSpriteEditor(entry.value.key, GAME_CONFIG_DATABASE.getTable('imageAssets')[entry.value.key] ?? '')
     return
   }
+  if ((state.activeTable === 'bgmTracks' || state.activeTable === 'sfxTracks') && isRecordObject(entry.value)) {
+    renderAudioRecordEditor(entry)
+    return
+  }
   const summary = document.createElement('div')
   summary.className = 'summary'
   const metrics = document.createElement('div')
@@ -436,27 +569,250 @@ function renderPreview(entry: RecordEntry | null): void {
   appendMetric(metrics, 'ID', entry.id)
   appendMetric(metrics, '字段', String(isRecordObject(entry.value) ? Object.keys(entry.value).length : CONFIG_EDITOR_PREVIEW.PRIMITIVE_FIELD_COUNT))
   summary.append(metrics)
-  if (isRecordObject(entry.value)) renderObjectPreview(summary, entry.value)
-  else appendDetail(summary, '值', String(entry.value))
+  renderImagePreviews(summary, getRecordImageAssetKeys(state.activeTable, entry.id, entry.value))
+  if (isRecordObject(entry.value)) renderObjectEditor(summary, entry.value)
+  else appendPrimitiveEditor(summary, entry.value)
   elements.previewBody.append(summary)
 }
 
-function renderObjectPreview(container: HTMLElement, value: Record<string, unknown>): void {
-  if (isStatsCarrier(value)) container.append(renderStatBars(value.stats))
-  const details = document.createElement('div')
-  details.className = 'detail-list'
-  for (const key of Object.keys(value)) {
-    const item = value[key]
-    if (key === 'stats') continue
-    if (Array.isArray(item)) {
-      appendDetail(details, key, item.join(', '))
-    } else if (isRecordObject(item)) {
-      appendDetail(details, key, stringify(item))
-    } else {
-      appendDetail(details, key, String(item ?? ''))
-    }
+function renderAudioRecordEditor(entry: RecordEntry): void {
+  if (!isRecordObject(entry.value)) return
+  const summary = document.createElement('div')
+  summary.className = 'summary'
+  const metrics = document.createElement('div')
+  metrics.className = 'metric-grid'
+  appendMetric(metrics, 'ID', entry.id)
+  appendMetric(metrics, '类型', state.activeTable === 'bgmTracks' ? '音乐' : '音效')
+  appendMetric(metrics, '字段', String(Object.keys(entry.value).length))
+  summary.append(metrics)
+  renderAudioPreview(summary, entry.id, entry.value)
+  renderObjectEditor(summary, entry.value)
+  elements.previewBody.append(summary)
+}
+
+function renderObjectEditor(container: HTMLElement, value: Record<string, unknown>): void {
+  const draft = cloneConfigData(value)
+  if (isStatsCarrier(draft)) container.append(renderStatBars(draft.stats))
+  const fields = document.createElement('div')
+  fields.className = 'editor-form'
+  for (const key of Object.keys(draft)) {
+    fields.append(createEditorField(key, draft[key], nextValue => {
+      draft[key] = nextValue
+      syncEditorDraft(draft)
+    }))
   }
-  container.append(details)
+  container.append(fields)
+}
+
+function appendPrimitiveEditor(container: HTMLElement, value: unknown): void {
+  const fields = document.createElement('div')
+  fields.className = 'editor-form'
+  fields.append(createEditorField('value', value, nextValue => syncEditorDraft(nextValue)))
+  container.append(fields)
+}
+
+function createEditorField(labelText: string, value: unknown, onChange: (value: unknown) => void): HTMLElement {
+  if (isRecordObject(value)) return createObjectField(labelText, value, onChange)
+  if (Array.isArray(value)) return createArrayField(labelText, value, onChange)
+
+  const label = document.createElement('label')
+  label.className = 'editor-field'
+  const caption = document.createElement('span')
+  caption.textContent = labelText
+  const referenceTable = getReferenceTableForField(labelText)
+  if (referenceTable) {
+    label.append(caption, createReferenceSelect(referenceTable, typeof value === 'string' ? value : '', next => onChange(next || null), true))
+    return label
+  }
+  if (typeof value === 'boolean') {
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.checked = value
+    input.addEventListener('change', () => onChange(input.checked))
+    label.append(caption, input)
+    return label
+  }
+  if (typeof value === 'number') {
+    const input = document.createElement('input')
+    input.type = 'number'
+    input.value = String(value)
+    input.addEventListener('input', () => onChange(finiteNumber(Number(input.value), value)))
+    label.append(caption, input)
+    return label
+  }
+  const input = String(value ?? '').length > CONFIG_EDITOR_PREVIEW.VALIDATION_PREVIEW_LENGTH
+    ? document.createElement('textarea')
+    : document.createElement('input')
+  if (input instanceof HTMLInputElement) input.type = 'text'
+  input.value = String(value ?? '')
+  input.addEventListener('input', () => onChange(input.value))
+  label.append(caption, input)
+  return label
+}
+
+function createObjectField(labelText: string, value: Record<string, unknown>, onChange: (value: unknown) => void): HTMLElement {
+  const fieldset = document.createElement('fieldset')
+  fieldset.className = 'editor-fieldset'
+  const legend = document.createElement('legend')
+  legend.textContent = labelText
+  fieldset.append(legend)
+  const draft = cloneConfigData(value)
+  for (const key of Object.keys(draft)) {
+    fieldset.append(createEditorField(key, draft[key], nextValue => {
+      draft[key] = nextValue
+      onChange(draft)
+    }))
+  }
+  return fieldset
+}
+
+function createArrayField(labelText: string, value: unknown[], onChange: (value: unknown) => void): HTMLElement {
+  const referenceTable = getReferenceTableForField(labelText)
+  if (referenceTable && value.every(item => typeof item === 'string')) {
+    const label = document.createElement('label')
+    label.className = 'editor-field'
+    const caption = document.createElement('span')
+    caption.textContent = labelText
+    const select = createReferenceSelect(referenceTable, value as string[], next => onChange(next), false)
+    label.append(caption, select)
+    return label
+  }
+
+  const label = document.createElement('label')
+  label.className = 'editor-field'
+  const caption = document.createElement('span')
+  caption.textContent = labelText
+  const textarea = document.createElement('textarea')
+  textarea.value = stringify(value)
+  textarea.addEventListener('input', () => {
+    try {
+      onChange(JSON.parse(textarea.value) as unknown[])
+      textarea.classList.remove('invalid')
+    } catch {
+      textarea.classList.add('invalid')
+    }
+  })
+  label.append(caption, textarea)
+  return label
+}
+
+function createReferenceSelect(
+  tableKey: ReferenceTableKey,
+  selected: string | string[],
+  onChange: (value: string | string[]) => void,
+  allowEmpty: boolean,
+): HTMLSelectElement {
+  const select = document.createElement('select')
+  const selectedValues = new Set(Array.isArray(selected) ? selected : [selected].filter(Boolean))
+  select.multiple = Array.isArray(selected)
+  if (allowEmpty) {
+    const empty = document.createElement('option')
+    empty.value = ''
+    empty.textContent = '未选择'
+    select.append(empty)
+  }
+  const options = getReferenceOptions(tableKey)
+  for (const option of options) {
+    const item = document.createElement('option')
+    item.value = option.id
+    item.textContent = option.label
+    item.selected = selectedValues.has(option.id)
+    select.append(item)
+  }
+  for (const value of selectedValues) {
+    if (options.some(option => option.id === value)) continue
+    const item = document.createElement('option')
+    item.value = value
+    item.textContent = `${value} · 未在配置表中找到`
+    item.selected = true
+    select.append(item)
+  }
+  select.addEventListener('change', () => {
+    if (select.multiple) {
+      onChange(Array.from(select.selectedOptions).map(option => option.value))
+      return
+    }
+    onChange(select.value)
+  })
+  return select
+}
+
+function getReferenceOptions(tableKey: ReferenceTableKey): { id: string; label: string }[] {
+  return getTableEntries(tableKey)
+    .map(entry => ({ id: entry.id, label: entry.label }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
+function getReferenceTableForField(fieldKey: string): ReferenceTableKey | null {
+  if (fieldKey === 'skills') return 'skills'
+  if (fieldKey === 'weapon' || fieldKey === 'armor' || fieldKey === 'accessory' || fieldKey === 'itemId') return 'items'
+  if (fieldKey === 'enemies') return 'enemies'
+  if (fieldKey === 'encounters' || fieldKey === 'encounterId') return 'encounters'
+  if (fieldKey === 'background' || fieldKey === 'sprite') return 'imageAssets'
+  if (fieldKey === 'bgm') return 'bgmTracks'
+  if (fieldKey === 'dialogueId') return 'dialogues'
+  if (fieldKey === 'questId') return 'quests'
+  if (fieldKey === 'targetMap') return 'maps'
+  if (fieldKey === 'characterId') return 'characters'
+  return null
+}
+
+function syncEditorDraft(value: unknown): void {
+  elements.jsonEditor.value = stringify(value)
+  validateEditor()
+}
+
+function renderImagePreviews(container: HTMLElement, assetKeys: string[]): void {
+  const imageAssets = GAME_CONFIG_DATABASE.getTable('imageAssets')
+  const uniqueKeys = Array.from(new Set(assetKeys)).filter(key => imageAssets[key])
+  if (uniqueKeys.length === 0) return
+  const grid = document.createElement('div')
+  grid.className = 'asset-preview-grid'
+  for (const key of uniqueKeys) {
+    const card = document.createElement('div')
+    card.className = 'asset-preview-card'
+    const image = document.createElement('img')
+    image.alt = key
+    image.src = `/sprites/${imageAssets[key]}`
+    const label = document.createElement('span')
+    label.textContent = key
+    card.append(image, label)
+    grid.append(card)
+  }
+  container.append(grid)
+}
+
+function getRecordImageAssetKeys(tableKey: GameConfigTableKey, id: string, value: unknown): string[] {
+  const imageAssets = GAME_CONFIG_DATABASE.getTable('imageAssets')
+  if (tableKey === 'imageAssets') return [id]
+  if (tableKey === 'characters') {
+    return [
+      CONFIG_EDITOR_CHARACTER_IMAGE_KEYS[id] ?? '',
+      `${id.toLowerCase()}_front_idle_01`,
+    ].filter(key => Boolean(key && imageAssets[key]))
+  }
+  if (tableKey === 'enemies') {
+    return [`mon_${id}_01`, `npc_${id}`].filter(key => Boolean(imageAssets[key]))
+  }
+  if (tableKey === 'items') {
+    return [`item_${id}`, `obj_${id}`, `env_${id}`, id].filter(key => Boolean(imageAssets[key]))
+  }
+  if (isRecordObject(value) && typeof value.sprite === 'string') return [value.sprite]
+  return []
+}
+
+function renderAudioPreview(container: HTMLElement, id: string, value: Record<string, unknown>): void {
+  if (typeof value.path !== 'string') return
+  const panel = document.createElement('div')
+  panel.className = 'audio-preview'
+  const title = document.createElement('span')
+  title.textContent = id
+  const audio = document.createElement('audio')
+  audio.controls = true
+  audio.preload = 'none'
+  audio.src = `/${value.path}`
+  panel.append(title, audio)
+  container.append(panel)
 }
 
 function appendMetric(container: HTMLElement, label: string, value: string): void {
@@ -529,8 +885,10 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   metrics.className = 'metric-grid'
   appendMetric(metrics, 'Key', assetKey)
   appendMetric(metrics, '文件', path ? path.split('/').pop() ?? path : '未配置')
-  appendMetric(metrics, '切图', GAME_CONFIG_DATABASE.getTable('spriteCrops')[assetKey] ? '已配置' : '默认')
+  appendMetric(metrics, '图块', getTileSpriteIds(assetKey).join(', ') || '未绑定')
   summary.append(metrics)
+
+  renderImagePreviews(summary, [assetKey])
 
   if (!path) {
     const empty = document.createElement('div')
@@ -558,6 +916,7 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   }
   let dragMode: SpriteDragMode = null
   let dragOffset: { x: number; y: number } = { x: SPRITE_CROP_DEFAULTS.SOURCE_X, y: SPRITE_CROP_DEFAULTS.SOURCE_Y }
+  let source: SpriteFrameSource | null = null
 
   const canvasWrap = document.createElement('div')
   canvasWrap.className = 'sprite-canvas-wrap'
@@ -565,10 +924,13 @@ function renderSpriteEditor(assetKey: string, path: string): void {
 
   const controls = document.createElement('div')
   controls.className = 'sprite-controls'
+  const sourceStatus = document.createElement('div')
+  sourceStatus.className = 'sprite-source-status'
+  sourceStatus.textContent = '正在读取源图集配置'
   const fields = document.createElement('div')
   fields.className = 'sprite-field-grid'
   const fieldInputs = new Map<SpriteCropField, HTMLInputElement>()
-  for (const field of SPRITE_CROP_FIELDS) {
+  for (const field of SPRITE_CROP_FIELDS.filter(field => field.key.startsWith('source'))) {
     const label = document.createElement('label')
     label.className = 'sprite-field'
     const span = document.createElement('span')
@@ -579,6 +941,8 @@ function renderSpriteEditor(assetKey: string, path: string): void {
     input.value = String(draft[field.key])
     input.addEventListener('input', () => {
       draft[field.key] = Number(input.value)
+      draft.outputWidth = draft.sourceWidth
+      draft.outputHeight = draft.sourceHeight
       if (image.naturalWidth > 0 && image.naturalHeight > 0) {
         clampSpriteCropDraft(draft, image.naturalWidth, image.naturalHeight)
         syncSpriteCropInputs(fieldInputs, draft)
@@ -593,26 +957,23 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   const outputWrap = document.createElement('div')
   outputWrap.className = 'sprite-output'
   const outputTitle = document.createElement('span')
-  outputTitle.textContent = '输出预览'
+  outputTitle.textContent = '切图预览'
   outputWrap.append(outputTitle, outputCanvas)
 
+  const tileBindings = renderTileBindings(assetKey)
   const actions = document.createElement('div')
   actions.className = 'sprite-actions'
   const resetButton = document.createElement('button')
   resetButton.type = 'button'
-  resetButton.textContent = '重置为整图'
+  resetButton.textContent = '重载源配置'
   const saveButton = document.createElement('button')
   saveButton.type = 'button'
   saveButton.className = 'primary'
-  saveButton.textContent = '保存切图'
-  const deleteButton = document.createElement('button')
-  deleteButton.type = 'button'
-  deleteButton.className = 'danger'
-  deleteButton.textContent = '删除切图'
-  deleteButton.disabled = !GAME_CONFIG_DATABASE.getTable('spriteCrops')[assetKey]
-  actions.append(resetButton, saveButton, deleteButton)
+  saveButton.textContent = '保存并刷新'
+  saveButton.disabled = true
+  actions.append(resetButton, saveButton)
 
-  controls.append(fields, outputWrap, actions)
+  controls.append(sourceStatus, fields, outputWrap, tileBindings, actions)
   const layout = document.createElement('div')
   layout.className = 'sprite-editor-layout'
   layout.append(canvasWrap, controls)
@@ -620,38 +981,57 @@ function renderSpriteEditor(assetKey: string, path: string): void {
 
   const details = document.createElement('div')
   details.className = 'detail-list'
-  appendDetail(details, '路径', `/sprites/${path}`)
+  appendDetail(details, '运行时路径', `/sprites/${path}`)
   summary.append(details)
   elements.previewBody.append(summary)
 
-  resetButton.addEventListener('click', () => {
-    resetSpriteCropDraft(draft, assetKey, image.naturalWidth, image.naturalHeight)
+  const applySource = (nextSource: SpriteFrameSource): void => {
+    source = nextSource
+    if (!source.available || !source.frame || !source.imageUrl) {
+      sourceStatus.textContent = source.message ?? '当前资源没有源图集配置'
+      saveButton.disabled = true
+      image.src = `/sprites/${path}`
+      return
+    }
+    setDraftFromSpriteFrame(draft, assetKey, source.frame)
     syncSpriteCropInputs(fieldInputs, draft)
-    viewport = drawSpriteCropCanvases(canvas, outputCanvas, image, draft)
-  })
+    sourceStatus.textContent = `${source.json ?? ''} · ${source.frameName ?? ''}`
+    saveButton.disabled = false
+    image.src = `${source.imageUrl}&v=${Date.now()}`
+  }
+
+  const reloadSource = (): void => {
+    loadSpriteFrameSource(path)
+      .then(applySource)
+      .catch(error => {
+        console.warn('Failed to load sprite atlas source', error)
+        sourceStatus.textContent = '源图集接口不可用，当前仅能预览运行时图片'
+        saveButton.disabled = true
+        image.src = `/sprites/${path}`
+      })
+  }
+
+  resetButton.addEventListener('click', reloadSource)
 
   saveButton.addEventListener('click', () => {
-    clampSpriteCropDraft(draft, image.naturalWidth, image.naturalHeight)
-    GAME_CONFIG_DATABASE.setRecord('spriteCrops', assetKey, cloneConfigData(draft))
-    deleteButton.disabled = false
-    renderTables()
-    if (state.activeTable === 'spriteCrops') renderRecords()
-    setStatus('切图参数已保存。', 'ok')
-  })
-
-  deleteButton.addEventListener('click', () => {
-    GAME_CONFIG_DATABASE.deleteRecord('spriteCrops', assetKey)
-    deleteButton.disabled = true
-    if (state.activeTable === 'spriteCrops') {
-      state.selectedId = ''
-      renderAll()
-    } else {
-      resetSpriteCropDraft(draft, assetKey, image.naturalWidth, image.naturalHeight)
-      syncSpriteCropInputs(fieldInputs, draft)
-      viewport = drawSpriteCropCanvases(canvas, outputCanvas, image, draft)
-      renderTables()
+    if (!source?.available || !source.frame) {
+      setStatus('当前资源没有可写入的源图集配置。', 'error')
+      return
     }
-    setStatus('切图参数已删除。', 'ok')
+    clampSpriteCropDraft(draft, image.naturalWidth, image.naturalHeight)
+    saveButton.disabled = true
+    saveSpriteFrameSource(path, draft)
+      .then(result => {
+        setStatus(result.message ?? '源切图已保存并刷新。', 'ok')
+        reloadSource()
+      })
+      .catch(error => {
+        console.error('Failed to save sprite atlas frame', error)
+        setStatus(error instanceof Error ? error.message : '保存源切图失败。', 'error')
+      })
+      .finally(() => {
+        saveButton.disabled = false
+      })
   })
 
   canvas.addEventListener('pointerdown', event => {
@@ -697,10 +1077,12 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   canvas.addEventListener('pointerleave', stopDrag)
 
   image.addEventListener('load', () => {
-    if (!GAME_CONFIG_DATABASE.getTable('spriteCrops')[assetKey]) {
+    if (!source?.available) {
       resetSpriteCropDraft(draft, assetKey, image.naturalWidth, image.naturalHeight)
     }
     clampSpriteCropDraft(draft, image.naturalWidth, image.naturalHeight)
+    draft.outputWidth = draft.sourceWidth
+    draft.outputHeight = draft.sourceHeight
     syncSpriteCropInputs(fieldInputs, draft)
     viewport = drawSpriteCropCanvases(canvas, outputCanvas, image, draft)
   })
@@ -712,7 +1094,74 @@ function renderSpriteEditor(assetKey: string, path: string): void {
     ctx.fillStyle = CONFIG_EDITOR_FALLBACK_COLORS.warning
     ctx.fillText(CONFIG_EDITOR_SPRITE.IMAGE_LOAD_ERROR, CONFIG_EDITOR_SPRITE.CANVAS_PADDING, CONFIG_EDITOR_SPRITE.CANVAS_PADDING * 2)
   })
-  image.src = `/sprites/${path}`
+  reloadSource()
+}
+
+function getTileSpriteIds(assetKey: string): string[] {
+  return Object.entries(GAME_CONFIG_DATABASE.getTable('tileSprites'))
+    .filter(([, spriteKey]) => spriteKey === assetKey)
+    .map(([tileId]) => tileId)
+}
+
+function renderTileBindings(assetKey: string): HTMLElement {
+  const wrapper = document.createElement('div')
+  wrapper.className = 'tile-bindings'
+  const title = document.createElement('span')
+  title.textContent = '图块引用'
+  wrapper.append(title)
+  const tileIds = getTileSpriteIds(assetKey)
+  if (tileIds.length === 0) {
+    const empty = document.createElement('span')
+    empty.className = 'muted'
+    empty.textContent = '未绑定到图块 ID'
+    wrapper.append(empty)
+    return wrapper
+  }
+  for (const tileId of tileIds) {
+    const chip = document.createElement('span')
+    chip.className = 'chip'
+    chip.textContent = tileId
+    wrapper.append(chip)
+  }
+  return wrapper
+}
+
+function setDraftFromSpriteFrame(draft: SpriteCropConfig, key: string, frame: SpriteFrame): void {
+  draft.key = key
+  draft.sourceX = frame.x
+  draft.sourceY = frame.y
+  draft.sourceWidth = frame.w
+  draft.sourceHeight = frame.h
+  draft.outputWidth = frame.w
+  draft.outputHeight = frame.h
+  draft.offsetX = SPRITE_CROP_DEFAULTS.OFFSET_X
+  draft.offsetY = SPRITE_CROP_DEFAULTS.OFFSET_Y
+}
+
+async function loadSpriteFrameSource(path: string): Promise<SpriteFrameSource> {
+  const url = `${CONFIG_EDITOR_API.BASE_PATH}/${CONFIG_EDITOR_API.SPRITE_FRAME_PATH}?path=${encodeURIComponent(path)}`
+  const response = await fetch(url)
+  if (!response.ok) return { available: false, message: '源图集接口不可用' }
+  return await response.json() as SpriteFrameSource
+}
+
+async function saveSpriteFrameSource(path: string, draft: SpriteCropConfig): Promise<{ message?: string }> {
+  const response = await fetch(`${CONFIG_EDITOR_API.BASE_PATH}/${CONFIG_EDITOR_API.SPRITE_FRAME_PATH}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path,
+      frame: {
+        x: draft.sourceX,
+        y: draft.sourceY,
+        w: draft.sourceWidth,
+        h: draft.sourceHeight,
+      },
+    }),
+  })
+  const result = await response.json().catch(() => ({})) as { message?: string }
+  if (!response.ok) throw new Error(result.message ?? 'Failed to save sprite atlas frame')
+  return result
 }
 
 function getSpriteCropDraft(key: string): SpriteCropConfig {
@@ -862,13 +1311,14 @@ function isSpriteHandleHit(point: { x: number; y: number }, draft: SpriteCropCon
 }
 
 function renderMapPreview(map: MapData): void {
+  const draft = cloneConfigData(map)
   const summary = document.createElement('div')
   summary.className = 'summary'
   const metrics = document.createElement('div')
   metrics.className = 'metric-grid'
-  appendMetric(metrics, '尺寸', `${map.width}x${map.height}`)
-  appendMetric(metrics, '事件', String(map.events.length))
-  appendMetric(metrics, '碰撞', String(map.collisions.length))
+  appendMetric(metrics, '尺寸', `${draft.width}x${draft.height}`)
+  appendMetric(metrics, '事件', String(draft.events.length))
+  appendMetric(metrics, '碰撞', String(draft.collisions.length))
   summary.append(metrics)
 
   const wrap = document.createElement('div')
@@ -876,16 +1326,38 @@ function renderMapPreview(map: MapData): void {
   const canvas = document.createElement('canvas')
   canvas.width = CONFIG_EDITOR_PREVIEW.MAP_CANVAS_WIDTH
   canvas.height = CONFIG_EDITOR_PREVIEW.MAP_CANVAS_HEIGHT
-  drawMap(canvas, map)
+  drawMap(canvas, draft)
   wrap.append(canvas)
   summary.append(wrap)
 
+  const fields = document.createElement('div')
+  fields.className = 'editor-form'
+  fields.append(createEditorField('name', draft.name, value => {
+    draft.name = String(value ?? '')
+    syncEditorDraft(draft)
+  }))
+  fields.append(createEditorField('bgm', draft.bgm, value => {
+    draft.bgm = String(value ?? '')
+    syncEditorDraft(draft)
+    audioPanel.replaceChildren()
+    const config = GAME_CONFIG_DATABASE.getTable('bgmTracks')[draft.bgm]
+    if (config) renderAudioPreview(audioPanel, draft.bgm, config as unknown as Record<string, unknown>)
+  }))
+  fields.append(createEditorField('encounters', draft.encounters ?? [], value => {
+    draft.encounters = Array.isArray(value) ? value.map(String) : []
+    syncEditorDraft(draft)
+  }))
+  summary.append(fields)
+
+  const audioPanel = document.createElement('div')
+  const bgmConfig = GAME_CONFIG_DATABASE.getTable('bgmTracks')[draft.bgm]
+  if (bgmConfig) renderAudioPreview(audioPanel, draft.bgm, bgmConfig as unknown as Record<string, unknown>)
+  summary.append(audioPanel)
+
   const details = document.createElement('div')
   details.className = 'detail-list'
-  appendDetail(details, '名称', map.name)
-  appendDetail(details, 'BGM', map.bgm ?? GAME_CONFIG_DATABASE.getTable('mapBgm')[map.id] ?? '')
-  appendDetail(details, '连接', map.connections.map(connection => connection.targetMap).join(', '))
-  appendDetail(details, '战斗', (map.encounters ?? []).join(', '))
+  appendDetail(details, '图块集', draft.tileset)
+  appendDetail(details, '连接', draft.connections.map(connection => connection.targetMap).join(', '))
   summary.append(details)
   elements.previewBody.append(summary)
 }

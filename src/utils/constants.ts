@@ -933,6 +933,12 @@ export const CONFIG_EDITOR_PREVIEW = {
   PRIMITIVE_FIELD_COUNT: 1,
 } as const
 
+export const CONFIG_EDITOR_API = {
+  BASE_PATH: '/__casktown-editor',
+  SPRITE_FRAME_PATH: 'sprite-frame',
+  SPRITE_ATLAS_IMAGE_PATH: 'sprite-atlas-image',
+} as const
+
 export const SPRITE_CROP_DEFAULTS = {
   SOURCE_X: 0,
   SOURCE_Y: 0,
@@ -974,11 +980,39 @@ export const CONFIG_EDITOR_TABLE_LABELS = {
   dialogues: '对话',
   prophecies: '预言',
   tileSprites: '图块',
-  imageAssets: '图片资产',
-  bgmTracks: 'BGM',
+  imageAssets: '图片',
+  bgmTracks: '音乐',
   sfxTracks: '音效',
   mapBgm: '地图音乐',
   spriteCrops: '切图',
+} as const
+
+export const CONFIG_EDITOR_HIDDEN_TABLE_KEYS = ['tileSprites', 'mapBgm', 'spriteCrops'] as const
+
+export const CONFIG_EDITOR_RESOURCE_GROUP_LABELS: Record<string, string> = {
+  characters: '角色',
+  npcs_bosses: 'NPC / Boss',
+  monsters: '敌人',
+  environment: '环境图块',
+  world_objects: '世界物件',
+  holy_temple: '神殿图块',
+  dark_fantasy: '暗黑图块',
+  ui: 'UI / 背景',
+  backgrounds: '背景',
+  misc: '通用',
+  uncategorized: '未分类',
+} as const
+
+export const CONFIG_EDITOR_RESOURCE_TREE = {
+  DEFAULT_OPEN_DEPTH: 1,
+} as const
+
+export const CONFIG_EDITOR_CHARACTER_IMAGE_KEYS: Record<string, string> = {
+  T: 'T_front_idle_01',
+  HUIHUI: 'huihui_front_idle_01',
+  A: 'abo_front_idle_01',
+  CONGCONG: 'congcong_front_idle_01',
+  SUN: 'sun_front_idle_01',
 } as const
 
 export const CONFIG_EDITOR_EVENT_COLORS: Record<string, string> = {
