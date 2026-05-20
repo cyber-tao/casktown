@@ -12,6 +12,12 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     assetsInlineLimit: 0,
+    rolldownOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        editor: path.resolve(__dirname, 'editor.html'),
+      },
+    },
   },
   resolve: {
     alias: {

@@ -3,7 +3,17 @@ import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, PROJECT_GITHUB_URL, START_MAP_ID, TITLE_GITHUB_LINK } from '../utils/constants'
+import {
+  EDITOR_PAGE_LINK,
+  GAME_WIDTH,
+  GAME_HEIGHT,
+  PROJECT_GITHUB_URL,
+  START_MAP_ID,
+  TITLE_GITHUB_LINK,
+  TITLE_MENU_ACTION_INDEX,
+  TITLE_MENU_ITEMS,
+  TITLE_MENU_LAYOUT,
+} from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
 export class TitleScene extends Phaser.Scene {
@@ -11,6 +21,7 @@ export class TitleScene extends Phaser.Scene {
   private menuItems: Phaser.GameObjects.Text[] = []
   private cursor!: Phaser.GameObjects.Rectangle
   private bg!: Phaser.GameObjects.Image
+  private titleBgmRequested = false
 
   constructor() {
     super({ key: 'TitleScene' })
@@ -18,7 +29,7 @@ export class TitleScene extends Phaser.Scene {
 
   create(): void {
     AudioManager.getInstance().setScene(this)
-    AudioManager.getInstance().playBGM('title')
+    this.titleBgmRequested = false
 
     // Background
     this.bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ui_title_bg')
@@ -46,10 +57,8 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5)
 
     // Menu
-    const menuTexts = ['开始游戏', '继续游戏', '设置', '退出']
-    const startY = 300
-    for (let i = 0; i < menuTexts.length; i++) {
-      const text = this.add.text(GAME_WIDTH / 2, startY + i * 50, menuTexts[i]!, {
+    for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
+      const text = this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
         fontSize: '24px',
         color: '#c0c0d0',
         fontFamily: 'sans-serif',
@@ -59,7 +68,7 @@ export class TitleScene extends Phaser.Scene {
     }
 
     // Cursor
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - 80, startY, 12, 12, 0xf1c40f)
+    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, 0xf1c40f)
     this.cursor.setOrigin(0.5)
 
     // Input
@@ -81,8 +90,15 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private changeMenu(dir: number): void {
+    this.ensureTitleBGM()
     this.menuIndex = (this.menuIndex + dir + this.menuItems.length) % this.menuItems.length
     this.updateCursor()
+  }
+
+  private ensureTitleBGM(): void {
+    if (this.titleBgmRequested) return
+    this.titleBgmRequested = true
+    AudioManager.getInstance().playBGM('title')
   }
 
   private updateCursor(): void {
@@ -92,17 +108,19 @@ export class TitleScene extends Phaser.Scene {
 
   private selectMenu(): void {
     switch (this.menuIndex) {
-      case 0:
+      case TITLE_MENU_ACTION_INDEX.NEW_GAME:
         this.startNewGame()
         break
-      case 1:
+      case TITLE_MENU_ACTION_INDEX.LOAD_GAME:
         this.loadGame()
         break
-      case 2:
+      case TITLE_MENU_ACTION_INDEX.EDITOR:
+        this.openEditor()
+        break
+      case TITLE_MENU_ACTION_INDEX.SETTINGS:
         this.openSettings()
         break
-      case 3:
-        // Exit - nothing in browser
+      case TITLE_MENU_ACTION_INDEX.EXIT:
         break
     }
   }
@@ -116,6 +134,11 @@ export class TitleScene extends Phaser.Scene {
   private openGithub(): void {
     const githubWindow = window.open(PROJECT_GITHUB_URL, TITLE_GITHUB_LINK.target, TITLE_GITHUB_LINK.features)
     if (!githubWindow) console.warn('Failed to open project GitHub link')
+  }
+
+  private openEditor(): void {
+    const editorWindow = window.open(EDITOR_PAGE_LINK.url, EDITOR_PAGE_LINK.target, EDITOR_PAGE_LINK.features)
+    if (!editorWindow) console.warn('Failed to open configuration editor')
   }
 
   private startNewGame(): void {
