@@ -6,10 +6,8 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
-import { getMap } from '../data/maps'
-import { ENCOUNTERS } from '../data/encounters'
-import { ENEMIES } from '../data/enemies'
-import { TILE_SPRITES } from '../data/tileSprites'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
   CHARACTER_DIRECTION_FRAME_STEMS,
@@ -27,9 +25,12 @@ import {
   FOLLOWER_MIN_DISTANCE_FACTOR,
   FOLLOWER_TRAIL_OFFSETS,
   MAP_ENCOUNTER_RATES,
+  MAP_HUD,
+  MAP_INPUT_CODES,
   MAP_MOVE_SPEED_TILES_PER_SECOND,
   PARTY_FIELD_EVENT_CHARACTER_IDS,
   REBUILD_VISUAL_MAP_THRESHOLD,
+  REBUILD_TILE_REPLACEMENTS,
   REBUILT_TOWN_MAP_ID,
   SEQUENCE_TEXTURE_FRAME_PATTERN,
   RUINED_TOWN_MAP_ID,
@@ -81,6 +82,7 @@ export class MapScene extends Phaser.Scene {
   private animationTimeMs = 0
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
   private touchControls: Phaser.GameObjects.GameObject[] = []
+  private minimapPlayerMarker?: Phaser.GameObjects.Rectangle
 
   constructor() {
     super({ key: 'MapScene' })
@@ -135,8 +137,13 @@ export class MapScene extends Phaser.Scene {
 
   init(data: { mapId?: string }): void {
     const mapId = data.mapId || GameData.getInstance().currentMap
-    this.mapData = getMap(mapId)
+    const maps = GAME_CONFIG_DATABASE.getTable('maps')
+    this.mapData = maps[mapId] || maps.MAP_001!
     GameData.getInstance().currentMap = this.mapData.id
+  }
+
+  preload(): void {
+    queueImageAssets(this, collectMapImageKeys(this.mapData, GameData.getInstance().party))
   }
 
   create(): void {
@@ -154,10 +161,12 @@ export class MapScene extends Phaser.Scene {
     this.enemyPatrolTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
+    this.minimapPlayerMarker = undefined
 
     this.cameras.main.setBackgroundColor('#2d4a22')
     this.cameras.main.setBounds(0, 0, this.mapData.width * TILE_SIZE, this.mapData.height * TILE_SIZE)
 
+    processTileTextures(this, collectMapTileTextureKeys(this.mapData))
     this.buildCollisionGrid()
     this.renderMap()
     this.spawnPlayer()
@@ -165,6 +174,7 @@ export class MapScene extends Phaser.Scene {
     this.createEvents()
     this.setupInput()
     this.createUI()
+    this.createMinimap()
     this.createTouchControls()
 
     // Show map name
@@ -190,7 +200,10 @@ export class MapScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     this.animationTimeMs = time
-    if (this.inEvent) return
+    if (this.inEvent) {
+      this.updateMinimapPlayerMarker()
+      return
+    }
 
     this.updateBattleEnemyBehavior(delta)
     if (!this.isMoving && this.checkBattleEnemyTouch()) return
@@ -202,6 +215,7 @@ export class MapScene extends Phaser.Scene {
     } else {
       this.handleInput()
     }
+    this.updateMinimapPlayerMarker()
   }
 
   private buildCollisionGrid(): void {
@@ -222,9 +236,10 @@ export class MapScene extends Phaser.Scene {
 
   private renderMap(): void {
     const gd = GameData.getInstance()
+    const tileSprites = GAME_CONFIG_DATABASE.getTable('tileSprites')
     const resolveTile = (idx: number): number => {
-      if (idx === 14 && gd.rebuildLevel >= 2) return 9 // RUIN -> HOUSE
-      if (idx === 13 && gd.rebuildLevel >= 1) return 22 // STUMP -> SAPLING
+      const replacement = REBUILD_TILE_REPLACEMENTS.find(rule => rule.sourceTileId === idx && gd.rebuildLevel >= rule.minRebuildLevel)
+      if (replacement) return replacement.targetTileId
       return idx
     }
 
@@ -238,7 +253,7 @@ export class MapScene extends Phaser.Scene {
       this.tileSprites[y] = []
       for (let x = 0; x < this.mapData.width; x++) {
         const idx = resolveTile(ground.data[y * this.mapData.width + x] ?? 0)
-        const spriteKey = TILE_SPRITES[idx] || 'env_dirt_plain'
+        const spriteKey = tileSprites[idx] || 'env_dirt_plain'
         const temp = this.add.image(0, 0, spriteKey)
         temp.setOrigin(0, 0)
         temp.setDisplaySize(TILE_SIZE, TILE_SIZE)
@@ -255,7 +270,7 @@ export class MapScene extends Phaser.Scene {
         const raw = objects.data[y * this.mapData.width + x]
         if (raw && raw > 0) {
           const idx = resolveTile(raw)
-          const spriteKey = TILE_SPRITES[idx]
+          const spriteKey = tileSprites[idx]
           if (spriteKey) {
             const footprint = TILE_SPRITE_FOOTPRINTS[spriteKey]
             const widthTiles = footprint?.width ?? 1
@@ -455,8 +470,10 @@ export class MapScene extends Phaser.Scene {
 
   private getBattleFieldBehavior(event: MapEvent): FieldEntityBehavior {
     const encounterId = this.getBattleEncounterId(event)
-    const enemyIds = encounterId ? ENCOUNTERS[encounterId]?.enemies ?? [] : []
-    const enemies = enemyIds.map(id => ENEMIES[id]).filter(Boolean)
+    const encounters = GAME_CONFIG_DATABASE.getTable('encounters')
+    const enemyDefs = GAME_CONFIG_DATABASE.getTable('enemies')
+    const enemyIds = encounterId ? encounters[encounterId]?.enemies ?? [] : []
+    const enemies = enemyIds.map(id => enemyDefs[id]).filter(Boolean)
     const hasBoss = enemies.some(enemy => enemy!.isBoss)
     const hasAmbush = enemies.some(enemy => enemy!.id === 'barrel_fake')
     const hasGuardian = enemies.some(enemy => enemy!.aiType === 'defensive')
@@ -632,7 +649,9 @@ export class MapScene extends Phaser.Scene {
 
     kb.on('keydown', (event: KeyboardEvent) => {
       const input = InputManager.getInstance()
-      if (input.isConfirm(event.code)) {
+      if (event.code === MAP_INPUT_CODES.WORLD_MAP) {
+        this.openWorldMap()
+      } else if (input.isConfirm(event.code)) {
         this.interact()
       } else if (input.isMenu(event.code) || input.isCancel(event.code)) {
         this.openMenu()
@@ -755,7 +774,7 @@ export class MapScene extends Phaser.Scene {
     }
 
     // Interaction prompt
-    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30, 'Space 调查/对话 | Tab 菜单', {
+    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30, MAP_HUD.PROMPT_TEXT, {
       fontSize: '12px',
       color: '#cccccc',
       backgroundColor: '#00000080',
@@ -765,6 +784,84 @@ export class MapScene extends Phaser.Scene {
     prompt.setScrollFactor(0)
     prompt.setDepth(100)
     this.uiTexts.push(prompt)
+  }
+
+  private createMinimap(): void {
+    const graphics = this.add.graphics()
+    graphics.setScrollFactor(0)
+    graphics.setDepth(MAP_HUD.DEPTH)
+    this.drawMinimapStatic(graphics)
+
+    const geometry = this.getMinimapGeometry()
+    this.minimapPlayerMarker = this.add.rectangle(geometry.offsetX, geometry.offsetY, MAP_HUD.PLAYER_MARKER_SIZE, MAP_HUD.PLAYER_MARKER_SIZE, MAP_HUD.PLAYER_COLOR)
+    this.minimapPlayerMarker.setScrollFactor(0)
+    this.minimapPlayerMarker.setDepth(MAP_HUD.DEPTH + MAP_HUD.MARKER_DEPTH_OFFSET)
+
+    const hitArea = this.add.rectangle(MAP_HUD.MINIMAP_X, MAP_HUD.MINIMAP_Y, MAP_HUD.MINIMAP_WIDTH, MAP_HUD.MINIMAP_HEIGHT, MAP_HUD.BACKGROUND_COLOR, 0)
+    hitArea.setOrigin(0, 0)
+    hitArea.setScrollFactor(0)
+    hitArea.setDepth(MAP_HUD.DEPTH + MAP_HUD.HIT_AREA_DEPTH_OFFSET)
+    hitArea.setInteractive({ useHandCursor: true })
+    hitArea.on(Phaser.Input.Events.POINTER_DOWN, () => this.openWorldMap())
+
+    const label = this.add.text(MAP_HUD.MINIMAP_X + MAP_HUD.MINIMAP_WIDTH - MAP_HUD.LABEL_OFFSET_X, MAP_HUD.MINIMAP_Y + MAP_HUD.MINIMAP_HEIGHT - MAP_HUD.LABEL_OFFSET_Y, MAP_HUD.OPEN_HINT, {
+      fontSize: `${MAP_HUD.LABEL_FONT_SIZE}px`,
+      color: MAP_HUD.LABEL_COLOR,
+      fontFamily: MAP_HUD.LABEL_FONT_FAMILY,
+    })
+    label.setOrigin(1, 0.5)
+    label.setScrollFactor(0)
+    label.setDepth(MAP_HUD.DEPTH + MAP_HUD.LABEL_DEPTH_OFFSET)
+    this.updateMinimapPlayerMarker()
+  }
+
+  private drawMinimapStatic(graphics: Phaser.GameObjects.Graphics): void {
+    const geometry = this.getMinimapGeometry()
+    graphics.clear()
+    graphics.fillStyle(MAP_HUD.BACKGROUND_COLOR, MAP_HUD.PANEL_ALPHA)
+    graphics.fillRect(MAP_HUD.MINIMAP_X, MAP_HUD.MINIMAP_Y, MAP_HUD.MINIMAP_WIDTH, MAP_HUD.MINIMAP_HEIGHT)
+    graphics.fillStyle(MAP_HUD.MAP_COLOR, MAP_HUD.MAP_ALPHA)
+    graphics.fillRect(geometry.offsetX, geometry.offsetY, geometry.width, geometry.height)
+    graphics.fillStyle(MAP_HUD.COLLISION_COLOR, MAP_HUD.COLLISION_ALPHA)
+    for (const index of this.mapData.collisions) {
+      const x = index % this.mapData.width
+      const y = Math.floor(index / this.mapData.width)
+      graphics.fillRect(geometry.offsetX + x * geometry.scale, geometry.offsetY + y * geometry.scale, geometry.scale, geometry.scale)
+    }
+    for (const event of this.mapData.events) {
+      const color = MAP_HUD.EVENT_COLORS[event.type] ?? MAP_HUD.EVENT_COLORS.trigger
+      const width = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, event.width * geometry.scale)
+      const height = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, event.height * geometry.scale)
+      graphics.fillStyle(color, MAP_HUD.EVENT_ALPHA)
+      graphics.fillRect(geometry.offsetX + event.x * geometry.scale, geometry.offsetY + event.y * geometry.scale, width, height)
+    }
+    graphics.lineStyle(MAP_HUD.BORDER_WIDTH, MAP_HUD.BORDER_COLOR, MAP_HUD.BORDER_ALPHA)
+    graphics.strokeRect(MAP_HUD.MINIMAP_X, MAP_HUD.MINIMAP_Y, MAP_HUD.MINIMAP_WIDTH, MAP_HUD.MINIMAP_HEIGHT)
+    graphics.strokeRect(geometry.offsetX, geometry.offsetY, geometry.width, geometry.height)
+  }
+
+  private getMinimapGeometry(): { scale: number; offsetX: number; offsetY: number; width: number; height: number } {
+    const innerWidth = MAP_HUD.MINIMAP_WIDTH - MAP_HUD.INNER_PADDING * 2
+    const innerHeight = MAP_HUD.MINIMAP_HEIGHT - MAP_HUD.INNER_PADDING * 2
+    const scale = Math.min(innerWidth / this.mapData.width, innerHeight / this.mapData.height)
+    const width = this.mapData.width * scale
+    const height = this.mapData.height * scale
+    return {
+      scale,
+      offsetX: MAP_HUD.MINIMAP_X + MAP_HUD.INNER_PADDING + (innerWidth - width) / 2,
+      offsetY: MAP_HUD.MINIMAP_Y + MAP_HUD.INNER_PADDING + (innerHeight - height) / 2,
+      width,
+      height,
+    }
+  }
+
+  private updateMinimapPlayerMarker(): void {
+    if (!this.minimapPlayerMarker || !this.player) return
+    const geometry = this.getMinimapGeometry()
+    this.minimapPlayerMarker.setPosition(
+      geometry.offsetX + (this.player.x / TILE_SIZE) * geometry.scale,
+      geometry.offsetY + (this.player.y / TILE_SIZE) * geometry.scale,
+    )
   }
 
   private showMapName(): void {
@@ -1193,6 +1290,14 @@ export class MapScene extends Phaser.Scene {
     this.scene.pause()
   }
 
+  private openWorldMap(): void {
+    if (this.inEvent) return
+    AudioManager.getInstance().playSFX('open_menu')
+    this.inEvent = true
+    this.scene.launch('WorldMapOverlay')
+    this.scene.pause()
+  }
+
   private onDialogueEnd(data?: { actions?: EventAction[] }): void {
     this.scene.resume()
     const pending = [...(data?.actions || []), ...this.pendingActions]
@@ -1361,7 +1466,7 @@ export class MapScene extends Phaser.Scene {
 
   private getEnemySpriteKey(encounterId?: string): string {
     if (!encounterId) return DEFAULT_ENEMY_SPRITE_KEY
-    const enemyId = ENCOUNTERS[encounterId]?.enemies[0]
+    const enemyId = GAME_CONFIG_DATABASE.getTable('encounters')[encounterId]?.enemies[0]
     return enemyId ? `mon_${enemyId}_01` : DEFAULT_ENEMY_SPRITE_KEY
   }
 
