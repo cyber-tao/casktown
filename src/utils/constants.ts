@@ -990,6 +990,20 @@ export const CONFIG_EDITOR_API = {
   SPRITE_ATLAS_IMAGE_PATH: 'sprite-atlas-image',
 } as const
 
+export const CONFIG_EDITOR_SPRITE_SOURCE = {
+  BASE_PATH: 'sprite-sources',
+  MANIFEST_FILE: 'pack_manifest.json',
+  MISC_DIRECTORY: 'misc',
+  ROOT_FRAME_SEGMENT_COUNT: 1,
+  OUTPUT_EXTENSION: '.png',
+} as const
+
+export const PUBLIC_ASSET_PATHS = {
+  PATH_SEPARATOR: '/',
+  SPRITES_DIRECTORY: 'sprites',
+  CACHE_BUSTER_PARAM: 'v',
+} as const
+
 export const SPRITE_CROP_DEFAULTS = {
   SOURCE_X: 0,
   SOURCE_Y: 0,

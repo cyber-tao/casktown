@@ -17,9 +17,11 @@ import {
   CONFIG_EDITOR_RESOURCE_GROUP_LABELS,
   CONFIG_EDITOR_RESOURCE_TREE,
   CONFIG_EDITOR_SPRITE,
+  CONFIG_EDITOR_SPRITE_SOURCE,
   CONFIG_EDITOR_TABLE_LABELS,
   CONFIG_EDITOR_TILE_COLORS,
   MAP_LAYER_INDEX,
+  PUBLIC_ASSET_PATHS,
   SPRITE_CROP_DEFAULTS,
 } from '../utils/constants'
 import { getDialogueVoicePath, resolveDialogueVoiceKey } from '../utils/voiceLines'
@@ -60,6 +62,21 @@ interface SpriteFrameSource {
   imageUrl?: string
   json?: string
   message?: string
+  readOnly?: boolean
+}
+
+interface SpritePackManifest {
+  files: SpritePackFile[]
+}
+
+interface SpritePackFile {
+  image: string
+  json: string
+  category: string
+}
+
+interface SpriteAtlasMetadata {
+  frames: Record<string, { frame: SpriteFrame }>
 }
 
 interface ResourceTreeNode {
@@ -75,6 +92,12 @@ interface SpriteViewport {
   offsetY: number
   width: number
   height: number
+}
+
+type ViteImportMeta = ImportMeta & {
+  readonly env: {
+    readonly BASE_URL: string
+  }
 }
 
 const state: EditorState = {
@@ -93,6 +116,8 @@ const SPRITE_CROP_FIELDS: { key: SpriteCropField; label: string }[] = [
   { key: 'offsetX', label: '偏移 X' },
   { key: 'offsetY', label: '偏移 Y' },
 ]
+
+const publicBaseUrl = new URL((import.meta as ViteImportMeta).env.BASE_URL, window.location.href)
 
 const root = queryElement<HTMLDivElement>('#editor-root')
 root.innerHTML = `
@@ -180,7 +205,7 @@ elements.jsonEditor.addEventListener('input', validateEditor)
 elements.saveRecord.addEventListener('click', saveSelectedRecord)
 elements.deleteRecord.addEventListener('click', deleteSelectedRecord)
 elements.duplicateRecord.addEventListener('click', duplicateSelectedRecord)
-elements.openGame.addEventListener('click', () => window.open('/', '_blank', 'noopener,noreferrer'))
+elements.openGame.addEventListener('click', () => window.open(publicBaseUrl.toString(), '_blank', 'noopener,noreferrer'))
 elements.applyConfig.addEventListener('click', () => {
   GAME_CONFIG_DATABASE.persist()
   setStatus('配置已写入浏览器本地覆盖，刷新游戏后生效。', 'ok')
@@ -784,6 +809,81 @@ function syncEditorDraft(value: unknown): void {
   validateEditor()
 }
 
+function normalizePublicAssetPath(path: string): string {
+  return path.split(PUBLIC_ASSET_PATHS.PATH_SEPARATOR).filter(Boolean).join(PUBLIC_ASSET_PATHS.PATH_SEPARATOR)
+}
+
+function resolvePublicAssetUrl(path: string): string {
+  return new URL(normalizePublicAssetPath(path), publicBaseUrl).toString()
+}
+
+function resolveSpriteAssetUrl(path: string): string {
+  return resolvePublicAssetUrl([
+    PUBLIC_ASSET_PATHS.SPRITES_DIRECTORY,
+    path,
+  ].join(PUBLIC_ASSET_PATHS.PATH_SEPARATOR))
+}
+
+function addCacheBuster(url: string): string {
+  const nextUrl = new URL(url, window.location.href)
+  nextUrl.searchParams.set(PUBLIC_ASSET_PATHS.CACHE_BUSTER_PARAM, String(Date.now()))
+  return nextUrl.toString()
+}
+
+function isSourceAtlasAssetPath(path: string): boolean {
+  return path.includes(PUBLIC_ASSET_PATHS.PATH_SEPARATOR)
+}
+
+function resolveSpriteSourceAssetUrl(path: string): string {
+  return resolvePublicAssetUrl([
+    CONFIG_EDITOR_SPRITE_SOURCE.BASE_PATH,
+    path,
+  ].join(PUBLIC_ASSET_PATHS.PATH_SEPARATOR))
+}
+
+function getStaticSpriteOutputPath(category: string, frameName: string): string {
+  const frameSegments = normalizePublicAssetPath(frameName).split(PUBLIC_ASSET_PATHS.PATH_SEPARATOR).filter(Boolean)
+  const outputSegments = [category]
+  if (frameSegments.length === CONFIG_EDITOR_SPRITE_SOURCE.ROOT_FRAME_SEGMENT_COUNT) {
+    outputSegments.push(CONFIG_EDITOR_SPRITE_SOURCE.MISC_DIRECTORY)
+  }
+  outputSegments.push(...frameSegments)
+  const fileName = outputSegments.pop()
+  if (!fileName) return ''
+  outputSegments.push(fileName.endsWith(CONFIG_EDITOR_SPRITE_SOURCE.OUTPUT_EXTENSION) ? fileName : `${fileName}${CONFIG_EDITOR_SPRITE_SOURCE.OUTPUT_EXTENSION}`)
+  return outputSegments.join(PUBLIC_ASSET_PATHS.PATH_SEPARATOR)
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+  const response = await fetch(url)
+  if (!response.ok) return null
+  return await response.json() as T
+}
+
+async function loadStaticSpriteFrameSource(path: string): Promise<SpriteFrameSource | null> {
+  const manifest = await fetchJson<SpritePackManifest>(resolveSpriteSourceAssetUrl(CONFIG_EDITOR_SPRITE_SOURCE.MANIFEST_FILE))
+  if (!manifest) return null
+  const outputPath = normalizePublicAssetPath(path)
+  for (const packFile of manifest.files) {
+    const atlas = await fetchJson<SpriteAtlasMetadata>(resolveSpriteSourceAssetUrl(packFile.json))
+    if (!atlas) continue
+    for (const [frameName, metadata] of Object.entries(atlas.frames)) {
+      if (getStaticSpriteOutputPath(packFile.category, frameName) !== outputPath) continue
+      return {
+        available: true,
+        category: packFile.category,
+        frame: metadata.frame,
+        frameName,
+        image: packFile.image,
+        imageUrl: resolveSpriteSourceAssetUrl(packFile.image),
+        json: packFile.json,
+        readOnly: true,
+      }
+    }
+  }
+  return null
+}
+
 function renderImagePreviews(container: HTMLElement, assetKeys: string[]): void {
   const imageAssets = GAME_CONFIG_DATABASE.getTable('imageAssets')
   const uniqueKeys = Array.from(new Set(assetKeys)).filter(key => imageAssets[key])
@@ -795,7 +895,7 @@ function renderImagePreviews(container: HTMLElement, assetKeys: string[]): void 
     card.className = 'asset-preview-card'
     const image = document.createElement('img')
     image.alt = key
-    image.src = `/sprites/${imageAssets[key]}`
+    image.src = resolveSpriteAssetUrl(imageAssets[key]!)
     const label = document.createElement('span')
     label.textContent = key
     card.append(image, label)
@@ -840,7 +940,7 @@ function renderAudioPathPreview(container: HTMLElement, id: string, path: string
   const audio = document.createElement('audio')
   audio.controls = true
   audio.preload = 'none'
-  audio.src = `/${path}`
+  audio.src = resolvePublicAssetUrl(path)
   if (subtitle) panel.append(title, subtitleText, audio)
   else panel.append(title, audio)
   container.append(panel)
@@ -932,6 +1032,26 @@ function isSpriteCropConfig(value: unknown): value is SpriteCropConfig {
   return isRecordObject(value) && typeof value.key === 'string'
 }
 
+function renderRuntimeImagePreview(container: HTMLElement, assetKey: string, path: string): void {
+  const panel = document.createElement('div')
+  panel.className = 'runtime-image-preview'
+  const image = document.createElement('img')
+  image.alt = assetKey
+  const meta = document.createElement('span')
+  meta.className = 'muted'
+  meta.textContent = '正在加载图片'
+  image.addEventListener('load', () => {
+    meta.textContent = `${image.naturalWidth} x ${image.naturalHeight}`
+  })
+  image.addEventListener('error', () => {
+    console.warn(`Failed to load runtime image ${assetKey}`)
+    meta.textContent = CONFIG_EDITOR_SPRITE.IMAGE_LOAD_ERROR
+  })
+  image.src = resolveSpriteAssetUrl(path)
+  panel.append(image, meta)
+  container.append(panel)
+}
+
 function renderSpriteEditor(assetKey: string, path: string): void {
   const summary = document.createElement('div')
   summary.className = 'summary sprite-editor'
@@ -948,6 +1068,16 @@ function renderSpriteEditor(assetKey: string, path: string): void {
     empty.className = 'empty'
     empty.textContent = '图片资产未配置路径'
     summary.append(empty)
+    elements.previewBody.append(summary)
+    return
+  }
+
+  if (!isSourceAtlasAssetPath(path)) {
+    renderRuntimeImagePreview(summary, assetKey, path)
+    const details = document.createElement('div')
+    details.className = 'detail-list'
+    appendDetail(details, '运行时输出路径', resolveSpriteAssetUrl(path))
+    summary.append(details)
     elements.previewBody.append(summary)
     return
   }
@@ -1034,7 +1164,7 @@ function renderSpriteEditor(assetKey: string, path: string): void {
 
   const details = document.createElement('div')
   details.className = 'detail-list'
-  appendDetail(details, '运行时输出路径', `/sprites/${path}`)
+  appendDetail(details, '运行时输出路径', resolveSpriteAssetUrl(path))
   summary.append(details)
   elements.previewBody.append(summary)
 
@@ -1043,15 +1173,17 @@ function renderSpriteEditor(assetKey: string, path: string): void {
     if (!source.available || !source.frame || !source.imageUrl) {
       sourceStatus.textContent = source.message ?? '当前资源没有源图集配置'
       saveButton.disabled = true
-      image.removeAttribute('src')
+      image.src = addCacheBuster(resolveSpriteAssetUrl(path))
       clearSpriteEditorCanvases(canvas, outputCanvas, sourceStatus.textContent)
       return
     }
     setDraftFromSpriteFrame(draft, assetKey, source.frame)
     syncSpriteCropInputs(fieldInputs, draft)
-    sourceStatus.textContent = `${source.json ?? ''} · ${source.frameName ?? ''}`
-    saveButton.disabled = false
-    image.src = `${source.imageUrl}&v=${Date.now()}`
+    sourceStatus.textContent = source.readOnly
+      ? `${source.json ?? ''} · ${source.frameName ?? ''} · 静态只读`
+      : `${source.json ?? ''} · ${source.frameName ?? ''}`
+    saveButton.disabled = source.readOnly === true
+    image.src = addCacheBuster(source.imageUrl)
   }
 
   const reloadSource = (): void => {
@@ -1061,7 +1193,7 @@ function renderSpriteEditor(assetKey: string, path: string): void {
         console.warn('Failed to load sprite atlas source', error)
         sourceStatus.textContent = '源图集接口不可用，无法编辑源切图'
         saveButton.disabled = true
-        image.removeAttribute('src')
+        image.src = addCacheBuster(resolveSpriteAssetUrl(path))
         clearSpriteEditorCanvases(canvas, outputCanvas, sourceStatus.textContent)
       })
   }
@@ -1071,6 +1203,10 @@ function renderSpriteEditor(assetKey: string, path: string): void {
   saveButton.addEventListener('click', () => {
     if (!source?.available || !source.frame) {
       setStatus('当前资源没有可写入的源图集配置。', 'error')
+      return
+    }
+    if (source.readOnly) {
+      setStatus('静态部署只能预览源图集，无法写回切图配置。', 'error')
       return
     }
     clampSpriteCropDraft(draft, image.naturalWidth, image.naturalHeight)
@@ -1196,7 +1332,9 @@ function setDraftFromSpriteFrame(draft: SpriteCropConfig, key: string, frame: Sp
 async function loadSpriteFrameSource(path: string): Promise<SpriteFrameSource> {
   const url = `${CONFIG_EDITOR_API.BASE_PATH}/${CONFIG_EDITOR_API.SPRITE_FRAME_PATH}?path=${encodeURIComponent(path)}`
   const response = await fetch(url)
-  if (!response.ok) return { available: false, message: '源图集接口不可用' }
+  if (!response.ok) {
+    return await loadStaticSpriteFrameSource(path) ?? { available: false, message: '源图集接口不可用' }
+  }
   return await response.json() as SpriteFrameSource
 }
 

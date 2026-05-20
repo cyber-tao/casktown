@@ -85,15 +85,15 @@ export class WorldMapOverlay extends Phaser.Scene {
       point.x,
       point.y,
       [
-        0, -WORLD_MAP_UI.LOCATION_PULSE_SIZE,
         WORLD_MAP_UI.LOCATION_PULSE_SIZE, 0,
+        WORLD_MAP_UI.LOCATION_PULSE_SIZE * 2, WORLD_MAP_UI.LOCATION_PULSE_SIZE,
+        WORLD_MAP_UI.LOCATION_PULSE_SIZE, WORLD_MAP_UI.LOCATION_PULSE_SIZE * 2,
         0, WORLD_MAP_UI.LOCATION_PULSE_SIZE,
-        -WORLD_MAP_UI.LOCATION_PULSE_SIZE, 0,
       ],
     )
     pulse.setFillStyle(WORLD_MAP_UI.LOCATION_PIN_COLOR, 0)
     pulse.setStrokeStyle(WORLD_MAP_UI.LOCATION_PIN_STROKE_WIDTH, WORLD_MAP_UI.LOCATION_PIN_COLOR, WORLD_MAP_UI.LOCATION_PULSE_ALPHA)
-    pulse.setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH - 1)
+    pulse.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH - 1)
 
     this.tweens.add({
       targets: pulse,
@@ -107,15 +107,15 @@ export class WorldMapOverlay extends Phaser.Scene {
       point.x,
       point.y,
       [
-        0, -WORLD_MAP_UI.LOCATION_PIN_SIZE,
         WORLD_MAP_UI.LOCATION_PIN_SIZE, 0,
+        WORLD_MAP_UI.LOCATION_PIN_SIZE * 2, WORLD_MAP_UI.LOCATION_PIN_SIZE,
+        WORLD_MAP_UI.LOCATION_PIN_SIZE, WORLD_MAP_UI.LOCATION_PIN_SIZE * 2,
         0, WORLD_MAP_UI.LOCATION_PIN_SIZE,
-        -WORLD_MAP_UI.LOCATION_PIN_SIZE, 0,
       ],
       WORLD_MAP_UI.LOCATION_PIN_COLOR,
     )
     pin.setStrokeStyle(WORLD_MAP_UI.LOCATION_PIN_STROKE_WIDTH, WORLD_MAP_UI.LOCATION_PIN_STROKE_COLOR)
-    pin.setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH)
+    pin.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH)
   }
 
   private close(): void {

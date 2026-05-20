@@ -357,6 +357,7 @@ export class BattleScene extends Phaser.Scene {
       breakBar.setScrollFactor(0)
       unit.tpBar = breakBar
     }
+    this.updateUnitBars(unit)
   }
 
   private updateUnitBars(unit: BattleUnit): void {

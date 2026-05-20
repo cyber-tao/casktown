@@ -376,6 +376,23 @@ textarea:focus {
   height: 112px;
 }
 
+.runtime-image-preview {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #0b1118;
+}
+
+.runtime-image-preview img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
 .sprite-actions {
   display: grid;
   gap: 8px;

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import { spawn } from 'node:child_process'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { readFile, writeFile } from 'node:fs/promises'
+import { cp, readFile, writeFile } from 'node:fs/promises'
 import path from 'path'
 
 const defaultBasePath = '/'
@@ -11,6 +11,7 @@ const spriteFrameRoute = '/sprite-frame'
 const spriteAtlasImageRoute = '/sprite-atlas-image'
 const sourceSpritePackDir = path.resolve(__dirname, 'img/sprites')
 const sourceSpriteManifestPath = path.resolve(sourceSpritePackDir, 'pack_manifest.json')
+const staticSpriteSourceOutputDir = 'sprite-sources'
 const refreshSpriteScriptPath = 'scripts/refresh-sprites.ts'
 const utf8Encoding = 'utf8'
 const posixSeparator = '/'
@@ -255,10 +256,20 @@ function casktownEditorApiPlugin() {
   }
 }
 
+function casktownStaticSpriteSourcePlugin() {
+  return {
+    name: 'casktown-static-sprite-source',
+    apply: 'build' as const,
+    async closeBundle() {
+      await cp(sourceSpritePackDir, path.resolve(__dirname, 'dist', staticSpriteSourceOutputDir), { recursive: true })
+    },
+  }
+}
+
 export default defineConfig({
   root: '.',
   base: basePath,
-  plugins: [casktownEditorApiPlugin()],
+  plugins: [casktownEditorApiPlugin(), casktownStaticSpriteSourcePlugin()],
   publicDir: 'assets',
   build: {
     outDir: 'dist',
