@@ -5,10 +5,8 @@ import { QuestSystem } from '../core/QuestSystem'
 import { AudioManager } from '../core/AudioManager'
 import { BarrelSystem } from '../core/BarrelSystem'
 import type { BarrelColor } from '../core/BarrelSystem'
-import { ENEMIES } from '../data/enemies'
-import { ENCOUNTERS } from '../data/encounters'
-import { ITEMS } from '../data/items'
-import { SKILLS } from '../data/skills'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { collectBattleImageKeys, queueImageAssets } from '../core/AssetLoader'
 import {
   BATTLE_RESULT_PANEL,
   BATTLE_TARGET_INDICATOR,
@@ -21,7 +19,7 @@ import {
   GAME_WIDTH,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
-import type { CharacterData, EnemyData, SkillData } from '../data/types'
+import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
 
 interface ComboDef {
   skillId: string
@@ -88,6 +86,15 @@ export class BattleScene extends Phaser.Scene {
 
   constructor() {
     super({ key: 'BattleScene', active: false })
+  }
+
+  init(data: { encounterId: string; mapEventId?: string }): void {
+    this.encounterId = data.encounterId
+    this.mapEventId = data.mapEventId || ''
+  }
+
+  preload(): void {
+    queueImageAssets(this, collectBattleImageKeys(this.encounterId, GameData.getInstance().party))
   }
 
   create(data: { encounterId: string; mapEventId?: string }): void {
@@ -228,9 +235,10 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Spawn enemies (demo: use encounterId to pick enemies)
+    const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
     const enemyIds = this.getEnemiesForEncounter(encounterId)
     for (let i = 0; i < enemyIds.length; i++) {
-      const ed = ENEMIES[enemyIds[i]!]
+      const ed = enemies[enemyIds[i]!]
       if (!ed) continue
       const x = 700 + i * 100
       const y = 280 + (i % 2) * 80
@@ -268,7 +276,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private getEnemiesForEncounter(encounterId: string): string[] {
-    const encounter = ENCOUNTERS[encounterId]
+    const encounter = GAME_CONFIG_DATABASE.getTable('encounters')[encounterId]
     if (!encounter) {
       console.warn(`Encounter ${encounterId} not found`)
       return ['xiao_yao']
@@ -633,8 +641,9 @@ export class BattleScene extends Phaser.Scene {
     const actor = this.getCurrentUnit()
     if (!actor || !actor.isPlayer) return
     const char = actor.data as CharacterData
+    const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     const skills = char.skills.filter(s => {
-      const sk = SKILLS[s]
+      const sk = skillDefs[s]
       if (!sk) return false
       return char.stats.mp >= sk.costMp && actor.tp >= sk.costTp
     })
@@ -653,7 +662,7 @@ export class BattleScene extends Phaser.Scene {
     this.skillMenuBg.setScrollFactor(0)
 
     for (let i = 0; i < skills.length; i++) {
-      const sk = SKILLS[skills[i]!]!
+      const sk = skillDefs[skills[i]!]!
       const cost = sk.costTp > 0 ? `TP${sk.costTp}` : `MP${sk.costMp}`
       const text = this.add.text(430, 390 + i * 22, `${sk.name} [${cost}]`, {
         fontSize: '14px',
@@ -689,8 +698,9 @@ export class BattleScene extends Phaser.Scene {
     const actor = this.getCurrentUnit()
     if (!actor || !actor.isPlayer) return
     const char = actor.data as CharacterData
+    const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     const skills = char.skills.filter(s => {
-      const sk = SKILLS[s]
+      const sk = skillDefs[s]
       if (!sk) return false
       return char.stats.mp >= sk.costMp && actor.tp >= sk.costTp
     })
@@ -698,7 +708,7 @@ export class BattleScene extends Phaser.Scene {
     if (!skillId) return
     this.closeSkillMenu()
     this.actionStack = ['skill', skillId]
-    const sk = SKILLS[skillId]
+    const sk = skillDefs[skillId]
     const targetPlayers = sk?.target === 'self' || sk?.type === 'heal' || sk?.type === 'buff'
     this.startTargetSelect(targetPlayers)
   }
@@ -883,6 +893,7 @@ export class BattleScene extends Phaser.Scene {
   private getAvailableCombos(): { skillId: string; name: string; char1: string; char2: string }[] {
     const gd = GameData.getInstance()
     const party = gd.party
+    const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     const results: { skillId: string; name: string; char1: string; char2: string }[] = []
 
     for (const def of COMBO_DEFS) {
@@ -894,7 +905,7 @@ export class BattleScene extends Phaser.Scene {
       if (!unit1 || !unit2 || unit1.stats.hp <= 0 || unit2.stats.hp <= 0) continue
       if (unit1.tp < COMBO_TP_COST || unit2.tp < COMBO_TP_COST) continue
 
-      const skill = SKILLS[def.skillId]
+      const skill = skillDefs[def.skillId]
       if (!skill) continue
 
       results.push({ skillId: def.skillId, name: skill.name, char1: def.char1, char2: def.char2 })
@@ -980,7 +991,7 @@ export class BattleScene extends Phaser.Scene {
     this.updateUnitBars(unit1)
     this.updateUnitBars(unit2)
 
-    const skill = SKILLS[combo.skillId]
+    const skill = GAME_CONFIG_DATABASE.getTable('skills')[combo.skillId]
     if (!skill) return
 
     AudioManager.getInstance().playSFX('magic_cast')
@@ -1132,19 +1143,9 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private getItemData(itemId: string): { usableInBattle: boolean; name: string; effect: string } | null {
-    const itemMap: Record<string, { usableInBattle: boolean; name: string; effect: string }> = {
-      heal_grass: { usableInBattle: true, name: '回复草', effect: 'heal_hp:80' },
-      pineapple_rice: { usableInBattle: true, name: '菠萝饭团', effect: 'heal_hp:150' },
-      holy_drop: { usableInBattle: true, name: '神水滴', effect: 'heal_mp:60' },
-      antidote: { usableInBattle: true, name: '解毒草', effect: 'cure_poison' },
-      clear_bell: { usableInBattle: true, name: '清心铃', effect: 'cure_confuse_charm_fear' },
-      revive_feather: { usableInBattle: true, name: '复生羽', effect: 'revive:30' },
-      barrel_cookie: { usableInBattle: true, name: '木桶饼干', effect: 'heal_hp:30_all' },
-      wind_pill: { usableInBattle: true, name: '风铃丸', effect: 'buff_speed' },
-      amulet: { usableInBattle: true, name: '护身符', effect: 'barrier_status' },
-    }
-    return itemMap[itemId] || null
+  private getItemData(itemId: string): ItemData | null {
+    const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
+    return item?.usableInBattle ? item : null
   }
 
   private performItem(actor: BattleUnit, target: BattleUnit, itemId: string): void {
@@ -1268,7 +1269,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private performSkill(actor: BattleUnit, target: BattleUnit, skillId: string): void {
-    const skill = SKILLS[skillId]
+    const skill = GAME_CONFIG_DATABASE.getTable('skills')[skillId]
     if (!skill) {
       this.performAttack(actor, target)
       return
@@ -1932,7 +1933,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     const qs = QuestSystem.getInstance()
-    const encounter = ENCOUNTERS[this.encounterId]
+    const encounter = GAME_CONFIG_DATABASE.getTable('encounters')[this.encounterId]
     if (encounter?.victoryFlag) {
       gd.setFlag(encounter.victoryFlag, true)
       rewardLines.push('关键战斗标记已更新')
@@ -2042,7 +2043,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private getItemName(itemId: string): string {
-    return ITEMS[itemId]?.name ?? this.getItemData(itemId)?.name ?? itemId
+    return GAME_CONFIG_DATABASE.getTable('items')[itemId]?.name ?? this.getItemData(itemId)?.name ?? itemId
   }
 
   private syncPlayerState(): void {

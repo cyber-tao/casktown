@@ -2,9 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { ENEMIES } from '../data/enemies'
-import { ITEMS } from '../data/items'
-import { PROPHECIES } from '../data/prophecies'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
@@ -29,6 +27,8 @@ export class CodexOverlay extends Phaser.Scene {
   create(): void {
     AudioManager.getInstance().setScene(this)
     const gd = GameData.getInstance()
+    const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
+    const items = GAME_CONFIG_DATABASE.getTable('items')
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.8)
     overlay.setDepth(200)
@@ -68,7 +68,7 @@ export class CodexOverlay extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201), () => this.close())
 
     // Collect discovered content
-    this.discoveredEnemies = Object.keys(ENEMIES).filter(id => {
+    this.discoveredEnemies = Object.keys(enemies).filter(id => {
       return gd.getFlag(`discovered_${id}`) === true || gd.getFlag(`defeated_${id}`) === true
     })
     // Always show bosses that have been encountered
@@ -78,12 +78,12 @@ export class CodexOverlay extends Phaser.Scene {
       fake_xiaoai: 'fake_xiaoai', xiaoai_true: 'xiaoai_true', wuxiang: 'wuxiang',
     }
     for (const [id, flag] of Object.entries(bossEncounters)) {
-      if (ENEMIES[id] && !this.discoveredEnemies.includes(id) && gd.getFlag(`defeated_${flag}`) === true) {
+      if (enemies[id] && !this.discoveredEnemies.includes(id) && gd.getFlag(`defeated_${flag}`) === true) {
         this.discoveredEnemies.push(id)
       }
     }
 
-    this.discoveredItems = Object.keys(ITEMS).filter(id => {
+    this.discoveredItems = Object.keys(items).filter(id => {
       const count = gd.inventory.items[id] || 0
       return count > 0 || gd.getFlag(`found_${id}`) === true
     })
@@ -135,7 +135,7 @@ export class CodexOverlay extends Phaser.Scene {
   private getListCount(): number {
     if (this.tab === 'monsters') return Math.max(1, this.discoveredEnemies.length)
     if (this.tab === 'items') return Math.max(1, this.discoveredItems.length)
-    return STORY_BRANCH_COUNT + PROPHECIES.length
+    return STORY_BRANCH_COUNT + GAME_CONFIG_DATABASE.getTable('prophecies').length
   }
 
   private updateTabs(): void {
@@ -162,6 +162,9 @@ export class CodexOverlay extends Phaser.Scene {
   private renderList(): void {
     for (const item of this.listItems) item.destroy()
     this.listItems = []
+    const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
+    const items = GAME_CONFIG_DATABASE.getTable('items')
+    const prophecies = GAME_CONFIG_DATABASE.getTable('prophecies')
 
     if (this.tab === 'monsters') {
       if (this.discoveredEnemies.length === 0) {
@@ -170,7 +173,7 @@ export class CodexOverlay extends Phaser.Scene {
         this.listItems.push(t)
       }
       for (let i = 0; i < this.discoveredEnemies.length; i++) {
-        const ed = ENEMIES[this.discoveredEnemies[i]!]
+        const ed = enemies[this.discoveredEnemies[i]!]
         if (!ed) continue
         const t = this.add.text(150, 90 + i * 26, `${ed.isBoss ? '★' : '·'} ${ed.name}`, {
           fontSize: '14px', color: ed.isBoss ? '#e74c3c' : '#ecf0f1',
@@ -186,7 +189,7 @@ export class CodexOverlay extends Phaser.Scene {
         this.listItems.push(t)
       }
       for (let i = 0; i < this.discoveredItems.length; i++) {
-        const item = ITEMS[this.discoveredItems[i]!]
+        const item = items[this.discoveredItems[i]!]
         if (!item) continue
         const count = GameData.getInstance().inventory.items[item.id] || 0
         const t = this.add.text(150, 90 + i * 26, `${item.name} x${count}`, {
@@ -218,8 +221,8 @@ export class CodexOverlay extends Phaser.Scene {
         bindTouchText(t, () => this.selectListItem(i))
         this.listItems.push(t)
       }
-      for (let i = 0; i < PROPHECIES.length; i++) {
-        const prophecy = PROPHECIES[i]!
+      for (let i = 0; i < prophecies.length; i++) {
+        const prophecy = prophecies[i]!
         const conditionValue = prophecy.condition ? gd.getFlag(prophecy.condition) : true
         const conditionMet = !prophecy.condition || conditionValue === true || (typeof conditionValue === 'number' && conditionValue > 0)
         const label = conditionMet ? `📖 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
@@ -242,8 +245,11 @@ export class CodexOverlay extends Phaser.Scene {
   }
 
   private updateDetail(): void {
+    const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
+    const items = GAME_CONFIG_DATABASE.getTable('items')
+    const prophecies = GAME_CONFIG_DATABASE.getTable('prophecies')
     if (this.tab === 'monsters' && this.discoveredEnemies.length > 0) {
-      const ed = ENEMIES[this.discoveredEnemies[this.cursorIndex]!]
+      const ed = enemies[this.discoveredEnemies[this.cursorIndex]!]
       if (ed) {
         this.detailText.setText([
           `【${ed.name}】${ed.isBoss ? ' (BOSS)' : ''}`,
@@ -259,7 +265,7 @@ export class CodexOverlay extends Phaser.Scene {
         ].join('\n'))
       }
     } else if (this.tab === 'items' && this.discoveredItems.length > 0) {
-      const item = ITEMS[this.discoveredItems[this.cursorIndex]!]
+      const item = items[this.discoveredItems[this.cursorIndex]!]
       if (item) {
         this.detailText.setText([
           `【${item.name}】`,
@@ -281,7 +287,7 @@ export class CodexOverlay extends Phaser.Scene {
         ].join('\n'))
       } else {
         const prophecyIndex = this.cursorIndex - STORY_BRANCH_COUNT
-        const prophecy = PROPHECIES[prophecyIndex]
+        const prophecy = prophecies[prophecyIndex]
         if (!prophecy) {
           this.detailText.setText('')
           return

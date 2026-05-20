@@ -1,6 +1,6 @@
 import { EventBus, GameEvents } from './EventBus'
 import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, BranchState } from '../data/types'
-import { INITIAL_CHARACTERS, createCharacter } from '../data/characters'
+import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import {
   INITIAL_GOLD,
   REBUILD_VISUAL_MAP_THRESHOLD,
@@ -98,6 +98,12 @@ function createDefaultBranches(): BranchState {
   }
 }
 
+function createConfiguredCharacter(id: string): CharacterData {
+  const base = GAME_CONFIG_DATABASE.getTable('characters')[id]
+  if (!base) throw new Error(`Character ${id} not found`)
+  return cloneConfigData(base)
+}
+
 export class GameData {
   private static instance: GameData
 
@@ -150,7 +156,7 @@ export class GameData {
     this.playerDirection = START_PLAYER_DIRECTION
     this.party = [...START_PARTY]
     this.reserve = []
-    this.characters = new Map(Object.keys(INITIAL_CHARACTERS).map(id => [id, createCharacter(id)]))
+    this.characters = new Map(Object.keys(GAME_CONFIG_DATABASE.getTable('characters')).map(id => [id, createConfiguredCharacter(id)]))
     this.baseStats = new Map()
     this.inventory = { items: {}, equipment: {} }
     this.equipment = {}
@@ -521,10 +527,10 @@ export class GameData {
     const characters = d.characters as Record<string, CharacterData> | undefined
     this.characters = characters && Object.keys(characters).length > 0
       ? new Map(Object.entries(characters).map(([id, char]) => [id, this.cloneCharacter(char)]))
-      : new Map(Object.keys(INITIAL_CHARACTERS).map(id => [id, createCharacter(id)]))
+      : new Map(Object.keys(GAME_CONFIG_DATABASE.getTable('characters')).map(id => [id, createConfiguredCharacter(id)]))
     for (const id of [...this.party, ...this.reserve]) {
-      if (!this.characters.has(id) && INITIAL_CHARACTERS[id]) {
-        this.characters.set(id, createCharacter(id))
+      if (!this.characters.has(id) && GAME_CONFIG_DATABASE.getTable('characters')[id]) {
+        this.characters.set(id, createConfiguredCharacter(id))
       }
     }
     const inventory = (d.inventory as Partial<Inventory>) ?? {}

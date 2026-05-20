@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { ITEMS } from '../data/items'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 
@@ -28,7 +28,8 @@ export class ShopOverlay extends Phaser.Scene {
     this.selectedIndex = 0
     AudioManager.getInstance().playSFX('open_menu')
 
-    this.shopItems = Object.values(ITEMS)
+    const items = GAME_CONFIG_DATABASE.getTable('items')
+    this.shopItems = Object.values(items)
       .filter(item => (item.price ?? 0) > 0)
       .map(item => ({ id: item.id, price: item.price! }))
 
@@ -74,7 +75,7 @@ export class ShopOverlay extends Phaser.Scene {
 
     for (let i = 0; i < this.shopItems.length; i++) {
       const si = this.shopItems[i]!
-      const def = ITEMS[si.id]
+      const def = GAME_CONFIG_DATABASE.getTable('items')[si.id]
       const owned = gd.inventory.items[si.id] || 0
       const color = i === this.selectedIndex ? '#f1c40f' : COLORS.uiText
       const label = `${(def?.name ?? si.id).padEnd(10)}  ${si.price}G  x${owned}`
@@ -92,7 +93,7 @@ export class ShopOverlay extends Phaser.Scene {
   private updateDesc(): void {
     const si = this.shopItems[this.selectedIndex]
     if (!si) return
-    this.descText.setText(ITEMS[si.id]?.description ?? '')
+    this.descText.setText(GAME_CONFIG_DATABASE.getTable('items')[si.id]?.description ?? '')
   }
 
   private updateGold(): void {
@@ -130,7 +131,7 @@ export class ShopOverlay extends Phaser.Scene {
     gd.spendGold(si.price)
     gd.addItem(si.id, 1)
     AudioManager.getInstance().playSFX('get_item')
-    this.messageText.setText(`Bought ${ITEMS[si.id]?.name ?? si.id}!`)
+    this.messageText.setText(`Bought ${GAME_CONFIG_DATABASE.getTable('items')[si.id]?.name ?? si.id}!`)
     this.updateGold()
     this.renderList()
   }

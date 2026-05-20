@@ -1,7 +1,7 @@
 import { EventBus, GameEvents } from './EventBus'
 import { GameData } from './GameData'
 import { RebuildSystem } from './RebuildSystem'
-import { QUESTS } from '../data/quests'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import type { QuestState } from '../data/types'
 
 export class QuestSystem {
@@ -16,7 +16,7 @@ export class QuestSystem {
 
   startQuest(questId: string): void {
     const gd = GameData.getInstance()
-    const def = QUESTS[questId]
+    const def = GAME_CONFIG_DATABASE.getTable('quests')[questId]
     if (!def) {
       console.warn(`Quest ${questId} not found`)
       return
@@ -56,7 +56,7 @@ export class QuestSystem {
     state.progress = state.maxProgress
     EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
 
-    const def = QUESTS[questId]
+    const def = GAME_CONFIG_DATABASE.getTable('quests')[questId]
     if (def?.rewards) {
       for (const reward of def.rewards) {
         if (reward.exp) {

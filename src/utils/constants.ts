@@ -38,6 +38,26 @@ export const TITLE_GITHUB_LINK = {
   features: 'noopener,noreferrer',
 } as const
 
+export const TITLE_MENU_ITEMS = ['开始游戏', '继续游戏', '配置编辑器', '设置', '退出'] as const
+export const TITLE_MENU_ACTION_INDEX = {
+  NEW_GAME: 0,
+  LOAD_GAME: 1,
+  EDITOR: 2,
+  SETTINGS: 3,
+  EXIT: 4,
+} as const
+export const TITLE_MENU_LAYOUT = {
+  START_Y: 284,
+  GAP_Y: 44,
+  CURSOR_OFFSET_X: 80,
+  CURSOR_SIZE: 12,
+} as const
+export const EDITOR_PAGE_LINK = {
+  url: '/editor.html',
+  target: '_blank',
+  features: 'noopener,noreferrer',
+} as const
+
 export const TILE_TEXTURE_PROCESSING = {
   TERRAIN_INSET_RATIO: 0.24,
   TERRAIN_SAMPLE_INSET_RATIO: 0.25,
@@ -146,6 +166,11 @@ export const MAP_TILE_KEYS = {
   FARMLAND: 'FARMLAND',
 } as const
 
+export const MAP_LAYER_INDEX = {
+  GROUND: 0,
+  OBJECTS: 1,
+} as const
+
 export const TILE_SPRITE_FOOTPRINTS: Record<string, { readonly width: number; readonly height: number }> = {
   obj_cottage: { width: 3, height: 3 },
   obj_festival_plaza: { width: 3, height: 3 },
@@ -159,6 +184,11 @@ export const MAP_ENCOUNTER_RATES = {
   DENSE: 0.08,
   DANGEROUS: 0.1,
 } as const
+
+export const REBUILD_TILE_REPLACEMENTS = [
+  { sourceTileId: 14, targetTileId: 9, minRebuildLevel: 2 },
+  { sourceTileId: 13, targetTileId: 22, minRebuildLevel: 1 },
+] as const
 
 export const REDESIGNED_MAP_LAYOUTS = {
   MAP_001: {
@@ -633,6 +663,49 @@ export const COLORS = {
   black: 0x000000,
 } as const
 
+export const MAP_INPUT_CODES = {
+  WORLD_MAP: 'KeyM',
+} as const
+
+export const MAP_HUD = {
+  MINIMAP_X: GAME_WIDTH - 154,
+  MINIMAP_Y: 18,
+  MINIMAP_WIDTH: 136,
+  MINIMAP_HEIGHT: 98,
+  INNER_PADDING: 8,
+  PANEL_ALPHA: 0.76,
+  MAP_ALPHA: 0.9,
+  COLLISION_ALPHA: 0.62,
+  EVENT_ALPHA: 0.92,
+  BORDER_ALPHA: 0.95,
+  BORDER_WIDTH: 1,
+  DEPTH: 140,
+  MARKER_DEPTH_OFFSET: 1,
+  HIT_AREA_DEPTH_OFFSET: 2,
+  LABEL_DEPTH_OFFSET: 3,
+  PLAYER_MARKER_SIZE: 5,
+  EVENT_MARKER_MIN_SIZE: 3,
+  LABEL_FONT_SIZE: 10,
+  LABEL_OFFSET_X: 8,
+  LABEL_OFFSET_Y: 10,
+  PROMPT_TEXT: 'Space 调查/对话 | M 地图 | Tab 菜单',
+  OPEN_HINT: 'M 地图',
+  BACKGROUND_COLOR: COLORS.black,
+  MAP_COLOR: 0x253244,
+  BORDER_COLOR: 0x85b6d8,
+  COLLISION_COLOR: 0x0f1720,
+  PLAYER_COLOR: COLORS.tpBar,
+  EVENT_COLORS: {
+    npc: 0xf59e0b,
+    battle: 0xef4444,
+    transfer: 0x22c55e,
+    chest: 0xa855f7,
+    trigger: 0x38bdf8,
+  },
+  LABEL_COLOR: '#dbeafe',
+  LABEL_FONT_FAMILY: 'sans-serif',
+} as const
+
 export const TRAINING_COST = 30
 export const TRAINING_EXP_BASE = 20
 export const TRAINING_EXP_PER_LEVEL = 10
@@ -795,4 +868,114 @@ export const GAME_OVER_PANEL = {
   cursorSize: 12,
   messageY: 484,
   messageDurationMs: 1500,
+} as const
+
+export const CONFIG_DATABASE_STORAGE_KEY = 'casktown.config.database.v1'
+export const CONFIG_EDITOR_ID_FALLBACK_PREFIX = 'record'
+export const CONFIG_EDITOR_JSON_INDENT = 2
+export const CONFIG_EDITOR_PREVIEW = {
+  MAP_CANVAS_WIDTH: 520,
+  MAP_CANVAS_HEIGHT: 360,
+  MAP_TILE_MAX_SIZE: 14,
+  MAP_TILE_MIN_SIZE: 4,
+  RECORD_LIST_LIMIT: 500,
+  VALIDATION_PREVIEW_LENGTH: 160,
+  STAT_BAR_MAX_VALUE: 100,
+  SEARCH_DEBOUNCE_MS: 120,
+  PRIMITIVE_FIELD_COUNT: 1,
+} as const
+
+export const SPRITE_CROP_DEFAULTS = {
+  SOURCE_X: 0,
+  SOURCE_Y: 0,
+  SOURCE_WIDTH: TILE_SIZE,
+  SOURCE_HEIGHT: TILE_SIZE,
+  OUTPUT_WIDTH: TILE_SIZE,
+  OUTPUT_HEIGHT: TILE_SIZE,
+  OFFSET_X: 0,
+  OFFSET_Y: 0,
+  MIN_SIZE: 1,
+  MAX_OUTPUT_SIZE: 512,
+} as const
+
+export const CONFIG_EDITOR_SPRITE = {
+  PREVIEW_CANVAS_WIDTH: 520,
+  PREVIEW_CANVAS_HEIGHT: 360,
+  OUTPUT_CANVAS_SIZE: 112,
+  CANVAS_PADDING: 18,
+  HANDLE_SIZE: 10,
+  NUMBER_INPUT_STEP: 1,
+  BACKGROUND_COLOR: '#0b1118',
+  GRID_COLOR: '#223246',
+  IMAGE_BORDER_COLOR: '#34495f',
+  CROP_STROKE_COLOR: '#5cc8ff',
+  CROP_FILL_COLOR: 'rgba(92, 200, 255, 0.16)',
+  HANDLE_COLOR: '#f8c46b',
+  OUTPUT_BACKGROUND_COLOR: '#111c27',
+  IMAGE_LOAD_ERROR: '图片加载失败',
+} as const
+
+export const CONFIG_EDITOR_TABLE_LABELS = {
+  maps: '地图',
+  characters: '角色',
+  items: '物品',
+  skills: '技能',
+  enemies: '敌人',
+  encounters: '战斗',
+  quests: '任务',
+  dialogues: '对话',
+  prophecies: '预言',
+  tileSprites: '图块',
+  imageAssets: '图片资产',
+  bgmTracks: 'BGM',
+  sfxTracks: '音效',
+  mapBgm: '地图音乐',
+  spriteCrops: '切图',
+} as const
+
+export const CONFIG_EDITOR_EVENT_COLORS: Record<string, string> = {
+  npc: '#f59e0b',
+  battle: '#ef4444',
+  transfer: '#22c55e',
+  chest: '#a855f7',
+  trigger: '#38bdf8',
+} as const
+
+export const CONFIG_EDITOR_FALLBACK_COLORS = {
+  mapBackground: '#101923',
+  mapGrid: '#233447',
+  mapObject: '#cbd5e1',
+  mapUnknownTile: '#334155',
+  panelText: '#dbeafe',
+  warning: '#f97316',
+  danger: '#ef4444',
+  success: '#22c55e',
+} as const
+
+export const CONFIG_EDITOR_TILE_COLORS: Record<string, string> = {
+  env_grass_plain: '#4f8f45',
+  env_dirt_plain: '#8b6847',
+  env_dirt_pebbles: '#8f7660',
+  env_river_vertical: '#2f8fb8',
+  env_tree_round: '#2f6b3f',
+  env_flowers_patch_pink: '#d47aa8',
+  env_flowers_patch_white: '#e7e5d4',
+  env_rock_large: '#79818a',
+  env_fence_long: '#7a5436',
+  env_wood_bridge: '#9b6a3c',
+  obj_cottage: '#c58c5c',
+  env_well_small: '#64748b',
+  env_bush_round: '#3f7d43',
+  env_stump_plain: '#8a5a33',
+  obj_festival_plaza: '#d6b66d',
+  env_signpost: '#b8864b',
+  env_barrel: '#9a5f2f',
+  env_campfire: '#f97316',
+  env_bench: '#9a6b3f',
+  env_lamp_post: '#facc15',
+  env_grass_clump_01: '#5ca854',
+  env_sapling: '#4d9f4f',
+  env_wheat: '#d6b653',
+  env_cabbage: '#7fb66c',
+  env_farmland_plain: '#6d4b32',
 } as const

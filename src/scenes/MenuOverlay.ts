@@ -4,9 +4,7 @@ import { GameData, EQUIP_SLOT_MAP } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
 import { SaveManager } from '../core/SaveManager'
 import { AudioManager } from '../core/AudioManager'
-import { QUESTS } from '../data/quests'
-import { SKILLS } from '../data/skills'
-import { ITEMS } from '../data/items'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { GAME_WIDTH, GAME_HEIGHT, SAVE_SLOTS } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import type { CharacterData, ItemData } from '../data/types'
@@ -29,6 +27,10 @@ export class MenuOverlay extends Phaser.Scene {
 
   constructor() {
     super({ key: 'MenuOverlay', active: false })
+  }
+
+  private getItems(): Record<string, ItemData> {
+    return GAME_CONFIG_DATABASE.getTable('items')
   }
 
   create(): void {
@@ -300,7 +302,7 @@ export class MenuOverlay extends Phaser.Scene {
         } else {
           let qy = 30
           for (const q of active) {
-            const def = QUESTS[q.id]
+            const def = GAME_CONFIG_DATABASE.getTable('quests')[q.id]
             this.addContentText(`${def?.name || q.id} (${q.progress}/${q.maxProgress})`, qy)
             qy += 24
             if (def && q.progress < def.objectives.length) {
@@ -330,7 +332,7 @@ export class MenuOverlay extends Phaser.Scene {
         this.addContentText('持有道具：', 0)
         let iy = 30
         for (const [itemId, qty] of Object.entries(gd.inventory.items)) {
-          const item = ITEMS[itemId]
+          const item = this.getItems()[itemId]
           this.addContentText(`${item?.name || itemId} x${qty}`, iy)
           iy += 24
         }
@@ -417,7 +419,7 @@ export class MenuOverlay extends Phaser.Scene {
     // Dynamic prophecy content based on current quest
     if (active.length > 0) {
       const q = active[0]!
-      const def = QUESTS[q.id]
+      const def = GAME_CONFIG_DATABASE.getTable('quests')[q.id]
       if (def) {
         this.addContentText(`当前预言：${def.name}`, 50)
         this.addContentText(`「${def.description}」`, 80)
@@ -479,7 +481,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.addContentText('背包', 0)
     let y = 30
     for (const [itemId, qty] of Object.entries(gd.inventory.items)) {
-      const item = ITEMS[itemId]
+      const item = this.getItems()[itemId]
       if (item) {
         this.addContentText(`${item.name} x${qty} - ${item.description}`, y)
         y += 24
@@ -494,14 +496,14 @@ export class MenuOverlay extends Phaser.Scene {
     const gd = GameData.getInstance()
 
     this.itemList = Object.entries(gd.inventory.items).filter(([itemId]) => {
-      const item = ITEMS[itemId]
+      const item = this.getItems()[itemId]
       return item && item.type === 'consumable' && item.usableInField
     })
 
     this.menuItems = []
     for (let i = 0; i < this.itemList.length; i++) {
       const [itemId, qty] = this.itemList[i]!
-      const item = ITEMS[itemId]
+      const item = this.getItems()[itemId]
       this.addMenuText(`${item?.name || itemId} x${qty}`, 100 + i * 36)
     }
     if (this.itemList.length === 0) {
@@ -543,7 +545,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.addContentText(`${char.name} Lv.${char.stats.level} 的技能`, 0)
     let y = 30
     for (const skillId of char.skills) {
-      const skill = SKILLS[skillId]
+      const skill = GAME_CONFIG_DATABASE.getTable('skills')[skillId]
       if (skill) {
         const cost = skill.costTp > 0 ? `TP${skill.costTp}` : `MP${skill.costMp}`
         this.addContentText(`${skill.name} [${cost}] - ${skill.description}`, y)
@@ -566,9 +568,9 @@ export class MenuOverlay extends Phaser.Scene {
     if (!char) return
 
     this.menuItems = []
-    const w = char.equipment.weapon ? ITEMS[char.equipment.weapon]?.name || char.equipment.weapon : '无'
-    const a = char.equipment.armor ? ITEMS[char.equipment.armor]?.name || char.equipment.armor : '无'
-    const acc = char.equipment.accessory ? ITEMS[char.equipment.accessory]?.name || char.equipment.accessory : '无'
+    const w = char.equipment.weapon ? this.getItems()[char.equipment.weapon]?.name || char.equipment.weapon : '无'
+    const a = char.equipment.armor ? this.getItems()[char.equipment.armor]?.name || char.equipment.armor : '无'
+    const acc = char.equipment.accessory ? this.getItems()[char.equipment.accessory]?.name || char.equipment.accessory : '无'
     this.addMenuText(`武器: ${w}`, 100)
     this.addMenuText(`防具: ${a}`, 144)
     this.addMenuText(`饰品: ${acc}`, 188)
@@ -600,7 +602,7 @@ export class MenuOverlay extends Phaser.Scene {
 
     this.equipList = Object.entries(gd.inventory.equipment)
       .filter(([itemId]) => {
-        const item = ITEMS[itemId]
+        const item = this.getItems()[itemId]
         if (!item || item.type !== 'equipment') return false
         const slot = EQUIP_SLOT_MAP[itemId]
         return slot === this.equipSlot
@@ -611,7 +613,7 @@ export class MenuOverlay extends Phaser.Scene {
 
     for (let i = 0; i < this.equipList.length; i++) {
       const itemId = this.equipList[i]!
-      const label = itemId === '__unequip__' ? '（卸下）' : (ITEMS[itemId]?.name || itemId)
+      const label = itemId === '__unequip__' ? '（卸下）' : (this.getItems()[itemId]?.name || itemId)
       this.addMenuText(label, 100 + i * 36)
     }
     this.addMenuText('返回', 100 + this.equipList.length * 36)
@@ -800,7 +802,7 @@ export class MenuOverlay extends Phaser.Scene {
     const entry = this.itemList[this.itemCursorIndex]
     if (!entry) return
     const [itemId] = entry
-    const item = ITEMS[itemId]
+    const item = this.getItems()[itemId]
     if (!item) return
 
     if (!gd.removeItem(itemId, 1)) {

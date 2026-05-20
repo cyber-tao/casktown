@@ -1,5 +1,4 @@
 import { GameData } from './GameData'
-import { SKILLS } from '../data/skills'
 
 interface SkillUnlockCondition {
   skillId: string

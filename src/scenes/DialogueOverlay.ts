@@ -15,7 +15,8 @@ import {
   TEXT_SPEED,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
-import { DIALOGUES } from '../data/dialogues'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { queueImageAssets } from '../core/AssetLoader'
 import { QuestSystem } from '../core/QuestSystem'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
 import voiceLines from '../../voice_lines.json'
@@ -100,9 +101,37 @@ export class DialogueOverlay extends Phaser.Scene {
   private canAdvance = false
   private choiceIndex = 0
   private inChoice = false
+  private dialogueId = ''
 
   constructor() {
     super({ key: 'DialogueOverlay', active: false })
+  }
+
+  init(data: { dialogueId: string }): void {
+    this.dialogueId = data.dialogueId
+  }
+
+  preload(): void {
+    queueImageAssets(this, this.collectDialogueFaceKeys(this.dialogueId))
+  }
+
+  private collectDialogueFaceKeys(dialogueId: string, visited: Set<string> = new Set()): Set<string> {
+    const keys = new Set<string>()
+    if (visited.has(dialogueId)) return keys
+    visited.add(dialogueId)
+    const script = GAME_CONFIG_DATABASE.getTable('dialogues')[dialogueId]
+    if (!script) return keys
+    for (const line of script.lines) {
+      const faceKey = SPEAKER_FACE_MAP[line.speaker]
+      if (faceKey) keys.add(faceKey)
+      for (const choice of line.choices ?? []) {
+        if (!choice.next) continue
+        for (const nestedKey of this.collectDialogueFaceKeys(choice.next, visited)) {
+          keys.add(nestedKey)
+        }
+      }
+    }
+    return keys
   }
 
   create(data: { dialogueId: string }): void {
@@ -114,7 +143,8 @@ export class DialogueOverlay extends Phaser.Scene {
     this.choiceIndex = 0
     this.choices = []
 
-    const script = DIALOGUES[data.dialogueId]
+    const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
+    const script = dialogues[data.dialogueId]
     if (!script) {
       console.warn(`Dialogue ${data.dialogueId} not found`)
       this.closeDialogue()
@@ -362,7 +392,7 @@ export class DialogueOverlay extends Phaser.Scene {
       const choice = line.choices[this.choiceIndex]!
       this.applyChoiceActions(choice.actions)
       if (choice.next) {
-        const nextScript = DIALOGUES[choice.next]
+        const nextScript = GAME_CONFIG_DATABASE.getTable('dialogues')[choice.next]
         if (nextScript) {
           this.currentScript = nextScript
           this.lineIndex = 0
