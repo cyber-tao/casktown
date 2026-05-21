@@ -284,19 +284,17 @@ export class MapScene extends Phaser.Scene {
       return idx
     }
 
-    // Ground layer - drawn as a single render texture to eliminate tile gaps
-    const groundRT = this.add.renderTexture(0, 0, this.mapData.width * TILE_SIZE, this.mapData.height * TILE_SIZE)
-    groundRT.setOrigin(0, 0)
-    groundRT.setDepth(0)
-
     const ground = this.mapData.layers[0]!
     for (let y = 0; y < this.mapData.height; y++) {
       this.tileSprites[y] = []
       for (let x = 0; x < this.mapData.width; x++) {
         const idx = resolveTile(ground.data[y * this.mapData.width + x] ?? 0)
         const spriteKey = tileSprites[idx] || 'env_dirt_plain'
-        groundRT.draw(spriteKey, x * TILE_SIZE, y * TILE_SIZE)
-        this.tileSprites[y]![x] = null as unknown as Phaser.GameObjects.Image
+        const img = this.add.image(x * TILE_SIZE, y * TILE_SIZE, spriteKey)
+        img.setOrigin(0, 0)
+        img.setDisplaySize(TILE_SIZE, TILE_SIZE)
+        img.setDepth(0)
+        this.tileSprites[y]![x] = img
       }
     }
 
