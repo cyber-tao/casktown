@@ -17,6 +17,7 @@ import {
   scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { QuestSystem } from '../core/QuestSystem'
@@ -186,7 +187,7 @@ export class DialogueOverlay extends Phaser.Scene {
     this.textObj.setInteractive()
     this.textObj.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
-    // Input
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-SPACE', () => this.advance())
     this.input.keyboard?.on('keydown-ENTER', () => this.advance())
     this.input.keyboard?.on('keydown-UP', () => this.moveChoice(-1))

@@ -21,6 +21,7 @@ export const BGM_TRACKS: Record<string, BGMConfig> = {
   holy_temple: { key: 'bgm_holy_temple', path: 'audio/bgm/holy_temple.ogg', loop: true, volume: 0.6 },
   mountain: { key: 'bgm_mountain', path: 'audio/bgm/mountain.ogg', loop: true, volume: 0.6 },
   mystery: { key: 'bgm_mystery', path: 'audio/bgm/mystery.ogg', loop: true, volume: 0.5 },
+  dream: { key: 'bgm_dream', path: 'audio/bgm/mystery.ogg', loop: true, volume: 0.5 },
   temple: { key: 'bgm_temple', path: 'audio/bgm/temple.ogg', loop: true, volume: 0.6 },
   dock: { key: 'bgm_dock', path: 'audio/bgm/dock.ogg', loop: true, volume: 0.5 },
   battle_normal: { key: 'bgm_battle_normal', path: 'audio/bgm/battle_normal.ogg', loop: true, volume: 0.7 },

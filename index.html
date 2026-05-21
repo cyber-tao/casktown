@@ -36,10 +36,32 @@
       height: 100%;
       touch-action: none;
     }
+    .orientation-notice {
+      display: none;
+    }
+    @media (orientation: portrait) and (max-width: 768px) {
+      #game-container {
+        filter: blur(2px);
+        opacity: 0.35;
+      }
+      .orientation-notice {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: #f8fafc;
+        font: 600 20px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.82);
+        z-index: 10;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="game-container"></div>
+  <div class="orientation-notice" aria-hidden="true">请横屏游玩 CaskTown</div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

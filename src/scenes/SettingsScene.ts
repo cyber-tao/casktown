@@ -5,6 +5,7 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
 import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED, SETTINGS_PANEL, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 interface SettingOption {
   label: string
@@ -171,6 +172,7 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.moveMenu(-1))
     this.input.keyboard?.on('keydown-DOWN', () => this.moveMenu(1))
     this.input.keyboard?.on('keydown-LEFT', () => this.changeValue(-1))

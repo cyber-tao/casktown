@@ -47,6 +47,7 @@ import {
   scalePx,
 } from '../utils/constants'
 import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
@@ -199,9 +200,12 @@ export class MapScene extends Phaser.Scene {
     this.battleEnemyEvents = new Map()
     this.fieldEntityBehaviors = new Map()
     this.fieldEntityOrigins = new Map()
+    this.fieldEntityDirections = new Map()
     this.enemyPatrolTimers = []
+    this.npcTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
+    this.weatherEmitter = null
     this.minimapPlayerMarker = undefined
 
     this.cameras.main.setBackgroundColor('#2d4a22')
@@ -666,6 +670,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    cleanupKeyboardOnShutdown(this)
     const kb = this.input.keyboard!
     const bindings = InputManager.getInstance().getBindings()
     this.cursors = kb.createCursorKeys()
@@ -1467,7 +1472,10 @@ export class MapScene extends Phaser.Scene {
     this.removeSuppressedFieldEventSprites()
     this.refreshFollowers()
 
-    if (this.pendingMapEventId) {
+    const battleEvent = this.pendingMapEventId
+      ? this.battleEnemyEvents.get(this.pendingMapEventId) ?? this.mapData.events.find(event => event.id === this.pendingMapEventId)
+      : undefined
+    if (result?.escaped && battleEvent?.trigger === 'touch') {
       const dv = DIRECTION_VECTORS[this.currentDir]!
       this.player.x -= dv.x * TILE_SIZE
       this.player.y -= dv.y * TILE_SIZE

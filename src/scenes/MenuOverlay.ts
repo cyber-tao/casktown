@@ -8,6 +8,7 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP } from '../data/equipment'
 import { GAME_WIDTH, GAME_HEIGHT, SAVE_LOAD_FEEDBACK_DELAY_MS, SAVE_SLOTS, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import type { CharacterData, ItemData } from '../data/types'
 
 export class MenuOverlay extends Phaser.Scene {
@@ -91,6 +92,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.handleUp())
     this.input.keyboard?.on('keydown-DOWN', () => this.handleDown())
     this.input.keyboard?.on('keydown-ENTER', () => this.handleConfirm())

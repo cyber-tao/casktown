@@ -4,6 +4,7 @@ import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
 import { GAME_HEIGHT, GAME_OVER_PANEL, GAME_WIDTH, START_MAP_ID, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 export class GameOverScene extends Phaser.Scene {
   private menuIndex = 0
@@ -48,6 +49,7 @@ export class GameOverScene extends Phaser.Scene {
     this.cursor = this.add.rectangle(GAME_WIDTH / 2 - GAME_OVER_PANEL.cursorOffsetX, GAME_OVER_PANEL.menuStartY, GAME_OVER_PANEL.cursorSize, GAME_OVER_PANEL.cursorSize, 0xf1c40f)
     this.cursor.setOrigin(0.5)
 
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.changeMenu(-1))
     this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())

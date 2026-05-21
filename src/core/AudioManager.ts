@@ -178,7 +178,7 @@ export class AudioManager {
 
     const gd = GameData.getInstance()
     const masterVol = gd.settings.masterVolume
-    const volume = 1.0 * masterVol
+    const volume = gd.settings.uiVolume * masterVol
 
     const path = `${VOICE_AUDIO_PATH.DIRECTORY}/${voiceKey}${VOICE_AUDIO_PATH.EXTENSION}`
     const key = `voice_${voiceKey}`

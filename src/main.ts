@@ -1,10 +1,17 @@
 import 'phaser'
 import { CaskTownGame } from './game'
 
-window.addEventListener('load', () => {
+function startGame(): void {
+  if ((window as any).game) return
   const game = new CaskTownGame()
   ;(window as any).game = game
-})
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('load', startGame, { once: true })
+} else {
+  startGame()
+}
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'F5') {

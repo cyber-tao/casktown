@@ -5,6 +5,7 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 
 const REBUILD_OPTIONS = [
@@ -28,6 +29,8 @@ export class RebuildOverlay extends Phaser.Scene {
   }
 
   create(): void {
+    this.cursorIndex = 0
+    this.items = []
     AudioManager.getInstance().setScene(this)
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7)
@@ -86,6 +89,7 @@ export class RebuildOverlay extends Phaser.Scene {
 
     this.updateDescription()
 
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
       switch (event.code) {
         case 'ArrowUp': case 'KeyW':

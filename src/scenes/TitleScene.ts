@@ -17,6 +17,7 @@ import {
   scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 type ViteImportMeta = ImportMeta & {
   readonly env: {
@@ -37,6 +38,8 @@ export class TitleScene extends Phaser.Scene {
 
   create(): void {
     AudioManager.getInstance().setScene(this)
+    this.menuIndex = 0
+    this.menuItems = []
     this.titleBgmRequested = false
 
     // Background
@@ -79,7 +82,7 @@ export class TitleScene extends Phaser.Scene {
     this.cursor = this.add.rectangle(GAME_WIDTH / 2 - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, 0xf1c40f)
     this.cursor.setOrigin(0.5)
 
-    // Input
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.changeMenu(-1))
     this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
@@ -129,6 +132,7 @@ export class TitleScene extends Phaser.Scene {
         this.openSettings()
         break
       case TITLE_MENU_ACTION_INDEX.EXIT:
+        this.showMessage('浏览器中无法直接退出')
         break
     }
   }

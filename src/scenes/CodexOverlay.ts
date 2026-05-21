@@ -5,6 +5,7 @@ import { AudioManager } from '../core/AudioManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 type CodexTab = 'monsters' | 'items' | 'story'
 
@@ -26,6 +27,8 @@ export class CodexOverlay extends Phaser.Scene {
 
   create(): void {
     AudioManager.getInstance().setScene(this)
+    this.cursorIndex = 0
+    this.listItems = []
     const gd = GameData.getInstance()
     const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
     const items = GAME_CONFIG_DATABASE.getTable('items')
@@ -103,6 +106,7 @@ export class CodexOverlay extends Phaser.Scene {
 
     this.renderList()
 
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
       switch (event.code) {
         case 'ArrowUp': case 'KeyW':

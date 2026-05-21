@@ -5,6 +5,7 @@ import { AudioManager } from '../core/AudioManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 interface ShopItem {
   id: string
@@ -56,7 +57,7 @@ export class ShopOverlay extends Phaser.Scene {
       fontSize: scaleFont(16), color: '#f1c40f',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ Select | Enter Buy | Esc Back', {
+    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ 选择 | Enter 购买 | Esc 返回', {
       fontSize: scaleFont(12), color: '#808090',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
 
@@ -97,10 +98,11 @@ export class ShopOverlay extends Phaser.Scene {
   }
 
   private updateGold(): void {
-    this.goldText.setText(`Gold: ${GameData.getInstance().gold}G`)
+    this.goldText.setText(`金币: ${GameData.getInstance().gold}G`)
   }
 
   private setupInput(): void {
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.move(-1))
     this.input.keyboard?.on('keydown-DOWN', () => this.move(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.buy())
@@ -123,7 +125,7 @@ export class ShopOverlay extends Phaser.Scene {
     const gd = GameData.getInstance()
 
     if (gd.gold < si.price) {
-      this.messageText.setText('Gold not enough!')
+      this.messageText.setText('金币不足！')
       AudioManager.getInstance().playSFX('cancel')
       return
     }
@@ -131,7 +133,7 @@ export class ShopOverlay extends Phaser.Scene {
     gd.spendGold(si.price)
     gd.addItem(si.id, 1)
     AudioManager.getInstance().playSFX('get_item')
-    this.messageText.setText(`Bought ${GAME_CONFIG_DATABASE.getTable('items')[si.id]?.name ?? si.id}!`)
+    this.messageText.setText(`已购买 ${GAME_CONFIG_DATABASE.getTable('items')[si.id]?.name ?? si.id}`)
     this.updateGold()
     this.renderList()
   }
