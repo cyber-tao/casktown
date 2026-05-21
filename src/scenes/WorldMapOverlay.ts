@@ -81,41 +81,30 @@ export class WorldMapOverlay extends Phaser.Scene {
     const point = WORLD_MAP_LOCATION_POINTS[mapId]
     if (!point) return
 
-    const pulse = this.add.polygon(
-      point.x,
-      point.y,
-      [
-        WORLD_MAP_UI.LOCATION_PULSE_SIZE, 0,
-        WORLD_MAP_UI.LOCATION_PULSE_SIZE * 2, WORLD_MAP_UI.LOCATION_PULSE_SIZE,
-        WORLD_MAP_UI.LOCATION_PULSE_SIZE, WORLD_MAP_UI.LOCATION_PULSE_SIZE * 2,
-        0, WORLD_MAP_UI.LOCATION_PULSE_SIZE,
-      ],
-    )
-    pulse.setFillStyle(WORLD_MAP_UI.LOCATION_PIN_COLOR, 0)
-    pulse.setStrokeStyle(WORLD_MAP_UI.LOCATION_PIN_STROKE_WIDTH, WORLD_MAP_UI.LOCATION_PIN_COLOR, WORLD_MAP_UI.LOCATION_PULSE_ALPHA)
-    pulse.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH - 1)
+    const pulse = this.add.graphics()
+    pulse.setPosition(point.x, point.y)
+    pulse.fillStyle(WORLD_MAP_UI.LOCATION_PIN_COLOR, WORLD_MAP_UI.LOCATION_PULSE_FILL_ALPHA)
+    pulse.fillCircle(0, 0, WORLD_MAP_UI.LOCATION_PULSE_SIZE)
+    pulse.lineStyle(WORLD_MAP_UI.LOCATION_PIN_STROKE_WIDTH, WORLD_MAP_UI.LOCATION_PIN_COLOR, WORLD_MAP_UI.LOCATION_PULSE_ALPHA)
+    pulse.strokeCircle(0, 0, WORLD_MAP_UI.LOCATION_PULSE_SIZE)
+    pulse.setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH - 1)
 
     this.tweens.add({
       targets: pulse,
-      alpha: 0,
+      alpha: WORLD_MAP_UI.LOCATION_PULSE_MIN_ALPHA,
       scale: WORLD_MAP_UI.LOCATION_PULSE_SCALE,
       duration: WORLD_MAP_UI.LOCATION_PULSE_DURATION_MS,
+      yoyo: true,
       repeat: -1,
     })
 
-    const pin = this.add.polygon(
-      point.x,
-      point.y,
-      [
-        WORLD_MAP_UI.LOCATION_PIN_SIZE, 0,
-        WORLD_MAP_UI.LOCATION_PIN_SIZE * 2, WORLD_MAP_UI.LOCATION_PIN_SIZE,
-        WORLD_MAP_UI.LOCATION_PIN_SIZE, WORLD_MAP_UI.LOCATION_PIN_SIZE * 2,
-        0, WORLD_MAP_UI.LOCATION_PIN_SIZE,
-      ],
-      WORLD_MAP_UI.LOCATION_PIN_COLOR,
-    )
-    pin.setStrokeStyle(WORLD_MAP_UI.LOCATION_PIN_STROKE_WIDTH, WORLD_MAP_UI.LOCATION_PIN_STROKE_COLOR)
-    pin.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH)
+    const pin = this.add.graphics()
+    pin.setPosition(point.x, point.y)
+    pin.fillStyle(WORLD_MAP_UI.LOCATION_PIN_COLOR, WORLD_MAP_UI.LOCATION_PIN_ALPHA)
+    pin.fillCircle(0, 0, WORLD_MAP_UI.LOCATION_PIN_SIZE)
+    pin.lineStyle(WORLD_MAP_UI.LOCATION_PIN_STROKE_WIDTH, WORLD_MAP_UI.LOCATION_PIN_STROKE_COLOR, WORLD_MAP_UI.LOCATION_PIN_ALPHA)
+    pin.strokeCircle(0, 0, WORLD_MAP_UI.LOCATION_PIN_SIZE)
+    pin.setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_MARKER_DEPTH)
   }
 
   private close(): void {
