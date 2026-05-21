@@ -295,11 +295,7 @@ export class MapScene extends Phaser.Scene {
       for (let x = 0; x < this.mapData.width; x++) {
         const idx = resolveTile(ground.data[y * this.mapData.width + x] ?? 0)
         const spriteKey = tileSprites[idx] || 'env_dirt_plain'
-        const temp = this.add.image(0, 0, spriteKey)
-        temp.setOrigin(0, 0)
-        temp.setDisplaySize(TILE_SIZE, TILE_SIZE)
-        groundRT.draw(temp, x * TILE_SIZE, y * TILE_SIZE)
-        temp.destroy()
+        groundRT.drawFrame(spriteKey, undefined, x * TILE_SIZE, y * TILE_SIZE)
         this.tileSprites[y]![x] = null as unknown as Phaser.GameObjects.Image
       }
     }
