@@ -101,6 +101,13 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  private handleSaveLoaded = (): void => {
+    this.pendingActions = []
+    this.pendingMapEventId = ''
+    this.inEvent = false
+    this.scene.restart({ mapId: GameData.getInstance().currentMap })
+  }
+
   private handleFlagSet = (key: string, value: unknown): void => {
     if (value === true && this.isJoinFlag(key)) {
       this.removeSuppressedFieldEventSprites()
@@ -224,6 +231,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.on(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.on(GameEvents.MENU_CLOSE, this.onMenuClose, this)
     EventBus.on(GameEvents.FLAG_SET, this.handleFlagSet, this)
+    EventBus.on(GameEvents.SAVE_LOADED, this.handleSaveLoaded, this)
     window.addEventListener('game-quicksave', this.handleQuickSave)
     window.addEventListener('game-quickload', this.handleQuickLoad)
 
@@ -1565,6 +1573,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.off(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.off(GameEvents.MENU_CLOSE, this.onMenuClose, this)
     EventBus.off(GameEvents.FLAG_SET, this.handleFlagSet, this)
+    EventBus.off(GameEvents.SAVE_LOADED, this.handleSaveLoaded, this)
     window.removeEventListener('game-quicksave', this.handleQuickSave)
     window.removeEventListener('game-quickload', this.handleQuickLoad)
     this.input.off(Phaser.Input.Events.POINTER_UP, this.clearTouchDirectionForPointer, this)

@@ -8,7 +8,9 @@ import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
 import {
+  BATTLE_RANDOM_TARGET_HITS,
   BATTLE_RESULT_PANEL,
+  BATTLE_RULES,
   BATTLE_TARGET_INDICATOR,
   CHARACTER_SPRITE_BASE_KEYS,
   COMBO_TP_COST,
@@ -302,6 +304,66 @@ export class BattleScene extends Phaser.Scene {
     return null
   }
 
+  private getLivePlayers(): BattleUnit[] {
+    return this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+  }
+
+  private getLiveEnemies(): BattleUnit[] {
+    return this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+  }
+
+  private getLiveAllies(actor: BattleUnit): BattleUnit[] {
+    return actor.isPlayer ? this.getLivePlayers() : this.getLiveEnemies()
+  }
+
+  private getLiveOpponents(actor: BattleUnit): BattleUnit[] {
+    return actor.isPlayer ? this.getLiveEnemies() : this.getLivePlayers()
+  }
+
+  private pickRandomTarget(targets: BattleUnit[]): BattleUnit | null {
+    return targets[Math.floor(Math.random() * targets.length)] ?? null
+  }
+
+  private getRandomHitCount(skillId: string): number {
+    const hits = BATTLE_RANDOM_TARGET_HITS[skillId]
+    if (!hits) return 1
+    return hits.min + Math.floor(Math.random() * (hits.max - hits.min + 1))
+  }
+
+  private applyDamageVariance(damage: number): number {
+    return Math.max(1, Math.floor(damage * (BATTLE_RULES.DAMAGE_VARIANCE_MIN + Math.random() * BATTLE_RULES.DAMAGE_VARIANCE_RANGE)))
+  }
+
+  private getPlayerDamageMultiplier(): number {
+    if (this.difficultyMult.dmg < 1.0) return BATTLE_RULES.STORY_PLAYER_DAMAGE_MULTIPLIER
+    if (this.difficultyMult.dmg > 1.0) return BATTLE_RULES.HARD_PLAYER_DAMAGE_MULTIPLIER
+    return 1.0
+  }
+
+  private addTp(unit: BattleUnit, amount: number): void {
+    if (unit.tp >= BATTLE_RULES.MAX_TP) return
+    unit.tp = Math.min(BATTLE_RULES.MAX_TP, unit.tp + amount)
+    this.updateUnitBars(unit)
+  }
+
+  private isReviveEffect(effect: string): boolean {
+    return effect.startsWith(BATTLE_RULES.REVIVE_EFFECT_PREFIX)
+  }
+
+  private isAllTargetItemEffect(effect: string): boolean {
+    return effect.includes(BATTLE_RULES.ALL_TARGET_EFFECT_SUFFIX)
+  }
+
+  private getSkillTargets(actor: BattleUnit, selectedTarget: BattleUnit, skill: SkillData): BattleUnit[] {
+    if (skill.target === 'self') return [actor]
+    if (skill.target === 'all') {
+      const targetsAllies = skill.type === 'heal' || skill.type === 'buff' || (skill.type === 'special' && skill.power <= 0)
+      return targetsAllies ? this.getLiveAllies(actor) : this.getLiveOpponents(actor)
+    }
+    if (skill.target === 'random') return this.getLiveOpponents(actor)
+    return [selectedTarget]
+  }
+
   private createUnitUI(unit: BattleUnit, x: number, y: number): void {
     const barWidth = scalePx(70)
     const barHeight = scalePx(5)
@@ -362,19 +424,19 @@ export class BattleScene extends Phaser.Scene {
 
   private updateUnitBars(unit: BattleUnit): void {
     if (unit.hpBar) {
-      const ratio = Math.max(0.01, unit.stats.hp / unit.stats.maxHp)
+      const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.stats.hp / unit.stats.maxHp)
       unit.hpBar.setScale(ratio, 1)
     }
     if (unit.mpBar) {
-      const ratio = Math.max(0.01, unit.stats.mp / unit.stats.maxMp)
+      const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.stats.maxMp > 0 ? unit.stats.mp / unit.stats.maxMp : 0)
       unit.mpBar.setScale(ratio, 1)
     }
     if (unit.tpBar) {
       if (unit.isPlayer) {
-        const ratio = Math.max(0.01, unit.tp / 100)
+        const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.tp / BATTLE_RULES.MAX_TP)
         unit.tpBar.setScale(ratio, 1)
       } else {
-        const ratio = Math.max(0.01, unit.breakGauge / unit.breakMax)
+        const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.breakGauge / unit.breakMax)
         unit.tpBar.setScale(ratio, 1)
       }
     }
@@ -513,12 +575,15 @@ export class BattleScene extends Phaser.Scene {
 
   private getSelectableTargets(): BattleUnit[] {
     if (this.targetPlayers) {
-      if (this.actionStack[0] === 'item' && this.actionStack[1] === 'revive_feather') {
-        return this.units.filter(u => u.isPlayer)
+      if (this.actionStack[0] === 'item') {
+        const item = this.actionStack[1] ? this.getItemData(this.actionStack[1]) : null
+        if (item && this.isReviveEffect(item.effect)) {
+          return this.units.filter(u => u.isPlayer && u.stats.hp <= 0)
+        }
       }
-      return this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+      return this.getLivePlayers()
     }
-    return this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+    return this.getLiveEnemies()
   }
 
   private updateTargetIndicator(target: BattleUnit): void {
@@ -567,6 +632,7 @@ export class BattleScene extends Phaser.Scene {
       this.inTargetSelect = false
       this.setCommandMenuVisible(true)
       this.hideTargetIndicator()
+      this.log('没有有效目标')
       return
     }
     this.targetIndex = 0
@@ -619,20 +685,24 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
+    let actionConsumed = false
     if (action === 'attack') {
       this.performAttack(actor, target)
+      actionConsumed = true
     } else if (action === 'skill') {
       const skillId = this.actionStack[1]!
-      this.performSkill(actor, target, skillId)
+      actionConsumed = this.performSkill(actor, target, skillId)
     } else if (action === 'item') {
       const itemId = this.actionStack[1]!
-      this.performItem(actor, target, itemId)
+      actionConsumed = this.performItem(actor, target, itemId)
     }
 
     this.inTargetSelect = false
     this.setCommandMenuVisible(true)
     this.hideTargetIndicator()
-    this.nextTurn()
+    if (actionConsumed) {
+      this.nextTurn()
+    }
   }
 
   private setCommandMenuVisible(visible: boolean): void {
@@ -645,10 +715,7 @@ export class BattleScene extends Phaser.Scene {
     this.log(`${actor.name} 采取防御姿态。`)
     actor.status.push('defend')
     // TP recovery on defend
-    if (actor.tp < 100) {
-      actor.tp = Math.min(100, actor.tp + 15)
-      this.updateUnitBars(actor)
-    }
+    this.addTp(actor, BATTLE_RULES.DEFEND_TP_GAIN)
     this.nextTurn()
   }
 
@@ -730,6 +797,12 @@ export class BattleScene extends Phaser.Scene {
     this.closeSkillMenu()
     this.actionStack = ['skill', skillId]
     const sk = skillDefs[skillId]
+    if (sk && (sk.target === 'self' || sk.target === 'all' || sk.target === 'random')) {
+      if (this.performSkill(actor, actor, skillId)) {
+        this.nextTurn()
+      }
+      return
+    }
     const targetPlayers = sk?.target === 'self' || sk?.type === 'heal' || sk?.type === 'buff'
     this.startTargetSelect(targetPlayers)
   }
@@ -814,7 +887,14 @@ export class BattleScene extends Phaser.Scene {
     this.closeItemMenu()
     this.actionStack = ['item', itemId]
     const item = this.getItemData(itemId)
-    const targetPlayers = item ? item.effect.startsWith('heal_hp') || item.effect.includes('revive') || item.effect.includes('buff') || item.effect.includes('barrier') || item.effect.includes('cure') || item.effect.startsWith('heal_mp') : true
+    const actor = this.getCurrentUnit()
+    if (item && this.isAllTargetItemEffect(item.effect)) {
+      if (actor && this.performItem(actor, actor, itemId)) {
+        this.nextTurn()
+      }
+      return
+    }
+    const targetPlayers = item ? item.effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX) || this.isReviveEffect(item.effect) || item.effect.includes('buff') || item.effect.includes('barrier') || item.effect.includes('cure') || item.effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX) : true
     this.startTargetSelect(targetPlayers)
   }
 
@@ -1058,8 +1138,8 @@ export class BattleScene extends Phaser.Scene {
       for (const t of targets) {
         const def = isMagic ? (t.data as EnemyData).stats.mdef : (t.data as EnemyData).stats.def
         let damage = Math.max(1, Math.floor(skill.power * stat / 10 / Math.max(1, def * 0.5)))
-        if (t.status.includes('break')) damage = Math.floor(damage * 1.3)
-        damage = Math.floor(damage * (0.9 + Math.random() * 0.2))
+        if (t.status.includes('break')) damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
+        damage = this.applyDamageVariance(damage)
         this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}，对 ${t.name} 造成 ${damage} 点伤害！`)
         this.dealDamage(t, damage)
       }
@@ -1068,8 +1148,8 @@ export class BattleScene extends Phaser.Scene {
       if (target) {
         const def = isMagic ? (target.data as EnemyData).stats.mdef : (target.data as EnemyData).stats.def
         let damage = Math.max(1, Math.floor(skill.power * stat / 10 / Math.max(1, def * 0.5)))
-        if (target.status.includes('break')) damage = Math.floor(damage * 1.3)
-        damage = Math.floor(damage * (0.9 + Math.random() * 0.2))
+        if (target.status.includes('break')) damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
+        damage = this.applyDamageVariance(damage)
         this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`)
         this.dealDamage(target, damage)
       }
@@ -1166,25 +1246,29 @@ export class BattleScene extends Phaser.Scene {
 
   private getItemData(itemId: string): ItemData | null {
     const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
-    return item?.usableInBattle ? item : null
+    return item?.usableInBattle && item.type === 'consumable' ? item : null
   }
 
-  private performItem(actor: BattleUnit, target: BattleUnit, itemId: string): void {
+  private performItem(actor: BattleUnit, target: BattleUnit, itemId: string): boolean {
     const gd = GameData.getInstance()
     const item = this.getItemData(itemId)
-    if (!item) return
+    if (!item) return false
 
+    if (this.isReviveEffect(item.effect) && target.stats.hp > 0) {
+      this.log(`${target.name} 还活着！`)
+      return false
+    }
     if (!gd.removeItem(itemId, 1)) {
       this.log('道具不足！')
-      return
+      return false
     }
 
     AudioManager.getInstance().playSFX('item_use')
     const effect = item.effect
-    if (effect.startsWith('heal_hp:')) {
+    if (effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)) {
       const amount = parseInt(effect.split(':')[1]!)
-      if (effect.includes('_all')) {
-        const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+      if (this.isAllTargetItemEffect(effect)) {
+        const targets = this.getLivePlayers()
         for (const t of targets) {
           t.stats.hp = Math.min(t.stats.maxHp, t.stats.hp + amount)
           this.updateUnitBars(t)
@@ -1195,7 +1279,7 @@ export class BattleScene extends Phaser.Scene {
         this.updateUnitBars(target)
         this.log(`${item.name}！${target.name} 回复 ${amount} HP！`)
       }
-    } else if (effect.startsWith('heal_mp:')) {
+    } else if (effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX)) {
       const amount = parseInt(effect.split(':')[1]!)
       target.stats.mp = Math.min(target.stats.maxMp, target.stats.mp + amount)
       this.log(`${item.name}！${target.name} 回复 ${amount} MP！`)
@@ -1207,14 +1291,10 @@ export class BattleScene extends Phaser.Scene {
       this.log(`${item.name}！${target.name} 状态恢复！`)
     } else if (effect.startsWith('revive:')) {
       const pct = parseInt(effect.split(':')[1]!)
-      if (target.stats.hp <= 0) {
-        target.stats.hp = Math.floor(target.stats.maxHp * pct / 100)
-        target.sprite!.setAlpha(1)
-        this.updateUnitBars(target)
-        this.log(`${item.name}！${target.name} 复活了！`)
-      } else {
-        this.log(`${target.name} 还活着！`)
-      }
+      target.stats.hp = Math.floor(target.stats.maxHp * pct / BATTLE_RULES.PERCENT_DIVISOR)
+      target.sprite!.setAlpha(1)
+      this.updateUnitBars(target)
+      this.log(`${item.name}！${target.name} 复活了！`)
     } else if (effect === 'buff_speed') {
       target.status.push('speed_up')
       this.log(`${item.name}！${target.name} 速度提升！`)
@@ -1224,10 +1304,11 @@ export class BattleScene extends Phaser.Scene {
     } else {
       this.log(`使用了 ${item.name}`)
     }
+    return true
   }
 
   private tryEscape(): void {
-    const success = Math.random() > 0.5
+    const success = Math.random() < BATTLE_RULES.ESCAPE_SUCCESS_RATE
     if (success) {
       this.log('成功逃跑了！')
       this.time.delayedCall(Math.floor(1000 / this.speedMult), () => this.endBattle(false, true))
@@ -1244,39 +1325,37 @@ export class BattleScene extends Phaser.Scene {
     let damage = Math.max(1, Math.floor(atk * 1.5 - def * 0.5))
 
     if (target.status.includes('defend')) {
-      damage = Math.floor(damage * 0.5)
+      damage = Math.floor(damage * BATTLE_RULES.DEFEND_DAMAGE_MULTIPLIER)
     }
     if (target.status.includes('break')) {
-      damage = Math.floor(damage * 1.3)
+      damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
     }
 
     // Difficulty scaling
     if (!isPlayer) {
       damage = Math.floor(damage * this.difficultyMult.dmg)
     } else {
-      const playerDmgMult = this.difficultyMult.dmg < 1.0 ? 1.15 : this.difficultyMult.dmg > 1.0 ? 0.9 : 1.0
-      damage = Math.floor(damage * playerDmgMult)
+      damage = Math.floor(damage * this.getPlayerDamageMultiplier())
     }
 
-    damage = Math.floor(damage * (0.9 + Math.random() * 0.2))
+    damage = this.applyDamageVariance(damage)
 
     AudioManager.getInstance().playSFX('attack_slash')
     this.log(`${actor.name} 攻击 ${target.name}，造成 ${damage} 点伤害！`)
     this.dealDamage(target, damage)
 
     // TP generation for player
-    if (isPlayer && actor.tp < 100) {
-      actor.tp = Math.min(100, actor.tp + 5)
-      this.updateUnitBars(actor)
+    if (isPlayer) {
+      this.addTp(actor, BATTLE_RULES.PLAYER_ATTACK_TP_GAIN)
     }
     // TP generation for enemy
-    if (!isPlayer && actor.tp < 100) {
-      actor.tp = Math.min(100, actor.tp + 3)
+    if (!isPlayer) {
+      this.addTp(actor, BATTLE_RULES.ENEMY_ATTACK_TP_GAIN)
     }
 
     // Break gauge for enemies
     if (!target.isPlayer && !target.status.includes('break')) {
-      target.breakGauge = Math.min(target.breakMax, target.breakGauge + 10)
+      target.breakGauge = Math.min(target.breakMax, target.breakGauge + BATTLE_RULES.NORMAL_BREAK_GAIN)
       this.updateUnitBars(target)
     }
 
@@ -1289,80 +1368,95 @@ export class BattleScene extends Phaser.Scene {
     })
   }
 
-  private performSkill(actor: BattleUnit, target: BattleUnit, skillId: string): void {
+  private performSkill(actor: BattleUnit, target: BattleUnit, skillId: string): boolean {
     const skill = GAME_CONFIG_DATABASE.getTable('skills')[skillId]
     if (!skill) {
       this.performAttack(actor, target)
-      return
+      return true
     }
 
     const isPlayer = actor.isPlayer
-    const char = actor.data as CharacterData
-    const enemy = actor.data as EnemyData
-
-    if (isPlayer) {
-      if (char.stats.mp < skill.costMp) {
-        this.log('MP不足！')
-        return
-      }
-      if (actor.tp < skill.costTp) {
-        this.log('TP不足！')
-        return
-      }
-      char.stats.mp -= skill.costMp
-      actor.stats.mp = char.stats.mp
-      actor.tp -= skill.costTp
-      this.updateUnitBars(actor)
-    } else {
-      if (enemy.stats.mp < skill.costMp) {
-        this.performAttack(actor, target)
-        return
-      }
-      enemy.stats.mp -= skill.costMp
-      actor.stats.mp = enemy.stats.mp
+    const targets = this.getSkillTargets(actor, target, skill).filter(t => t.stats.hp > 0)
+    if (targets.length === 0) {
+      this.log('没有有效目标')
+      return false
     }
+
+    if (actor.stats.mp < skill.costMp) {
+      if (isPlayer) {
+        this.log('MP不足！')
+      }
+      if (!isPlayer) {
+        this.performAttack(actor, target)
+        return true
+      }
+      return false
+    }
+    if (actor.tp < skill.costTp) {
+      this.log('TP不足！')
+      return false
+    }
+
+    actor.stats.mp -= skill.costMp
+    if (isPlayer) {
+      ;(actor.data as CharacterData).stats.mp = actor.stats.mp
+    }
+    actor.tp -= skill.costTp
+    this.updateUnitBars(actor)
 
     if (skill.type === 'heal') {
       AudioManager.getInstance().playSFX('heal')
-      this.performHeal(actor, target, skill)
-      return
+      for (const currentTarget of targets) {
+        this.performHeal(actor, currentTarget, skill)
+      }
+      return true
     }
 
     if (skill.type === 'buff') {
       AudioManager.getInstance().playSFX('magic_cast')
-      this.applyBuff(actor, target, skill)
-      return
+      for (const currentTarget of targets) {
+        this.applyBuff(actor, currentTarget, skill)
+      }
+      return true
     }
 
     if (skill.type === 'debuff') {
       AudioManager.getInstance().playSFX('magic_cast')
-      this.applyDebuff(actor, target, skill)
-      return
+      for (const currentTarget of targets) {
+        this.applyDebuff(actor, currentTarget, skill)
+      }
+      return true
     }
 
     if (skill.type === 'special') {
       AudioManager.getInstance().playSFX('magic_cast')
       this.log(`${actor.name} 使用 ${skill.name}！`)
-      return
+      if (skill.power > 0) {
+        for (const currentTarget of targets) {
+          this.calculateAndDealSkillDamage(actor, currentTarget, skill)
+        }
+      } else {
+        for (const currentTarget of targets) {
+          if (!currentTarget.status.includes(skill.id)) currentTarget.status.push(skill.id)
+        }
+      }
+      return true
     }
 
-    // attack / magic
-    if (skill.target === 'all') {
-      const targets = actor.isPlayer
-        ? this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
-        : this.units.filter(u => u.isPlayer && u.stats.hp > 0)
-      for (const t of targets) {
-        this.calculateAndDealSkillDamage(actor, t, skill)
+    if (skill.target === 'random') {
+      const hitCount = this.getRandomHitCount(skill.id)
+      for (let i = 0; i < hitCount; i++) {
+        const randomTarget = this.pickRandomTarget(this.getLiveOpponents(actor))
+        if (!randomTarget) break
+        this.calculateAndDealSkillDamage(actor, randomTarget, skill)
       }
-    } else if (skill.target === 'random') {
-      const targets = actor.isPlayer
-        ? this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
-        : this.units.filter(u => u.isPlayer && u.stats.hp > 0)
-      const t = targets[Math.floor(Math.random() * targets.length)]!
-      this.calculateAndDealSkillDamage(actor, t, skill)
-    } else {
-      this.calculateAndDealSkillDamage(actor, target, skill)
+      return true
     }
+
+    for (const currentTarget of targets) {
+      this.calculateAndDealSkillDamage(actor, currentTarget, skill)
+    }
+    return true
   }
 
   private calculateAndDealSkillDamage(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
@@ -1380,20 +1474,19 @@ export class BattleScene extends Phaser.Scene {
     let damage = Math.max(1, Math.floor(stat * skill.power / 10))
 
     // Buff modifiers
-    if (actor.status.includes('roar')) damage = Math.floor(damage * 1.3)
+    if (actor.status.includes('roar')) damage = Math.floor(damage * BATTLE_RULES.ROAR_DAMAGE_MULTIPLIER)
     if (target.status.includes('water_curtain') || target.status.includes('wind_wall') || target.status.includes('armor_up')) {
       damage = Math.floor(damage * 0.7)
     }
     if (target.status.includes('break')) {
-      damage = Math.floor(damage * 1.3)
+      damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
     }
 
     // Difficulty scaling
     if (!isPlayer) {
       damage = Math.floor(damage * this.difficultyMult.dmg)
     } else {
-      const playerDmgMult = this.difficultyMult.dmg < 1.0 ? 1.15 : this.difficultyMult.dmg > 1.0 ? 0.9 : 1.0
-      damage = Math.floor(damage * playerDmgMult)
+      damage = Math.floor(damage * this.getPlayerDamageMultiplier())
     }
 
     // Element weakness
@@ -1406,14 +1499,13 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // TP generation for player
-    if (actor.isPlayer && actor.tp < 100) {
-      actor.tp = Math.min(100, actor.tp + 8)
-      this.updateUnitBars(actor)
+    if (actor.isPlayer) {
+      this.addTp(actor, BATTLE_RULES.PLAYER_SKILL_TP_GAIN)
     }
 
     // Break gauge for enemies
     if (!target.isPlayer && !target.status.includes('break')) {
-      const breakGain = isWeakHit ? 25 : 15
+      const breakGain = isWeakHit ? BATTLE_RULES.WEAK_SKILL_BREAK_GAIN : BATTLE_RULES.SKILL_BREAK_GAIN
       target.breakGauge = Math.min(target.breakMax, target.breakGauge + breakGain)
       this.updateUnitBars(target)
       if (target.breakGauge >= target.breakMax) {
@@ -1494,7 +1586,7 @@ export class BattleScene extends Phaser.Scene {
       const enemy = target.data as EnemyData
       if (enemy.id === 'fenghuang' && !target.status.includes('rebirth_used')) {
         target.status.push('rebirth_used')
-        target.stats.hp = Math.floor(target.stats.maxHp * 0.3)
+        target.stats.hp = Math.floor(target.stats.maxHp * BATTLE_RULES.PHOENIX_REBIRTH_HP_RATIO)
         this.updateUnitBars(target)
         this.log(`${target.name} 涅槃重生！恢复了 ${target.stats.hp} 点生命！`)
         target.sprite!.setAlpha(1)
@@ -1850,8 +1942,8 @@ export class BattleScene extends Phaser.Scene {
 
   private nextTurn(): void {
     // Check victory / defeat
-    const livePlayers = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
-    const liveEnemies = this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
+    const livePlayers = this.getLivePlayers()
+    const liveEnemies = this.getLiveEnemies()
 
     if (liveEnemies.length === 0) {
       this.phase = 'victory'
@@ -2022,6 +2114,9 @@ export class BattleScene extends Phaser.Scene {
   private showBattleResult(summary: BattleResultSummary): void {
     this.phase = 'result'
     this.resultSummary = summary
+    this.inTargetSelect = false
+    this.setCommandMenuVisible(false)
+    this.hideTargetIndicator()
     this.log(summary.title)
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, BATTLE_RESULT_PANEL.overlayAlpha)

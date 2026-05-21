@@ -8,7 +8,7 @@ import { MAPS } from '../../src/data/maps.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import type { EventAction, MapData } from '../../src/data/types.ts'
-import { WORLD_MAP_CONNECTION_LAYOUTS, WORLD_MAP_NODE_LAYOUTS } from '../../src/utils/constants.ts'
+import { GAME_HEIGHT, GAME_WIDTH, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -171,24 +171,28 @@ describe('game content data', () => {
     expect(errors).toEqual([])
   })
 
-  test('world map nodes match implemented maps and valid spawn points', () => {
+  test('world map points match implemented maps and valid screen bounds', () => {
     const errors: string[] = []
-    const nodeIds = new Set(WORLD_MAP_NODE_LAYOUTS.map(node => node.id))
+    const worldMapIds = new Set(Object.keys(WORLD_MAP_LOCATION_POINTS))
 
-    for (const node of WORLD_MAP_NODE_LAYOUTS) {
-      const map = MAPS[node.id]
-      if (!map) {
-        pushMissing(errors, 'world-map', 'map', node.id)
+    for (const [mapId, point] of Object.entries(WORLD_MAP_LOCATION_POINTS)) {
+      if (!MAPS[mapId]) {
+        pushMissing(errors, 'world-map', 'map', mapId)
         continue
       }
-      if (node.spawn.x < 0 || node.spawn.x >= map.width || node.spawn.y < 0 || node.spawn.y >= map.height) {
-        errors.push(`world-map/${node.id} spawn outside map: ${node.spawn.x},${node.spawn.y}`)
+      if (point.x < 0 || point.x > GAME_WIDTH || point.y < 0 || point.y > GAME_HEIGHT) {
+        errors.push(`world-map/${mapId} point outside screen: ${point.x},${point.y}`)
       }
     }
 
-    for (const [fromId, toId] of WORLD_MAP_CONNECTION_LAYOUTS) {
-      if (!nodeIds.has(fromId)) pushMissing(errors, 'world-map-connection', 'node', fromId)
-      if (!nodeIds.has(toId)) pushMissing(errors, 'world-map-connection', 'node', toId)
+    for (const mapId of Object.keys(MAPS)) {
+      if (!worldMapIds.has(mapId)) pushMissing(errors, 'world-map', 'point', mapId)
+    }
+
+    for (const [mapId, map] of Object.entries(MAPS)) {
+      for (const connection of map.connections) {
+        if (!worldMapIds.has(connection.targetMap)) pushMissing(errors, `${mapId}/world-map-connection`, 'point', connection.targetMap)
+      }
     }
 
     expect(errors).toEqual([])

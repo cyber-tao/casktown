@@ -710,6 +710,7 @@ export const DIALOGUE_CHOICE = {
 
 export const SAVE_SLOTS = 3
 export const QUICK_SAVE_SLOT = SAVE_SLOTS + 1
+export const SAVE_LOAD_FEEDBACK_DELAY_MS = 1000
 export const TRUE_ROUTE_MIN_MERCY = 3
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3
 
@@ -804,6 +805,36 @@ export const TRAINING_EXP_PER_LEVEL = 10
 export const INITIAL_GOLD = 100
 
 export const COMBO_TP_COST = 25
+export const BATTLE_RULES = {
+  MAX_TP: 100,
+  PERCENT_DIVISOR: 100,
+  MIN_BAR_RATIO: 0.01,
+  DAMAGE_VARIANCE_MIN: 0.9,
+  DAMAGE_VARIANCE_RANGE: 0.2,
+  BREAK_DAMAGE_MULTIPLIER: 1.3,
+  ROAR_DAMAGE_MULTIPLIER: 1.3,
+  DEFEND_DAMAGE_MULTIPLIER: 0.5,
+  STORY_PLAYER_DAMAGE_MULTIPLIER: 1.15,
+  HARD_PLAYER_DAMAGE_MULTIPLIER: 0.9,
+  ESCAPE_SUCCESS_RATE: 0.5,
+  PLAYER_ATTACK_TP_GAIN: 5,
+  PLAYER_SKILL_TP_GAIN: 8,
+  ENEMY_ATTACK_TP_GAIN: 3,
+  DEFEND_TP_GAIN: 15,
+  NORMAL_BREAK_GAIN: 10,
+  SKILL_BREAK_GAIN: 15,
+  WEAK_SKILL_BREAK_GAIN: 25,
+  PHOENIX_REBIRTH_HP_RATIO: 0.3,
+  REVIVE_EFFECT_PREFIX: 'revive:',
+  HEAL_HP_EFFECT_PREFIX: 'heal_hp:',
+  HEAL_MP_EFFECT_PREFIX: 'heal_mp:',
+  ALL_TARGET_EFFECT_SUFFIX: '_all',
+} as const
+export const BATTLE_RANDOM_TARGET_HITS: Record<string, { readonly min: number; readonly max: number }> = {
+  zhuifengdian: { min: 6, max: 10 },
+  wuhuazhui: { min: 3, max: 5 },
+  shadow_dance: { min: 3, max: 5 },
+} as const
 
 export const BGM_FADE_DURATIONS = {
   DEFAULT_MS: 1000,

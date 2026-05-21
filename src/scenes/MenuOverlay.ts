@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
-import { GameData, EQUIP_SLOT_MAP } from '../core/GameData'
+import { GameData } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
 import { SaveManager } from '../core/SaveManager'
 import { AudioManager } from '../core/AudioManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { GAME_WIDTH, GAME_HEIGHT, SAVE_SLOTS, scaleFont, scalePx } from '../utils/constants'
+import { EQUIP_SLOT_MAP } from '../data/equipment'
+import { GAME_WIDTH, GAME_HEIGHT, SAVE_LOAD_FEEDBACK_DELAY_MS, SAVE_SLOTS, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import type { CharacterData, ItemData } from '../data/types'
 
@@ -100,6 +101,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private handleUp(): void {
+    if (!this.cursor || this.menuItems.length === 0) return
     if (this.submenu === 'equipment' && this.equipSlot) {
       this.equipCursorIndex = (this.equipCursorIndex - 1 + this.menuItems.length) % this.menuItems.length
       this.refreshEquipListCursor()
@@ -126,6 +128,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private handleDown(): void {
+    if (!this.cursor || this.menuItems.length === 0) return
     if (this.submenu === 'equipment' && this.equipSlot) {
       this.equipCursorIndex = (this.equipCursorIndex + 1) % this.menuItems.length
       this.refreshEquipListCursor()
@@ -186,6 +189,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private handleConfirm(): void {
+    if (this.menuItems.length === 0) return
     if (this.submenu === 'main') {
       this.selectMenu()
       return
@@ -722,7 +726,7 @@ export class MenuOverlay extends Phaser.Scene {
     const success = sm.save(slot + 1)
     this.contentArea.removeAll(true)
     this.addContentText(success ? '保存成功！' : '保存失败', 0)
-    this.time.delayedCall(1000, () => {
+    this.time.delayedCall(SAVE_LOAD_FEEDBACK_DELAY_MS, () => {
       this.contentArea.removeAll(true)
       const sm2 = SaveManager.getInstance()
       for (let i = 1; i <= SAVE_SLOTS; i++) {
@@ -773,12 +777,10 @@ export class MenuOverlay extends Phaser.Scene {
     }
     const success = sm.load(slotNum)
     if (success) {
-      EventBus.emit(GameEvents.SAVE_LOADED)
       this.contentArea.removeAll(true)
       this.addContentText('读取成功！', 0)
-      this.time.delayedCall(1000, () => {
-        this.closeMenu()
-        EventBus.emit(GameEvents.MENU_CLOSE)
+      this.time.delayedCall(SAVE_LOAD_FEEDBACK_DELAY_MS, () => {
+        EventBus.emit(GameEvents.SAVE_LOADED)
         this.scene.stop()
       })
     } else {

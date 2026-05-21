@@ -1,6 +1,8 @@
 import { EventBus, GameEvents } from './EventBus'
 import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, BranchState } from '../data/types'
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
+import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
+import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import {
   INITIAL_GOLD,
   REBUILD_VISUAL_MAP_THRESHOLD,
@@ -13,39 +15,6 @@ import {
   TRUE_ROUTE_MIN_MERCY,
   TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
 } from '../utils/constants'
-
-type EquipStats = Pick<CharacterStats, 'atk' | 'def' | 'matk' | 'mdef' | 'speed' | 'maxHp' | 'maxMp'>
-type EquipmentSlot = keyof CharacterData['equipment']
-
-const EQUIPMENT_SLOTS: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
-
-const EQUIP_STAT_BONUSES: Record<string, Partial<EquipStats>> = {
-  fathers_sword: { atk: 10 },
-  fathers_armor: { def: 8, maxHp: 20 },
-  baihu_kai: { def: 15, mdef: 10, maxHp: 50 },
-  zi_yue: { atk: 8, speed: 3 },
-  guan_dao: { atk: 12, def: 3 },
-  yufeng_jian: { atk: 9, speed: 5 },
-  shenyu_juanzhou: { matk: 12, mdef: 8 },
-  water_mirror: { mdef: 15, matk: 5 },
-  pink_chime: { speed: 5, mdef: 3 },
-  rainbow_barrel: { matk: 10, mdef: 10 },
-  ring: { atk: 5, matk: 5, speed: 2 },
-}
-
-export const EQUIP_SLOT_MAP: Record<string, 'weapon' | 'armor' | 'accessory'> = {
-  fathers_sword: 'weapon',
-  fathers_armor: 'armor',
-  baihu_kai: 'armor',
-  zi_yue: 'weapon',
-  guan_dao: 'weapon',
-  yufeng_jian: 'weapon',
-  shenyu_juanzhou: 'accessory',
-  water_mirror: 'accessory',
-  pink_chime: 'accessory',
-  rainbow_barrel: 'accessory',
-  ring: 'accessory',
-}
 
 const BRANCH_NUMBER_KEYS = new Set<keyof BranchState>([
   'trust_huihui',
@@ -73,10 +42,6 @@ const JOIN_FLAG_TO_CHARACTER: Record<string, string> = {
   a_joined: 'A',
   congcong_joined: 'CONGCONG',
   sun_joined: 'SUN',
-}
-
-function createEmptyEquipStats(): EquipStats {
-  return { atk: 0, def: 0, matk: 0, mdef: 0, speed: 0, maxHp: 0, maxMp: 0 }
 }
 
 function createDefaultBranches(): BranchState {
@@ -275,8 +240,10 @@ export class GameData {
   }
 
   addItem(itemId: string, quantity: number = 1): void {
-    const current = this.inventory.items[itemId] || 0
-    this.inventory.items[itemId] = current + quantity
+    const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
+    const bag = item?.type === 'equipment' ? this.inventory.equipment : this.inventory.items
+    const current = bag[itemId] || 0
+    bag[itemId] = current + quantity
     EventBus.emit(GameEvents.ITEM_GET, itemId, quantity)
   }
 
