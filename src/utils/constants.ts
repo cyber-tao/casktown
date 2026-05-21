@@ -838,6 +838,18 @@ export const TRAINING_COST = 30
 export const TRAINING_EXP_BASE = 20
 export const TRAINING_EXP_PER_LEVEL = 10
 export const INITIAL_GOLD = 100
+export const LEVEL_GROWTH = {
+  EXP_TO_NEXT_MULTIPLIER: 1.5,
+  MAX_HP_BASE_GAIN: 10,
+  MAX_HP_LEVEL_GAIN: 2,
+  MAX_MP_BASE_GAIN: 5,
+  MAX_MP_LEVEL_GAIN: 1,
+  ATK_GAIN: 2,
+  DEF_GAIN: 1,
+  MATK_GAIN: 2,
+  MDEF_GAIN: 1,
+  SPEED_GAIN: 1,
+} as const
 
 export const COMBO_TP_COST = 25
 export const BATTLE_RULES = {

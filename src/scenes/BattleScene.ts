@@ -4,6 +4,7 @@ import { GameData } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
 import { AudioManager } from '../core/AudioManager'
 import { BarrelSystem } from '../core/BarrelSystem'
+import { SkillGrowth } from '../core/SkillGrowth'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
@@ -24,6 +25,7 @@ import {
   scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -110,13 +112,29 @@ export class BattleScene extends Phaser.Scene {
     this.turnOrder = []
     this.currentTurn = 0
     this.phase = 'intro'
+    this.enemyData = []
     this.menuIndex = 0
+    this.menuItems = []
     this.commandMenuObjects = []
     this.targetIndex = 0
     this.inTargetSelect = false
     this.targetPlayers = false
     this.targetIndicator = null
     this.actionStack = []
+    this.skillMenuItems = []
+    this.skillMenuIndex = 0
+    this.inSkillMenu = false
+    this.itemMenuItems = []
+    this.itemMenuIndex = 0
+    this.inItemMenu = false
+    this.barrelMenuItems = []
+    this.barrelMenuIndex = 0
+    this.inBarrelMenu = false
+    this.barrelMenuColors = []
+    this.comboMenuItems = []
+    this.comboMenuIndex = 0
+    this.inComboMenu = false
+    this.availableCombos = []
     this.encounterId = data.encounterId
     this.mapId = data.mapId || GameData.getInstance().currentMap
     this.mapEventId = data.mapEventId || ''
@@ -482,6 +500,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => {
       if (this.inSkillMenu) this.moveSkillMenu(-1)
       else if (this.inItemMenu) this.moveItemMenu(-1)
@@ -2033,17 +2052,7 @@ export class BattleScene extends Phaser.Scene {
     totalExp = Math.floor(totalExp * this.difficultyMult.exp)
     gd.addGold(totalGold)
 
-    for (const id of gd.party) {
-      const char = gd.characters.get(id)
-      if (!char) continue
-      char.stats.exp += totalExp
-      if (char.stats.exp >= char.stats.expToNext) {
-        char.stats.level++
-        char.stats.exp -= char.stats.expToNext
-        char.stats.expToNext = Math.floor(char.stats.expToNext * 1.5)
-        levelUps.push(`${char.name} Lv.${char.stats.level}`)
-      }
-    }
+    levelUps.push(...gd.gainPartyExperience(totalExp).map(result => `${result.name} Lv.${result.level}`))
 
     const qs = QuestSystem.getInstance()
     const encounter = GAME_CONFIG_DATABASE.getTable('encounters')[this.encounterId]
@@ -2079,6 +2088,7 @@ export class BattleScene extends Phaser.Scene {
         }
       }
     }
+    const unlockedSkills = SkillGrowth.getInstance().checkAllUnlocks()
 
     if (this.mapEventId) {
       gd.setFlag(`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}${this.mapEventId}`, true)
@@ -2099,6 +2109,14 @@ export class BattleScene extends Phaser.Scene {
     const lines = [`EXP +${totalExp}`, `金币 +${totalGold}`]
     if (dropLines.length > 0) lines.push(`掉落：${dropLines.join('、')}`)
     if (levelUps.length > 0) lines.push(`升级：${levelUps.join('、')}`)
+    if (unlockedSkills.size > 0) {
+      const skillNames = GAME_CONFIG_DATABASE.getTable('skills')
+      const unlockLines = Array.from(unlockedSkills.entries()).map(([charId, skillIds]) => {
+        const charName = gd.characters.get(charId)?.name ?? charId
+        return `${charName}: ${skillIds.map(skillId => skillNames[skillId]?.name ?? skillId).join('、')}`
+      })
+      lines.push(`习得：${unlockLines.join('；')}`)
+    }
     if (rewardLines.length > 0) lines.push(...rewardLines)
     return { victory: true, escaped: false, title: '战斗结算', lines }
   }

@@ -2,8 +2,11 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { SkillGrowth } from '../core/SkillGrowth'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TRAINING_COST, TRAINING_EXP_BASE, TRAINING_EXP_PER_LEVEL, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 export class TrainingOverlay extends Phaser.Scene {
   private selectedIndex = 0
@@ -26,11 +29,11 @@ export class TrainingOverlay extends Phaser.Scene {
     const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, scalePx(600), scalePx(420), COLORS.uiBg, 0.95)
     panel.setStrokeStyle(scalePx(2), COLORS.uiBorder).setDepth(401).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(195), 'Training', {
+    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(195), '训练场', {
       fontSize: scaleFont(24), color: COLORS.uiText,
     }).setDepth(402).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(162), `Cost: ${TRAINING_COST}G / session`, {
+    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(162), `每次消耗 ${TRAINING_COST}G`, {
       fontSize: scaleFont(16), color: '#a0a0b0',
     }).setDepth(402).setScrollFactor(0)
 
@@ -43,7 +46,7 @@ export class TrainingOverlay extends Phaser.Scene {
       fontSize: scaleFont(16), color: '#f1c40f',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ Select | Enter Train | Esc Back', {
+    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ 选择 | Enter 训练 | Esc 返回', {
       fontSize: scaleFont(12), color: '#808090',
     }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
 
@@ -95,10 +98,11 @@ export class TrainingOverlay extends Phaser.Scene {
   }
 
   private updateGold(): void {
-    this.goldText.setText(`Gold: ${GameData.getInstance().gold}G`)
+    this.goldText.setText(`金币: ${GameData.getInstance().gold}G`)
   }
 
   private setupInput(): void {
+    cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.move(-1))
     this.input.keyboard?.on('keydown-DOWN', () => this.move(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.train())
@@ -123,7 +127,7 @@ export class TrainingOverlay extends Phaser.Scene {
     if (!char) return
 
     if (gd.gold < TRAINING_COST) {
-      this.messageText.setText('Gold not enough!')
+      this.messageText.setText('金币不足！')
       AudioManager.getInstance().playSFX('cancel')
       return
     }
@@ -131,34 +135,18 @@ export class TrainingOverlay extends Phaser.Scene {
     gd.spendGold(TRAINING_COST)
 
     const expGain = TRAINING_EXP_BASE + char.stats.level * TRAINING_EXP_PER_LEVEL
-    char.stats.exp += expGain
+    const levelUps = gd.gainCharacterExperience(charId, expGain)
+    const unlockedSkills = SkillGrowth.getInstance().checkUnlocksForCharacter(charId)
 
-    let leveledUp = false
-    while (char.stats.exp >= char.stats.expToNext) {
-      char.stats.exp -= char.stats.expToNext
-      char.stats.level++
-      char.stats.expToNext = Math.floor(char.stats.expToNext * 1.3)
-
-      char.stats.maxHp += Math.floor(10 + char.stats.level * 2)
-      char.stats.hp = char.stats.maxHp
-      char.stats.maxMp += Math.floor(5 + char.stats.level)
-      char.stats.mp = char.stats.maxMp
-      char.stats.atk += 2
-      char.stats.def += 1
-      char.stats.matk += 2
-      char.stats.mdef += 1
-      char.stats.speed += 1
-
-      leveledUp = true
-    }
-
-    if (leveledUp) {
+    if (levelUps.length > 0) {
       AudioManager.getInstance().playSFX('level_up')
-      this.messageText.setText(`${char.name} leveled up to Lv.${char.stats.level}!`)
-      EventBus.emit(GameEvents.LEVEL_UP, { charId, level: char.stats.level })
+      const skillText = unlockedSkills.length > 0
+        ? `，习得 ${unlockedSkills.map(skillId => GAME_CONFIG_DATABASE.getTable('skills')[skillId]?.name ?? skillId).join('、')}`
+        : ''
+      this.messageText.setText(`${char.name} 升至 Lv.${char.stats.level}${skillText}`)
     } else {
       AudioManager.getInstance().playSFX('confirm')
-      this.messageText.setText(`${char.name} gained ${expGain} EXP!`)
+      this.messageText.setText(`${char.name} 获得 ${expGain} EXP`)
     }
 
     this.updateGold()

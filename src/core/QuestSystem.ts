@@ -1,6 +1,7 @@
 import { EventBus, GameEvents } from './EventBus'
 import { GameData } from './GameData'
 import { RebuildSystem } from './RebuildSystem'
+import { SkillGrowth } from './SkillGrowth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import type { QuestState } from '../data/types'
 
@@ -60,17 +61,8 @@ export class QuestSystem {
     if (def?.rewards) {
       for (const reward of def.rewards) {
         if (reward.exp) {
-          for (const id of gd.party) {
-            const char = gd.characters.get(id)
-            if (char) {
-              char.stats.exp += reward.exp
-              if (char.stats.exp >= char.stats.expToNext) {
-                char.stats.level++
-                char.stats.exp -= char.stats.expToNext
-                char.stats.expToNext = Math.floor(char.stats.expToNext * 1.5)
-              }
-            }
-          }
+          gd.gainPartyExperience(reward.exp)
+          SkillGrowth.getInstance().checkAllUnlocks()
         }
         if (reward.itemId) {
           gd.addItem(reward.itemId, reward.itemQty || 1)

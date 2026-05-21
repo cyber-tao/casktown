@@ -5,6 +5,7 @@ import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipSt
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import {
   INITIAL_GOLD,
+  LEVEL_GROWTH,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   START_MAP_ID,
@@ -67,6 +68,12 @@ function createConfiguredCharacter(id: string): CharacterData {
   const base = GAME_CONFIG_DATABASE.getTable('characters')[id]
   if (!base) throw new Error(`Character ${id} not found`)
   return cloneConfigData(base)
+}
+
+export interface LevelUpResult {
+  charId: string
+  name: string
+  level: number
 }
 
 export class GameData {
@@ -364,6 +371,70 @@ export class GameData {
     if (!this.baseStats.has(charId)) {
       this.baseStats.set(charId, { ...char.stats })
     }
+  }
+
+  private getBaseStatsForProgression(charId: string, char: CharacterData): CharacterStats {
+    const existing = this.baseStats.get(charId)
+    if (existing) return existing
+    const bonus = this.getEquipStats(charId)
+    const base = {
+      ...char.stats,
+      atk: char.stats.atk - bonus.atk,
+      def: char.stats.def - bonus.def,
+      matk: char.stats.matk - bonus.matk,
+      mdef: char.stats.mdef - bonus.mdef,
+      speed: char.stats.speed - bonus.speed,
+      maxHp: char.stats.maxHp - bonus.maxHp,
+      maxMp: char.stats.maxMp - bonus.maxMp,
+    }
+    this.baseStats.set(charId, base)
+    return base
+  }
+
+  gainCharacterExperience(charId: string, amount: number): LevelUpResult[] {
+    if (amount <= 0) return []
+    const char = this.characters.get(charId)
+    if (!char) return []
+
+    const base = this.getBaseStatsForProgression(charId, char)
+    const currentHp = char.stats.hp
+    const currentMp = char.stats.mp
+    const levelUps: LevelUpResult[] = []
+    base.exp += amount
+
+    while (base.expToNext > 0 && base.exp >= base.expToNext) {
+      base.exp -= base.expToNext
+      base.level++
+      base.expToNext = Math.floor(base.expToNext * LEVEL_GROWTH.EXP_TO_NEXT_MULTIPLIER)
+      base.maxHp += LEVEL_GROWTH.MAX_HP_BASE_GAIN + base.level * LEVEL_GROWTH.MAX_HP_LEVEL_GAIN
+      base.maxMp += LEVEL_GROWTH.MAX_MP_BASE_GAIN + base.level * LEVEL_GROWTH.MAX_MP_LEVEL_GAIN
+      base.atk += LEVEL_GROWTH.ATK_GAIN
+      base.def += LEVEL_GROWTH.DEF_GAIN
+      base.matk += LEVEL_GROWTH.MATK_GAIN
+      base.mdef += LEVEL_GROWTH.MDEF_GAIN
+      base.speed += LEVEL_GROWTH.SPEED_GAIN
+      levelUps.push({ charId, name: char.name, level: base.level })
+    }
+
+    char.stats.level = base.level
+    char.stats.exp = base.exp
+    char.stats.expToNext = base.expToNext
+    this.applyEquipment(charId)
+
+    if (levelUps.length > 0) {
+      char.stats.hp = char.stats.maxHp
+      char.stats.mp = char.stats.maxMp
+      EventBus.emit(GameEvents.LEVEL_UP, { charId, level: char.stats.level })
+    } else {
+      char.stats.hp = Math.min(currentHp, char.stats.maxHp)
+      char.stats.mp = Math.min(currentMp, char.stats.maxMp)
+    }
+
+    return levelUps
+  }
+
+  gainPartyExperience(amount: number): LevelUpResult[] {
+    return this.party.flatMap(charId => this.gainCharacterExperience(charId, amount))
   }
 
   applyEquipment(charId: string): void {
