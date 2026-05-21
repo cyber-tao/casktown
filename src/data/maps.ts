@@ -126,6 +126,7 @@ function createTransferEvent(transfer: EventBounds & { readonly id: string; read
     height: transfer.height,
     type: 'transfer',
     trigger: 'touch',
+    conditions: undefined,
     actions: [{ type: 'transfer', targetMap: transfer.targetMap, targetX: transfer.targetX, targetY: transfer.targetY }],
   }
 }
@@ -292,7 +293,14 @@ function buildMap001(): MapData {
     {
       id: 'NPC_MAYOR', x: 16, y: 5, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
+      conditions: [{ flag: 'met_mayor', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_004_MAYOR' }],
+    },
+    {
+      id: 'NPC_MAYOR_AFTER', x: 16, y: 5, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
+      conditions: [{ flag: 'met_mayor', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_005_MAYOR_AFTER' }],
     },
     {
       id: 'NPC_BARREL', x: 13, y: 11, width: 1, height: 1,
@@ -309,6 +317,12 @@ function buildMap001(): MapData {
       type: 'trigger', trigger: 'action',
       conditions: [{ flag: 'met_mayor', value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_006_FESTIVAL' }],
+    },
+    {
+      id: 'EVT_REBUILD_CEREMONY', x: 14, y: 5, width: 4, height: 3,
+      type: 'trigger', trigger: 'action',
+      conditions: [{ flag: 'has_all_relics', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_305_REBUILD' }],
     },
   ]
 
@@ -636,17 +650,28 @@ function buildMap012(): MapData {
     {
       id: 'EVT_PUZZLE_TREE_1', x: 6, y: 6, width: 1, height: 1,
       type: 'trigger', trigger: 'action',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_105_TREE_1' }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_105_TREE_1' },
+        { type: 'setFlag', flag: 'tree_puzzle_1_solved', value: true },
+      ],
     },
     {
       id: 'EVT_PUZZLE_TREE_2', x: 12, y: 6, width: 1, height: 1,
       type: 'trigger', trigger: 'action',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_105_TREE_2' }],
+      conditions: [{ flag: 'tree_puzzle_1_solved', value: true }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_105_TREE_2' },
+        { type: 'setFlag', flag: 'tree_puzzle_2_solved', value: true },
+      ],
     },
     {
       id: 'EVT_PUZZLE_TREE_3', x: 18, y: 6, width: 1, height: 1,
       type: 'trigger', trigger: 'action',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_105_TREE_3' }],
+      conditions: [{ flag: 'tree_puzzle_2_solved', value: true }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_105_TREE_3' },
+        { type: 'setFlag', flag: 'puzzle_trees_solved', value: true },
+      ],
     },
     {
       id: 'EVT_ALTAR', x: 11, y: 10, width: 2, height: 1,
@@ -877,7 +902,14 @@ function buildMap031(): MapData {
     {
       id: 'NPC_XIYUAN', x: 13, y: 8, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_xiyuan', direction: 2,
+      conditions: [{ flag: 'xiyuan_quiz_completed', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN' }],
+    },
+    {
+      id: 'NPC_XIYUAN_AFTER', x: 13, y: 8, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'npc_xiyuan', direction: 2,
+      conditions: [{ flag: 'xiyuan_quiz_completed', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN_AFTER' }],
     },
     {
       id: 'EVT_XIYUAN_QUIZ_BATTLE', x: 13, y: 9, width: 1, height: 1,

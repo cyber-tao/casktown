@@ -1,5 +1,27 @@
 import type { DialogueScript } from '../scenes/DialogueOverlay'
 
+const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'met_mayor', value: true },
+  { type: 'questStart', questId: 'QST_003' },
+  { type: 'questComplete', questId: 'QST_003' },
+  { type: 'questStart', questId: 'QST_004' },
+]
+
+const FOREST_PARTY_JOIN_BATTLE_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'battle', encounterId: 'BTL_101' },
+]
+
+const CONGCONG_JOIN_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'congcong_joined', value: true },
+]
+
+const XIYUAN_SACRED_WATER_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'xiyuan_quiz_completed', value: true },
+  { type: 'setFlag', flag: 'has_sacred_water', value: true },
+  { type: 'questComplete', questId: 'QST_006' },
+  { type: 'questStart', questId: 'QST_007' },
+]
+
 export const DIALOGUES: Record<string, DialogueScript> = {
   // ============================================================
   // 序章：盛典之日 (SCN_001 - SCN_005)
@@ -195,6 +217,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: 'T', text: '听起来一个比一个麻烦。' },
       { speaker: '木桶精灵', text: '恭喜你，理解正确。' },
     ],
+    onComplete: MAYOR_STORY_COMPLETION_ACTIONS,
   },
   DIA_005_RELUCTANT: {
     id: 'DIA_005_RELUCTANT',
@@ -202,6 +225,14 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '木桶精灵', text: '勇士拒绝率接近零。你是第一个。' },
       { speaker: 'T', text: '那说明我特别。' },
       { speaker: '木桶精灵', text: '特别固执。' },
+    ],
+    onComplete: MAYOR_STORY_COMPLETION_ACTIONS,
+  },
+  DIA_005_MAYOR_AFTER: {
+    id: 'DIA_005_MAYOR_AFTER',
+    lines: [
+      { speaker: '镇长', text: '预言之书和七彩木桶已经交给你了。先去奇妙森林，找到千年树种。' },
+      { speaker: '木桶精灵', text: '东边。别再往会场绕了。' },
     ],
   },
 
@@ -234,7 +265,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '阿博', text: '先别说漂亮话。森林里有动静。' },
       { speaker: '系统', text: '战斗开始！' },
     ],
-    onComplete: [{ type: 'battle', encounterId: 'BTL_101' }],
+    onComplete: FOREST_PARTY_JOIN_BATTLE_ACTIONS,
   },
   DIA_101_DANGER: {
     id: 'DIA_101_DANGER',
@@ -242,6 +273,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: '正因危险才要一起去。你以为丢下我们就安全了？' },
       { speaker: '阿博', text: '我会保护大家。' },
     ],
+    onComplete: FOREST_PARTY_JOIN_BATTLE_ACTIONS,
   },
   DIA_101_COLD: {
     id: 'DIA_101_COLD',
@@ -249,6 +281,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: '你才拖后腿！连方向都分不清的才是你。' },
       { speaker: '阿博', text: '……' },
     ],
+    onComplete: FOREST_PARTY_JOIN_BATTLE_ACTIONS,
   },
 
   // SCN_102 森林探索对白
@@ -619,6 +652,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '旁白', text: '听风乐，白鹭轻吟，残雾撩萦。' },
       { speaker: '旁白', text: '镜中白雪，万年岁梦蝶舞飞。' },
     ],
+    onComplete: XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
   },
   DIA_203_XIYUAN_NEUTRAL: {
     id: 'DIA_203_XIYUAN_NEUTRAL',
@@ -628,6 +662,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '熙苑', text: '愿你们重建的不只是房子，还有愿意相信彼此的心。' },
       { speaker: '旁白', text: '圣水殿化为一潭水。熙苑化为七彩凤鸟飞向天空。' },
     ],
+    onComplete: XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
   },
   DIA_203_XIYUAN_BITTER: {
     id: 'DIA_203_XIYUAN_BITTER',
@@ -636,6 +671,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '系统', text: '获得【神水】、【御疗术之书】。慧慧学会【御疗术】。' },
       { speaker: '旁白', text: '圣水殿化为一潭水。熙苑化为七彩凤鸟飞向天空。' },
     ],
+    onComplete: XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
   },
   DIA_203_XIYUAN_COLD: {
     id: 'DIA_203_XIYUAN_COLD',
@@ -643,6 +679,16 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '熙苑', text: '……也是。神水拿去吧。' },
       { speaker: '系统', text: '获得【神水】。悲悯值-1。' },
       { speaker: '旁白', text: '圣水殿化为一潭水。熙苑化为七彩凤鸟飞向天空。' },
+    ],
+    onComplete: [
+      ...XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
+      { type: 'adjustMercy', amount: -1 },
+    ],
+  },
+  DIA_203_XIYUAN_AFTER: {
+    id: 'DIA_203_XIYUAN_AFTER',
+    lines: [
+      { speaker: '熙苑', text: '神水已经交给你们。下一段路在神殿，不在这座殿里。' },
     ],
   },
 
@@ -691,6 +737,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '葱葱', text: '你们反应也太冷淡了吧！' },
       { speaker: '系统', text: '葱葱加入队伍。' },
     ],
+    onComplete: CONGCONG_JOIN_COMPLETION_ACTIONS,
   },
   DIA_301_RELEASE: {
     id: 'DIA_301_RELEASE',
@@ -699,6 +746,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '葱葱', text: '终于！我以为要在树上过夜了！' },
       { speaker: '慧慧', text: '哼。看在你还知道认错的份上。' },
     ],
+    onComplete: CONGCONG_JOIN_COMPLETION_ACTIONS,
   },
   DIA_301_INTERROGATE: {
     id: 'DIA_301_INTERROGATE',
@@ -709,6 +757,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '葱葱', text: '那是我师父的地方。本少爷是入室大弟子！' },
       { speaker: '系统', text: '获得信息【天剑阁】。' },
     ],
+    onComplete: CONGCONG_JOIN_COMPLETION_ACTIONS,
   },
   DIA_301_HUIHUI: {
     id: 'DIA_301_HUIHUI',
@@ -718,6 +767,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '葱葱', text: '大小姐英明！' },
       { speaker: '慧慧', text: '少拍马屁。' },
     ],
+    onComplete: CONGCONG_JOIN_COMPLETION_ACTIONS,
   },
 
   // SCN_302 七色路与迷惘界
@@ -840,7 +890,10 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: '你还是吃吧。' },
       { speaker: '系统', text: '木桶镇重建等级提升至Lv.3。开放商店、训练场、支线板、装备强化。' },
     ],
-    onComplete: [{ type: 'setFlag', flag: 'rebuild_level', value: 3 }],
+    onComplete: [
+      { type: 'setFlag', flag: 'rebuild_level', value: 3 },
+      { type: 'questStart', questId: 'QST_009' },
+    ],
   },
 
   // ============================================================
@@ -2673,12 +2726,77 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: 'sun', text: '……谢谢。' },
     ],
   },
+
+  DIA_LOCKED_FOREST: {
+    id: 'DIA_LOCKED_FOREST',
+    lines: [{ speaker: '木桶精灵', text: '盛典后的预言之力还没有觉醒。先回镇上完成当前主线。' }],
+  },
+  DIA_LOCKED_FOREST_DEPTH: {
+    id: 'DIA_LOCKED_FOREST_DEPTH',
+    lines: [{ speaker: '慧慧', text: '森林深处太危险了。先和大家会合，再继续往里走。' }],
+  },
+  DIA_LOCKED_FOREST_ALTAR: {
+    id: 'DIA_LOCKED_FOREST_ALTAR',
+    lines: [{ speaker: '木桶精灵', text: '白虎的试炼还没有结束。千年树种不会提前回应你。' }],
+  },
+  DIA_LOCKED_DOCK: {
+    id: 'DIA_LOCKED_DOCK',
+    lines: [{ speaker: '船夫', text: '去圣水殿的航路还没开。先把奇妙森林的千年树种带回来。' }],
+  },
+  DIA_LOCKED_WATER_ROUTE: {
+    id: 'DIA_LOCKED_WATER_ROUTE',
+    lines: [{ speaker: '船夫', text: '海雾还没散。没有千年树种的气息，船靠不过去。' }],
+  },
+  DIA_LOCKED_WATER_HALL: {
+    id: 'DIA_LOCKED_WATER_HALL',
+    lines: [{ speaker: '熙苑', text: '圣水殿不会跳过试炼。先完成水瑶和风赤的战斗。' }],
+  },
+  DIA_LOCKED_TEMPLE_ROUTE: {
+    id: 'DIA_LOCKED_TEMPLE_ROUTE',
+    lines: [{ speaker: '木桶精灵', text: '神殿山路还在沉睡。取得神水后，通往神殿的路才会显现。' }],
+  },
+  DIA_LOCKED_SEVEN_ROAD: {
+    id: 'DIA_LOCKED_SEVEN_ROAD',
+    lines: [{ speaker: '葱葱', text: '前面的路被石阵封住了。先解决山路上的阻碍。' }],
+  },
+  DIA_LOCKED_TEMPLE: {
+    id: 'DIA_LOCKED_TEMPLE',
+    lines: [{ speaker: 'sun', text: '神殿不会在试炼结束前开门。先完成七色路的战斗。' }],
+  },
+  DIA_LOCKED_LIFE_SPRING: {
+    id: 'DIA_LOCKED_LIFE_SPRING',
+    lines: [{ speaker: '木桶精灵', text: '生命之泉还没有显露。集齐三件神物并完成重建后再来。' }],
+  },
+  DIA_LOCKED_REINCARNATION: {
+    id: 'DIA_LOCKED_REINCARNATION',
+    lines: [{ speaker: '木桶精灵', text: '轮回道仍被四道封印压住。先释放祀神四体。' }],
+  },
+  DIA_LOCKED_SWAMP: {
+    id: 'DIA_LOCKED_SWAMP',
+    lines: [{ speaker: 'xiaoai', text: '梦还没有醒。你现在看见的黑暗沼泽，只是黑暗本身。' }],
+  },
+  DIA_LOCKED_PALACE: {
+    id: 'DIA_LOCKED_PALACE',
+    lines: [{ speaker: '木桶精灵', text: '沼泽的链锁还没有解开。魔宫入口不会回应你。' }],
+  },
+  DIA_LOCKED_UNDERGROUND: {
+    id: 'DIA_LOCKED_UNDERGROUND',
+    lines: [{ speaker: '木桶精灵', text: '通往地下魔宫的机关还没有打开。先处理黑暗沼泽的链锁。' }],
+  },
+  DIA_LOCKED_DEEP_UNDERGROUND: {
+    id: 'DIA_LOCKED_DEEP_UNDERGROUND',
+    lines: [{ speaker: 'xiaoai', text: '假影还没有被击破。更深处的门不会让你通过。' }],
+  },
+  DIA_LOCKED_ABYSS: {
+    id: 'DIA_LOCKED_ABYSS',
+    lines: [{ speaker: '木桶精灵', text: '人心之渊还没有出现。等xiaoai被净化后，再回到这里。' }],
+  },
 }
 
 const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boolean }> = {
   DIA_002_HUIHUI: { target: 'DIA_001_HELP' },
   DIA_003_A: { target: 'DIA_101_COLD' },
-  DIA_004_MAYOR: { target: 'DIA_005_MAYOR' },
+  DIA_004_MAYOR: { target: 'DIA_005_MAYOR', includeOnComplete: true },
   DIA_005_BARREL: { target: 'DIA_REBUILD_BOARD' },
   DIA_006_FESTIVAL: { target: 'DIA_004_FESTIVAL', includeOnComplete: true },
   DIA_202_PINE: { target: 'DIA_NPC_REBUILD1_PINE', includeOnComplete: true },

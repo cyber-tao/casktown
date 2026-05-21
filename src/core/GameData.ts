@@ -225,8 +225,9 @@ export class GameData {
     if (this.flags.has_divine_laurel) {
       this.flags.phoenix_qilin_defeated = true
     }
-    if (this.flags.seal_qinglong_released && this.flags.seal_baihu_released && this.flags.seal_zhuque_released) {
+    if (this.flags.seal_qinglong_released && this.flags.seal_baihu_released && this.flags.seal_zhuque_released && this.flags.seal_xuanwu_released) {
       this.flags.defeated_chi_mei_wang = true
+      this.flags.released_four_seals = true
     }
     if (this.flags.fake_xiaoai_defeated) {
       this.flags.defeated_fake_xiaoai = true

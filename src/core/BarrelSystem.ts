@@ -71,11 +71,11 @@ export class BarrelSystem {
   getDungeonEntrance(mapId: string): string | null {
     const entrances: Record<string, string> = {
       'MAP_010': 'MAP_001', 'MAP_011': 'MAP_001', 'MAP_012': 'MAP_001',
-      'MAP_020': 'MAP_001', 'MAP_030': 'MAP_001', 'MAP_031': 'MAP_001',
+      'MAP_020': 'MAP_001', 'MAP_030': 'MAP_020', 'MAP_031': 'MAP_020',
       'MAP_040': 'MAP_001', 'MAP_041': 'MAP_001', 'MAP_042': 'MAP_001',
       'MAP_051': 'MAP_050', 'MAP_052': 'MAP_050', 'MAP_053': 'MAP_050',
-      'MAP_054': 'MAP_050', 'MAP_060': 'MAP_001', 'MAP_061': 'MAP_001',
-      'MAP_062': 'MAP_001', 'MAP_063': 'MAP_001', 'MAP_070': 'MAP_001',
+      'MAP_054': 'MAP_050', 'MAP_060': 'MAP_061', 'MAP_061': 'MAP_050',
+      'MAP_062': 'MAP_060', 'MAP_063': 'MAP_060', 'MAP_070': 'MAP_060',
     }
     return entrances[mapId] || null
   }

@@ -6,6 +6,7 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
+import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
 import {
@@ -486,6 +487,7 @@ export class MapScene extends Phaser.Scene {
   private isTileReservedByEvent(x: number, y: number): boolean {
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event)) continue
+      if (!this.areEventConditionsMet(event)) continue
       if (this.checkEventCollision(event, x, y)) return true
     }
     for (const sprite of this.battleEnemies.values()) {
@@ -1193,6 +1195,7 @@ export class MapScene extends Phaser.Scene {
       if (this.isSuppressedFieldEvent(event)) continue
       if (event.type === 'battle') continue
       if (event.trigger !== 'touch' && event.trigger !== 'autorun') continue
+      if (!this.areEventConditionsMet(event)) continue
       if (this.checkEventCollision(event, px, py)) {
         this.triggerEvent(event)
         return
@@ -1213,6 +1216,7 @@ export class MapScene extends Phaser.Scene {
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event)) continue
       if (event.trigger !== 'action') continue
+      if (!this.areEventConditionsMet(event)) continue
       if (this.canInteractWithEvent(event, px, py, fx, fy)) {
         this.triggerEvent(event)
         return
@@ -1257,8 +1261,9 @@ export class MapScene extends Phaser.Scene {
 
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event)) continue
+      if (!this.areEventConditionsMet(event)) continue
       if (event.trigger === 'autorun' && this.checkEventCollision(event, px, py)) {
-        if (event.type !== 'npc') {
+        if (event.type !== 'npc' && event.type !== 'transfer') {
           const doneFlag = `event_done_${event.id}`
           if (gd.getFlag(doneFlag) === true) continue
         }
@@ -1282,7 +1287,7 @@ export class MapScene extends Phaser.Scene {
       gd.setFlag(flag, true)
     }
 
-    if (event.type !== 'npc') {
+    if (event.type !== 'npc' && event.type !== 'transfer') {
       const doneFlag = `event_done_${event.id}`
       if (gd.getFlag(doneFlag) === true) {
         this.inEvent = false
@@ -1304,7 +1309,7 @@ export class MapScene extends Phaser.Scene {
 
     this.executeActions(event.actions, event.type === 'battle' ? event.id : undefined)
 
-    if (event.type !== 'npc' && event.type !== 'battle') {
+    if (event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer') {
       if (event.trigger === 'touch' || event.trigger === 'autorun' || event.trigger === 'action') {
         gd.setFlag(`event_done_${event.id}`, true)
       }
@@ -1323,8 +1328,15 @@ export class MapScene extends Phaser.Scene {
   }
 
   private transferMap(mapId: string, x: number, y: number): void {
-    AudioManager.getInstance().playSFX('warp')
     const gd = GameData.getInstance()
+    const blockedDialogueId = getBlockedMapDialogueId(mapId, flag => gd.getFlag(flag))
+    if (blockedDialogueId) {
+      AudioManager.getInstance().playSFX('cancel')
+      this.startDialogue(blockedDialogueId)
+      return
+    }
+
+    AudioManager.getInstance().playSFX('warp')
     gd.currentMap = mapId
     gd.playerPosition = { x, y }
     this.scene.restart({ mapId })

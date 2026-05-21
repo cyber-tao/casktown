@@ -7,8 +7,9 @@ import { ITEMS } from '../../src/data/items.ts'
 import { MAPS } from '../../src/data/maps.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
-import type { EventAction, MapData } from '../../src/data/types.ts'
-import { GAME_HEIGHT, GAME_WIDTH, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
+import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
+import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -77,6 +78,47 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
   }
 }
 
+function collectProducedFlags(): Set<string> {
+  const produced = new Set<string>()
+  const collectAction = (action: EventAction): void => {
+    if (action.type === 'setFlag') produced.add(action.flag)
+  }
+
+  for (const map of Object.values(MAPS)) {
+    for (const event of map.events) {
+      for (const action of event.actions) collectAction(action)
+    }
+  }
+
+  for (const dialogue of Object.values(DIALOGUES)) {
+    for (const action of dialogue.onComplete ?? []) collectAction(action)
+    for (const line of dialogue.lines) {
+      for (const choice of line.choices ?? []) {
+        for (const action of choice.actions ?? []) collectAction(action)
+      }
+    }
+  }
+
+  for (const encounter of Object.values(ENCOUNTERS)) {
+    if (encounter.victoryFlag) produced.add(encounter.victoryFlag)
+    for (const reward of encounter.rewards ?? []) {
+      if (reward.flag) produced.add(reward.flag)
+    }
+  }
+
+  return produced
+}
+
+function findEvent(mapId: string, eventId: string): MapEvent {
+  const event = MAPS[mapId]?.events.find(item => item.id === eventId)
+  if (!event) throw new Error(`${mapId}/${eventId} not found`)
+  return event
+}
+
+function expectCondition(event: MapEvent, flag: string, value: unknown): void {
+  expect(event.conditions).toContainEqual({ flag, value })
+}
+
 function validateMapGeometry(map: MapData, errors: string[]): void {
   const tileCount = map.width * map.height
   if (map.width <= 0 || map.height <= 0) errors.push(`${map.id} has invalid dimensions`)
@@ -123,6 +165,26 @@ describe('game content data', () => {
         for (const choice of line.choices ?? []) {
           if (choice.next && !DIALOGUES[choice.next]) pushMissing(errors, `${dialogueId}/${lineIndex}`, 'dialogue', choice.next)
           for (const action of choice.actions ?? []) validateAction(action, `${dialogueId}/${lineIndex}`, errors)
+        }
+      }
+      for (const action of dialogue.onComplete ?? []) validateAction(action, `${dialogueId}/onComplete`, errors)
+    }
+
+    expect(errors).toEqual([])
+  })
+
+  test('branch dialogues preserve completion-bearing story actions', () => {
+    const errors: string[] = []
+
+    for (const [dialogueId, dialogue] of Object.entries(DIALOGUES)) {
+      if (!dialogue.onComplete?.length) continue
+      for (const [lineIndex, line] of dialogue.lines.entries()) {
+        for (const choice of line.choices ?? []) {
+          if (!choice.next) continue
+          const target = DIALOGUES[choice.next]
+          if (!target?.onComplete?.length) {
+            errors.push(`${dialogueId}/${lineIndex} branches to ${choice.next} without completion actions`)
+          }
         }
       }
     }
@@ -196,5 +258,66 @@ describe('game content data', () => {
     }
 
     expect(errors).toEqual([])
+  })
+
+  test('map access requirements have reachable story flags', () => {
+    const producedFlags = collectProducedFlags()
+    const errors: string[] = []
+
+    for (const [mapId, requirement] of Object.entries(MAP_ACCESS_REQUIREMENTS)) {
+      if (!MAPS[mapId]) pushMissing(errors, 'map-access', 'map', mapId)
+      if (!DIALOGUES[requirement.blockedDialogueId]) pushMissing(errors, `map-access/${mapId}`, 'dialogue', requirement.blockedDialogueId)
+      if (!producedFlags.has(requirement.flag)) errors.push(`map-access/${mapId} requires unreachable flag: ${requirement.flag}`)
+    }
+
+    expect(errors).toEqual([])
+  })
+
+  test('main story access chain unlocks maps in order', () => {
+    const flags: Record<string, unknown> = {}
+    const readFlag = (flag: string): unknown => flags[flag]
+    const steps = [
+      { flag: 'met_mayor', value: true, maps: ['MAP_010'] },
+      { flag: 'a_joined', value: true, maps: ['MAP_011'] },
+      { flag: 'defeated_baihu', value: true, maps: ['MAP_012'] },
+      { flag: 'has_millennium_seed', value: true, maps: ['MAP_020', 'MAP_030'] },
+      { flag: 'shuiyao_fengchi_defeated', value: true, maps: ['MAP_031'] },
+      { flag: 'has_sacred_water', value: true, maps: ['MAP_040'] },
+      { flag: 'congcong_joined', value: true, maps: ['MAP_041'] },
+      { flag: 'phoenix_qilin_defeated', value: true, maps: ['MAP_042'] },
+      { flag: 'rebuild_level', value: 3, maps: ['MAP_050', 'MAP_051', 'MAP_052', 'MAP_053', 'MAP_054'] },
+      { flag: 'released_four_seals', value: true, maps: ['MAP_055'] },
+      { flag: 'dream_completed', value: true, maps: ['MAP_061'] },
+      { flag: 'swamp_chains_resolved', value: true, maps: ['MAP_060', 'MAP_062'] },
+      { flag: 'fake_xiaoai_defeated', value: true, maps: ['MAP_063'] },
+      { flag: 'xiaoai_purified', value: true, maps: ['MAP_070'] },
+    ]
+
+    for (const step of steps) {
+      for (const mapId of step.maps) {
+        expect(getBlockedMapDialogueId(mapId, readFlag)).not.toBeNull()
+      }
+      flags[step.flag] = step.value
+      for (const mapId of step.maps) {
+        expect(getBlockedMapDialogueId(mapId, readFlag)).toBeNull()
+      }
+    }
+  })
+
+  test('critical story npcs switch to follow-up dialogue after completion flags', () => {
+    const mayorBefore = findEvent('MAP_001', 'NPC_MAYOR')
+    const mayorAfter = findEvent('MAP_001', 'NPC_MAYOR_AFTER')
+    const xiyuanBefore = findEvent('MAP_031', 'NPC_XIYUAN')
+    const xiyuanAfter = findEvent('MAP_031', 'NPC_XIYUAN_AFTER')
+
+    expectCondition(mayorBefore, 'met_mayor', false)
+    expect(mayorBefore.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_004_MAYOR' })
+    expectCondition(mayorAfter, 'met_mayor', true)
+    expect(mayorAfter.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_005_MAYOR_AFTER' })
+
+    expectCondition(xiyuanBefore, 'xiyuan_quiz_completed', false)
+    expect(xiyuanBefore.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN' })
+    expectCondition(xiyuanAfter, 'xiyuan_quiz_completed', true)
+    expect(xiyuanAfter.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN_AFTER' })
   })
 })
