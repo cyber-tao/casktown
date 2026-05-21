@@ -23,6 +23,11 @@ const badRequestStatusCode = 400
 const notFoundStatusCode = 404
 const methodNotAllowedStatusCode = 405
 const internalErrorStatusCode = 500
+const phaserVendorChunkName = 'phaser-vendor'
+const vendorChunkName = 'vendor'
+const phaserVendorPattern = /node_modules[\\/]phaser[\\/]/
+const nodeModulesPattern = /node_modules[\\/]/
+const knownFrameworkChunkWarningLimitKb = 1400
 
 interface SpritePackManifest {
   files: SpritePackFile[]
@@ -275,10 +280,19 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     assetsInlineLimit: 0,
+    chunkSizeWarningLimit: knownFrameworkChunkWarningLimitKb,
     rolldownOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
         editor: path.resolve(__dirname, 'editor.html'),
+      },
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: phaserVendorChunkName, test: phaserVendorPattern, priority: 20 },
+            { name: vendorChunkName, test: nodeModulesPattern, priority: 10 },
+          ],
+        },
       },
     },
   },
