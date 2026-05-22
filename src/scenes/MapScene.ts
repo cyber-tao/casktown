@@ -43,11 +43,23 @@ import {
   GAME_HEIGHT,
   DIRECTION_VECTORS,
   TOUCH_INPUT,
+  UI_FONT_FAMILY,
   scaleFont,
   scalePx,
 } from '../utils/constants'
 import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+
+type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
+
+interface PartyHudRow {
+  charId: string
+  hpBar: Phaser.GameObjects.Rectangle
+  mpBar: Phaser.GameObjects.Rectangle
+  hpText: Phaser.GameObjects.Text
+  mpText: Phaser.GameObjects.Text
+  levelText: Phaser.GameObjects.Text
+}
 
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
@@ -68,6 +80,9 @@ export class MapScene extends Phaser.Scene {
   private collisionGrid: boolean[][] = []
   private inEvent = false
   private uiTexts: Phaser.GameObjects.Text[] = []
+  private partyHudObjects: PartyHudObject[] = []
+  private partyHudRows: PartyHudRow[] = []
+  private partyHudPartyKey = ''
   private mapNameText!: Phaser.GameObjects.Text
 
   private followers: Phaser.GameObjects.Sprite[] = []
@@ -114,6 +129,7 @@ export class MapScene extends Phaser.Scene {
     if (value === true && this.isJoinFlag(key)) {
       this.removeSuppressedFieldEventSprites()
       this.refreshFollowers()
+      this.createPartyHud()
     }
 
     if (key !== 'rebuild_level' || typeof value !== 'number') return
@@ -196,6 +212,9 @@ export class MapScene extends Phaser.Scene {
     this.npcs = new Map()
     this.eventObjects = []
     this.uiTexts = []
+    this.partyHudObjects = []
+    this.partyHudRows = []
+    this.partyHudPartyKey = ''
     this.battleEnemies = new Map()
     this.battleEnemyEvents = new Map()
     this.fieldEntityBehaviors = new Map()
@@ -246,6 +265,7 @@ export class MapScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     this.animationTimeMs = time
+    this.updatePartyHud()
     if (this.inEvent) {
       this.updateMinimapPlayerMarker()
       return
@@ -812,34 +832,164 @@ export class MapScene extends Phaser.Scene {
   }
 
   private createUI(): void {
-    // Status bar (fixed to camera)
-    const gd = GameData.getInstance()
-    const leader = gd.party[0] || 'T'
-    const char = gd.characters.get(leader)
+    this.createPartyHud()
 
-    if (char) {
-      const statusText = this.add.text(scalePx(10), scalePx(10), `${char.name} HP:${char.stats.hp}/${char.stats.maxHp} MP:${char.stats.mp}/${char.stats.maxMp}`, {
-        fontSize: scaleFont(14),
-        color: '#ffffff',
-        backgroundColor: '#00000080',
-        padding: { x: scalePx(6), y: scalePx(3) },
-      })
-      statusText.setScrollFactor(0)
-      statusText.setDepth(100)
-      this.uiTexts.push(statusText)
-    }
-
-    // Interaction prompt
-    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - scalePx(30), MAP_HUD.PROMPT_TEXT, {
-      fontSize: scaleFont(12),
-      color: '#cccccc',
-      backgroundColor: '#00000080',
-      padding: { x: scalePx(6), y: scalePx(3) },
+    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - MAP_HUD.PROMPT_Y_OFFSET, MAP_HUD.PROMPT_TEXT, {
+      fontSize: `${MAP_HUD.PROMPT_FONT_SIZE}px`,
+      color: MAP_HUD.PROMPT_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+      backgroundColor: MAP_HUD.PROMPT_BACKGROUND_COLOR,
+      padding: { x: MAP_HUD.PROMPT_PADDING_X, y: MAP_HUD.PROMPT_PADDING_Y },
     })
     prompt.setOrigin(0.5)
     prompt.setScrollFactor(0)
-    prompt.setDepth(100)
+    prompt.setDepth(MAP_HUD.PROMPT_DEPTH)
     this.uiTexts.push(prompt)
+  }
+
+  private createPartyHud(): void {
+    this.destroyPartyHud()
+    const gd = GameData.getInstance()
+    const members = this.getPartyHudMembers()
+    this.partyHudPartyKey = this.getPartyHudKey(members)
+
+    for (const [index, charId] of members.entries()) {
+      const char = gd.characters.get(charId)
+      if (!char) continue
+
+      const rowX = MAP_HUD.PARTY_X
+      const rowY = MAP_HUD.PARTY_Y + index * (MAP_HUD.PARTY_ROW_HEIGHT + MAP_HUD.PARTY_ROW_GAP)
+      const panel = this.add.rectangle(rowX, rowY, MAP_HUD.PARTY_ROW_WIDTH, MAP_HUD.PARTY_ROW_HEIGHT, MAP_HUD.PARTY_BACKGROUND_COLOR, MAP_HUD.PARTY_PANEL_ALPHA)
+      panel.setOrigin(0, 0)
+      panel.setStrokeStyle(
+        MAP_HUD.BORDER_WIDTH,
+        index === MAP_HUD.PARTY_LEADER_INDEX ? COLORS.uiHighlight : COLORS.uiBorder,
+        index === MAP_HUD.PARTY_LEADER_INDEX ? MAP_HUD.PARTY_LEADER_BORDER_ALPHA : MAP_HUD.PARTY_BORDER_ALPHA,
+      )
+      this.addPartyHudObject(panel)
+
+      const portraitX = rowX + MAP_HUD.PARTY_INNER_PADDING
+      const portraitY = rowY + MAP_HUD.PARTY_INNER_PADDING
+      const portraitFrame = this.add.rectangle(portraitX, portraitY, MAP_HUD.PARTY_PORTRAIT_SIZE, MAP_HUD.PARTY_PORTRAIT_SIZE, COLORS.black, MAP_HUD.PARTY_PORTRAIT_BG_ALPHA)
+      portraitFrame.setOrigin(0, 0)
+      portraitFrame.setStrokeStyle(MAP_HUD.BORDER_WIDTH, COLORS.uiBorder, MAP_HUD.PARTY_BORDER_ALPHA)
+      this.addPartyHudObject(portraitFrame)
+
+      const spriteBase = this.getCharacterSpriteBase(charId)
+      const spriteKey = this.resolveTextureKey(`${spriteBase}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY)
+      if (spriteKey) {
+        const portrait = this.add.image(portraitX + MAP_HUD.PARTY_PORTRAIT_CENTER_OFFSET, portraitY + MAP_HUD.PARTY_PORTRAIT_CENTER_OFFSET, spriteKey)
+        portrait.setDisplaySize(MAP_HUD.PARTY_PORTRAIT_IMAGE_SIZE, MAP_HUD.PARTY_PORTRAIT_IMAGE_SIZE)
+        this.addPartyHudObject(portrait)
+      }
+
+      const textX = rowX + MAP_HUD.PARTY_TEXT_OFFSET_X
+      const levelX = rowX + MAP_HUD.PARTY_ROW_WIDTH - MAP_HUD.PARTY_LEVEL_RIGHT
+      const nameText = this.add.text(textX, rowY + MAP_HUD.PARTY_NAME_Y, char.name, {
+        fontSize: `${MAP_HUD.PARTY_NAME_FONT_SIZE}px`,
+        color: MAP_HUD.PARTY_NAME_COLOR,
+        fontFamily: UI_FONT_FAMILY,
+        fixedWidth: MAP_HUD.PARTY_NAME_WIDTH,
+        maxLines: MAP_HUD.PARTY_NAME_MAX_LINES,
+      })
+      this.addPartyHudObject(nameText)
+
+      const levelText = this.add.text(levelX, rowY + MAP_HUD.PARTY_NAME_Y, '', {
+        fontSize: `${MAP_HUD.PARTY_LEVEL_FONT_SIZE}px`,
+        color: MAP_HUD.PARTY_LEVEL_COLOR,
+        fontFamily: UI_FONT_FAMILY,
+      })
+      levelText.setOrigin(1, 0)
+      this.addPartyHudObject(levelText)
+
+      const hpRow = this.createPartyHudBar(rowX, rowY + MAP_HUD.PARTY_HP_BAR_Y, MAP_HUD.PARTY_HP_LABEL, COLORS.hpBar)
+      const mpRow = this.createPartyHudBar(rowX, rowY + MAP_HUD.PARTY_MP_BAR_Y, MAP_HUD.PARTY_MP_LABEL, COLORS.mpBar)
+      this.partyHudRows.push({ charId, hpBar: hpRow.bar, mpBar: mpRow.bar, hpText: hpRow.text, mpText: mpRow.text, levelText })
+    }
+
+    this.updatePartyHud()
+  }
+
+  private createPartyHudBar(rowX: number, barY: number, label: string, color: number): { bar: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text } {
+    const labelX = rowX + MAP_HUD.PARTY_TEXT_OFFSET_X
+    const barX = labelX + MAP_HUD.PARTY_BAR_LABEL_WIDTH
+    const valueX = barX + MAP_HUD.PARTY_BAR_WIDTH + MAP_HUD.PARTY_BAR_VALUE_GAP
+    const labelText = this.add.text(labelX, barY, label, {
+      fontSize: `${MAP_HUD.PARTY_STATUS_FONT_SIZE}px`,
+      color: MAP_HUD.PARTY_STATUS_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+    })
+    labelText.setOrigin(0, 0.5)
+    this.addPartyHudObject(labelText)
+
+    const bg = this.add.rectangle(barX, barY, MAP_HUD.PARTY_BAR_WIDTH, MAP_HUD.PARTY_BAR_HEIGHT, COLORS.black, MAP_HUD.PARTY_BAR_BG_ALPHA)
+    bg.setOrigin(0, 0.5)
+    this.addPartyHudObject(bg)
+
+    const bar = this.add.rectangle(barX, barY, MAP_HUD.PARTY_BAR_WIDTH, MAP_HUD.PARTY_BAR_HEIGHT, color, MAP_HUD.PARTY_BAR_ALPHA)
+    bar.setOrigin(0, 0.5)
+    this.addPartyHudObject(bar)
+
+    const valueText = this.add.text(valueX, barY, '', {
+      fontSize: `${MAP_HUD.PARTY_STATUS_FONT_SIZE}px`,
+      color: MAP_HUD.PARTY_STATUS_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+    })
+    valueText.setOrigin(0, 0.5)
+    this.addPartyHudObject(valueText)
+    return { bar, text: valueText }
+  }
+
+  private addPartyHudObject<T extends PartyHudObject>(object: T): T {
+    object.setScrollFactor(0)
+    object.setDepth(MAP_HUD.DEPTH)
+    this.partyHudObjects.push(object)
+    return object
+  }
+
+  private destroyPartyHud(): void {
+    for (const object of this.partyHudObjects) object.destroy()
+    this.partyHudObjects = []
+    this.partyHudRows = []
+    this.partyHudPartyKey = ''
+  }
+
+  private updatePartyHud(): void {
+    const members = this.getPartyHudMembers()
+    const partyKey = this.getPartyHudKey(members)
+    if (partyKey !== this.partyHudPartyKey) {
+      this.createPartyHud()
+      return
+    }
+
+    const gd = GameData.getInstance()
+    for (const row of this.partyHudRows) {
+      const char = gd.characters.get(row.charId)
+      if (!char) continue
+      row.levelText.setText(`${MAP_HUD.PARTY_LEVEL_PREFIX}${char.stats.level}`)
+      row.hpText.setText(`${char.stats.hp}/${char.stats.maxHp}`)
+      row.mpText.setText(`${char.stats.mp}/${char.stats.maxMp}`)
+      this.updatePartyHudBar(row.hpBar, this.getPartyHudStatRatio(char.stats.hp, char.stats.maxHp))
+      this.updatePartyHudBar(row.mpBar, this.getPartyHudStatRatio(char.stats.mp, char.stats.maxMp))
+    }
+  }
+
+  private updatePartyHudBar(bar: Phaser.GameObjects.Rectangle, ratio: number): void {
+    bar.setDisplaySize(MAP_HUD.PARTY_BAR_WIDTH * ratio, MAP_HUD.PARTY_BAR_HEIGHT)
+    bar.setVisible(ratio > MAP_HUD.PARTY_RATIO_MIN)
+  }
+
+  private getPartyHudStatRatio(value: number, max: number): number {
+    if (max <= MAP_HUD.PARTY_EMPTY_STAT_MAX) return MAP_HUD.PARTY_RATIO_MIN
+    return Phaser.Math.Clamp(value / max, MAP_HUD.PARTY_RATIO_MIN, MAP_HUD.PARTY_RATIO_MAX)
+  }
+
+  private getPartyHudMembers(): string[] {
+    return GameData.getInstance().party.slice(MAP_HUD.PARTY_LEADER_INDEX, MAP_HUD.PARTY_MAX_ROWS)
+  }
+
+  private getPartyHudKey(members: string[]): string {
+    return members.join(MAP_HUD.PARTY_KEY_SEPARATOR)
   }
 
   private createMinimap(): void {
@@ -1427,6 +1577,7 @@ export class MapScene extends Phaser.Scene {
           gd.addPartyMember(action.characterId)
           this.removeSuppressedFieldEventSprites()
           this.refreshFollowers()
+          this.createPartyHud()
           break
         case 'rebuild':
           RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level || 0))
@@ -1594,6 +1745,7 @@ export class MapScene extends Phaser.Scene {
     this.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.clearTouchDirectionForPointer, this)
     this.scale.off(Phaser.Scale.Events.RESIZE, this.syncTouchControls, this)
     this.destroyTouchControls()
+    this.destroyPartyHud()
     for (const timer of this.enemyPatrolTimers) timer.remove(false)
     for (const timer of this.npcTimers) timer.remove(false)
     this.enemyPatrolTimers = []
