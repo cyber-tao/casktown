@@ -1490,7 +1490,12 @@ export class BattleScene extends Phaser.Scene {
       stat = isPlayer ? char.stats.matk : enemy.stats.matk
     }
 
-    let damage = Math.max(1, Math.floor(stat * skill.power / 10))
+    const isMagic = skill.type === 'magic'
+    const def = target.isPlayer
+      ? (isMagic ? (target.data as CharacterData).stats.mdef : (target.data as CharacterData).stats.def)
+      : (isMagic ? (target.data as EnemyData).stats.mdef : (target.data as EnemyData).stats.def)
+
+    let damage = Math.max(1, Math.floor((stat * skill.power / 10) - def * 0.5))
 
     // Buff modifiers
     if (actor.status.includes('roar')) damage = Math.floor(damage * BATTLE_RULES.ROAR_DAMAGE_MULTIPLIER)
@@ -1516,6 +1521,8 @@ export class BattleScene extends Phaser.Scene {
       isWeakHit = true
       this.log(`弱点打击！`)
     }
+
+    damage = this.applyDamageVariance(damage)
 
     // TP generation for player
     if (actor.isPlayer) {
