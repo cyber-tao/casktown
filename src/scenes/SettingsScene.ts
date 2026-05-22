@@ -3,46 +3,20 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
-import { GAME_WIDTH, GAME_HEIGHT, TEXT_SPEED, BATTLE_SPEED, SETTINGS_PANEL, scalePx } from '../utils/constants'
+import {
+  GAME_WIDTH,
+  GAME_HEIGHT,
+  MENU_SETTINGS_OPTION_LABELS,
+  MENU_SETTINGS_OPTIONS,
+  TEXT_SPEED,
+  BATTLE_SPEED,
+  SETTINGS_PANEL,
+  scalePx,
+} from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
-interface SettingOption {
-  label: string
-  key: string
-  type: 'select' | 'slider' | 'toggle'
-  options?: string[]
-  min?: number
-  max?: number
-  step?: number
-}
-
-const SETTINGS_CONFIG: SettingOption[] = [
-  { label: '文字速度', key: 'textSpeed', type: 'select', options: ['slow', 'normal', 'fast', 'instant'] },
-  { label: '战斗速度', key: 'battleSpeed', type: 'select', options: ['normal', 'fast', 'fastest'] },
-  { label: '巡逻怪物', key: 'encounterRate', type: 'select', options: ['default', 'reduced', 'none'] },
-  { label: '战斗难度', key: 'difficulty', type: 'select', options: ['story', 'standard', 'hard'] },
-  { label: '预言提示', key: 'prophecyHint', type: 'select', options: ['poem', 'light', 'clear'] },
-  { label: '主音量', key: 'masterVolume', type: 'slider', min: 0, max: 1, step: 0.1 },
-  { label: '音乐音量', key: 'musicVolume', type: 'slider', min: 0, max: 1, step: 0.1 },
-  { label: '音效音量', key: 'sfxVolume', type: 'slider', min: 0, max: 1, step: 0.1 },
-  { label: '语音音量', key: 'uiVolume', type: 'slider', min: 0, max: 1, step: 0.1 },
-  { label: '像素锐化', key: 'pixelSharp', type: 'toggle' },
-  { label: '全屏模式', key: 'fullscreen', type: 'toggle' },
-  { label: '操作模式', key: 'controlMode', type: 'select', options: ['arrows', 'wasd'] },
-  { label: '手柄', key: 'gamepad', type: 'toggle' },
-  { label: '重置按键', key: 'resetKeys', type: 'select', options: ['keep', 'reset'] },
-]
-
-const OPTION_LABELS: Record<string, Record<string, string>> = {
-  textSpeed: { slow: '慢', normal: '中', fast: '快', instant: '立即' },
-  battleSpeed: { normal: '1x', fast: '1.5x', fastest: '2x' },
-  encounterRate: { default: '默认', reduced: '降低', none: '关闭' },
-  difficulty: { story: '故事', standard: '标准', hard: '困难' },
-  prophecyHint: { poem: '原诗', light: '轻提示', clear: '明确目标' },
-  controlMode: { arrows: '方向键', wasd: 'WASD' },
-  resetKeys: { keep: '--', reset: '确认重置?' },
-}
+type SettingOption = typeof MENU_SETTINGS_OPTIONS[number]
 
 export class SettingsScene extends Phaser.Scene {
   private menuIndex = 0
@@ -88,8 +62,8 @@ export class SettingsScene extends Phaser.Scene {
   private createSettingsUI(): void {
     const gd = GameData.getInstance()
 
-    for (let i = 0; i < SETTINGS_CONFIG.length; i++) {
-      const config = SETTINGS_CONFIG[i]!
+    for (let i = 0; i < MENU_SETTINGS_OPTIONS.length; i++) {
+      const config = MENU_SETTINGS_OPTIONS[i]!
       const container = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + i * SETTINGS_PANEL.rowHeight)
       container.setDepth(502)
       container.setScrollFactor(0)
@@ -110,12 +84,12 @@ export class SettingsScene extends Phaser.Scene {
       this.menuItems.push(container)
     }
 
-    const backContainer = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + SETTINGS_CONFIG.length * SETTINGS_PANEL.rowHeight + SETTINGS_PANEL.backOffsetY)
+    const backContainer = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + MENU_SETTINGS_OPTIONS.length * SETTINGS_PANEL.rowHeight + SETTINGS_PANEL.backOffsetY)
     backContainer.setDepth(502)
     backContainer.setScrollFactor(0)
     const backText = this.add.text(0, 0, '返回', { fontSize: `${SETTINGS_PANEL.backFontSize}px`, color: '#e74c3c' })
     backText.setDepth(502)
-    bindTouchText(backText, () => this.selectTouchMenuItem(SETTINGS_CONFIG.length))
+    bindTouchText(backText, () => this.selectTouchMenuItem(MENU_SETTINGS_OPTIONS.length))
     backContainer.add(backText)
     this.menuItems.push(backContainer)
 
@@ -136,7 +110,7 @@ export class SettingsScene extends Phaser.Scene {
     } else {
       const value = (gd.settings as Record<string, unknown>)[config.key]
       if (config.type === 'select' && config.options) {
-        const labels = OPTION_LABELS[config.key]
+        const labels = MENU_SETTINGS_OPTION_LABELS[config.key]
         displayText = labels?.[value as string] || (value as string)
       } else if (config.type === 'slider') {
         displayText = `${Math.round((value as number) * 100)}%`
@@ -153,7 +127,7 @@ export class SettingsScene extends Phaser.Scene {
 
   private updateValueText(index: number): void {
     const gd = GameData.getInstance()
-    const config = SETTINGS_CONFIG[index]
+    const config = MENU_SETTINGS_OPTIONS[index]
     if (!config) return
 
     const container = this.menuItems[index]
@@ -190,18 +164,19 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private changeValue(dir: number): void {
-    if (this.menuIndex >= SETTINGS_CONFIG.length) return
+    if (this.menuIndex >= MENU_SETTINGS_OPTIONS.length) return
 
-    const config = SETTINGS_CONFIG[this.menuIndex]!
+    const config = MENU_SETTINGS_OPTIONS[this.menuIndex]!
     if (config.key === 'controlMode' || config.key === 'gamepad' || config.key === 'resetKeys') return
 
     const gd = GameData.getInstance()
     const settings = gd.settings as Record<string, unknown>
 
     if (config.type === 'select' && config.options) {
-      const currentIdx = config.options.indexOf(settings[config.key] as string)
-      const newIdx = (currentIdx + dir + config.options.length) % config.options.length
-      settings[config.key] = config.options[newIdx]!
+      const options = config.options as readonly string[]
+      const currentIdx = options.indexOf(settings[config.key] as string)
+      const newIdx = (currentIdx + dir + options.length) % options.length
+      settings[config.key] = options[newIdx]!
       this.updateValueText(this.menuIndex)
       AudioManager.getInstance().playSFX('cursor')
     } else if (config.type === 'slider') {
@@ -216,12 +191,12 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private selectMenu(): void {
-    if (this.menuIndex >= SETTINGS_CONFIG.length) {
+    if (this.menuIndex >= MENU_SETTINGS_OPTIONS.length) {
       this.goBack()
       return
     }
 
-    const config = SETTINGS_CONFIG[this.menuIndex]!
+    const config = MENU_SETTINGS_OPTIONS[this.menuIndex]!
     const gd = GameData.getInstance()
     const settings = gd.settings as Record<string, unknown>
 
@@ -267,7 +242,7 @@ export class SettingsScene extends Phaser.Scene {
     const target = this.menuItems[this.menuIndex]!
     this.cursor.setY(target.y + cursorOffsetY)
 
-    const config = SETTINGS_CONFIG[this.menuIndex]
+    const config = MENU_SETTINGS_OPTIONS[this.menuIndex]
     if (config?.type === 'slider') {
       this.changeValue(1)
       return
