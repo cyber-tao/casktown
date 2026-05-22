@@ -1,4 +1,5 @@
 import { GameData } from './GameData'
+import { CONTROL_MODE } from '../utils/constants'
 
 export interface KeyBindings {
   up: string
@@ -67,10 +68,16 @@ export class InputManager {
 
   private loadBindings(): void {
     const gd = GameData.getInstance()
+    this.bindings = gd.settings.controlMode === CONTROL_MODE.WASD ? { ...WASD_BINDINGS } : { ...DEFAULT_BINDINGS }
+    this.useGamepad = gd.settings.gamepad
     const saved = gd.getFlag('keyBindings')
     if (saved && typeof saved === 'object') {
       Object.assign(this.bindings, saved)
     }
+  }
+
+  syncFromGameData(): void {
+    this.loadBindings()
   }
 
   getBindings(): KeyBindings {
@@ -89,11 +96,13 @@ export class InputManager {
 
   resetToDefault(): void {
     this.bindings = { ...DEFAULT_BINDINGS }
+    GameData.getInstance().settings.controlMode = CONTROL_MODE.ARROWS
     this.saveBindings()
   }
 
   setWASD(): void {
     this.bindings = { ...WASD_BINDINGS }
+    GameData.getInstance().settings.controlMode = CONTROL_MODE.WASD
     this.saveBindings()
   }
 
@@ -127,6 +136,7 @@ export class InputManager {
 
   setGamepadEnabled(enabled: boolean): void {
     this.useGamepad = enabled
+    GameData.getInstance().settings.gamepad = enabled
   }
 
   isGamepadEnabled(): boolean {

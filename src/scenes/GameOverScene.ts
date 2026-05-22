@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { AudioManager } from '../core/AudioManager'
 import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
+import { InputManager } from '../core/InputManager'
 import { GAME_HEIGHT, GAME_OVER_PANEL, GAME_WIDTH, START_MAP_ID, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
@@ -89,12 +90,16 @@ export class GameOverScene extends Phaser.Scene {
       this.showMessage('无存档')
       return
     }
-    saveManager.load(1)
+    if (!saveManager.load(1)) {
+      this.showMessage('读取失败')
+      return
+    }
     this.scene.start('MapScene', { mapId: GameData.getInstance().currentMap })
   }
 
   private startNewGame(): void {
     GameData.getInstance().reset()
+    InputManager.getInstance().syncFromGameData()
     this.scene.start('MapScene', { mapId: START_MAP_ID })
   }
 

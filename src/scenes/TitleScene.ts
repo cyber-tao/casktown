@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
+import { InputManager } from '../core/InputManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { AudioManager } from '../core/AudioManager'
 import {
@@ -171,6 +172,7 @@ export class TitleScene extends Phaser.Scene {
   private startNewGame(): void {
     const gd = GameData.getInstance()
     gd.reset()
+    InputManager.getInstance().syncFromGameData()
     this.cameras.main.fadeOut(500)
     this.time.delayedCall(500, () => {
       this.scene.start('MapScene', { mapId: START_MAP_ID })
@@ -180,7 +182,10 @@ export class TitleScene extends Phaser.Scene {
   private loadGame(): void {
     const saveManager = SaveManager.getInstance()
     if (saveManager.hasSave(1)) {
-      saveManager.load(1)
+      if (!saveManager.load(1)) {
+        this.showMessage('读取失败')
+        return
+      }
       this.cameras.main.fadeOut(500)
       this.time.delayedCall(500, () => {
         this.scene.start('MapScene', { mapId: GameData.getInstance().currentMap })

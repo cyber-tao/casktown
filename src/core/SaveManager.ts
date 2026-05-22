@@ -1,4 +1,5 @@
 import { GameData } from './GameData'
+import { InputManager } from './InputManager'
 import { QUICK_SAVE_SLOT, SAVE_SLOTS } from '../utils/constants'
 
 const SAVE_KEY = 'casktown_save'
@@ -30,8 +31,19 @@ export class SaveManager {
     return (slot >= 1 && slot <= SAVE_SLOTS) || slot === QUICK_SAVE_SLOT
   }
 
+  private getStorage(): Storage | null {
+    try {
+      return typeof window !== 'undefined' ? window.localStorage : globalThis.localStorage ?? null
+    } catch (e) {
+      console.warn('Local save storage is unavailable:', e)
+      return null
+    }
+  }
+
   save(slot: number): boolean {
     if (!this.isValidSlot(slot)) return false
+    const storage = this.getStorage()
+    if (!storage) return false
     try {
       const data = this.gameData.serialize()
       const meta: SaveMeta = {
@@ -41,8 +53,8 @@ export class SaveManager {
         currentMap: this.gameData.currentMap,
         preview: this.gameData.party.join(', '),
       }
-      localStorage.setItem(`${SAVE_KEY}_data_${slot}`, JSON.stringify(data))
-      localStorage.setItem(`${SAVE_KEY}_meta_${slot}`, JSON.stringify(meta))
+      storage.setItem(`${SAVE_KEY}_data_${slot}`, JSON.stringify(data))
+      storage.setItem(`${SAVE_KEY}_meta_${slot}`, JSON.stringify(meta))
       return true
     } catch (e) {
       console.error('Save failed:', e)
@@ -52,11 +64,14 @@ export class SaveManager {
 
   load(slot: number): boolean {
     if (!this.isValidSlot(slot)) return false
+    const storage = this.getStorage()
+    if (!storage) return false
     try {
-      const raw = localStorage.getItem(`${SAVE_KEY}_data_${slot}`)
+      const raw = storage.getItem(`${SAVE_KEY}_data_${slot}`)
       if (!raw) return false
       const data = JSON.parse(raw)
       this.gameData.deserialize(data)
+      InputManager.getInstance().syncFromGameData()
       return true
     } catch (e) {
       console.error('Load failed:', e)
@@ -65,8 +80,10 @@ export class SaveManager {
   }
 
   getMeta(slot: number): SaveMeta | null {
+    const storage = this.getStorage()
+    if (!storage) return null
     try {
-      const raw = localStorage.getItem(`${SAVE_KEY}_meta_${slot}`)
+      const raw = storage.getItem(`${SAVE_KEY}_meta_${slot}`)
       return raw ? (JSON.parse(raw) as SaveMeta) : null
     } catch {
       return null
@@ -74,14 +91,27 @@ export class SaveManager {
   }
 
   hasSave(slot: number): boolean {
-    return localStorage.getItem(`${SAVE_KEY}_data_${slot}`) !== null
+    const storage = this.getStorage()
+    if (!storage) return false
+    try {
+      return storage.getItem(`${SAVE_KEY}_data_${slot}`) !== null
+    } catch {
+      return false
+    }
   }
 
   deleteSave(slot: number): boolean {
     if (!this.isValidSlot(slot)) return false
-    localStorage.removeItem(`${SAVE_KEY}_data_${slot}`)
-    localStorage.removeItem(`${SAVE_KEY}_meta_${slot}`)
-    return true
+    const storage = this.getStorage()
+    if (!storage) return false
+    try {
+      storage.removeItem(`${SAVE_KEY}_data_${slot}`)
+      storage.removeItem(`${SAVE_KEY}_meta_${slot}`)
+      return true
+    } catch (e) {
+      console.error('Delete save failed:', e)
+      return false
+    }
   }
 
   quickSave(): boolean {
@@ -93,8 +123,10 @@ export class SaveManager {
   }
 
   exportSave(slot: number): string | null {
+    const storage = this.getStorage()
+    if (!storage) return null
     try {
-      const raw = localStorage.getItem(`${SAVE_KEY}_data_${slot}`)
+      const raw = storage.getItem(`${SAVE_KEY}_data_${slot}`)
       return raw
     } catch {
       return null

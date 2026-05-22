@@ -6,6 +6,8 @@ import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import {
   INITIAL_GOLD,
   LEVEL_GROWTH,
+  CONTROL_MODE,
+  PARTY_RULES,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   START_MAP_ID,
@@ -77,6 +79,22 @@ export interface LevelUpResult {
   level: number
 }
 
+type GameSettings = {
+  textSpeed: 'slow' | 'normal' | 'fast' | 'instant'
+  battleSpeed: 'normal' | 'fast' | 'fastest'
+  encounterRate: 'default' | 'reduced' | 'none'
+  difficulty: 'story' | 'standard' | 'hard'
+  prophecyHint: 'poem' | 'light' | 'clear'
+  masterVolume: number
+  musicVolume: number
+  sfxVolume: number
+  uiVolume: number
+  pixelSharp: boolean
+  fullscreen: boolean
+  controlMode: typeof CONTROL_MODE[keyof typeof CONTROL_MODE]
+  gamepad: boolean
+}
+
 export class GameData {
   private static instance: GameData
 
@@ -100,18 +118,20 @@ export class GameData {
   rebuildLevel: number = 0
   gold: number = INITIAL_GOLD
   unlockedCodex: string[] = []
-  settings = {
-    textSpeed: 'normal' as const,
-    battleSpeed: 'normal' as const,
-    encounterRate: 'default' as const,
-    difficulty: 'standard' as const,
-    prophecyHint: 'light' as 'poem' | 'light' | 'clear',
+  settings: GameSettings = {
+    textSpeed: 'normal',
+    battleSpeed: 'normal',
+    encounterRate: 'default',
+    difficulty: 'standard',
+    prophecyHint: 'light',
     masterVolume: 1,
     musicVolume: 1,
     sfxVolume: 1,
     uiVolume: 1,
     pixelSharp: true,
     fullscreen: false,
+    controlMode: CONTROL_MODE.ARROWS,
+    gamepad: false,
   }
 
   private constructor() {}
@@ -153,6 +173,8 @@ export class GameData {
       uiVolume: 1,
       pixelSharp: true,
       fullscreen: false,
+      controlMode: CONTROL_MODE.ARROWS,
+      gamepad: false,
     }
     for (const item of START_INVENTORY_ITEMS) {
       this.inventory.items[item.itemId] = item.quantity
@@ -292,7 +314,7 @@ export class GameData {
 
   addPartyMember(charId: string): void {
     if (!this.party.includes(charId) && !this.reserve.includes(charId)) {
-      if (this.party.length < 4) {
+      if (this.party.length < PARTY_RULES.ACTIVE_MEMBER_LIMIT) {
         this.party.push(charId)
       } else {
         this.reserve.push(charId)

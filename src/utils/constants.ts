@@ -144,6 +144,15 @@ export const MENU_SETTINGS_OPTIONS = [
   { label: '重置按键', key: 'resetKeys', type: 'select', options: ['keep', 'reset'] },
 ] as const
 
+export const CONTROL_MODE = {
+  ARROWS: 'arrows',
+  WASD: 'wasd',
+} as const
+
+export const PARTY_RULES = {
+  ACTIVE_MEMBER_LIMIT: 4,
+} as const
+
 export const MENU_SETTINGS_OPTION_LABELS: Record<string, Record<string, string>> = {
   textSpeed: { slow: '慢', normal: '中', fast: '快', instant: '立即' },
   battleSpeed: { normal: '1x', fast: '1.5x', fastest: '2x' },
