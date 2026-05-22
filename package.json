@@ -9,7 +9,7 @@
     "test": "bun test",
     "preview": "vite preview",
     "sprites:repair": "bun run scripts/repair-sprite-atlases.ts",
-    "sprites:refresh": "bun run scripts/repair-sprite-atlases.ts && bun run scripts/refresh-sprites.ts",
+    "sprites:refresh": "bun run scripts/generate-item-icons.ts && bun run scripts/repair-sprite-atlases.ts && bun run scripts/refresh-sprites.ts",
     "voices:sync": "bun run scripts/sync-voice-lines.ts",
     "voices:generate": "bun run scripts/generate_voices.ts"
   },

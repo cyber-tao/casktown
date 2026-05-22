@@ -1,4 +1,5 @@
-import { BATTLE_BACKGROUND_KEYS } from '../utils/constants'
+import { BATTLE_BACKGROUND_KEYS, ITEM_ICON_KEY_PREFIX } from '../utils/constants'
+import { ITEMS } from './items'
 
 const CHARACTER_POSES = {
   T: ['front_idle_01', 'front_idle_02', 'back_idle_01', 'back_idle_02', 'side_walk_01', 'side_walk_02', 'attack_01', 'attack_02'],
@@ -210,6 +211,10 @@ for (const tile of HOLY_TILES) {
 
 for (const tile of DARK_TILES) {
   imageAssets[`dark_${tile}`] = `dark_fantasy/misc/${tile}.png`
+}
+
+for (const itemId of Object.keys(ITEMS)) {
+  imageAssets[`${ITEM_ICON_KEY_PREFIX}${itemId}`] = `items/misc/${itemId}.png`
 }
 
 export const IMAGE_ASSETS: Record<string, string> = imageAssets

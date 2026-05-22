@@ -1,0 +1,314 @@
+{
+  "frames": {
+    "amulet": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "antidote": {
+      "frame": {
+        "x": 96,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "baihu_kai": {
+      "frame": {
+        "x": 192,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "barrel_cookie": {
+      "frame": {
+        "x": 288,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "blue_mint": {
+      "frame": {
+        "x": 384,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "clear_bell": {
+      "frame": {
+        "x": 480,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "fathers_armor": {
+      "frame": {
+        "x": 576,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "fathers_sword": {
+      "frame": {
+        "x": 672,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "guan_dao": {
+      "frame": {
+        "x": 0,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "heal_grass": {
+      "frame": {
+        "x": 96,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "healing_book": {
+      "frame": {
+        "x": 192,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "holy_drop": {
+      "frame": {
+        "x": 288,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "holy_water": {
+      "frame": {
+        "x": 384,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "laurel": {
+      "frame": {
+        "x": 480,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "phoenix_feather": {
+      "frame": {
+        "x": 576,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "pineapple_rice": {
+      "frame": {
+        "x": 672,
+        "y": 96,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "pineapple_seed": {
+      "frame": {
+        "x": 0,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "pink_chime": {
+      "frame": {
+        "x": 96,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "prophecy_book": {
+      "frame": {
+        "x": 192,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "rainbow_barrel": {
+      "frame": {
+        "x": 288,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "revive_feather": {
+      "frame": {
+        "x": 384,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "ring": {
+      "frame": {
+        "x": 480,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "seal_baihu": {
+      "frame": {
+        "x": 576,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "seal_qinglong": {
+      "frame": {
+        "x": 672,
+        "y": 192,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "seal_xuanwu": {
+      "frame": {
+        "x": 0,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "seal_zhuque": {
+      "frame": {
+        "x": 96,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "seed": {
+      "frame": {
+        "x": 192,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "shenyu_juanzhou": {
+      "frame": {
+        "x": 288,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "water_mirror": {
+      "frame": {
+        "x": 384,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "wind_pill": {
+      "frame": {
+        "x": 480,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "wuxiang_fragment": {
+      "frame": {
+        "x": 576,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "xiaoai_light": {
+      "frame": {
+        "x": 672,
+        "y": 288,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "yufeng_jian": {
+      "frame": {
+        "x": 0,
+        "y": 384,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    },
+    "zi_yue": {
+      "frame": {
+        "x": 96,
+        "y": 384,
+        "w": 96,
+        "h": 96
+      },
+      "rotated": false
+    }
+  },
+  "meta": {
+    "category": "items",
+    "image": "08_item_icons.png"
+  }
+}

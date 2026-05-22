@@ -85,6 +85,18 @@
         "cellW": 181,
         "cellH": 181
       }
+    },
+    {
+      "image": "08_item_icons.png",
+      "json": "08_item_icons.json",
+      "category": "items",
+      "sprite_count": 34,
+      "grid": {
+        "cols": 8,
+        "rows": 5,
+        "cellW": 96,
+        "cellH": 96
+      }
     }
   ],
   "notes": [
