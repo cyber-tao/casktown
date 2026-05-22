@@ -11,8 +11,8 @@ export const QUESTS: Record<string, QuestDef> = {
   QST_002: {
     id: 'QST_002',
     name: '整理菜园子',
-    description: '帮菠萝大叔整理后院的菜园子。',
-    objectives: ['前往菜园', '清理杂草', '向菠萝大叔汇报'],
+    description: '去小镇西南角的菜园，帮菠萝大叔整理篱笆里的菜地。',
+    objectives: ['与菠萝大叔对话', '清理菜园木桶', '向菠萝大叔汇报'],
     rewards: [{ exp: 30 }],
   },
   QST_003: {

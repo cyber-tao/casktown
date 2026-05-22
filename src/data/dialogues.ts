@@ -65,8 +65,8 @@ export const DIALOGUES: Record<string, DialogueScript> = {
   DIA_001_HELP: {
     id: 'DIA_001_HELP',
     lines: [
-      { speaker: '慧慧', text: '这才是我认识的T。快去吧，菠萝大叔在等你。' },
-      { speaker: '系统', text: '慧慧信赖度+1。开启菜园教学。' },
+      { speaker: '慧慧', text: '这才是我认识的T。快去吧，菠萝大叔在小镇西南角的菜园门口等你。' },
+      { speaker: '系统', text: '慧慧信赖度+1。目标：前往小镇西南角菜园。' },
     ],
   },
   DIA_001_REFUSE: {
@@ -92,10 +92,18 @@ export const DIALOGUES: Record<string, DialogueScript> = {
   DIA_002_GARDEN: {
     id: 'DIA_002_GARDEN',
     lines: [
-      { speaker: 'T', text: '门关着？菠萝大叔人呢？' },
-      { speaker: '旁白', text: '菜园里堆着几只木桶，几排卷心菜懒洋洋地晒着太阳。篱笆旁贴着一张纸条。' },
-      { speaker: '系统', text: '纸条写着："拔草，浇水，搬木桶。敢偷吃菠萝就扣你饭团。"' },
-      { speaker: 'T', text: '真严谨。' },
+      { speaker: '菠萝大叔', text: 'T，可算来了。菜园就在这片篱笆里面，别再说你找不到。' },
+      { speaker: 'T', text: '我只是确认一下是不是还有专门的菜园入口。' },
+      { speaker: '菠萝大叔', text: '没有入口，只有活。进去把那只怪木桶搬走，再回来找我。' },
+      { speaker: '系统', text: '目标更新：清理菜园里的木桶。' },
+    ],
+  },
+  DIA_002_GARDEN_WAIT: {
+    id: 'DIA_002_GARDEN_WAIT',
+    lines: [
+      { speaker: '菠萝大叔', text: '先去篱笆里的菜地。那只木桶卡在地里，我看它不像普通木桶。' },
+      { speaker: 'T', text: '木桶还能不像普通木桶？' },
+      { speaker: '菠萝大叔', text: '你们年轻人见识少。' },
     ],
   },
   DIA_002_GARDEN_BARREL: {
@@ -107,11 +115,28 @@ export const DIALOGUES: Record<string, DialogueScript> = {
     ],
     onComplete: [{ type: 'battle', encounterId: 'BTL_001' }],
   },
+  DIA_002_GARDEN_CLEAR: {
+    id: 'DIA_002_GARDEN_CLEAR',
+    lines: [
+      { speaker: 'T', text: '木桶终于老实了。旁边还压着几株药草和一包种子。' },
+      { speaker: '系统', text: '获得【回复草】x2，【菠萝种子】x1。' },
+      { speaker: 'T', text: '回去找菠萝大叔交差。' },
+    ],
+  },
   DIA_002_GARDEN_AFTER: {
     id: 'DIA_002_GARDEN_AFTER',
     lines: [
-      { speaker: 'T', text: '菠萝大叔的菜园连木桶都这么有精神。' },
-      { speaker: '系统', text: '获得【回复草】x2，【菠萝种子】x1。' },
+      { speaker: '菠萝大叔', text: '干得好。那只木桶昨晚还在我菜地里打呼噜。' },
+      { speaker: 'T', text: '你的菜园问题比我想象得复杂。' },
+      { speaker: '菠萝大叔', text: '作为回报，这是我特制的菠萝饭团。赶紧去会场，别让慧慧来抓人。' },
+      { speaker: '系统', text: '获得【菠萝饭团】x3。任务【整理菜园子】完成。' },
+    ],
+  },
+  DIA_002_GARDEN_DONE: {
+    id: 'DIA_002_GARDEN_DONE',
+    lines: [
+      { speaker: '菠萝大叔', text: '菜园整理好了。你要是还想帮忙，我这里永远有活。' },
+      { speaker: 'T', text: '我突然想起盛典快开始了。' },
     ],
   },
 
