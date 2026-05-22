@@ -1,0 +1,285 @@
+{
+  "timestamp": "2026-05-22T15:52:17+08:00",
+  "previousTimestamp": "2026-05-22T14:10:48+08:00",
+  "lastDeepScan": "2026-05-22",
+  "project": "casktown",
+  "root": "D:\\WorkDir\\casktown",
+  "modules": [
+    {
+      "path": "src/scenes",
+      "name": "scenes",
+      "description": "Phaser 游戏场景层：标题、地图探索、战斗、对话、菜单等 13 个场景",
+      "language": "TypeScript",
+      "entry": "所有场景在 src/game.ts 注册",
+      "interfaces": ["EventBus 事件通信", "DialogueScript 类型导出"],
+      "tests": null,
+      "importantPaths": [
+        "src/scenes/MapScene.ts",
+        "src/scenes/BattleScene.ts",
+        "src/scenes/MenuOverlay.ts",
+        "src/scenes/DialogueOverlay.ts"
+      ],
+      "claudeMd": "src/scenes/CLAUDE.md"
+    },
+    {
+      "path": "src/core",
+      "name": "core",
+      "description": "核心系统：游戏状态、存档、事件、资源、输入、音频、任务、木桶、技能成长、重建等 12 个系统",
+      "language": "TypeScript",
+      "entry": "GameData.getInstance()",
+      "interfaces": ["GameData", "EventBus", "AssetLoader", "InputManager", "AudioManager", "SaveManager", "QuestSystem", "BarrelSystem", "SkillGrowth", "RebuildSystem", "MapAccess", "SFXSynth"],
+      "tests": {
+        "files": 7,
+        "paths": [
+          "tests/core/game-data.test.ts",
+          "tests/core/event-bus.test.ts",
+          "tests/core/quest-system.test.ts",
+          "tests/core/barrel-system.test.ts",
+          "tests/core/save-manager.test.ts",
+          "tests/core/skill-growth.test.ts",
+          "tests/core/map-access.test.ts"
+        ]
+      },
+      "importantPaths": [
+        "src/core/GameData.ts",
+        "src/core/EventBus.ts",
+        "src/core/AssetLoader.ts",
+        "src/core/BarrelSystem.ts"
+      ],
+      "claudeMd": "src/core/CLAUDE.md"
+    },
+    {
+      "path": "src/data",
+      "name": "data",
+      "description": "游戏静态数据表与类型声明，含 15 张配置表和 GameConfigDatabase。259+ 对话条目+38别名=297节点、27 地图、108 事件、13 Boss",
+      "language": "TypeScript",
+      "entry": "GAME_CONFIG_DATABASE",
+      "interfaces": ["GameConfigDatabase", "GameConfigTables", "types.ts 全部类型", "DialogueScript (in DialogueOverlay.ts)"],
+      "tests": {
+        "files": 3,
+        "paths": [
+          "tests/data/config-database.test.ts",
+          "tests/data/data-integrity.test.ts",
+          "tests/data/game-content.test.ts"
+        ]
+      },
+      "deepScan": {
+        "dialogues": { "entries": 259, "aliases": 38, "effectiveNodes": 297, "speakers": 36, "branchPoints": 35, "battleTriggers": 42, "shops": 5, "skillUnlocks": 10, "onCompleteSupport": true },
+        "maps": { "totalMaps": 27, "events": 108, "connections": 36, "chests": 17, "bosses": 13, "encounterMaps": 13 }
+      },
+      "importantPaths": [
+        "src/data/types.ts",
+        "src/data/configDatabase.ts",
+        "src/data/maps.ts",
+        "src/data/dialogues.ts",
+        "src/data/characters.ts"
+      ],
+      "claudeMd": "src/data/CLAUDE.md"
+    },
+    {
+      "path": "src/utils",
+      "name": "utils",
+      "description": "全局常量(130顶级/~1256总计)、UI布局参数、触控适配、场景生命周期、语音解析",
+      "language": "TypeScript",
+      "entry": null,
+      "interfaces": ["constants.ts 导出", "bindTouchText", "cleanupKeyboardOnShutdown", "resolveDialogueVoiceKey"],
+      "tests": {
+        "files": 2,
+        "paths": [
+          "tests/utils/constants.test.ts",
+          "tests/utils/voice-lines.test.ts"
+        ]
+      },
+      "deepScan": {
+        "constants": { "lines": 1480, "topLevelExports": 130, "totalConstants": 1256, "largestObject": "REDESIGNED_MAP_LAYOUTS" },
+        "audit": { "duplicateEventColors": true, "magicNumbers": "minimal", "unusedConstants": "none" }
+      },
+      "importantPaths": [
+        "src/utils/constants.ts",
+        "src/utils/voiceLines.ts"
+      ],
+      "claudeMd": "src/utils/CLAUDE.md"
+    },
+    {
+      "path": "src/editor",
+      "name": "editor",
+      "description": "独立的 Web 配置编辑器(2文件)，支持数据 CRUD、地图预览、精灵裁剪、JSON 编辑。Vite 插件提供 API",
+      "language": "TypeScript",
+      "entry": "src/editor/main.ts",
+      "interfaces": ["Vite 编辑器 API 中间件", "casktownEditorApiPlugin", "casktownStaticSpriteSourcePlugin"],
+      "tests": null,
+      "importantPaths": [
+        "src/editor/main.ts",
+        "src/editor/styles.css"
+      ],
+      "claudeMd": "src/editor/CLAUDE.md"
+    },
+    {
+      "path": "scripts",
+      "name": "scripts",
+      "description": "7 个构建工具脚本：精灵修复/拆分、物品图标生成、语音同步/生成。三条工具链",
+      "language": "TypeScript",
+      "entry": null,
+      "interfaces": ["精灵工具链", "语音工具链", "图标生成"],
+      "tests": null,
+      "deepScan": {
+        "pipeline": "repair->refresh (精灵) | sync->generate (语音) | generate-icons->refresh (图标)",
+        "externalDeps": ["sharp", "mmx CLI", "ffmpeg"],
+        "voiceCharacters": 19,
+        "generatedVoices": 835
+      },
+      "importantPaths": [
+        "scripts/repair-sprite-atlases.ts",
+        "scripts/refresh-sprites.ts",
+        "scripts/generate-item-icons.ts",
+        "scripts/generate_voices.ts",
+        "scripts/sync-voice-lines.ts",
+        "scripts/voice-config.ts",
+        "scripts/constants.ts"
+      ],
+      "claudeMd": "scripts/CLAUDE.md"
+    },
+    {
+      "path": "assets",
+      "name": "assets",
+      "description": "1225+ 个静态资源文件：19 BGM + 835+ 语音 + 371 精灵 PNG。生成物，勿手动编辑",
+      "language": null,
+      "entry": null,
+      "interfaces": [],
+      "tests": null,
+      "deepScan": {
+        "bgm": 19,
+        "voice": "835+",
+        "sprites": 371,
+        "spriteCategories": { "characters": 48, "npcs_bosses": 29, "monsters": 53, "world_objects": 24, "environment": 80, "holy_temple": 55, "dark_fantasy": 48, "items": 34 }
+      },
+      "importantPaths": [
+        "assets/audio/bgm/",
+        "assets/audio/voice/",
+        "assets/sprites/"
+      ],
+      "claudeMd": "assets/CLAUDE.md"
+    },
+    {
+      "path": "img",
+      "name": "img",
+      "description": "源美术资源：8 设计参考原图 + 8 组精灵图集(371精灵)。工具链输入源",
+      "language": null,
+      "entry": null,
+      "interfaces": [],
+      "tests": null,
+      "deepScan": {
+        "designFiles": 8,
+        "atlasGroups": 8,
+        "totalSprites": 371
+      },
+      "importantPaths": [
+        "img/sprites/pack_manifest.json",
+        "img/sprites/01_characters_main.png",
+        "img/sprites/03_monsters.png"
+      ],
+      "claudeMd": "img/CLAUDE.md"
+    },
+    {
+      "path": "doc",
+      "name": "doc",
+      "description": "设计文档：GDD v2.0 (788行) + 完整剧情脚本 v1.0 (2030行)",
+      "language": "Markdown",
+      "entry": null,
+      "interfaces": [],
+      "tests": null,
+      "deepScan": {
+        "gdd": { "version": "2.0", "lines": 788, "size": "31.7KB" },
+        "script": { "version": "1.0", "lines": 2030, "size": "52.5KB", "branchVariables": 17, "trueEndingConditions": 6 }
+      },
+      "importantPaths": [
+        "doc/CaskTown_Web_JRPG_GDD_v2.md",
+        "doc/CaskTown_Full_Script_Branches_BattlePoints.md"
+      ],
+      "claudeMd": "doc/CLAUDE.md"
+    },
+    {
+      "path": "tests",
+      "name": "tests",
+      "description": "测试目录：12 个测试文件覆盖 core(7)/data(3)/utils(2) 三个模块",
+      "language": "TypeScript",
+      "entry": null,
+      "interfaces": [],
+      "tests": {
+        "files": 12,
+        "paths": [
+          "tests/core/game-data.test.ts",
+          "tests/core/event-bus.test.ts",
+          "tests/core/quest-system.test.ts",
+          "tests/core/barrel-system.test.ts",
+          "tests/core/save-manager.test.ts",
+          "tests/core/skill-growth.test.ts",
+          "tests/core/map-access.test.ts",
+          "tests/data/config-database.test.ts",
+          "tests/data/data-integrity.test.ts",
+          "tests/data/game-content.test.ts",
+          "tests/utils/constants.test.ts",
+          "tests/utils/voice-lines.test.ts"
+        ]
+      },
+      "importantPaths": [
+        "tests/core/",
+        "tests/data/",
+        "tests/utils/"
+      ],
+      "claudeMd": null
+    }
+  ],
+  "coverage": {
+    "totalSourceFiles": 48,
+    "scannedFiles": 48,
+    "coveragePercent": 100,
+    "deepScanFiles": ["src/data/dialogues.ts", "src/data/maps.ts", "src/utils/constants.ts"],
+    "modulesWithClaudeMd": 9,
+    "modulesWithoutClaudeMd": 1,
+    "allModulesDocumented": false,
+    "undocumentedModules": ["tests"],
+    "testCoverage": {
+      "totalTestFiles": 12,
+      "testedModules": ["src/core", "src/data", "src/utils"],
+      "untestedModules": ["src/scenes", "src/editor", "scripts"]
+    }
+  },
+  "ignored": {
+    "directories": ["node_modules", "dist", ".git", ".playwright-mcp", ".serena"],
+    "reasons": {
+      "node_modules": "gitignore + 默认忽略规则",
+      "dist": "构建产物",
+      ".git": "版本控制",
+      ".playwright-mcp": "临时日志",
+      ".serena": "工具配置"
+    }
+  },
+  "gaps": {
+    "missingTests": false,
+    "testCoverageDetail": "12 个测试文件覆盖 core/data/utils，scenes/editor/scripts 仍无测试",
+    "duplicateEventColors": "MAP_HUD.EVENT_COLORS 与 CONFIG_EDITOR_EVENT_COLORS 重复（数值 vs 字符串格式）",
+    "sceneTestGap": "场景层涉及 Phaser 渲染，需要集成/E2E 测试策略"
+  },
+  "changes": {
+    "sinceLastScan": [
+      "新增 12 个测试文件 (tests/core 7, tests/data 3, tests/utils 2)",
+      "GameEvents 扩展至 18 种事件 (新增 BARREL_UNLOCKED)",
+      "DialogueScript 新增 onComplete 可选属性",
+      "DIALOGUE_ALIASES 支持 includeOnComplete 选项",
+      "GameData 新增 playTime/syncPlayTime 游玩时间追踪",
+      "SaveManager 新增 QUICK_SAVE_SLOT (4) 和 playTime 元数据",
+      "初始装备: 主角开始时携带父亲之剑/父亲之甲/预言之书/彩虹桶",
+      "MapScene 新增 PartyHudRow 队伍状态 HUD",
+      "constants.ts 顶级导出从 128 增至 130+ (新增时间常量/QUICK_SAVE_SLOT/标题画面常量/战斗面板常量等)",
+      "editor 模块文件数修正为 2 (main.ts + styles.css)",
+      "EventAction 类型修正为 16 种 (非之前记录的 18 种)"
+    ]
+  },
+  "nextSteps": [
+    "为 scenes 层建立集成测试策略（涉及 Phaser 渲染）",
+    "合并 EVENT_COLORS 重复定义",
+    "考虑为 editor 模块建立功能测试",
+    "持续扩展 game-content.test.ts 的数据验证覆盖范围"
+  ]
+}
