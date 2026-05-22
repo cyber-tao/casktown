@@ -14,12 +14,12 @@ export const ITEMS: Record<string, ItemData> = {
   },
   fathers_sword: {
     id: 'fathers_sword', name: '父亲的剑', type: 'equipment',
-    effect: 'equip_weapon', description: 'T的初始武器，可升级',
+    effect: 'equip_weapon', description: '镇长保管的旧剑，承载父亲的遗志，可升级',
     usableInBattle: false, usableInField: false,
   },
   fathers_armor: {
     id: 'fathers_armor', name: '父亲的战袍', type: 'equipment',
-    effect: 'equip_armor', description: 'T的初始防具，提升意志抗性',
+    effect: 'equip_armor', description: '镇长保管的旧战袍，提升意志抗性',
     usableInBattle: false, usableInField: false,
   },
   rainbow_barrel: {

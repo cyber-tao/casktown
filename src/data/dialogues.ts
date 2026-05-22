@@ -2,6 +2,10 @@ import type { DialogueScript } from '../scenes/DialogueOverlay'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
   { type: 'setFlag', flag: 'met_mayor', value: true },
+  { type: 'addItem', itemId: 'prophecy_book', quantity: 1 },
+  { type: 'addItem', itemId: 'fathers_sword', quantity: 1 },
+  { type: 'addItem', itemId: 'fathers_armor', quantity: 1 },
+  { type: 'addItem', itemId: 'rainbow_barrel', quantity: 1 },
   { type: 'questStart', questId: 'QST_003' },
   { type: 'questComplete', questId: 'QST_003' },
   { type: 'questStart', questId: 'QST_004' },
