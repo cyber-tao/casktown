@@ -14,6 +14,9 @@ import {
   CHARACTER_STAT_LABELS,
   CODEX_BOSS_DISCOVERY_FLAGS,
   CODEX_STORY_BRANCH_COUNT,
+  DEFAULT_ENEMY_SPRITE_KEY,
+  ENEMY_ICON_DEFAULT_FRAME,
+  ENEMY_ICON_KEY_PREFIX,
   EQUIPMENT_STAT_LABELS,
   EQUIPMENT_SLOT_LABELS,
   GAME_HEIGHT,
@@ -42,7 +45,7 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
 
-type MenuSubmenu = 'main' | 'prophecy' | 'party' | 'inventory' | 'inventory-target' | 'skills' | 'equipment' | 'equip-list' | 'codex' | 'map' | 'save' | 'settings'
+type MenuSubmenu = 'main' | 'prophecy' | 'party' | 'inventory' | 'inventory-target' | 'skills' | 'equip-list' | 'codex' | 'map' | 'save' | 'settings'
 type InventoryCategory = typeof INVENTORY_CATEGORY_KEYS[number]
 type DisplayItemType = Exclude<InventoryCategory, 'all'>
 type CodexTab = typeof MENU_CODEX_TAB_KEYS[number]
@@ -99,7 +102,11 @@ export class MenuOverlay extends Phaser.Scene {
     const characterKeys = Object.keys(GAME_CONFIG_DATABASE.getTable('characters'))
       .map(charId => `${CHARACTER_SPRITE_BASE_KEYS[charId] ?? charId.toLowerCase()}_front_idle_01`)
     const itemKeys = Object.keys(this.getItems()).map(itemId => this.getItemIconKey(itemId))
-    queueImageAssets(this, [...characterKeys, ...itemKeys, WORLD_MAP_BACKGROUND_LAYOUT.KEY])
+    const imageAssets = GAME_CONFIG_DATABASE.getTable('imageAssets')
+    const enemyKeys = Object.keys(GAME_CONFIG_DATABASE.getTable('enemies'))
+      .map(enemyId => this.getEnemyIconKey(enemyId))
+      .filter(key => Boolean(imageAssets[key]))
+    queueImageAssets(this, [...characterKeys, ...itemKeys, ...enemyKeys, DEFAULT_ENEMY_SPRITE_KEY, WORLD_MAP_BACKGROUND_LAYOUT.KEY])
   }
 
   create(): void {
@@ -239,9 +246,6 @@ export class MenuOverlay extends Phaser.Scene {
       case MENU_NAV_INDEX.SKILLS:
         this.renderSkillsSummary()
         break
-      case MENU_NAV_INDEX.EQUIPMENT:
-        this.renderEquipmentSummary()
-        break
       case MENU_NAV_INDEX.CODEX:
         this.renderCodexSummary()
         break
@@ -275,9 +279,6 @@ export class MenuOverlay extends Phaser.Scene {
       case MENU_NAV_INDEX.SKILLS:
         this.showSkills()
         break
-      case MENU_NAV_INDEX.EQUIPMENT:
-        this.showEquipment()
-        break
       case MENU_NAV_INDEX.CODEX:
         this.showCodex()
         break
@@ -310,15 +311,11 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'party') {
-      this.moveParty(-1)
+      this.moveEquipmentSlot(-1)
       return
     }
     if (this.submenu === 'skills') {
       this.moveSkillCharacter(-1)
-      return
-    }
-    if (this.submenu === 'equipment') {
-      this.moveEquipmentSlot(-1)
       return
     }
     if (this.submenu === 'equip-list') {
@@ -352,15 +349,11 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'party') {
-      this.moveParty(1)
+      this.moveEquipmentSlot(1)
       return
     }
     if (this.submenu === 'skills') {
       this.moveSkillCharacter(1)
-      return
-    }
-    if (this.submenu === 'equipment') {
-      this.moveEquipmentSlot(1)
       return
     }
     if (this.submenu === 'equip-list') {
@@ -393,10 +386,6 @@ export class MenuOverlay extends Phaser.Scene {
       this.moveSkillCharacter(-1)
       return
     }
-    if (this.submenu === 'equipment') {
-      this.moveEquipmentCharacter(-1)
-      return
-    }
     if (this.submenu === 'codex') {
       this.moveCodexTab(-1)
       return
@@ -417,10 +406,6 @@ export class MenuOverlay extends Phaser.Scene {
     }
     if (this.submenu === 'skills') {
       this.moveSkillCharacter(1)
-      return
-    }
-    if (this.submenu === 'equipment') {
-      this.moveEquipmentCharacter(1)
       return
     }
     if (this.submenu === 'codex') {
@@ -446,13 +431,7 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'party') {
-      this.navIndex = MENU_NAV_INDEX.EQUIPMENT
       this.equipmentCharIndex = this.clampIndex(this.partyIndex, this.getPartyMembers().length)
-      this.renderNav()
-      this.showEquipment()
-      return
-    }
-    if (this.submenu === 'equipment') {
       this.showEquipList()
       return
     }
@@ -481,8 +460,8 @@ export class MenuOverlay extends Phaser.Scene {
       AudioManager.getInstance().playSFX('cancel')
       this.equipSlot = null
       this.equipList = []
-      this.submenu = 'equipment'
-      this.renderEquipment()
+      this.submenu = 'party'
+      this.renderParty()
       return
     }
     if (this.submenu !== 'main') {
@@ -565,8 +544,8 @@ export class MenuOverlay extends Phaser.Scene {
         card.setInteractive()
         card.on('pointerdown', () => {
           this.partyIndex = i
+          this.equipmentCharIndex = i
           this.renderParty()
-          this.handleConfirm()
         })
       }
       this.addCharacterPortrait(member.charId, x + MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE)
@@ -586,15 +565,16 @@ export class MenuOverlay extends Phaser.Scene {
   private renderSelectedPartyDetail(): void {
     const member = this.getPartyMembers()[this.partyIndex]
     if (!member) return
+    this.equipmentCharIndex = this.partyIndex
     const x = MENU_OVERLAY_UI.PARTY_DETAIL_X
     const y = MENU_OVERLAY_UI.LIST_Y
     this.addContentRect(x, y, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH, MENU_OVERLAY_UI.CONTENT_HEIGHT - MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.COLORS.panelDeep)
       .setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, MENU_OVERLAY_UI.COLORS.borderMuted)
     this.addCharacterPortrait(member.charId, x + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE)
     this.addText(x + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.CARD_GAP, `${member.char.name} Lv.${member.char.stats.level}`, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 3)
-    this.renderCharacterResources(member.char, x + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 3)
+    this.renderCharacterResources(member.char, x + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 3, false)
     this.renderCharacterStatCards(member.char, x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.renderEquipmentSlotRows(member.char, x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.STAT_CARD_HEIGHT * 2 + MENU_OVERLAY_UI.CARD_GAP * 3, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2, false)
+    this.renderEquipmentSlotRows(member.char, x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.STAT_CARD_HEIGHT * 2 + MENU_OVERLAY_UI.CARD_GAP * 3, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2, true)
   }
 
   private renderInventorySummary(): void {
@@ -660,7 +640,11 @@ export class MenuOverlay extends Phaser.Scene {
       }
       this.addItemIcon(entry.itemId, MENU_OVERLAY_UI.ICON_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP / 2, y + MENU_OVERLAY_UI.ICON_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP / 4, MENU_OVERLAY_UI.ICON_SIZE)
       this.addText(MENU_OVERLAY_UI.LIST_TEXT_X, y + MENU_OVERLAY_UI.CARD_GAP / 2, entry.item.name, MENU_OVERLAY_UI.BODY_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.LIST_QTY_X - MENU_OVERLAY_UI.LIST_TEXT_X - MENU_OVERLAY_UI.CARD_GAP)
-      this.addText(MENU_OVERLAY_UI.LIST_QTY_X, y + MENU_OVERLAY_UI.CARD_GAP / 2, `x${entry.quantity}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted)
+      const qtyX = MENU_OVERLAY_UI.LIST_QTY_X
+      const qtyY = y + MENU_OVERLAY_UI.CARD_GAP / 2
+      this.addContentRect(qtyX, qtyY, MENU_OVERLAY_UI.INVENTORY_QTY_BADGE_WIDTH, MENU_OVERLAY_UI.INVENTORY_QTY_BADGE_HEIGHT, MENU_OVERLAY_UI.COLORS.panelDeep)
+        .setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, MENU_OVERLAY_UI.COLORS.borderMuted)
+      this.addText(qtyX + MENU_OVERLAY_UI.CARD_GAP / 2, qtyY + MENU_OVERLAY_UI.CARD_GAP / 4, `x${entry.quantity}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.INVENTORY_QTY_BADGE_WIDTH - MENU_OVERLAY_UI.CARD_GAP)
     }
 
     const page = Math.floor(this.inventoryIndex / visibleRows) + 1
@@ -799,78 +783,43 @@ export class MenuOverlay extends Phaser.Scene {
       this.addText(0, MENU_OVERLAY_UI.EMPTY_STATE_Y, '无角色', MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted)
       return
     }
-    if (interactive) {
-      this.addCharacterPortrait(member.charId, MENU_OVERLAY_UI.PORTRAIT_SIZE / 2, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.PORTRAIT_SIZE / 2, MENU_OVERLAY_UI.PORTRAIT_SIZE)
-    }
-    this.addText(interactive ? MENU_OVERLAY_UI.PORTRAIT_SIZE + MENU_OVERLAY_UI.CARD_GAP : 0, MENU_OVERLAY_UI.LIST_Y, `${member.char.name} Lv.${member.char.stats.level}`, MENU_OVERLAY_UI.TITLE_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title)
-    let y = MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2
+    this.renderSkillCharacterCards(interactive)
+    const x = MENU_OVERLAY_UI.SKILL_LIST_X
+    this.addCharacterPortrait(member.charId, x + MENU_OVERLAY_UI.PORTRAIT_SIZE / 2, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.PORTRAIT_SIZE / 2, MENU_OVERLAY_UI.PORTRAIT_SIZE)
+    this.addText(x + MENU_OVERLAY_UI.PORTRAIT_SIZE + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.LIST_Y, `${member.char.name} Lv.${member.char.stats.level}`, MENU_OVERLAY_UI.TITLE_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.SKILL_LIST_WIDTH - MENU_OVERLAY_UI.PORTRAIT_SIZE - MENU_OVERLAY_UI.CARD_GAP)
+    this.renderCharacterResources(member.char, x + MENU_OVERLAY_UI.PORTRAIT_SIZE + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, MENU_OVERLAY_UI.SKILL_LIST_WIDTH - MENU_OVERLAY_UI.PORTRAIT_SIZE - MENU_OVERLAY_UI.CARD_GAP, false)
+    let y = MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2 + MENU_OVERLAY_UI.RESOURCE_ROW_HEIGHT * MENU_OVERLAY_UI.RESOURCE_COMPACT_ROW_COUNT + MENU_OVERLAY_UI.CARD_GAP
     for (const skillId of member.char.skills) {
       const skill = GAME_CONFIG_DATABASE.getTable('skills')[skillId]
       if (!skill) continue
       const cost = skill.costTp > 0 ? `TP ${skill.costTp}` : `MP ${skill.costMp}`
-      this.addContentRect(0, y, MENU_OVERLAY_UI.CONTENT_WIDTH, MENU_OVERLAY_UI.LIST_ROW_HEIGHT, MENU_OVERLAY_UI.COLORS.panelAlt)
+      this.addContentRect(x, y, MENU_OVERLAY_UI.SKILL_LIST_WIDTH, MENU_OVERLAY_UI.LIST_ROW_HEIGHT, MENU_OVERLAY_UI.COLORS.panelAlt)
         .setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, MENU_OVERLAY_UI.COLORS.borderMuted)
-      this.addText(MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 2, skill.name, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_X - MENU_OVERLAY_UI.CARD_GAP * 2)
-      this.addText(MENU_OVERLAY_UI.DETAIL_X, y + MENU_OVERLAY_UI.CARD_GAP / 2, cost, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent)
-      this.addText(MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.LINE_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2, skill.description, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.CONTENT_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+      this.addText(x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 2, skill.name, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.SKILL_LIST_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+      this.addText(x + MENU_OVERLAY_UI.SKILL_LIST_WIDTH - MENU_OVERLAY_UI.CARD_WIDTH / 2, y + MENU_OVERLAY_UI.CARD_GAP / 2, cost, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent)
+      this.addText(x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.LINE_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2, skill.description, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.SKILL_LIST_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
       y += MENU_OVERLAY_UI.LIST_ROW_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2
     }
   }
 
-  private showEquipment(): void {
-    this.submenu = 'equipment'
-    this.equipSlot = null
-    this.equipmentCharIndex = this.clampIndex(this.equipmentCharIndex, this.getPartyMembers().length)
-    this.equipmentSlotIndex = this.clampIndex(this.equipmentSlotIndex, EQUIPMENT_SLOTS.length)
-    this.renderEquipment()
-  }
-
-  private renderEquipmentSummary(): void {
-    this.renderHeader('装备', '穿戴概览')
-    this.renderEquipmentBody(false)
-    this.renderFeedback()
-  }
-
-  private renderEquipment(): void {
-    this.clearContent()
-    this.renderHeader('装备', '角色穿戴')
-    this.renderEquipmentBody(true)
-    this.renderFeedback()
-  }
-
-  private renderEquipmentBody(interactive: boolean): void {
+  private renderSkillCharacterCards(interactive: boolean): void {
     const members = this.getPartyMembers()
-    const member = members[this.equipmentCharIndex]
-    if (!member) {
-      this.addText(0, MENU_OVERLAY_UI.EMPTY_STATE_Y, '无角色', MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted)
-      return
-    }
-    this.addCharacterPortrait(member.charId, MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE / 2, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE / 2, MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE)
-    this.addText(MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.LIST_Y, `${member.char.name} Lv.${member.char.stats.level}`, MENU_OVERLAY_UI.TITLE_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.EQUIPMENT_DETAIL_X - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.renderCharacterResources(member.char, MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, MENU_OVERLAY_UI.EQUIPMENT_DETAIL_X - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.renderCharacterStatCards(member.char, MENU_OVERLAY_UI.EQUIPMENT_DETAIL_X, MENU_OVERLAY_UI.LIST_Y)
-
-    let y = MENU_OVERLAY_UI.EQUIPMENT_SLOT_LIST_Y
-    for (let i = 0; i < EQUIPMENT_SLOTS.length; i++) {
-      const slot = EQUIPMENT_SLOTS[i]!
-      const itemId = member.char.equipment[slot]
-      const selected = interactive && i === this.equipmentSlotIndex
-      const row = this.addContentRect(0, y, MENU_OVERLAY_UI.EQUIPMENT_DETAIL_X - MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.LIST_ROW_HEIGHT, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
-      row.setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, selected ? MENU_OVERLAY_UI.COLORS.highlight : MENU_OVERLAY_UI.COLORS.borderMuted)
+    for (let i = 0; i < members.length; i++) {
+      const member = members[i]!
+      const y = MENU_OVERLAY_UI.LIST_Y + i * (MENU_OVERLAY_UI.PARTY_CARD_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2)
+      const selected = interactive && i === this.skillCharIndex
+      const card = this.addContentRect(0, y, MENU_OVERLAY_UI.PARTY_CARD_WIDTH * 2 + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.PARTY_CARD_HEIGHT, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
+      card.setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, selected ? MENU_OVERLAY_UI.COLORS.highlight : MENU_OVERLAY_UI.COLORS.borderMuted)
       if (interactive) {
-        row.setInteractive()
-        row.on('pointerdown', () => {
-          this.equipmentSlotIndex = i
-          this.renderEquipment()
-          this.showEquipList()
+        card.setInteractive()
+        card.on('pointerdown', () => {
+          this.skillCharIndex = i
+          this.renderSkills()
         })
       }
-      this.addText(MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 2, EQUIPMENT_SLOT_LABELS[slot], MENU_OVERLAY_UI.BODY_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text)
-      if (itemId) {
-        this.addItemIcon(itemId, MENU_OVERLAY_UI.LIST_TEXT_X + MENU_OVERLAY_UI.ICON_SIZE / 2, y + MENU_OVERLAY_UI.ICON_SIZE / 2, MENU_OVERLAY_UI.ICON_SIZE)
-      }
-      this.addText(MENU_OVERLAY_UI.LIST_TEXT_X + MENU_OVERLAY_UI.ICON_SIZE + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 2, itemId ? this.getItemName(itemId) : '空', MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.EQUIPMENT_DETAIL_X - MENU_OVERLAY_UI.LIST_TEXT_X - MENU_OVERLAY_UI.ICON_SIZE)
-      y += MENU_OVERLAY_UI.LIST_ROW_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2
+      this.addCharacterPortrait(member.charId, MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE)
+      this.addText(MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.CARD_GAP, member.char.name, MENU_OVERLAY_UI.BODY_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.PARTY_CARD_WIDTH)
+      this.addText(MENU_OVERLAY_UI.PARTY_CARD_PORTRAIT_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.LINE_HEIGHT + MENU_OVERLAY_UI.CARD_GAP, `技能 ${member.char.skills.length}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted)
     }
   }
 
@@ -888,9 +837,10 @@ export class MenuOverlay extends Phaser.Scene {
   private renderEquipList(): void {
     this.clearContent()
     const members = this.getPartyMembers()
+    this.equipmentCharIndex = this.clampIndex(this.partyIndex, members.length)
     const member = members[this.equipmentCharIndex]
     if (!member || !this.equipSlot) {
-      this.showEquipment()
+      this.showParty()
       return
     }
     this.renderHeader(`${member.char.name} · ${EQUIPMENT_SLOT_LABELS[this.equipSlot]}`, '更换装备')
@@ -945,8 +895,8 @@ export class MenuOverlay extends Phaser.Scene {
 
     this.equipSlot = null
     this.equipList = []
-    this.submenu = 'equipment'
-    this.renderEquipment()
+    this.submenu = 'party'
+    this.renderParty()
   }
 
   private showCodex(): void {
@@ -1007,11 +957,15 @@ export class MenuOverlay extends Phaser.Scene {
           this.renderCodex()
         })
       }
-      const itemId = this.getCodexTab() === 'items' ? this.getDiscoveredItems()[index] : undefined
+      const tab = this.getCodexTab()
+      const itemId = tab === 'items' ? this.getDiscoveredItems()[index] : undefined
+      const enemyId = tab === 'monsters' ? this.getDiscoveredEnemies()[index] : undefined
       if (itemId) {
         this.addItemIcon(itemId, MENU_OVERLAY_UI.ICON_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP / 2, y + MENU_OVERLAY_UI.ICON_SIZE / 2, MENU_OVERLAY_UI.ICON_SIZE)
+      } else if (enemyId) {
+        this.addEnemyIcon(enemyId, MENU_OVERLAY_UI.CODEX_ENEMY_ICON_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP / 2, y + MENU_OVERLAY_UI.CODEX_ENEMY_ICON_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP / 4, MENU_OVERLAY_UI.CODEX_ENEMY_ICON_SIZE)
       }
-      this.addText(itemId ? MENU_OVERLAY_UI.LIST_TEXT_X : MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 2, this.getCodexRowLabel(index), MENU_OVERLAY_UI.CAPTION_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : this.getCodexRowColor(index), MENU_OVERLAY_UI.DETAIL_X - MENU_OVERLAY_UI.LIST_TEXT_X)
+      this.addText(itemId || enemyId ? MENU_OVERLAY_UI.LIST_TEXT_X : MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 2, this.getCodexRowLabel(index), MENU_OVERLAY_UI.CAPTION_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : this.getCodexRowColor(index), MENU_OVERLAY_UI.DETAIL_X - MENU_OVERLAY_UI.LIST_TEXT_X)
     }
   }
 
@@ -1033,15 +987,17 @@ export class MenuOverlay extends Phaser.Scene {
   private renderCodexEnemyDetail(): void {
     const enemyId = this.getDiscoveredEnemies()[this.codexIndex]
     const enemy = enemyId ? GAME_CONFIG_DATABASE.getTable('enemies')[enemyId] : undefined
-    if (!enemy) {
+    if (!enemyId || !enemy) {
       this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.CARD_GAP, '尚未发现怪物', MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
       return
     }
-    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.CARD_GAP, enemy.name, MENU_OVERLAY_UI.BODY_FONT_SIZE, enemy.isBoss ? MENU_OVERLAY_UI.COLORS.danger : MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, `HP ${enemy.stats.maxHp} / MP ${enemy.stats.maxMp}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 3, `ATK ${enemy.stats.atk}  DEF ${enemy.stats.def}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 4, `属性 ${enemy.element}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 5, `弱点 ${enemy.weakness.join(' / ') || '无'}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.success, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+    this.addEnemyIcon(enemyId, MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.DETAIL_WIDTH / 2, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.CODEX_ENEMY_IMAGE_SIZE / 2 + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_ENEMY_IMAGE_SIZE)
+    const textY = MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.CODEX_ENEMY_IMAGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2
+    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, textY, enemy.name, MENU_OVERLAY_UI.BODY_FONT_SIZE, enemy.isBoss ? MENU_OVERLAY_UI.COLORS.danger : MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, textY + MENU_OVERLAY_UI.LINE_HEIGHT, `HP ${enemy.stats.maxHp} / MP ${enemy.stats.maxMp}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, textY + MENU_OVERLAY_UI.LINE_HEIGHT * 2, `ATK ${enemy.stats.atk}  DEF ${enemy.stats.def}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, textY + MENU_OVERLAY_UI.LINE_HEIGHT * 3, `属性 ${enemy.element}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+    this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, textY + MENU_OVERLAY_UI.LINE_HEIGHT * 4, `弱点 ${enemy.weakness.join(' / ') || '无'}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.success, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
   }
 
   private renderCodexItemDetail(): void {
@@ -1103,8 +1059,8 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private renderMapContent(): void {
-    const mapHeight = MENU_OVERLAY_UI.MAP_IMAGE_HEIGHT
-    const mapWidth = Math.round(mapHeight * WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_WIDTH / WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_HEIGHT)
+    const mapWidth = MENU_OVERLAY_UI.MAP_IMAGE_WIDTH
+    const mapHeight = Math.round(mapWidth * WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_HEIGHT / WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_WIDTH)
     const mapX = MENU_OVERLAY_UI.CONTENT_WIDTH / 2
     const mapY = MENU_OVERLAY_UI.MAP_IMAGE_Y
     if (this.textures.exists(WORLD_MAP_BACKGROUND_LAYOUT.KEY)) {
@@ -1117,7 +1073,12 @@ export class MenuOverlay extends Phaser.Scene {
     }
     const gd = GameData.getInstance()
     const mapName = GAME_CONFIG_DATABASE.getTable('maps')[gd.currentMap]?.name ?? gd.currentMap
-    this.addText(0, MENU_OVERLAY_UI.FOOTER_Y, `当前位置：${mapName}`, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.CONTENT_WIDTH)
+    const labelX = mapX - mapWidth / 2 + MENU_OVERLAY_UI.CARD_GAP
+    const labelY = mapY + mapHeight / 2 - MENU_OVERLAY_UI.MAP_LABEL_HEIGHT - MENU_OVERLAY_UI.CARD_GAP
+    const labelWidth = mapWidth - MENU_OVERLAY_UI.CARD_GAP * 2
+    this.addContentRect(labelX, labelY, labelWidth, MENU_OVERLAY_UI.MAP_LABEL_HEIGHT, MENU_OVERLAY_UI.COLORS.panelDeep)
+      .setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, MENU_OVERLAY_UI.COLORS.borderMuted)
+    this.addText(labelX + MENU_OVERLAY_UI.CARD_GAP, labelY + MENU_OVERLAY_UI.CARD_GAP / 3, `当前位置：${mapName}`, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, labelWidth - MENU_OVERLAY_UI.CARD_GAP * 2)
     this.renderMapPin(gd.currentMap, mapX, mapY, mapWidth, mapHeight)
   }
 
@@ -1321,6 +1282,7 @@ export class MenuOverlay extends Phaser.Scene {
     const count = this.getPartyMembers().length
     if (count === 0) return
     this.partyIndex = (this.partyIndex + dir + count) % count
+    this.equipmentCharIndex = this.partyIndex
     this.renderParty()
     AudioManager.getInstance().playSFX('cursor')
   }
@@ -1333,17 +1295,9 @@ export class MenuOverlay extends Phaser.Scene {
     AudioManager.getInstance().playSFX('cursor')
   }
 
-  private moveEquipmentCharacter(dir: number): void {
-    const count = this.getPartyMembers().length
-    if (count === 0) return
-    this.equipmentCharIndex = (this.equipmentCharIndex + dir + count) % count
-    this.renderEquipment()
-    AudioManager.getInstance().playSFX('cursor')
-  }
-
   private moveEquipmentSlot(dir: number): void {
     this.equipmentSlotIndex = (this.equipmentSlotIndex + dir + EQUIPMENT_SLOTS.length) % EQUIPMENT_SLOTS.length
-    this.renderEquipment()
+    this.renderParty()
     AudioManager.getInstance().playSFX('cursor')
   }
 
@@ -1670,10 +1624,11 @@ export class MenuOverlay extends Phaser.Scene {
     return Number.isFinite(amount) ? amount : 0
   }
 
-  private renderCharacterResources(char: CharacterData, x: number, y: number, width: number): void {
+  private renderCharacterResources(char: CharacterData, x: number, y: number, width: number, includeExp = true): void {
     this.addLabeledStatusBar(x, y, 'HP', char.stats.hp, char.stats.maxHp, MENU_OVERLAY_UI.COLORS.hp, width)
     this.addLabeledStatusBar(x, y + MENU_OVERLAY_UI.RESOURCE_ROW_HEIGHT, 'MP', char.stats.mp, char.stats.maxMp, MENU_OVERLAY_UI.COLORS.mp, width)
     this.addLabeledStatusBar(x, y + MENU_OVERLAY_UI.RESOURCE_ROW_HEIGHT * 2, 'TP', char.tp, BATTLE_RULES.MAX_TP, MENU_OVERLAY_UI.COLORS.exp, width)
+    if (!includeExp) return
     this.addLabeledStatusBar(x, y + MENU_OVERLAY_UI.RESOURCE_ROW_HEIGHT * 3, 'EXP', char.stats.exp, char.stats.expToNext, MENU_OVERLAY_UI.COLORS.accentBar, width)
   }
 
@@ -1700,6 +1655,14 @@ export class MenuOverlay extends Phaser.Scene {
       const rowY = y + i * (MENU_OVERLAY_UI.EQUIPMENT_SLOT_CARD_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2)
       const row = this.addContentRect(x, rowY, width, MENU_OVERLAY_UI.EQUIPMENT_SLOT_CARD_HEIGHT, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
       row.setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, selected ? MENU_OVERLAY_UI.COLORS.highlight : MENU_OVERLAY_UI.COLORS.borderMuted)
+      if (interactive) {
+        row.setInteractive()
+        row.on('pointerdown', () => {
+          this.equipmentSlotIndex = i
+          this.equipmentCharIndex = this.partyIndex
+          this.showEquipList()
+        })
+      }
       this.addText(x + MENU_OVERLAY_UI.CARD_GAP, rowY + MENU_OVERLAY_UI.CARD_GAP / 2, EQUIPMENT_SLOT_LABELS[slot], MENU_OVERLAY_UI.CAPTION_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.RESOURCE_LABEL_WIDTH)
       if (itemId) {
         this.addItemIcon(itemId, x + MENU_OVERLAY_UI.RESOURCE_LABEL_WIDTH + MENU_OVERLAY_UI.EQUIPMENT_SLOT_ICON_SIZE / 2, rowY + MENU_OVERLAY_UI.EQUIPMENT_SLOT_CARD_HEIGHT / 2, MENU_OVERLAY_UI.EQUIPMENT_SLOT_ICON_SIZE)
@@ -1780,6 +1743,18 @@ export class MenuOverlay extends Phaser.Scene {
     this.contentArea.add(image)
   }
 
+  private addEnemyIcon(enemyId: string, x: number, y: number, size: number): void {
+    const key = this.getEnemyIconKey(enemyId)
+    const textureKey = this.textures.exists(key) ? key : this.textures.exists(DEFAULT_ENEMY_SPRITE_KEY) ? DEFAULT_ENEMY_SPRITE_KEY : null
+    this.addContentRect(x - size / 2, y - size / 2, size, size, MENU_OVERLAY_UI.COLORS.panelDeep)
+      .setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, MENU_OVERLAY_UI.COLORS.borderMuted)
+    if (!textureKey) return
+    const image = this.add.image(x, y, textureKey)
+    image.setDisplaySize(size, size)
+    image.setScrollFactor(0)
+    this.contentArea.add(image)
+  }
+
   private addCharacterPortrait(charId: string, x: number, y: number, size: number): void {
     const key = `${CHARACTER_SPRITE_BASE_KEYS[charId] ?? charId.toLowerCase()}_front_idle_01`
     this.addContentRect(x - size / 2, y - size / 2, size, size, MENU_OVERLAY_UI.COLORS.panelDeep)
@@ -1838,7 +1813,6 @@ export class MenuOverlay extends Phaser.Scene {
     else if (this.submenu === 'inventory') this.renderInventory()
     else if (this.submenu === 'inventory-target') this.renderInventoryTarget()
     else if (this.submenu === 'skills') this.renderSkills()
-    else if (this.submenu === 'equipment') this.renderEquipment()
     else if (this.submenu === 'equip-list') this.renderEquipList()
     else if (this.submenu === 'codex') this.renderCodex()
     else if (this.submenu === 'map') this.renderMap()
@@ -1852,6 +1826,10 @@ export class MenuOverlay extends Phaser.Scene {
 
   private getItemIconKey(itemId: string): string {
     return `${ITEM_ICON_KEY_PREFIX}${itemId}`
+  }
+
+  private getEnemyIconKey(enemyId: string): string {
+    return `${ENEMY_ICON_KEY_PREFIX}${enemyId}_${ENEMY_ICON_DEFAULT_FRAME}`
   }
 
   private getItemName(itemId: string): string {

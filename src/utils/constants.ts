@@ -45,19 +45,20 @@ export const UI_FONT_FAMILY = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaH
 export const UI_TITLE_FONT_FAMILY = '"Songti SC", "STSong", "Noto Serif CJK SC", serif'
 
 export const ITEM_ICON_KEY_PREFIX = 'item_'
+export const ENEMY_ICON_KEY_PREFIX = 'mon_'
+export const ENEMY_ICON_DEFAULT_FRAME = '01'
 
-export const MENU_NAV_LABELS = ['预言之书', '队伍', '背包', '技能', '装备', '图鉴', '地图', '存档', '设置', '返回游戏'] as const
+export const MENU_NAV_LABELS = ['预言之书', '队伍', '背包', '技能', '图鉴', '地图', '存档', '设置', '返回游戏'] as const
 export const MENU_NAV_INDEX = {
   PROPHECY: 0,
   PARTY: 1,
   INVENTORY: 2,
   SKILLS: 3,
-  EQUIPMENT: 4,
-  CODEX: 5,
-  MAP: 6,
-  SAVE: 7,
-  SETTINGS: 8,
-  CLOSE: 9,
+  CODEX: 4,
+  MAP: 5,
+  SAVE: 6,
+  SETTINGS: 7,
+  CLOSE: 8,
 } as const
 
 export const INVENTORY_CATEGORY_KEYS = ['all', 'consumable', 'equipment', 'key', 'material'] as const
@@ -189,6 +190,8 @@ export const MENU_OVERLAY_UI = {
   PARTY_DETAIL_X: scalePx(306),
   PARTY_DETAIL_WIDTH: scalePx(284),
   PARTY_CARD_PORTRAIT_SIZE: scalePx(44),
+  SKILL_LIST_X: scalePx(306),
+  SKILL_LIST_WIDTH: scalePx(284),
   RESOURCE_CARD_WIDTH: scalePx(276),
   RESOURCE_CARD_HEIGHT: scalePx(96),
   RESOURCE_METER_WIDTH: scalePx(196),
@@ -196,15 +199,13 @@ export const MENU_OVERLAY_UI = {
   RESOURCE_LABEL_WIDTH: scalePx(42),
   RESOURCE_VALUE_WIDTH: scalePx(58),
   RESOURCE_ROW_HEIGHT: scalePx(19),
+  RESOURCE_COMPACT_ROW_COUNT: 3,
   STAT_CARD_WIDTH: scalePx(86),
   STAT_CARD_HEIGHT: scalePx(46),
   STAT_CARD_COLUMNS: 3,
   STAT_CARD_GAP: scalePx(8),
   EQUIPMENT_SLOT_CARD_HEIGHT: scalePx(32),
   EQUIPMENT_SLOT_ICON_SIZE: scalePx(26),
-  EQUIPMENT_SLOT_LIST_Y: scalePx(248),
-  EQUIPMENT_DETAIL_X: scalePx(306),
-  EQUIPMENT_DETAIL_WIDTH: scalePx(284),
   EQUIPMENT_BONUS_Y: scalePx(310),
   PORTRAIT_SIZE: scalePx(54),
   PORTRAIT_LARGE_SIZE: scalePx(72),
@@ -216,7 +217,9 @@ export const MENU_OVERLAY_UI = {
   LIST_VISIBLE_ROWS: 7,
   EQUIP_LIST_VISIBLE_ROWS: 7,
   LIST_TEXT_X: scalePx(48),
-  LIST_QTY_X: scalePx(370),
+  LIST_QTY_X: scalePx(314),
+  INVENTORY_QTY_BADGE_WIDTH: scalePx(48),
+  INVENTORY_QTY_BADGE_HEIGHT: scalePx(24),
   DETAIL_X: scalePx(390),
   DETAIL_Y: scalePx(118),
   DETAIL_WIDTH: scalePx(196),
@@ -230,9 +233,12 @@ export const MENU_OVERLAY_UI = {
   CODEX_VISIBLE_ROWS: 8,
   CODEX_ROW_HEIGHT: scalePx(34),
   CODEX_DETAIL_Y: scalePx(118),
+  CODEX_ENEMY_IMAGE_SIZE: scalePx(82),
+  CODEX_ENEMY_ICON_SIZE: scalePx(28),
   CODEX_STORY_ROW_HEIGHT: scalePx(28),
-  MAP_IMAGE_Y: scalePx(244),
-  MAP_IMAGE_HEIGHT: scalePx(292),
+  MAP_IMAGE_Y: scalePx(258),
+  MAP_IMAGE_WIDTH: scalePx(536),
+  MAP_LABEL_HEIGHT: scalePx(32),
   MAP_PIN_SIZE: scalePx(8),
   SETTINGS_ROW_Y: scalePx(104),
   SETTINGS_ROW_HEIGHT: scalePx(23),
