@@ -2,7 +2,7 @@
 
 ## 项目速览
 
-- 这是一个基于 Phaser 3、TypeScript 和 Vite 的 2D 顶视角剧情 JRPG 网页游戏。
+- 这是一个基于 Phaser 4.1.0、TypeScript 和 Vite 的 2D 顶视角剧情 JRPG 网页游戏。
 - 运行入口是 [src/main.ts](src/main.ts)，Phaser 配置在 [src/game.ts](src/game.ts)，启动加载流程从 [src/scenes/BootScene.ts](src/scenes/BootScene.ts) 进入标题场景。
 - 游戏设计以 [doc/CaskTown_Web_JRPG_GDD_v2.md](doc/CaskTown_Web_JRPG_GDD_v2.md) 为准；剧情、分支和战斗点参考 [doc/CaskTown_Full_Script_Branches_BattlePoints.md](doc/CaskTown_Full_Script_Branches_BattlePoints.md)。不要把这些文档的大段内容复制进代码或说明文件。
 
@@ -33,7 +33,7 @@
 
 ## 开发规则
 
-- 优先复用 Phaser API、现有 core 管理器和 data 配置表，不为已有能力另建平行实现。
+- 优先复用 Phaser 4 API、现有 core 管理器和 data 配置表，不为已有能力另建平行实现。
 - 修改 `GameData` 状态结构时，同步检查默认值、`reset()`、`serialize()`、`deserialize()`、相关类型和读档后的场景刷新逻辑。
 - 新增跨场景事件时，先在 `GameEvents` 中定义事件名，再在生产者和消费者之间传递明确的数据结构。
 - 新增资源时，确认文件路径、资源 key、BootScene 预加载和使用处一致；避免让场景引用未加载的 sprite/audio。

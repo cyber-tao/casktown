@@ -2,7 +2,7 @@
 
 《木桶镇 / CaskTown》是一个面向浏览器的 2D 顶视角剧情 JRPG。玩家扮演少年 T，与慧慧、A、葱葱、sun 等伙伴从被魔头侵袭的木桶镇出发，寻找三件神物重建家园，进入生命之泉追索 xiaoai 堕魔真相，并在童话外壳与悲悯内核交织的冒险中面对人心深处的黑暗。
 
-项目当前使用 Phaser 3、TypeScript、Vite 和 Bun，资源由 Vite 的 `assets` 公共目录提供。
+项目当前使用 Phaser 4.1.0、TypeScript、Vite 和 Bun，资源由 Vite 的 `assets` 公共目录提供。
 
 ## 项目起源
 
@@ -51,7 +51,7 @@ bun run dev
 | 类型 | 使用内容 |
 | --- | --- |
 | 运行时与包管理 | Bun |
-| 游戏引擎 | Phaser 3 |
+| 游戏引擎 | Phaser 4.1.0 |
 | 语言 | TypeScript |
 | 构建工具 | Vite |
 | 存档 | LocalStorage |
@@ -111,7 +111,7 @@ doc/         游戏设计、剧情脚本、分支和战斗点文档
 
 ## 开发提示
 
-- 入口文件是 [src/main.ts](src/main.ts)，Phaser 配置在 [src/game.ts](src/game.ts)。
+- 入口文件是 [src/main.ts](src/main.ts)，Phaser 4 配置在 [src/game.ts](src/game.ts)。
 - 启动资源加载集中在 [src/scenes/BootScene.ts](src/scenes/BootScene.ts)。
 - 全局游戏状态由 [src/core/GameData.ts](src/core/GameData.ts) 管理。
 - 跨场景通信使用 [src/core/EventBus.ts](src/core/EventBus.ts)。

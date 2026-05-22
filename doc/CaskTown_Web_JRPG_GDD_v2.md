@@ -3,7 +3,7 @@
 > 目标版本：网页版可玩完整主线 Demo → 完整版 Web JRPG  
 > 游戏类型：2D 顶视角剧情驱动 JRPG  
 > 目标平台：PC 浏览器优先，兼容移动端触屏  
-> 推荐引擎：Phaser 3 / PixiJS + 自研状态机，或 Godot Web Export  
+> 推荐引擎：Phaser 4.1.0 + TypeScript + Vite，或 PixiJS + 自研状态机 / Godot Web Export  
 > 美术方向：复古像素 JRPG，明亮童话村镇 + 神域水晶圣殿 + 暗黑魔宫
 
 ---
