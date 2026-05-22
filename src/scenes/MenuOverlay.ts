@@ -34,6 +34,8 @@ import {
   MENU_SETTINGS_OPTIONS,
   SAVE_LOAD_FEEDBACK_DELAY_MS,
   SAVE_SLOTS,
+  SECONDS_PER_HOUR,
+  SECONDS_PER_MINUTE,
   UI_FONT_FAMILY,
   UI_TITLE_FONT_FAMILY,
   WORLD_MAP_BACKGROUND_DISPLAY_WIDTH,
@@ -1871,8 +1873,10 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private formatTime(seconds: number): string {
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
+    const totalSeconds = Math.max(0, Math.floor(seconds))
+    const h = Math.floor(totalSeconds / SECONDS_PER_HOUR)
+    const m = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+    if (h === 0 && m === 0) return `${totalSeconds}s`
     return `${h}h${m}m`
   }
 }

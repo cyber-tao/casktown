@@ -47,6 +47,10 @@ export const UI_TITLE_FONT_FAMILY = '"Songti SC", "STSong", "Noto Serif CJK SC",
 export const ITEM_ICON_KEY_PREFIX = 'item_'
 export const ENEMY_ICON_KEY_PREFIX = 'mon_'
 export const ENEMY_ICON_DEFAULT_FRAME = '01'
+export const TIME_MS_PER_SECOND = 1000
+export const SECONDS_PER_MINUTE = 60
+export const MINUTES_PER_HOUR = 60
+export const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
 
 export const MENU_NAV_LABELS = ['预言之书', '队伍', '背包', '技能', '图鉴', '地图', '存档', '设置', '返回游戏'] as const
 export const MENU_NAV_INDEX = {

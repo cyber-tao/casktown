@@ -13,6 +13,7 @@ import {
   START_PARTY,
   START_PLAYER_DIRECTION,
   START_PLAYER_POSITION,
+  TIME_MS_PER_SECOND,
   TRUE_ROUTE_MIN_MERCY,
   TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
 } from '../utils/constants'
@@ -80,6 +81,7 @@ export class GameData {
   private static instance: GameData
 
   playTime: number = 0
+  private playTimeSyncedAtMs: number = Date.now()
   currentMap: string = START_MAP_ID
   playerPosition: { x: number; y: number } = { ...START_PLAYER_POSITION }
   playerDirection: number = START_PLAYER_DIRECTION
@@ -123,6 +125,7 @@ export class GameData {
 
   reset(): void {
     this.playTime = 0
+    this.playTimeSyncedAtMs = Date.now()
     this.currentMap = START_MAP_ID
     this.playerPosition = { ...START_PLAYER_POSITION }
     this.playerDirection = START_PLAYER_DIRECTION
@@ -531,6 +534,7 @@ export class GameData {
   }
 
   serialize(): object {
+    this.syncPlayTime()
     return {
       playTime: this.playTime,
       currentMap: this.currentMap,
@@ -558,6 +562,7 @@ export class GameData {
   deserialize(data: object): void {
     const d = data as Record<string, unknown>
     this.playTime = (d.playTime as number) ?? 0
+    this.playTimeSyncedAtMs = Date.now()
     this.currentMap = (d.currentMap as string) ?? START_MAP_ID
     this.playerPosition = { ...START_PLAYER_POSITION, ...((d.playerPosition as Partial<{ x: number; y: number }>) ?? {}) }
     this.playerDirection = (d.playerDirection as number) ?? START_PLAYER_DIRECTION
@@ -595,5 +600,13 @@ export class GameData {
     }
     this.syncProgressionFlags()
     this.syncTrueRouteState()
+  }
+
+  syncPlayTime(nowMs = Date.now()): void {
+    const elapsedMs = Math.max(0, nowMs - this.playTimeSyncedAtMs)
+    const elapsedSeconds = Math.floor(elapsedMs / TIME_MS_PER_SECOND)
+    if (elapsedSeconds <= 0) return
+    this.playTime += elapsedSeconds
+    this.playTimeSyncedAtMs += elapsedSeconds * TIME_MS_PER_SECOND
   }
 }
