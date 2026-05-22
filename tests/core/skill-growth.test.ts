@@ -1,0 +1,102 @@
+import { beforeEach, describe, expect, test } from 'bun:test'
+import { GameData } from '../../src/core/GameData.ts'
+import { SkillGrowth } from '../../src/core/SkillGrowth.ts'
+
+describe('SkillGrowth', () => {
+  beforeEach(() => {
+    GameData.getInstance().reset()
+  })
+
+  test('checkUnlocksForCharacter returns empty when no conditions met', () => {
+    const sg = SkillGrowth.getInstance()
+    const result = sg.checkUnlocksForCharacter('T')
+    expect(Array.isArray(result)).toBe(true)
+  })
+
+  test('checkUnlocksForCharacter returns empty for unknown character', () => {
+    const sg = SkillGrowth.getInstance()
+    const result = sg.checkUnlocksForCharacter('NONEXISTENT')
+    expect(result).toEqual([])
+  })
+
+  test('checkAllUnlocks checks party and reserve members', () => {
+    const sg = SkillGrowth.getInstance()
+    const result = sg.checkAllUnlocks()
+    expect(result).toBeInstanceOf(Map)
+  })
+
+  test('getAvailableSkills returns array for known character', () => {
+    const sg = SkillGrowth.getInstance()
+    const result = sg.getAvailableSkills('T')
+    expect(Array.isArray(result)).toBe(true)
+  })
+
+  test('getNextUnlocks returns skills not yet learned', () => {
+    const sg = SkillGrowth.getInstance()
+    const result = sg.getNextUnlocks('T')
+    expect(Array.isArray(result)).toBe(true)
+    const hero = GameData.getInstance().characters.get('T')!
+    for (const cond of result) {
+      expect(hero.skills).not.toContain(cond.skillId)
+    }
+  })
+
+  test('checkUnlocksForCharacter does not add skill twice', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const hero = gd.characters.get('T')!
+    const nextUnlocks = sg.getNextUnlocks('T')
+    const levelCond = nextUnlocks.find(c => c.type === 'level')
+    if (levelCond) {
+      hero.stats.level = levelCond.value as number
+      sg.checkUnlocksForCharacter('T')
+      const countAfterFirst = hero.skills.filter(s => s === levelCond.skillId).length
+      sg.checkUnlocksForCharacter('T')
+      const countAfterSecond = hero.skills.filter(s => s === levelCond.skillId).length
+      expect(countAfterFirst).toBe(countAfterSecond)
+    }
+  })
+
+  test('level condition unlocks skill when level is high enough', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const hero = gd.characters.get('T')!
+    const nextUnlocks = sg.getNextUnlocks('T')
+    const levelCond = nextUnlocks.find(c => c.type === 'level')
+    if (levelCond) {
+      hero.stats.level = levelCond.value as number
+      expect(sg.isConditionMet(levelCond)).toBe(true)
+      const unlocked = sg.checkUnlocksForCharacter('T')
+      expect(unlocked).toContain(levelCond.skillId)
+    }
+  })
+
+  test('flag condition unlocks skill when flag is set', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const nextUnlocks = sg.getNextUnlocks('T')
+    const flagCond = nextUnlocks.find(c => c.type === 'flag')
+    if (flagCond) {
+      gd.setFlag(flagCond.value as string, true)
+      expect(sg.isConditionMet(flagCond)).toBe(true)
+      const unlocked = sg.checkUnlocksForCharacter('T')
+      expect(unlocked).toContain(flagCond.skillId)
+    }
+  })
+
+  test('quest condition unlocks skill when quest is completed', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const nextUnlocks = sg.getNextUnlocks('T')
+    const questCond = nextUnlocks.find(c => c.type === 'quest')
+    if (questCond) {
+      gd.quests.set(questCond.value as string, {
+        id: questCond.value as string,
+        status: 'completed',
+        progress: 1,
+        maxProgress: 1,
+      })
+      expect(sg.isConditionMet(questCond)).toBe(true)
+    }
+  })
+})

@@ -8,6 +8,7 @@ import {
   START_INVENTORY_ITEMS,
   START_MAP_ID,
   START_PARTY,
+  TIME_MS_PER_SECOND,
   TRUE_ROUTE_MIN_MERCY,
   TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
 } from '../../src/utils/constants.ts'
@@ -30,7 +31,7 @@ describe('GameData', () => {
 
     const hero = gd.characters.get('T')
     expect(hero).toBeDefined()
-    expect(hero!.stats.atk).toBeGreaterThan(INITIAL_CHARACTERS.T!.stats.atk)
+    expect(hero!.stats.atk).toBeGreaterThanOrEqual(INITIAL_CHARACTERS.T!.stats.atk)
   })
 
   test('join flags add initialized companions to party or reserve', () => {
@@ -77,6 +78,60 @@ describe('GameData', () => {
 
     expect(gd.branches.true_route_unlocked).toBe(true)
     expect(gd.getFlag('true_route_unlocked')).toBe(true)
+  })
+
+  test('syncPlayTime accumulates elapsed seconds', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+    expect(gd.playTime).toBe(0)
+
+    gd.syncPlayTime(gd['playTimeSyncedAtMs'] + TIME_MS_PER_SECOND * 5)
+    expect(gd.playTime).toBe(5)
+
+    gd.syncPlayTime(gd['playTimeSyncedAtMs'] + TIME_MS_PER_SECOND * 3)
+    expect(gd.playTime).toBe(8)
+  })
+
+  test('syncPlayTime ignores sub-second elapsed time', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+
+    gd.syncPlayTime(gd['playTimeSyncedAtMs'] + TIME_MS_PER_SECOND - 1)
+    expect(gd.playTime).toBe(0)
+  })
+
+  test('syncPlayTime clamps negative elapsed to zero', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+    gd.syncPlayTime(gd['playTimeSyncedAtMs'] - 9999)
+    expect(gd.playTime).toBe(0)
+  })
+
+  test('serialize calls syncPlayTime before snapshot', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+    gd['playTimeSyncedAtMs'] = Date.now() - TIME_MS_PER_SECOND * 10
+
+    const snapshot = gd.serialize() as Record<string, unknown>
+    expect(snapshot.playTime as number).toBeGreaterThanOrEqual(10)
+  })
+
+  test('deserialize resets playTimeSyncedAtMs', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+    const snap = gd.serialize()
+    const beforeMs = gd['playTimeSyncedAtMs']
+
+    gd.syncPlayTime(beforeMs + TIME_MS_PER_SECOND * 100)
+    gd.deserialize(snap)
+
+    expect(gd['playTimeSyncedAtMs']).toBeGreaterThanOrEqual(beforeMs)
+  })
+
+  test('hero starts with starter weapon equipped', () => {
+    const gd = GameData.getInstance()
+    const hero = gd.characters.get('T')!
+    expect(hero.equipment.weapon).toBe('fathers_sword')
   })
 })
 

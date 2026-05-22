@@ -320,4 +320,42 @@ describe('game content data', () => {
     expectCondition(xiyuanAfter, 'xiyuan_quiz_completed', true)
     expect(xiyuanAfter.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN_AFTER' })
   })
+
+  test('garden quest flow events progress through flag chain', () => {
+    const start = findEvent('MAP_001', 'NPC_PINEAPPLE_START')
+    const wait = findEvent('MAP_001', 'NPC_PINEAPPLE_WAIT')
+    const report = findEvent('MAP_001', 'NPC_PINEAPPLE_REPORT')
+    const done = findEvent('MAP_001', 'NPC_PINEAPPLE_DONE')
+    const barrel = findEvent('MAP_001', 'NPC_GARDEN_BARREL')
+
+    expectCondition(start, 'garden_started', false)
+    expect(start.actions).toContainEqual({ type: 'questStart', questId: 'QST_002' })
+    expect(start.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_002_GARDEN' })
+    expect(start.actions).toContainEqual({ type: 'setFlag', flag: 'garden_started', value: true })
+
+    expectCondition(wait, 'garden_started', true)
+    expectCondition(wait, 'garden_cleaned', false)
+
+    expectCondition(barrel, 'garden_started', true)
+    expectCondition(barrel, 'garden_cleaned', false)
+    expect(barrel.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_002_GARDEN_BARREL' })
+    expect(barrel.actions).toContainEqual({ type: 'setFlag', flag: 'garden_cleaned', value: true })
+
+    expectCondition(report, 'garden_cleaned', true)
+    expectCondition(report, 'garden_reported', false)
+    expect(report.actions).toContainEqual({ type: 'addItem', itemId: 'pineapple_rice', quantity: 3 })
+    expect(report.actions).toContainEqual({ type: 'questComplete', questId: 'QST_002' })
+    expect(report.actions).toContainEqual({ type: 'setFlag', flag: 'garden_reported', value: true })
+
+    expectCondition(done, 'garden_reported', true)
+    expect(done.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_002_GARDEN_DONE' })
+  })
+
+  test('garden dialogues DIA_002_* exist and have valid structure', () => {
+    const gardenIds = ['DIA_002_GARDEN', 'DIA_002_GARDEN_WAIT', 'DIA_002_GARDEN_BARREL', 'DIA_002_GARDEN_CLEAR', 'DIA_002_GARDEN_AFTER', 'DIA_002_GARDEN_DONE']
+    for (const id of gardenIds) {
+      expect(DIALOGUES[id]).toBeDefined()
+      expect(DIALOGUES[id]!.lines.length).toBeGreaterThan(0)
+    }
+  })
 })
