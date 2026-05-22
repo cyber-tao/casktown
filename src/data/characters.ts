@@ -13,7 +13,7 @@ export const INITIAL_CHARACTERS: Record<string, CharacterData> = {
       level: 1, exp: 0, expToNext: 50,
     },
     skills: ['qizhijian'],
-    equipment: { weapon: null, armor: null, accessory: null },
+    equipment: { weapon: 'fathers_sword', armor: null, accessory: null },
     tp: 0,
   },
   HUIHUI: {
