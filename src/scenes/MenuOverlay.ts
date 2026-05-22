@@ -1473,7 +1473,7 @@ export class MenuOverlay extends Phaser.Scene {
   private getDiscoveredItems(): string[] {
     const gd = GameData.getInstance()
     return Object.keys(this.getItems()).filter(id => {
-      const stored = (gd.inventory.items[id] ?? 0) + (gd.inventory.equipment[id] ?? 0)
+      const stored = gd.getItemQuantity(id)
       const equipped = this.getPartyMembers().some(member => EQUIPMENT_SLOTS.some(slot => member.char.equipment[slot] === id))
       return stored > 0 || equipped || gd.getFlag(`found_${id}`) === true
     })
@@ -1535,29 +1535,11 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private getStoredQuantity(itemId: string): number {
-    const gd = GameData.getInstance()
-    return (gd.inventory.items[itemId] ?? 0) + (gd.inventory.equipment[itemId] ?? 0)
+    return GameData.getInstance().getItemQuantity(itemId)
   }
 
   private removeStoredItem(itemId: string): boolean {
-    const gd = GameData.getInstance()
-    const equipmentQty = gd.inventory.equipment[itemId] ?? 0
-    if (equipmentQty > 0) {
-      if (equipmentQty === 1) {
-        delete gd.inventory.equipment[itemId]
-      } else {
-        gd.inventory.equipment[itemId] = equipmentQty - 1
-      }
-      return true
-    }
-    const itemQty = gd.inventory.items[itemId] ?? 0
-    if (itemQty <= 0) return false
-    if (itemQty === 1) {
-      delete gd.inventory.items[itemId]
-    } else {
-      gd.inventory.items[itemId] = itemQty - 1
-    }
-    return true
+    return GameData.getInstance().removeItem(itemId, 1)
   }
 
   private equipStoredItem(charId: string, itemId: string): boolean {

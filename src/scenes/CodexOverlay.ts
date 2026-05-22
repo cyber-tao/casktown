@@ -87,7 +87,7 @@ export class CodexOverlay extends Phaser.Scene {
     }
 
     this.discoveredItems = Object.keys(items).filter(id => {
-      const count = gd.inventory.items[id] || 0
+      const count = gd.getItemQuantity(id)
       return count > 0 || gd.getFlag(`found_${id}`) === true
     })
 
@@ -195,7 +195,7 @@ export class CodexOverlay extends Phaser.Scene {
       for (let i = 0; i < this.discoveredItems.length; i++) {
         const item = items[this.discoveredItems[i]!]
         if (!item) continue
-        const count = GameData.getInstance().inventory.items[item.id] || 0
+        const count = GameData.getInstance().getItemQuantity(item.id)
         const t = this.add.text(scalePx(150), scalePx(90 + i * 26), `${item.name} x${count}`, {
           fontSize: scaleFont(14), color: '#ecf0f1',
         })

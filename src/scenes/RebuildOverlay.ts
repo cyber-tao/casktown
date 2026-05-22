@@ -45,7 +45,7 @@ export class RebuildOverlay extends Phaser.Scene {
     this.titleText.setDepth(201)
 
     const gd = GameData.getInstance()
-    const matCount = gd.inventory.items['rebuild_material'] || 0
+    const matCount = gd.getItemQuantity('rebuild_material')
 
     const matText = this.add.text(GAME_WIDTH / 2, scalePx(70), `建材: ${matCount}`, {
       fontSize: scaleFont(16), color: '#ecf0f1',
@@ -128,13 +128,10 @@ export class RebuildOverlay extends Phaser.Scene {
       return
     }
 
-    const matCount = gd.inventory.items['rebuild_material'] || 0
-    if (matCount < opt.material) {
+    if (!gd.removeItem('rebuild_material', opt.material)) {
       this.descText.setText('建材不足！')
       return
     }
-
-    gd.inventory.items['rebuild_material'] = matCount - opt.material
     gd.setFlag(`rebuilt_${opt.id}`, true)
     RebuildSystem.getInstance().addProgress(1)
     AudioManager.getInstance().playSFX('open_menu')
@@ -146,7 +143,7 @@ export class RebuildOverlay extends Phaser.Scene {
       c => c instanceof Phaser.GameObjects.Text && c !== this.titleText && c.y === scalePx(70)
     ) as Phaser.GameObjects.Text | null
     if (matText) {
-      matText.setText(`建材: ${gd.inventory.items['rebuild_material'] || 0}`)
+      matText.setText(`建材: ${gd.getItemQuantity('rebuild_material')}`)
     }
 
     this.descText.setText(`${opt.name} 重建完成！`)

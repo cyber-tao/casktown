@@ -77,7 +77,7 @@ export class ShopOverlay extends Phaser.Scene {
     for (let i = 0; i < this.shopItems.length; i++) {
       const si = this.shopItems[i]!
       const def = GAME_CONFIG_DATABASE.getTable('items')[si.id]
-      const owned = gd.inventory.items[si.id] || 0
+      const owned = gd.getItemQuantity(si.id)
       const color = i === this.selectedIndex ? '#f1c40f' : COLORS.uiText
       const label = `${(def?.name ?? si.id).padEnd(10)}  ${si.price}G  x${owned}`
       const t = this.add.text(GAME_WIDTH / 2 - scalePx(260), startY + scalePx(i * 28), label, {

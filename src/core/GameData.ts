@@ -258,18 +258,26 @@ export class GameData {
     EventBus.emit(GameEvents.ITEM_GET, itemId, quantity)
   }
 
+  getItemQuantity(itemId: string): number {
+    const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
+    const bag = item?.type === 'equipment' ? this.inventory.equipment : this.inventory.items
+    return bag[itemId] || 0
+  }
+
   removeItem(itemId: string, quantity: number = 1): boolean {
-    const current = this.inventory.items[itemId] || 0
+    const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
+    const bag = item?.type === 'equipment' ? this.inventory.equipment : this.inventory.items
+    const current = bag[itemId] || 0
     if (current < quantity) return false
-    this.inventory.items[itemId] = current - quantity
-    if (this.inventory.items[itemId] <= 0) {
-      delete this.inventory.items[itemId]
+    bag[itemId] = current - quantity
+    if (bag[itemId] <= 0) {
+      delete bag[itemId]
     }
     return true
   }
 
   hasItem(itemId: string, quantity: number = 1): boolean {
-    return (this.inventory.items[itemId] || 0) >= quantity
+    return this.getItemQuantity(itemId) >= quantity
   }
 
   addGold(amount: number): void {
