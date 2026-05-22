@@ -59,6 +59,11 @@ interface PartyHudRow {
   hpText: Phaser.GameObjects.Text
   mpText: Phaser.GameObjects.Text
   levelText: Phaser.GameObjects.Text
+  lastHp?: number
+  lastMaxHp?: number
+  lastMp?: number
+  lastMaxMp?: number
+  lastLevel?: number
 }
 
 export class MapScene extends Phaser.Scene {
@@ -966,11 +971,25 @@ export class MapScene extends Phaser.Scene {
     for (const row of this.partyHudRows) {
       const char = gd.characters.get(row.charId)
       if (!char) continue
-      row.levelText.setText(`${MAP_HUD.PARTY_LEVEL_PREFIX}${char.stats.level}`)
-      row.hpText.setText(`${char.stats.hp}/${char.stats.maxHp}`)
-      row.mpText.setText(`${char.stats.mp}/${char.stats.maxMp}`)
-      this.updatePartyHudBar(row.hpBar, this.getPartyHudStatRatio(char.stats.hp, char.stats.maxHp))
-      this.updatePartyHudBar(row.mpBar, this.getPartyHudStatRatio(char.stats.mp, char.stats.maxMp))
+
+      if (row.lastLevel !== char.stats.level) {
+        row.levelText.setText(`${MAP_HUD.PARTY_LEVEL_PREFIX}${char.stats.level}`)
+        row.lastLevel = char.stats.level
+      }
+
+      if (row.lastHp !== char.stats.hp || row.lastMaxHp !== char.stats.maxHp) {
+        row.hpText.setText(`${char.stats.hp}/${char.stats.maxHp}`)
+        this.updatePartyHudBar(row.hpBar, this.getPartyHudStatRatio(char.stats.hp, char.stats.maxHp))
+        row.lastHp = char.stats.hp
+        row.lastMaxHp = char.stats.maxHp
+      }
+
+      if (row.lastMp !== char.stats.mp || row.lastMaxMp !== char.stats.maxMp) {
+        row.mpText.setText(`${char.stats.mp}/${char.stats.maxMp}`)
+        this.updatePartyHudBar(row.mpBar, this.getPartyHudStatRatio(char.stats.mp, char.stats.maxMp))
+        row.lastMp = char.stats.mp
+        row.lastMaxMp = char.stats.maxMp
+      }
     }
   }
 
