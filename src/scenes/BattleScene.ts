@@ -179,7 +179,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Determine if boss battle
     const isBoss = this.enemyData.some(e => e.isBoss)
-    AudioManager.getInstance().playBattleBGM(isBoss)
+    this.playEncounterBGM(isBoss)
 
     this.createUI()
     this.setupInput()
@@ -310,6 +310,15 @@ export class BattleScene extends Phaser.Scene {
       return ['xiao_yao']
     }
     return encounter.enemies
+  }
+
+  private playEncounterBGM(isBoss: boolean): void {
+    const encounter = GAME_CONFIG_DATABASE.getTable('encounters')[this.encounterId]
+    if (encounter?.bgm) {
+      AudioManager.getInstance().playBGM(encounter.bgm)
+      return
+    }
+    AudioManager.getInstance().playBattleBGM(isBoss)
   }
 
   private getCharacterSpriteBase(characterId: string): string {

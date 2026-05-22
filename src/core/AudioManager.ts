@@ -39,6 +39,9 @@ export class AudioManager {
     if (title) {
       loader.audio(title.key, title.path)
     }
+    for (const sfx of Object.values(GAME_CONFIG_DATABASE.getTable('sfxTracks'))) {
+      loader.audio(sfx.key, sfx.path)
+    }
   }
 
   playBGM(bgmId: string, fadeDuration: number = BGM_FADE_DURATIONS.DEFAULT_MS): void {
@@ -142,7 +145,7 @@ export class AudioManager {
     const sfxVol = gd.settings.sfxVolume
     const volume = config.volume * masterVol * sfxVol
 
-    if (this.scene && this.scene.sound.get(config.key)) {
+    if (this.scene?.cache.audio.exists(config.key)) {
       this.scene.sound.play(config.key, { volume })
       return
     }
@@ -153,6 +156,7 @@ export class AudioManager {
       case 'cursor': this.sfxSynth.playCursor(); break
       case 'confirm': this.sfxSynth.playConfirm(); break
       case 'cancel': this.sfxSynth.playCancel(); break
+      case 'battle_start': this.sfxSynth.playEncounter(); break
       case 'attack_hit': this.sfxSynth.playAttackHit(); break
       case 'attack_slash': this.sfxSynth.playAttackSlash(); break
       case 'magic_cast': this.sfxSynth.playMagicCast(); break
@@ -167,6 +171,7 @@ export class AudioManager {
       case 'step_grass':
       case 'step_stone': this.sfxSynth.playStep(); break
       case 'warp': this.sfxSynth.playWarp(); break
+      case 'victory_fanfare': this.sfxSynth.playLevelUp(); break
       case 'dialogue_advance': this.sfxSynth.playDialogue(); break
       default: console.warn(`No synth fallback for SFX ${sfxId}`)
     }

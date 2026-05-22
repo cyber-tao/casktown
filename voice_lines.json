@@ -5008,5 +5008,203 @@
     "speaker": "sun",
     "text": "……谢谢。",
     "assetKey": "DIA_NPC_REBUILD5_SUN_007"
+  },
+  {
+    "diaId": "DIA_001_HELP",
+    "speaker": "慧慧",
+    "text": "这才是我认识的T。快去吧，菠萝大叔在小镇西南角的菜园门口等你。",
+    "assetKey": "DIA_001_HELP_001_2"
+  },
+  {
+    "diaId": "DIA_002_GARDEN",
+    "speaker": "菠萝大叔",
+    "text": "T，可算来了。菜园就在这片篱笆里面，别再说你找不到。",
+    "assetKey": "DIA_002_GARDEN_001_2"
+  },
+  {
+    "diaId": "DIA_002_GARDEN",
+    "speaker": "T",
+    "text": "我只是确认一下是不是还有专门的菜园入口。",
+    "assetKey": "DIA_002_GARDEN_002"
+  },
+  {
+    "diaId": "DIA_002_GARDEN",
+    "speaker": "菠萝大叔",
+    "text": "没有入口，只有活。进去把那只怪木桶搬走，再回来找我。",
+    "assetKey": "DIA_002_GARDEN_003"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_WAIT",
+    "speaker": "菠萝大叔",
+    "text": "先去篱笆里的菜地。那只木桶卡在地里，我看它不像普通木桶。",
+    "assetKey": "DIA_002_GARDEN_WAIT_001"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_WAIT",
+    "speaker": "T",
+    "text": "木桶还能不像普通木桶？",
+    "assetKey": "DIA_002_GARDEN_WAIT_002"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_WAIT",
+    "speaker": "菠萝大叔",
+    "text": "你们年轻人见识少。",
+    "assetKey": "DIA_002_GARDEN_WAIT_003"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_CLEAR",
+    "speaker": "T",
+    "text": "木桶终于老实了。旁边还压着几株药草和一包种子。",
+    "assetKey": "DIA_002_GARDEN_CLEAR_001"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_CLEAR",
+    "speaker": "T",
+    "text": "回去找菠萝大叔交差。",
+    "assetKey": "DIA_002_GARDEN_CLEAR_003"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_AFTER",
+    "speaker": "菠萝大叔",
+    "text": "干得好。那只木桶昨晚还在我菜地里打呼噜。",
+    "assetKey": "DIA_002_GARDEN_AFTER_001_2"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_AFTER",
+    "speaker": "T",
+    "text": "你的菜园问题比我想象得复杂。",
+    "assetKey": "DIA_002_GARDEN_AFTER_002"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_AFTER",
+    "speaker": "菠萝大叔",
+    "text": "作为回报，这是我特制的菠萝饭团。赶紧去会场，别让慧慧来抓人。",
+    "assetKey": "DIA_002_GARDEN_AFTER_003"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_DONE",
+    "speaker": "菠萝大叔",
+    "text": "菜园整理好了。你要是还想帮忙，我这里永远有活。",
+    "assetKey": "DIA_002_GARDEN_DONE_001"
+  },
+  {
+    "diaId": "DIA_002_GARDEN_DONE",
+    "speaker": "T",
+    "text": "我突然想起盛典快开始了。",
+    "assetKey": "DIA_002_GARDEN_DONE_002"
+  },
+  {
+    "diaId": "DIA_005_MAYOR_AFTER",
+    "speaker": "镇长",
+    "text": "预言之书和七彩木桶已经交给你了。先去奇妙森林，找到千年树种。",
+    "assetKey": "DIA_005_MAYOR_AFTER_001"
+  },
+  {
+    "diaId": "DIA_005_MAYOR_AFTER",
+    "speaker": "木桶精灵",
+    "text": "东边。别再往会场绕了。",
+    "assetKey": "DIA_005_MAYOR_AFTER_002"
+  },
+  {
+    "diaId": "DIA_203_XIYUAN_AFTER",
+    "speaker": "熙苑",
+    "text": "神水已经交给你们。下一段路在神殿，不在这座殿里。",
+    "assetKey": "DIA_203_XIYUAN_AFTER_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_FOREST",
+    "speaker": "木桶精灵",
+    "text": "盛典后的预言之力还没有觉醒。先回镇上完成当前主线。",
+    "assetKey": "DIA_LOCKED_FOREST_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_FOREST_DEPTH",
+    "speaker": "慧慧",
+    "text": "森林深处太危险了。先和大家会合，再继续往里走。",
+    "assetKey": "DIA_LOCKED_FOREST_DEPTH_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_FOREST_ALTAR",
+    "speaker": "木桶精灵",
+    "text": "白虎的试炼还没有结束。千年树种不会提前回应你。",
+    "assetKey": "DIA_LOCKED_FOREST_ALTAR_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_DOCK",
+    "speaker": "船夫",
+    "text": "去圣水殿的航路还没开。先把奇妙森林的千年树种带回来。",
+    "assetKey": "DIA_LOCKED_DOCK_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_WATER_ROUTE",
+    "speaker": "船夫",
+    "text": "海雾还没散。没有千年树种的气息，船靠不过去。",
+    "assetKey": "DIA_LOCKED_WATER_ROUTE_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_WATER_HALL",
+    "speaker": "熙苑",
+    "text": "圣水殿不会跳过试炼。先完成水瑶和风赤的战斗。",
+    "assetKey": "DIA_LOCKED_WATER_HALL_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_TEMPLE_ROUTE",
+    "speaker": "木桶精灵",
+    "text": "神殿山路还在沉睡。取得神水后，通往神殿的路才会显现。",
+    "assetKey": "DIA_LOCKED_TEMPLE_ROUTE_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_SEVEN_ROAD",
+    "speaker": "葱葱",
+    "text": "前面的路被石阵封住了。先解决山路上的阻碍。",
+    "assetKey": "DIA_LOCKED_SEVEN_ROAD_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_TEMPLE",
+    "speaker": "sun",
+    "text": "神殿不会在试炼结束前开门。先完成七色路的战斗。",
+    "assetKey": "DIA_LOCKED_TEMPLE_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_LIFE_SPRING",
+    "speaker": "木桶精灵",
+    "text": "生命之泉还没有显露。集齐三件神物并完成重建后再来。",
+    "assetKey": "DIA_LOCKED_LIFE_SPRING_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_REINCARNATION",
+    "speaker": "木桶精灵",
+    "text": "轮回道仍被四道封印压住。先释放祀神四体。",
+    "assetKey": "DIA_LOCKED_REINCARNATION_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_SWAMP",
+    "speaker": "xiaoai",
+    "text": "梦还没有醒。你现在看见的黑暗沼泽，只是黑暗本身。",
+    "assetKey": "DIA_LOCKED_SWAMP_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_PALACE",
+    "speaker": "木桶精灵",
+    "text": "沼泽的链锁还没有解开。魔宫入口不会回应你。",
+    "assetKey": "DIA_LOCKED_PALACE_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_UNDERGROUND",
+    "speaker": "木桶精灵",
+    "text": "通往地下魔宫的机关还没有打开。先处理黑暗沼泽的链锁。",
+    "assetKey": "DIA_LOCKED_UNDERGROUND_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_DEEP_UNDERGROUND",
+    "speaker": "xiaoai",
+    "text": "假影还没有被击破。更深处的门不会让你通过。",
+    "assetKey": "DIA_LOCKED_DEEP_UNDERGROUND_001"
+  },
+  {
+    "diaId": "DIA_LOCKED_ABYSS",
+    "speaker": "木桶精灵",
+    "text": "人心之渊还没有出现。等xiaoai被净化后，再回到这里。",
+    "assetKey": "DIA_LOCKED_ABYSS_001"
   }
 ]
