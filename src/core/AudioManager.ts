@@ -193,24 +193,36 @@ export class AudioManager {
       this.scene.load.audio(key, path)
       this.scene.load.once(`filecomplete-audio-${key}`, () => {
         if (this.scene && this.requestedVoiceKey === key) {
-          this.currentVoice = this.scene.sound.add(key, { volume, loop: false })
-          this.currentVoice.play()
+          this.requestedVoiceKey = ''
+          this.playLoadedVoice(key, volume)
         }
       })
       this.scene.load.once(`loaderror-audio-${key}`, () => {
-        // Voice file not found, skip silently
+        if (this.requestedVoiceKey === key) this.requestedVoiceKey = ''
       })
       this.scene.load.start()
     } else {
-      this.currentVoice = this.scene.sound.add(key, { volume, loop: false })
-      this.currentVoice.play()
+      this.requestedVoiceKey = ''
+      this.playLoadedVoice(key, volume)
     }
+  }
+
+  private playLoadedVoice(key: string, volume: number): void {
+    if (!this.scene) return
+    const voice = this.scene.sound.add(key, { volume, loop: false })
+    this.currentVoice = voice
+    voice.once('complete', () => {
+      if (this.currentVoice === voice) this.currentVoice = null
+      voice.destroy()
+    })
+    voice.play()
   }
 
   stopVoice(): void {
     if (this.currentVoice?.isPlaying) {
       this.currentVoice.stop()
     }
+    this.currentVoice?.destroy()
     this.currentVoice = null
     this.requestedVoiceKey = ''
   }

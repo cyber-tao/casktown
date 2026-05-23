@@ -48,7 +48,7 @@ import {
   scaleFont,
   scalePx,
 } from '../utils/constants'
-import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
+import type { MapData, MapEvent, EventAction, FieldEntityBehavior, QuestState } from '../data/types'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 
@@ -90,6 +90,8 @@ export class MapScene extends Phaser.Scene {
   private partyHudObjects: PartyHudObject[] = []
   private partyHudRows: PartyHudRow[] = []
   private partyHudPartyKey = ''
+  private questHudObjects: PartyHudObject[] = []
+  private questHudKey = ''
   private mapNameText!: Phaser.GameObjects.Text
 
   private followers: Phaser.GameObjects.Sprite[] = []
@@ -130,6 +132,10 @@ export class MapScene extends Phaser.Scene {
     this.pendingMapEventId = ''
     this.inEvent = false
     this.scene.restart({ mapId: GameData.getInstance().currentMap })
+  }
+
+  private handleQuestUpdate = (): void => {
+    this.createQuestHud()
   }
 
   private handleFlagSet = (key: string, value: unknown): void => {
@@ -223,6 +229,8 @@ export class MapScene extends Phaser.Scene {
     this.partyHudObjects = []
     this.partyHudRows = []
     this.partyHudPartyKey = ''
+    this.questHudObjects = []
+    this.questHudKey = ''
     this.battleEnemies = new Map()
     this.battleEnemyEvents = new Map()
     this.fieldEntityBehaviors = new Map()
@@ -263,6 +271,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.on(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.on(GameEvents.MENU_CLOSE, this.onMenuClose, this)
     EventBus.on(GameEvents.FLAG_SET, this.handleFlagSet, this)
+    EventBus.on(GameEvents.QUEST_UPDATE, this.handleQuestUpdate, this)
     EventBus.on(GameEvents.SAVE_LOADED, this.handleSaveLoaded, this)
     window.addEventListener('game-quicksave', this.handleQuickSave)
     window.addEventListener('game-quickload', this.handleQuickLoad)
@@ -841,6 +850,7 @@ export class MapScene extends Phaser.Scene {
 
   private createUI(): void {
     this.createPartyHud()
+    this.createQuestHud()
 
     const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - MAP_HUD.PROMPT_Y_OFFSET, MAP_HUD.PROMPT_TEXT, {
       fontSize: `${MAP_HUD.PROMPT_FONT_SIZE}px`,
@@ -1012,6 +1022,75 @@ export class MapScene extends Phaser.Scene {
 
   private getPartyHudKey(members: string[]): string {
     return members.join(MAP_HUD.PARTY_KEY_SEPARATOR)
+  }
+
+  private createQuestHud(): void {
+    const states = QuestSystem.getInstance().getActiveQuests().slice(0, MAP_HUD.QUEST_VISIBLE_COUNT)
+    const nextKey = this.getQuestHudKey(states)
+    if (nextKey === this.questHudKey) return
+
+    this.destroyQuestHud()
+    this.questHudKey = nextKey
+    if (states.length === 0) return
+
+    const panel = this.add.rectangle(MAP_HUD.QUEST_X, MAP_HUD.QUEST_Y, MAP_HUD.QUEST_WIDTH, MAP_HUD.QUEST_HEIGHT, MAP_HUD.BACKGROUND_COLOR, MAP_HUD.QUEST_PANEL_ALPHA)
+    panel.setOrigin(0, 0)
+    panel.setStrokeStyle(MAP_HUD.BORDER_WIDTH, MAP_HUD.BORDER_COLOR, MAP_HUD.QUEST_BORDER_ALPHA)
+    this.addQuestHudObject(panel)
+
+    const title = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_TITLE_Y, MAP_HUD.QUEST_TITLE_TEXT, {
+      fontSize: `${MAP_HUD.QUEST_TITLE_FONT_SIZE}px`,
+      color: MAP_HUD.QUEST_TITLE_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+    })
+    this.addQuestHudObject(title)
+
+    const state = states[MAP_HUD.QUEST_FALLBACK_OBJECTIVE_INDEX]!
+    const quest = GAME_CONFIG_DATABASE.getTable('quests')[state.id]
+    const objective = quest?.objectives[state.progress] ?? quest?.objectives[MAP_HUD.QUEST_FALLBACK_OBJECTIVE_INDEX] ?? quest?.description ?? state.id
+
+    const name = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_NAME_Y, quest?.name ?? state.id, {
+      fontSize: `${MAP_HUD.QUEST_NAME_FONT_SIZE}px`,
+      color: MAP_HUD.QUEST_NAME_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+      fixedWidth: MAP_HUD.QUEST_TEXT_WIDTH,
+      maxLines: MAP_HUD.QUEST_NAME_MAX_LINES,
+    })
+    this.addQuestHudObject(name)
+
+    const body = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_OBJECTIVE_Y, objective, {
+      fontSize: `${MAP_HUD.QUEST_BODY_FONT_SIZE}px`,
+      color: MAP_HUD.QUEST_TEXT_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+      fixedWidth: MAP_HUD.QUEST_TEXT_WIDTH,
+      wordWrap: { width: MAP_HUD.QUEST_TEXT_WIDTH, useAdvancedWrap: true },
+      maxLines: MAP_HUD.QUEST_BODY_MAX_LINES,
+    })
+    this.addQuestHudObject(body)
+
+    const progress = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_PROGRESS_Y, `${MAP_HUD.QUEST_PROGRESS_PREFIX} ${state.progress}/${state.maxProgress}`, {
+      fontSize: `${MAP_HUD.QUEST_PROGRESS_FONT_SIZE}px`,
+      color: MAP_HUD.QUEST_PROGRESS_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+    })
+    this.addQuestHudObject(progress)
+  }
+
+  private addQuestHudObject<T extends PartyHudObject>(object: T): T {
+    object.setScrollFactor(0)
+    object.setDepth(MAP_HUD.DEPTH)
+    this.questHudObjects.push(object)
+    return object
+  }
+
+  private destroyQuestHud(): void {
+    for (const object of this.questHudObjects) object.destroy()
+    this.questHudObjects = []
+    this.questHudKey = ''
+  }
+
+  private getQuestHudKey(states: QuestState[]): string {
+    return states.map(state => `${state.id}:${state.status}:${state.progress}:${state.maxProgress}`).join(MAP_HUD.QUEST_KEY_SEPARATOR)
   }
 
   private createMinimap(): void {
@@ -1760,6 +1839,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.off(GameEvents.BATTLE_END, this.onBattleEnd, this)
     EventBus.off(GameEvents.MENU_CLOSE, this.onMenuClose, this)
     EventBus.off(GameEvents.FLAG_SET, this.handleFlagSet, this)
+    EventBus.off(GameEvents.QUEST_UPDATE, this.handleQuestUpdate, this)
     EventBus.off(GameEvents.SAVE_LOADED, this.handleSaveLoaded, this)
     window.removeEventListener('game-quicksave', this.handleQuickSave)
     window.removeEventListener('game-quickload', this.handleQuickLoad)
@@ -1768,6 +1848,7 @@ export class MapScene extends Phaser.Scene {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.syncTouchControls, this)
     this.destroyTouchControls()
     this.destroyPartyHud()
+    this.destroyQuestHud()
     for (const timer of this.enemyPatrolTimers) timer.remove(false)
     for (const timer of this.npcTimers) timer.remove(false)
     this.enemyPatrolTimers = []
