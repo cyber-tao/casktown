@@ -28,6 +28,7 @@ import {
   MAP_ENCOUNTER_RATES,
   MAP_HUD,
   MAP_INPUT_CODES,
+  LOADING_SCREEN,
   MAP_MOVE_SPEED_TILES_PER_SECOND,
   PARTY_FIELD_EVENT_CHARACTER_IDS,
   REBUILD_VISUAL_MAP_THRESHOLD,
@@ -49,6 +50,7 @@ import {
 } from '../utils/constants'
 import type { MapData, MapEvent, EventAction, FieldEntityBehavior } from '../data/types'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { showLoadingScreen } from '../utils/loadingScreen'
 
 type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
 
@@ -206,6 +208,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   preload(): void {
+    showLoadingScreen(this, LOADING_SCREEN.MAP_LABEL)
     queueImageAssets(this, collectMapImageKeys(this.mapData, GameData.getInstance().party))
   }
 

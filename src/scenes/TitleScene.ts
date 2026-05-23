@@ -10,6 +10,7 @@ import {
   GAME_HEIGHT,
   PROJECT_GITHUB_URL,
   START_MAP_ID,
+  STARTUP_LOADING,
   TITLE_GITHUB_LINK,
   TITLE_MENU_ACTION_INDEX,
   TITLE_MENU_ITEMS,
@@ -99,6 +100,7 @@ export class TitleScene extends Phaser.Scene {
 
     // Fade in
     this.cameras.main.fadeIn(500)
+    window.dispatchEvent(new CustomEvent(STARTUP_LOADING.READY_EVENT))
   }
 
   private changeMenu(dir: number): void {

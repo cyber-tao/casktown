@@ -1,4 +1,4 @@
-import { BATTLE_BACKGROUND_KEYS, ITEM_ICON_KEY_PREFIX } from '../utils/constants'
+import { BATTLE_BACKGROUND_KEYS, ITEM_ICON_KEY_PREFIX, LOADING_SCREEN } from '../utils/constants'
 import { ITEMS } from './items'
 
 const CHARACTER_POSES = {
@@ -140,6 +140,7 @@ const DARK_TILES = [
 
 const imageAssets: Record<string, string> = {
   ui_title_bg: 'title_bg_1080p.jpg',
+  [LOADING_SCREEN.BACKGROUND_KEY]: 'loading_bg_1080p.jpg',
   ui_world_map: 'map-world.png',
 }
 

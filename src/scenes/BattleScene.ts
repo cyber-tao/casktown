@@ -20,12 +20,14 @@ import {
   ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
+  LOADING_SCREEN,
   ROAMING_ENCOUNTER_RESPAWN,
   scaleFont,
   scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { showLoadingScreen } from '../utils/loadingScreen'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -104,6 +106,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   preload(): void {
+    showLoadingScreen(this, LOADING_SCREEN.BATTLE_LABEL)
     queueImageAssets(this, collectBattleImageKeys(this.encounterId, GameData.getInstance().party, this.mapId))
   }
 

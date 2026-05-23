@@ -25,6 +25,7 @@ import {
   INVENTORY_CATEGORY_LABELS,
   INVENTORY_TYPE_ORDER,
   ITEM_ICON_KEY_PREFIX,
+  LOADING_SCREEN,
   MENU_CODEX_TAB_KEYS,
   MENU_CODEX_TAB_LABELS,
   MENU_NAV_INDEX,
@@ -44,6 +45,7 @@ import {
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { showLoadingScreen } from '../utils/loadingScreen'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
 
@@ -101,6 +103,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   preload(): void {
+    showLoadingScreen(this, LOADING_SCREEN.MENU_LABEL)
     const characterKeys = Object.keys(GAME_CONFIG_DATABASE.getTable('characters'))
       .map(charId => `${CHARACTER_SPRITE_BASE_KEYS[charId] ?? charId.toLowerCase()}_front_idle_01`)
     const itemKeys = Object.keys(this.getItems()).map(itemId => this.getItemIconKey(itemId))

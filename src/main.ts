@@ -1,5 +1,12 @@
 import 'phaser'
 import { CaskTownGame } from './game'
+import { STARTUP_LOADING } from './utils/constants'
+
+function hideStartupLoading(): void {
+  document.getElementById(STARTUP_LOADING.ELEMENT_ID)?.remove()
+}
+
+window.addEventListener(STARTUP_LOADING.READY_EVENT, hideStartupLoading, { once: true })
 
 function startGame(): void {
   if ((window as any).game) return

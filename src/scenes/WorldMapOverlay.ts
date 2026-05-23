@@ -7,6 +7,7 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
+  LOADING_SCREEN,
   MAP_INPUT_CODES,
   WORLD_MAP_BACKGROUND_DISPLAY_WIDTH,
   WORLD_MAP_BACKGROUND_LAYOUT,
@@ -14,8 +15,11 @@ import {
   WORLD_MAP_UI,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
+import { showLoadingScreen } from '../utils/loadingScreen'
 
 export class WorldMapOverlay extends Phaser.Scene {
+  private closing = false
+
   constructor() {
     super({ key: 'WorldMapOverlay', active: false })
   }
@@ -27,10 +31,12 @@ export class WorldMapOverlay extends Phaser.Scene {
   }
 
   preload(): void {
+    showLoadingScreen(this, LOADING_SCREEN.WORLD_MAP_LABEL)
     queueImageAsset(this, WORLD_MAP_BACKGROUND_LAYOUT.KEY)
   }
 
   create(): void {
+    this.closing = false
     AudioManager.getInstance().setScene(this)
 
     const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_COLOR, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_ALPHA)
@@ -50,6 +56,26 @@ export class WorldMapOverlay extends Phaser.Scene {
     })
     hint.setOrigin(0.5).setScrollFactor(0).setDepth(201)
     bindTouchText(hint, () => this.close())
+
+    const closeButton = this.add.rectangle(
+      WORLD_MAP_UI.CLOSE_BUTTON_X,
+      WORLD_MAP_UI.CLOSE_BUTTON_Y,
+      WORLD_MAP_UI.CLOSE_BUTTON_WIDTH,
+      WORLD_MAP_UI.CLOSE_BUTTON_HEIGHT,
+      WORLD_MAP_UI.CLOSE_BUTTON_BG_COLOR,
+      WORLD_MAP_UI.CLOSE_BUTTON_BG_ALPHA,
+    )
+    closeButton.setStrokeStyle(WORLD_MAP_UI.CLOSE_BUTTON_BORDER_WIDTH, WORLD_MAP_UI.CLOSE_BUTTON_BORDER_COLOR, WORLD_MAP_UI.CLOSE_BUTTON_BORDER_ALPHA)
+    closeButton.setScrollFactor(0).setDepth(WORLD_MAP_UI.CLOSE_BUTTON_DEPTH).setInteractive()
+    if (closeButton.input) closeButton.input.cursor = 'pointer'
+    closeButton.on(Phaser.Input.Events.POINTER_DOWN, () => this.close())
+
+    const closeText = this.add.text(WORLD_MAP_UI.CLOSE_BUTTON_X, WORLD_MAP_UI.CLOSE_BUTTON_Y, WORLD_MAP_UI.CLOSE_BUTTON_TEXT, {
+      fontSize: `${WORLD_MAP_UI.CLOSE_BUTTON_FONT_SIZE}px`,
+      color: WORLD_MAP_UI.CLOSE_BUTTON_TEXT_COLOR,
+    })
+    closeText.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.CLOSE_BUTTON_DEPTH + WORLD_MAP_UI.CLOSE_BUTTON_TEXT_DEPTH_OFFSET)
+    bindTouchText(closeText, () => this.close())
 
     this.renderCurrentLocation()
 
@@ -108,6 +134,8 @@ export class WorldMapOverlay extends Phaser.Scene {
   }
 
   private close(): void {
+    if (this.closing) return
+    this.closing = true
     AudioManager.getInstance().playSFX('close_menu')
     EventBus.emit(GameEvents.MENU_CLOSE)
     this.scene.stop()

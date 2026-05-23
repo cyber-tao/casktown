@@ -12,6 +12,7 @@ import {
   DIALOGUE_TEXT_WRAP_CHARS,
   GAME_HEIGHT,
   GAME_WIDTH,
+  LOADING_SCREEN,
   TEXT_SPEED,
   scaleFont,
   scalePx,
@@ -21,6 +22,7 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { QuestSystem } from '../core/QuestSystem'
+import { showLoadingScreen } from '../utils/loadingScreen'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
 
@@ -96,6 +98,7 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   preload(): void {
+    showLoadingScreen(this, LOADING_SCREEN.DIALOGUE_LABEL)
     queueImageAssets(this, this.collectDialogueFaceKeys(this.dialogueId))
   }
 
