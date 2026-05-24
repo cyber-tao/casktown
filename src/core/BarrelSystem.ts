@@ -1,5 +1,6 @@
 import { GameData } from './GameData'
 import { EventBus, GameEvents } from './EventBus'
+import { BARREL_DUNGEON_ENTRANCES, BARREL_NO_ESCAPE_MAP_IDS } from '../utils/constants'
 
 export type BarrelColor = 'green' | 'blue' | 'gold' | 'cyan' | 'white' | 'vermillion' | 'black' | 'rainbow'
 
@@ -63,20 +64,11 @@ export class BarrelSystem {
   }
 
   canEscapeDungeon(mapId: string): boolean {
-    const noEscapeMaps = ['MAP_055', 'MAP_063']
-    if (noEscapeMaps.includes(mapId)) return false
+    if ((BARREL_NO_ESCAPE_MAP_IDS as readonly string[]).includes(mapId)) return false
     return this.getUnlockedColors().length > 0
   }
 
   getDungeonEntrance(mapId: string): string | null {
-    const entrances: Record<string, string> = {
-      'MAP_010': 'MAP_001', 'MAP_011': 'MAP_001', 'MAP_012': 'MAP_001',
-      'MAP_020': 'MAP_001', 'MAP_030': 'MAP_020', 'MAP_031': 'MAP_020',
-      'MAP_040': 'MAP_001', 'MAP_041': 'MAP_001', 'MAP_042': 'MAP_001',
-      'MAP_051': 'MAP_050', 'MAP_052': 'MAP_050', 'MAP_053': 'MAP_050',
-      'MAP_054': 'MAP_050', 'MAP_060': 'MAP_061', 'MAP_061': 'MAP_050',
-      'MAP_062': 'MAP_060', 'MAP_063': 'MAP_060', 'MAP_070': 'MAP_060',
-    }
-    return entrances[mapId] || null
+    return BARREL_DUNGEON_ENTRANCES[mapId] || null
   }
 }

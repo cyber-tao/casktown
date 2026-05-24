@@ -4,6 +4,7 @@ import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import {
+  BARREL_UNLOCK_PROGRESS_FLAGS,
   INITIAL_GOLD,
   LEVEL_GROWTH,
   CONTROL_MODE,
@@ -221,6 +222,11 @@ export class GameData {
   }
 
   private syncProgressionFlags(): void {
+    for (const { sourceFlag, unlockFlag } of BARREL_UNLOCK_PROGRESS_FLAGS) {
+      if (this.flags[sourceFlag] === true) {
+        this.flags[unlockFlag] = true
+      }
+    }
     if (this.flags.has_millennium_seed && this.flags.has_sacred_water && this.flags.has_divine_laurel) {
       this.flags.has_all_relics = true
     }
@@ -601,8 +607,8 @@ export class GameData {
     for (const charId of this.characters.keys()) {
       this.applyEquipment(charId)
     }
-    this.syncProgressionFlags()
     this.syncTrueRouteState()
+    this.syncProgressionFlags()
   }
 
   syncPlayTime(nowMs = Date.now()): void {

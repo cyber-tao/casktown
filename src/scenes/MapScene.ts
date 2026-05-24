@@ -31,6 +31,7 @@ import {
   MAP_ENCOUNTER_RATES,
   MAP_HUD,
   MAP_INPUT_CODES,
+  MAP_WEATHER_GROUPS,
   LOADING_SCREEN,
   MAP_MOVE_SPEED_TILES_PER_SECOND,
   PARTY_FIELD_EVENT_CHARACTER_IDS,
@@ -1837,12 +1838,9 @@ export class MapScene extends Phaser.Scene {
   }
 
   private createWeather(): void {
-    const rainMaps = ['MAP_040', 'MAP_041', 'MAP_050', 'MAP_061']
-    const snowMaps: string[] = []
-
-    if (rainMaps.includes(this.mapData.id)) {
+    if ((MAP_WEATHER_GROUPS.rain as readonly string[]).includes(this.mapData.id)) {
       this.startRain()
-    } else if (snowMaps.includes(this.mapData.id)) {
+    } else if ((MAP_WEATHER_GROUPS.snow as readonly string[]).includes(this.mapData.id)) {
       this.startSnow()
     }
   }

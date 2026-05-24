@@ -488,6 +488,41 @@ export const PARTY_FIELD_EVENT_CHARACTER_IDS: Record<string, string> = {
 export const RUINED_TOWN_MAP_ID = 'MAP_001'
 export const REBUILT_TOWN_MAP_ID = 'MAP_002'
 export const TOWN_MAP_IDS = [RUINED_TOWN_MAP_ID, REBUILT_TOWN_MAP_ID] as const
+export const BARREL_UNLOCK_PROGRESS_FLAGS = [
+  { sourceFlag: 'has_millennium_seed', unlockFlag: 'barrel_green' },
+  { sourceFlag: 'has_sacred_water', unlockFlag: 'barrel_blue' },
+  { sourceFlag: 'has_divine_laurel', unlockFlag: 'barrel_gold' },
+  { sourceFlag: 'seal_qinglong_released', unlockFlag: 'barrel_cyan' },
+  { sourceFlag: 'seal_baihu_released', unlockFlag: 'barrel_white' },
+  { sourceFlag: 'seal_zhuque_released', unlockFlag: 'barrel_vermillion' },
+  { sourceFlag: 'seal_xuanwu_released', unlockFlag: 'barrel_black' },
+  { sourceFlag: 'true_route_unlocked', unlockFlag: 'barrel_rainbow' },
+] as const
+export const BARREL_NO_ESCAPE_MAP_IDS = ['MAP_055', 'MAP_063'] as const
+export const BARREL_DUNGEON_ENTRANCES: Record<string, string> = {
+  MAP_010: RUINED_TOWN_MAP_ID,
+  MAP_011: RUINED_TOWN_MAP_ID,
+  MAP_012: RUINED_TOWN_MAP_ID,
+  MAP_020: RUINED_TOWN_MAP_ID,
+  MAP_030: 'MAP_020',
+  MAP_031: 'MAP_020',
+  MAP_040: RUINED_TOWN_MAP_ID,
+  MAP_041: RUINED_TOWN_MAP_ID,
+  MAP_042: RUINED_TOWN_MAP_ID,
+  MAP_051: 'MAP_050',
+  MAP_052: 'MAP_050',
+  MAP_053: 'MAP_050',
+  MAP_054: 'MAP_050',
+  MAP_060: 'MAP_061',
+  MAP_061: 'MAP_050',
+  MAP_062: 'MAP_060',
+  MAP_063: 'MAP_060',
+  MAP_070: 'MAP_060',
+} as const
+export const MAP_WEATHER_GROUPS = {
+  rain: ['MAP_040', 'MAP_041', 'MAP_050', 'MAP_061'],
+  snow: [],
+} as const
 export const MAP_ACCESS_REQUIREMENTS: Record<
   string,
   { readonly flag: string; readonly value?: unknown; readonly minimum?: number; readonly blockedDialogueId: string }
