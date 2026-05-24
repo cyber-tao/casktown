@@ -17,7 +17,7 @@ import { GAME_HEIGHT, GAME_WIDTH, TOUCH_INPUT } from './utils/constants'
 export class CaskTownGame extends Phaser.Game {
   constructor() {
     const config: Phaser.Types.Core.GameConfig = {
-      type: Phaser.AUTO,
+      type: Phaser.CANVAS,
       parent: 'game-container',
       width: GAME_WIDTH,
       height: GAME_HEIGHT,

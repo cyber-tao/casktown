@@ -755,7 +755,12 @@ export const REDESIGNED_MAP_LAYOUTS = {
   },
   MAP_030: {
     width: 40, height: 30, baseTile: MAP_TILE_KEYS.DIRT, frameTile: MAP_TILE_KEYS.ROCK, frameThickness: 2,
-    groundRects: [{ x: 0, y: 14, width: 40, height: 5, tile: MAP_TILE_KEYS.PATH }, { x: 18, y: 0, width: 5, height: 18, tile: MAP_TILE_KEYS.PATH }, { x: 18, y: 5, width: 6, height: 8, tile: MAP_TILE_KEYS.WATER }],
+    groundRects: [
+      { x: 0, y: 14, width: 40, height: 5, tile: MAP_TILE_KEYS.PATH },
+      { x: 18, y: 0, width: 5, height: 18, tile: MAP_TILE_KEYS.PATH },
+      { x: 18, y: 5, width: 6, height: 8, tile: MAP_TILE_KEYS.WATER },
+      { x: 18, y: 0, width: 5, height: 18, tile: MAP_TILE_KEYS.PATH },
+    ],
     objectClearRects: [{ x: 0, y: 14, width: 2, height: 6 }, { x: 18, y: 0, width: 5, height: 2 }],
     objects: [{ x: 20, y: 7, tile: MAP_TILE_KEYS.RUIN }, { x: 17, y: 10, tile: MAP_TILE_KEYS.LAMP }, { x: 24, y: 10, tile: MAP_TILE_KEYS.LAMP }, { x: 29, y: 21, tile: MAP_TILE_KEYS.BARREL }, { x: 7, y: 8, tile: MAP_TILE_KEYS.BARREL }],
     eventPositions: { EVT_SHUIYAO_GATE: { x: 17, y: 7, width: 7, height: 4 }, EVT_SHUIYAO_FENGCHI_BOSS: { x: 19, y: 9, width: 3, height: 3 }, CHEST_HOLY_1: { x: 29, y: 21, width: 1, height: 1 }, CHEST_HOLY_2: { x: 7, y: 8, width: 1, height: 1 } },
@@ -809,8 +814,26 @@ export const REDESIGNED_MAP_LAYOUTS = {
   },
   MAP_050: {
     width: 42, height: 30, baseTile: MAP_TILE_KEYS.GRASS, frameTile: MAP_TILE_KEYS.TREE, frameThickness: 2,
-    groundRects: [{ x: 18, y: 0, width: 6, height: 30, tile: MAP_TILE_KEYS.PATH }, { x: 0, y: 13, width: 42, height: 5, tile: MAP_TILE_KEYS.PATH }, { x: 0, y: 20, width: 18, height: 4, tile: MAP_TILE_KEYS.PATH }, { x: 12, y: 8, width: 18, height: 12, tile: MAP_TILE_KEYS.WATER }, { x: 18, y: 13, width: 6, height: 5, tile: MAP_TILE_KEYS.PATH }],
-    objectClearRects: [{ x: 18, y: 0, width: 6, height: 2 }, { x: 40, y: 13, width: 2, height: 6 }, { x: 0, y: 6, width: 2, height: 5 }, { x: 0, y: 20, width: 2, height: 6 }, { x: 20, y: 28, width: 6, height: 2 }],
+    groundRects: [
+      { x: 18, y: 0, width: 6, height: 30, tile: MAP_TILE_KEYS.PATH },
+      { x: 0, y: 13, width: 42, height: 5, tile: MAP_TILE_KEYS.PATH },
+      { x: 0, y: 20, width: 18, height: 4, tile: MAP_TILE_KEYS.PATH },
+      { x: 12, y: 8, width: 18, height: 12, tile: MAP_TILE_KEYS.WATER },
+      { x: 0, y: 13, width: 42, height: 5, tile: MAP_TILE_KEYS.PATH },
+      { x: 11, y: 0, width: 5, height: 18, tile: MAP_TILE_KEYS.PATH },
+      { x: 18, y: 0, width: 6, height: 30, tile: MAP_TILE_KEYS.PATH },
+      { x: 27, y: 0, width: 5, height: 18, tile: MAP_TILE_KEYS.PATH },
+      { x: 0, y: 20, width: 18, height: 4, tile: MAP_TILE_KEYS.PATH },
+    ],
+    objectClearRects: [
+      { x: 11, y: 0, width: 5, height: 2 },
+      { x: 18, y: 0, width: 6, height: 2 },
+      { x: 27, y: 0, width: 5, height: 2 },
+      { x: 40, y: 13, width: 2, height: 6 },
+      { x: 0, y: 6, width: 2, height: 5 },
+      { x: 0, y: 20, width: 2, height: 6 },
+      { x: 20, y: 28, width: 6, height: 2 },
+    ],
     objects: [{ x: 21, y: 15, tile: MAP_TILE_KEYS.RUIN }, { x: 13, y: 2, tile: MAP_TILE_KEYS.SIGN }, { x: 21, y: 2, tile: MAP_TILE_KEYS.SIGN }, { x: 30, y: 2, tile: MAP_TILE_KEYS.SIGN }, { x: 2, y: 8, tile: MAP_TILE_KEYS.SIGN }, { x: 22, y: 27, tile: MAP_TILE_KEYS.SIGN }],
     eventPositions: { EVT_SPRING_BARRIER: { x: 18, y: 12, width: 8, height: 6 }, EVT_SPRING_GATE: { x: 18, y: 12, width: 8, height: 6 } },
     transfers: [
@@ -885,7 +908,13 @@ export const REDESIGNED_MAP_LAYOUTS = {
   },
   MAP_061: {
     width: 36, height: 28, baseTile: MAP_TILE_KEYS.DIRT, frameTile: MAP_TILE_KEYS.ROCK, frameThickness: 2,
-    groundRects: [{ x: 0, y: 12, width: 36, height: 5, tile: MAP_TILE_KEYS.PATH }, { x: 17, y: 0, width: 5, height: 17, tile: MAP_TILE_KEYS.PATH }, { x: 7, y: 7, width: 23, height: 12, tile: MAP_TILE_KEYS.WATER }, { x: 0, y: 12, width: 36, height: 5, tile: MAP_TILE_KEYS.PATH }],
+    groundRects: [
+      { x: 0, y: 12, width: 36, height: 5, tile: MAP_TILE_KEYS.PATH },
+      { x: 17, y: 0, width: 5, height: 17, tile: MAP_TILE_KEYS.PATH },
+      { x: 7, y: 7, width: 23, height: 12, tile: MAP_TILE_KEYS.WATER },
+      { x: 0, y: 12, width: 36, height: 5, tile: MAP_TILE_KEYS.PATH },
+      { x: 17, y: 0, width: 5, height: 17, tile: MAP_TILE_KEYS.PATH },
+    ],
     objectClearRects: [{ x: 0, y: 12, width: 2, height: 6 }, { x: 17, y: 0, width: 5, height: 2 }, { x: 34, y: 12, width: 2, height: 6 }],
     objects: [{ x: 9, y: 13, tile: MAP_TILE_KEYS.BRIDGE }, { x: 18, y: 13, tile: MAP_TILE_KEYS.BRIDGE }, { x: 27, y: 13, tile: MAP_TILE_KEYS.BRIDGE }, { x: 5, y: 18, tile: MAP_TILE_KEYS.BARREL }, { x: 30, y: 18, tile: MAP_TILE_KEYS.BARREL }],
     eventPositions: { EVT_CHAIN_1: { x: 7, y: 11, width: 2, height: 2 }, EVT_CHAIN_2: { x: 17, y: 9, width: 2, height: 2 }, EVT_CHAIN_3: { x: 27, y: 11, width: 2, height: 2 }, EVT_SWAMP_AMBUSH: { x: 12, y: 12, width: 12, height: 5 }, CHEST_SWAMP_1: { x: 5, y: 18, width: 1, height: 1 }, CHEST_SWAMP_2: { x: 30, y: 18, width: 1, height: 1 } },
