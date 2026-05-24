@@ -637,8 +637,11 @@ function buildMap011(): MapData {
     },
     {
       id: 'EVT_TIGER', x: 16, y: 12, width: 4, height: 4,
-      type: 'battle', trigger: 'touch',
-      actions: [{ type: 'battle', encounterId: 'BTL_110' }],
+      type: 'trigger', trigger: 'touch',
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_103_TIGER' },
+        { type: 'dialogue', dialogueId: 'DIA_103_TIGER_RING' },
+      ],
     },
   ]
 
@@ -722,16 +725,28 @@ function buildMap012(): MapData {
       ],
     },
     {
+      id: 'EVT_ALTAR_HINT', x: 11, y: 10, width: 2, height: 1,
+      type: 'trigger', trigger: 'action',
+      conditions: [{ flag: 'puzzle_trees_solved', value: false }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_104_ALTAR_LOCKED' }],
+    },
+    {
       id: 'EVT_ALTAR', x: 11, y: 10, width: 2, height: 1,
       type: 'trigger', trigger: 'action',
-      conditions: [{ flag: 'puzzle_trees_solved', value: true }],
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_106_ALTAR' }],
+      conditions: [{ flag: 'puzzle_trees_solved', value: true }, { flag: 'has_millennium_seed', value: false }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_104_SEED_BATTLE' },
+        { type: 'dialogue', dialogueId: 'DIA_104_SEED' },
+      ],
     },
     {
       id: 'EVT_SEED_BOSS', x: 10, y: 12, width: 4, height: 3,
       type: 'battle', trigger: 'touch',
-      conditions: [{ flag: 'puzzle_trees_solved', value: true }],
-      actions: [{ type: 'battle', encounterId: 'BTL_113' }],
+      conditions: [{ flag: 'puzzle_trees_solved', value: true }, { flag: 'has_millennium_seed', value: false }],
+      actions: [
+        { type: 'battle', encounterId: 'BTL_113' },
+        { type: 'dialogue', dialogueId: 'DIA_104_SEED' },
+      ],
     },
   ]
 
@@ -1122,13 +1137,23 @@ function buildMap041(): MapData {
     {
       id: 'EVT_PHOENIX_GATE', x: 12, y: 4, width: 4, height: 3,
       type: 'trigger', trigger: 'touch',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_303_PHOENIX' }],
+      conditions: [{ flag: 'phoenix_qilin_defeated', value: false }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_303_PHOENIX' },
+        { type: 'dialogue', dialogueId: 'DIA_303_PHOENIX_P2' },
+        { type: 'dialogue', dialogueId: 'DIA_303_PHOENIX_KILIN_AFTER' },
+        { type: 'dialogue', dialogueId: 'DIA_303_SUN_APPEAR' },
+      ],
     },
     {
       id: 'EVT_PHOENIX_QILIN_BOSS', x: 13, y: 5, width: 2, height: 2,
       type: 'battle', trigger: 'touch',
       conditions: [{ flag: 'phoenix_qilin_defeated', value: false }],
-      actions: [{ type: 'battle', encounterId: 'ENC_PHOENIX_QILIN' }],
+      actions: [
+        { type: 'battle', encounterId: 'BTL_311B' },
+        { type: 'dialogue', dialogueId: 'DIA_303_PHOENIX_KILIN_AFTER' },
+        { type: 'dialogue', dialogueId: 'DIA_303_SUN_APPEAR' },
+      ],
     },
   ]
 
@@ -1278,10 +1303,19 @@ function buildMap050(): MapData {
       actions: [{ type: 'transfer', targetMap: 'MAP_055', targetX: 10, targetY: 13 }],
     },
     {
+      id: 'EVT_SPRING_BARRIER', x: 16, y: 6, width: 4, height: 4,
+      type: 'trigger', trigger: 'touch',
+      conditions: [{ flag: 'released_four_seals', value: false }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_401_SPRING' },
+        { type: 'dialogue', dialogueId: 'DIA_402_BARRIER' },
+      ],
+    },
+    {
       id: 'EVT_SPRING_GATE', x: 16, y: 6, width: 4, height: 4,
       type: 'trigger', trigger: 'touch',
       conditions: [{ flag: 'released_four_seals', value: true }],
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_401_SPRING' }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_420_GOD' }],
     },
   ]
 
@@ -1415,13 +1449,24 @@ function buildMap062(): MapData {
     {
       id: 'EVT_FAKE_XIAOAI', x: 13, y: 8, width: 2, height: 2,
       type: 'trigger', trigger: 'action',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_503_FAKE_XIAOAI' }],
+      conditions: [{ flag: 'fake_xiaoai_defeated', value: false }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_520_PALACE' },
+        { type: 'dialogue', dialogueId: 'DIA_520_PALACE_AFTER' },
+        { type: 'dialogue', dialogueId: 'DIA_520_RESCUE_A' },
+        { type: 'transfer', targetMap: 'MAP_063', targetX: 12, targetY: 16 },
+      ],
     },
     {
       id: 'EVT_FAKE_XIAOAI_BOSS', x: 13, y: 10, width: 2, height: 2,
       type: 'battle', trigger: 'action',
       conditions: [{ flag: 'fake_xiaoai_defeated', value: false }],
-      actions: [{ type: 'battle', encounterId: 'ENC_FAKE_XIAOAI' }],
+      actions: [
+        { type: 'battle', encounterId: 'BTL_520' },
+        { type: 'dialogue', dialogueId: 'DIA_520_PALACE_AFTER' },
+        { type: 'dialogue', dialogueId: 'DIA_520_RESCUE_A' },
+        { type: 'transfer', targetMap: 'MAP_063', targetX: 12, targetY: 16 },
+      ],
     },
   ]
 
@@ -2143,9 +2188,8 @@ function buildMap063(): MapData {
       type: 'trigger', trigger: 'action',
       conditions: [{ flag: 'fake_xiaoai_defeated', value: true }],
       actions: [
-        { type: 'dialogue', dialogueId: 'DIA_631_XIAOAI_CONFRONT' },
-        { type: 'battle', encounterId: 'BTL_XIAOAI_TRUE' },
-        { type: 'setFlag', flag: 'xiaoai_purified', value: true },
+        { type: 'dialogue', dialogueId: 'DIA_530_XIAOAI' },
+        { type: 'dialogue', dialogueId: 'DIA_530_CHOICE' },
       ],
     },
     {

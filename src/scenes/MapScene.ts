@@ -295,6 +295,7 @@ export class MapScene extends Phaser.Scene {
     EventBus.on(GameEvents.FLAG_SET, this.handleFlagSet, this)
     EventBus.on(GameEvents.QUEST_UPDATE, this.handleQuestUpdate, this)
     EventBus.on(GameEvents.SAVE_LOADED, this.handleSaveLoaded, this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this)
     window.addEventListener('game-quicksave', this.handleQuickSave)
     window.addEventListener('game-quickload', this.handleQuickLoad)
 
@@ -677,6 +678,10 @@ export class MapScene extends Phaser.Scene {
       }
       const event = this.battleEnemyEvents.get(id)
       if (!event) continue
+      if (!this.areEventConditionsMet(event)) {
+        this.removeBattleEnemy(id, sprite)
+        continue
+      }
       const behavior = this.fieldEntityBehaviors.get(id) ?? this.getBattleFieldBehavior(event)
       const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
       if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) {
@@ -685,6 +690,16 @@ export class MapScene extends Phaser.Scene {
       }
     }
     return false
+  }
+
+  private removeBattleEnemy(eventId: string, sprite: Phaser.GameObjects.Sprite): void {
+    this.tweens.killTweensOf(sprite)
+    sprite.destroy()
+    this.battleEnemies.delete(eventId)
+    this.battleEnemyEvents.delete(eventId)
+    this.fieldEntityBehaviors.delete(eventId)
+    this.fieldEntityOrigins.delete(eventId)
+    this.fieldEntityDirections.delete(eventId)
   }
 
   private canFieldEntityOccupyPixel(x: number, y: number): boolean {
@@ -1751,10 +1766,8 @@ export class MapScene extends Phaser.Scene {
 
     for (const [eventId, sprite] of this.battleEnemies) {
       const event = this.battleEnemyEvents.get(eventId)
-      if (event && this.isBattleEventDefeated(event)) {
-        sprite.destroy()
-        this.battleEnemies.delete(eventId)
-        this.battleEnemyEvents.delete(eventId)
+      if (event && (this.isBattleEventDefeated(event) || !this.areEventConditionsMet(event))) {
+        this.removeBattleEnemy(eventId, sprite)
       }
     }
 

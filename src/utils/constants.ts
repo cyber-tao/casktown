@@ -735,7 +735,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     objects: [{ x: 16, y: 10, tile: MAP_TILE_KEYS.RUIN }, { x: 10, y: 7, tile: MAP_TILE_KEYS.SAPLING }, { x: 17, y: 7, tile: MAP_TILE_KEYS.SAPLING }, { x: 24, y: 7, tile: MAP_TILE_KEYS.SAPLING }],
     eventPositions: {
       EVT_PUZZLE_TREE_1: { x: 10, y: 7, width: 1, height: 1 }, EVT_PUZZLE_TREE_2: { x: 17, y: 7, width: 1, height: 1 },
-      EVT_PUZZLE_TREE_3: { x: 24, y: 7, width: 1, height: 1 }, EVT_ALTAR: { x: 15, y: 10, width: 3, height: 2 },
+      EVT_PUZZLE_TREE_3: { x: 24, y: 7, width: 1, height: 1 }, EVT_ALTAR_HINT: { x: 15, y: 10, width: 3, height: 2 }, EVT_ALTAR: { x: 15, y: 10, width: 3, height: 2 },
       EVT_SEED_BOSS: { x: 14, y: 12, width: 6, height: 4 },
     },
     transfers: [{ id: 'EXIT_WEST_12', x: 0, y: 12, width: 1, height: 6, targetMap: 'MAP_011', targetX: 39, targetY: 15, direction: DIRECTION.LEFT }],
@@ -812,7 +812,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     groundRects: [{ x: 18, y: 0, width: 6, height: 30, tile: MAP_TILE_KEYS.PATH }, { x: 0, y: 13, width: 42, height: 5, tile: MAP_TILE_KEYS.PATH }, { x: 0, y: 20, width: 18, height: 4, tile: MAP_TILE_KEYS.PATH }, { x: 12, y: 8, width: 18, height: 12, tile: MAP_TILE_KEYS.WATER }, { x: 18, y: 13, width: 6, height: 5, tile: MAP_TILE_KEYS.PATH }],
     objectClearRects: [{ x: 18, y: 0, width: 6, height: 2 }, { x: 40, y: 13, width: 2, height: 6 }, { x: 0, y: 6, width: 2, height: 5 }, { x: 0, y: 20, width: 2, height: 6 }, { x: 20, y: 28, width: 6, height: 2 }],
     objects: [{ x: 21, y: 15, tile: MAP_TILE_KEYS.RUIN }, { x: 13, y: 2, tile: MAP_TILE_KEYS.SIGN }, { x: 21, y: 2, tile: MAP_TILE_KEYS.SIGN }, { x: 30, y: 2, tile: MAP_TILE_KEYS.SIGN }, { x: 2, y: 8, tile: MAP_TILE_KEYS.SIGN }, { x: 22, y: 27, tile: MAP_TILE_KEYS.SIGN }],
-    eventPositions: { EVT_SPRING_GATE: { x: 18, y: 12, width: 8, height: 6 } },
+    eventPositions: { EVT_SPRING_BARRIER: { x: 18, y: 12, width: 8, height: 6 }, EVT_SPRING_GATE: { x: 18, y: 12, width: 8, height: 6 } },
     transfers: [
       { id: 'EXIT_SOUTH_50', x: 41, y: 13, width: 1, height: 6, targetMap: 'MAP_001', targetX: 2, targetY: 17, direction: DIRECTION.RIGHT },
       { id: 'EXIT_NORTH_51', x: 11, y: 0, width: 5, height: 1, targetMap: 'MAP_051', targetX: 17, targetY: 24, direction: DIRECTION.UP },

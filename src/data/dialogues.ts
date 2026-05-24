@@ -483,6 +483,13 @@ export const DIALOGUES: Record<string, DialogueScript> = {
         ],
       },
     ],
+    onComplete: [{ type: 'questStart', questId: 'QST_006' }],
+  },
+  DIA_104_ALTAR_LOCKED: {
+    id: 'DIA_104_ALTAR_LOCKED',
+    lines: [
+      { speaker: '木桶精灵', text: '祭台还没有回应。先按下三棵刻有种子形状的机关树。' },
+    ],
   },
 
   // ============================================================
@@ -900,6 +907,11 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: 'T', text: '那我就当他帮忙了。' },
       { speaker: '系统', text: '获得关键道具【神之桂冠】。主线任务更新：返回木桶镇，完成重建。' },
     ],
+    onComplete: [
+      { type: 'setFlag', flag: 'has_divine_laurel', value: true },
+      { type: 'questComplete', questId: 'QST_007' },
+      { type: 'questStart', questId: 'QST_008' },
+    ],
   },
 
   // SCN_305 木桶镇重建
@@ -920,6 +932,8 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '系统', text: '木桶镇重建等级提升至Lv.3。开放商店、训练场、支线板、装备强化。' },
     ],
     onComplete: [
+      { type: 'questStart', questId: 'QST_008' },
+      { type: 'questComplete', questId: 'QST_008' },
       { type: 'setFlag', flag: 'rebuild_level', value: 3 },
       { type: 'questStart', questId: 'QST_009' },
     ],
@@ -960,6 +974,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '木桶精灵', text: '史诗冒险本质上就是高风险跑腿。' },
       { speaker: '系统', text: '开放四封印任务。推荐顺序：青龙潭 → 白虎穴 → 朱雀林 → 玄武殿。' },
     ],
+    onComplete: [{ type: 'questStart', questId: 'QST_010' }],
   },
 
   // SCN_411 青龙潭：魑
@@ -1050,6 +1065,10 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: 'T……' },
       { speaker: '祀神', text: '只有你一个人能去。你只有一分钟。' },
       { speaker: '系统', text: '进入限时事件【轮回道 60 秒】。' },
+    ],
+    onComplete: [
+      { type: 'questComplete', questId: 'QST_009' },
+      { type: 'questStart', questId: 'QST_011' },
     ],
   },
   DIA_420_REINCARNATION: {
@@ -1349,6 +1368,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '旁白', text: 'xiaoai化为白烟。地下魔宫门打开。' },
       { speaker: '系统', text: '进入普通结局。normal_ending_seen = true。' },
     ],
+    onComplete: [{ type: 'questComplete', questId: 'QST_012' }],
   },
   DIA_530_PURIFY: {
     id: 'DIA_530_PURIFY',
@@ -1391,7 +1411,11 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '系统', text: '获得【xiaoai的残光】。预言之书自动翻页。' },
       { speaker: '木桶精灵', text: '预言还没有结束。' },
     ],
-    onComplete: [{ type: 'setFlag', flag: 'true_route_unlocked', value: true }],
+    onComplete: [
+      { type: 'setFlag', flag: 'true_route_unlocked', value: true },
+      { type: 'questComplete', questId: 'QST_012' },
+      { type: 'questStart', questId: 'QST_013' },
+    ],
   },
 
   // ============================================================
@@ -2839,7 +2863,7 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_106_ALTAR: { target: 'DIA_104_SEED' },
   DIA_107_SAILOR: { target: 'DIA_201_BOAT' },
   DIA_201_SHUIYAO: { target: 'DIA_202_SHUIYAO', includeOnComplete: true },
-  DIA_304_GET_LAUREL: { target: 'DIA_304_TEMPLE' },
+  DIA_304_GET_LAUREL: { target: 'DIA_304_TEMPLE', includeOnComplete: true },
   DIA_511_POISON_GAS: { target: 'DIA_411_CHI_PRE' },
   DIA_512_DRAGON_SEAL: { target: 'DIA_411_CHI_PRE' },
   DIA_521_TIGER_MEMORY: { target: 'DIA_412_MEI_PRE' },
@@ -2858,7 +2882,7 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_613_CHAIN_3: { target: 'DIA_510_SWAMP_MECH' },
   DIA_503_FAKE_XIAOAI: { target: 'DIA_520_PALACE', includeOnComplete: true },
   DIA_631_XIAOAI_CONFRONT: { target: 'DIA_530_CHOICE' },
-  DIA_632_PURIFICATION: { target: 'DIA_530_PURIFY_SUCCESS' },
+  DIA_632_PURIFICATION: { target: 'DIA_530_PURIFY_SUCCESS', includeOnComplete: true },
   DIA_601_WUXIANG: { target: 'DIA_710_ENTER' },
 }
 

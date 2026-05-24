@@ -433,11 +433,11 @@ export class DialogueOverlay extends Phaser.Scene {
   private closeDialogue(): void {
     this.typeTimer?.remove()
     const actions = this.currentScript?.onComplete
+    this.scene.stop()
     if (actions && actions.length > 0) {
       EventBus.emit(GameEvents.DIALOGUE_END, { actions })
     } else {
       EventBus.emit(GameEvents.DIALOGUE_END)
     }
-    this.scene.stop()
   }
 }

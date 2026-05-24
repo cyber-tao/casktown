@@ -2191,8 +2191,8 @@ export class BattleScene extends Phaser.Scene {
     this.resultPanel?.destroy()
     this.resultPanel = null
     this.resultSummary = null
-    EventBus.emit(GameEvents.BATTLE_END, summary.victory, { escaped: summary.escaped })
     this.scene.stop()
+    EventBus.emit(GameEvents.BATTLE_END, summary.victory, { escaped: summary.escaped })
   }
 
   private getItemName(itemId: string): string {
