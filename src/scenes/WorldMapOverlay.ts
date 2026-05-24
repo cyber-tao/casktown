@@ -3,6 +3,7 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { AudioManager } from '../core/AudioManager'
 import { queueImageAsset } from '../core/AssetLoader'
 import { GameData } from '../core/GameData'
+import { InputManager } from '../core/InputManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import {
   GAME_WIDTH,
@@ -25,7 +26,7 @@ export class WorldMapOverlay extends Phaser.Scene {
   }
 
   private handleKeydown = (event: KeyboardEvent): void => {
-    if (event.code === MAP_INPUT_CODES.WORLD_MAP || event.code === 'Escape') {
+    if (event.code === MAP_INPUT_CODES.WORLD_MAP || InputManager.getInstance().isCancel(event.code)) {
       this.close()
     }
   }
@@ -51,7 +52,7 @@ export class WorldMapOverlay extends Phaser.Scene {
     })
     title.setOrigin(0.5, 0).setScrollFactor(0).setDepth(201)
 
-    const hint = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.HINT_Y, 'M / Esc 返回', {
+    const hint = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.HINT_Y, `M / ${InputManager.getInstance().getActionName('cancel')} 返回`, {
       fontSize: `${WORLD_MAP_UI.HINT_FONT_SIZE}px`, color: '#7f8c8d',
     })
     hint.setOrigin(0.5).setScrollFactor(0).setDepth(201)

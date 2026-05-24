@@ -5,6 +5,7 @@ import { QuestSystem } from '../core/QuestSystem'
 import { AudioManager } from '../core/AudioManager'
 import { BarrelSystem } from '../core/BarrelSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
+import { InputManager } from '../core/InputManager'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
@@ -543,45 +544,60 @@ export class BattleScene extends Phaser.Scene {
 
   private setupInput(): void {
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-UP', () => {
-      if (this.inSkillMenu) this.moveSkillMenu(-1)
-      else if (this.inItemMenu) this.moveItemMenu(-1)
-      else if (this.inBarrelMenu) this.moveBarrelMenu(-1)
-      else if (this.inComboMenu) this.moveComboMenu(-1)
-      else this.moveMenu(-1)
-    })
-    this.input.keyboard?.on('keydown-DOWN', () => {
-      if (this.inSkillMenu) this.moveSkillMenu(1)
-      else if (this.inItemMenu) this.moveItemMenu(1)
-      else if (this.inBarrelMenu) this.moveBarrelMenu(1)
-      else if (this.inComboMenu) this.moveComboMenu(1)
-      else this.moveMenu(1)
-    })
-    this.input.keyboard?.on('keydown-ENTER', () => {
-      if (this.phase === 'result') { this.finishBattleResult(); return }
-      if (this.inSkillMenu) this.selectSkill()
-      else if (this.inItemMenu) this.selectItem()
-      else if (this.inBarrelMenu) this.selectBarrel()
-      else if (this.inComboMenu) this.selectCombo()
-      else this.selectMenu()
-    })
-    this.input.keyboard?.on('keydown-SPACE', () => {
-      if (this.phase === 'result') { this.finishBattleResult(); return }
-      if (this.inSkillMenu) this.selectSkill()
-      else if (this.inItemMenu) this.selectItem()
-      else if (this.inBarrelMenu) this.selectBarrel()
-      else if (this.inComboMenu) this.selectCombo()
-      else this.selectMenu()
-    })
-    this.input.keyboard?.on('keydown-ESC', () => {
-      if (this.inSkillMenu) { this.closeSkillMenu(); return }
-      if (this.inItemMenu) { this.closeItemMenu(); return }
-      if (this.inBarrelMenu) { this.closeBarrelMenu(); return }
-      if (this.inComboMenu) { this.closeComboMenu(); return }
-      this.cancelTarget()
-    })
-    this.input.keyboard?.on('keydown-LEFT', () => this.moveTarget(-1))
-    this.input.keyboard?.on('keydown-RIGHT', () => this.moveTarget(1))
+    this.input.keyboard?.on('keydown', this.handleKeydown, this)
+  }
+
+  private handleKeydown(event: KeyboardEvent): void {
+    const input = InputManager.getInstance()
+    const direction = input.isDirection(event.code)
+    if (direction === 'up') {
+      this.moveActiveMenu(-1)
+      return
+    }
+    if (direction === 'down') {
+      this.moveActiveMenu(1)
+      return
+    }
+    if (direction === 'left') {
+      this.moveTarget(-1)
+      return
+    }
+    if (direction === 'right') {
+      this.moveTarget(1)
+      return
+    }
+    if (input.isConfirm(event.code)) {
+      this.confirmActiveMenu()
+      return
+    }
+    if (input.isCancel(event.code)) {
+      this.cancelActiveMenu()
+    }
+  }
+
+  private moveActiveMenu(dir: number): void {
+    if (this.inSkillMenu) this.moveSkillMenu(dir)
+    else if (this.inItemMenu) this.moveItemMenu(dir)
+    else if (this.inBarrelMenu) this.moveBarrelMenu(dir)
+    else if (this.inComboMenu) this.moveComboMenu(dir)
+    else this.moveMenu(dir)
+  }
+
+  private confirmActiveMenu(): void {
+    if (this.phase === 'result') { this.finishBattleResult(); return }
+    if (this.inSkillMenu) this.selectSkill()
+    else if (this.inItemMenu) this.selectItem()
+    else if (this.inBarrelMenu) this.selectBarrel()
+    else if (this.inComboMenu) this.selectCombo()
+    else this.selectMenu()
+  }
+
+  private cancelActiveMenu(): void {
+    if (this.inSkillMenu) { this.closeSkillMenu(); return }
+    if (this.inItemMenu) { this.closeItemMenu(); return }
+    if (this.inBarrelMenu) { this.closeBarrelMenu(); return }
+    if (this.inComboMenu) { this.closeComboMenu(); return }
+    this.cancelTarget()
   }
 
   private moveMenu(dir: number): void {

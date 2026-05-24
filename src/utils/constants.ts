@@ -205,6 +205,22 @@ export const CONTROL_MODE = {
   WASD: 'wasd',
 } as const
 
+export const DEFAULT_GAME_SETTINGS = {
+  textSpeed: 'normal',
+  battleSpeed: 'normal',
+  encounterRate: 'default',
+  difficulty: 'standard',
+  prophecyHint: 'light',
+  masterVolume: 1,
+  musicVolume: 1,
+  sfxVolume: 1,
+  uiVolume: 1,
+  pixelSharp: true,
+  fullscreen: false,
+  controlMode: CONTROL_MODE.ARROWS,
+  gamepad: false,
+} as const
+
 export const PARTY_RULES = {
   ACTIVE_MEMBER_LIMIT: 4,
 } as const

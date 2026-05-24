@@ -7,6 +7,7 @@ import {
   INITIAL_GOLD,
   LEVEL_GROWTH,
   CONTROL_MODE,
+  DEFAULT_GAME_SETTINGS,
   PARTY_RULES,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
@@ -118,21 +119,7 @@ export class GameData {
   rebuildLevel: number = 0
   gold: number = INITIAL_GOLD
   unlockedCodex: string[] = []
-  settings: GameSettings = {
-    textSpeed: 'normal',
-    battleSpeed: 'normal',
-    encounterRate: 'default',
-    difficulty: 'standard',
-    prophecyHint: 'light',
-    masterVolume: 1,
-    musicVolume: 1,
-    sfxVolume: 1,
-    uiVolume: 1,
-    pixelSharp: true,
-    fullscreen: false,
-    controlMode: CONTROL_MODE.ARROWS,
-    gamepad: false,
-  }
+  settings: GameSettings = { ...DEFAULT_GAME_SETTINGS }
 
   private constructor() {}
 
@@ -161,21 +148,7 @@ export class GameData {
     this.rebuildLevel = 0
     this.gold = INITIAL_GOLD
     this.unlockedCodex = []
-    this.settings = {
-      textSpeed: 'normal',
-      battleSpeed: 'normal',
-      encounterRate: 'default',
-      difficulty: 'standard',
-      prophecyHint: 'light',
-      masterVolume: 1,
-      musicVolume: 1,
-      sfxVolume: 1,
-      uiVolume: 1,
-      pixelSharp: true,
-      fullscreen: false,
-      controlMode: CONTROL_MODE.ARROWS,
-      gamepad: false,
-    }
+    this.settings = { ...DEFAULT_GAME_SETTINGS }
     for (const item of START_INVENTORY_ITEMS) {
       this.inventory.items[item.itemId] = item.quantity
     }
@@ -622,7 +595,7 @@ export class GameData {
     this.branches.rebuild_level = this.rebuildLevel
     this.gold = (d.gold as number) ?? INITIAL_GOLD
     this.unlockedCodex = [...((d.unlockedCodex as string[] | undefined) ?? [])]
-    this.settings = { ...this.settings, ...((d.settings as Partial<typeof this.settings>) ?? {}) }
+    this.settings = { ...DEFAULT_GAME_SETTINGS, ...((d.settings as Partial<GameSettings>) ?? {}) }
     this.syncEquipmentIndex(serializedEquipment)
     this.restoreBaseStats(serializedBaseStats, Object.keys(serializedEquipment).length > 0)
     for (const charId of this.characters.keys()) {

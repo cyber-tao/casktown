@@ -295,7 +295,6 @@ export class MapScene extends Phaser.Scene {
     EventBus.on(GameEvents.FLAG_SET, this.handleFlagSet, this)
     EventBus.on(GameEvents.QUEST_UPDATE, this.handleQuestUpdate, this)
     EventBus.on(GameEvents.SAVE_LOADED, this.handleSaveLoaded, this)
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this)
     window.addEventListener('game-quicksave', this.handleQuickSave)
     window.addEventListener('game-quickload', this.handleQuickLoad)
 
