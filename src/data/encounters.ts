@@ -57,7 +57,7 @@ export const ENCOUNTERS: Record<string, EncounterData> = {
   BTL_705: { id: 'BTL_705', enemies: ['crystal_parasite', 'xiao_shuidi'], bgm: 'wuxiang_battle' },
   BTL_720: { id: 'BTL_720', enemies: ['wuxiang'], bgm: 'wuxiang_battle', questId: 'QST_013', questProgress: 'complete', rewards: [{ flag: 'game_cleared', value: true }, { flag: 'rebuild_level', value: 5 }] },
   BTL_WUXIANG: { id: 'BTL_WUXIANG', enemies: ['wuxiang'], bgm: 'wuxiang_battle', questId: 'QST_013', questProgress: 'complete', rewards: [{ flag: 'game_cleared', value: true }, { flag: 'rebuild_level', value: 5 }] },
-  BTL_SIDE_HH_01: { id: 'BTL_SIDE_HH_01', enemies: ['miwang_ying', 'miwang_ying', 'miwang_ying'], bgm: 'battle_normal', rewards: [{ flag: 'side_huihui_done', value: true }] },
+  BTL_SIDE_HH_01: { id: 'BTL_SIDE_HH_01', enemies: ['miwang_ying', 'miwang_ying', 'miwang_ying'], bgm: 'battle_normal', rewards: [{ flag: 'side_huihui_done', value: true }, { itemId: 'pink_chime', itemQty: 1 }] },
   BTL_SIDE_A_01: { id: 'BTL_SIDE_A_01', enemies: ['barrel_fake'], bgm: 'battle_normal', rewards: [{ flag: 'side_a_done', value: true }] },
   BTL_SIDE_CC_01: { id: 'BTL_SIDE_CC_01', enemies: ['feng_defender'], bgm: 'battle_normal', rewards: [{ flag: 'side_congcong_done', value: true }] },
   BTL_SIDE_SUN_01: { id: 'BTL_SIDE_SUN_01', enemies: ['miwang_ying'], bgm: 'battle_normal', rewards: [{ flag: 'side_sun_done', value: true }] },

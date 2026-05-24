@@ -165,6 +165,11 @@ export const ITEMS: Record<string, ItemData> = {
     effect: 'mdef+15', description: '熙苑赠予的水镜',
     usableInBattle: false, usableInField: false, price: 0,
   },
+  guard_charm: {
+    id: 'guard_charm', name: '守护护符', type: 'equipment',
+    effect: 'def+8', description: '阿博交给同伴的护符',
+    usableInBattle: false, usableInField: false, price: 0,
+  },
   pink_chime: {
     id: 'pink_chime', name: '粉色风铃', type: 'equipment',
     effect: 'speed+5', description: '慧慧珍视的风铃',

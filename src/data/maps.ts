@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { MAP_BATTLE_BACKGROUND_KEYS, REDESIGNED_MAP_LAYOUTS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
+import { DIRECTION, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -114,6 +114,19 @@ function finalizeMap(map: MapData): MapData {
   const redesigned = applyRedesignedLayout(map)
   const battleBackground = MAP_BATTLE_BACKGROUND_KEYS[redesigned.id]
   return battleBackground ? { ...redesigned, battleBackground } : redesigned
+}
+
+function createStaticTriggerEvent(id: string, sprite: string, dialogueId: string, conditions: MapEvent['conditions'] = []): MapEvent {
+  return {
+    id,
+    ...MAP_EVENT_PLACEHOLDER_BOUNDS,
+    type: 'trigger',
+    trigger: 'action',
+    sprite,
+    direction: DIRECTION.DOWN,
+    conditions,
+    actions: [{ type: 'dialogue', dialogueId }],
+  }
 }
 
 function createTransferEvent(transfer: EventBounds & { readonly id: string; readonly targetMap: string; readonly targetX: number; readonly targetY: number }, existing?: MapEvent): MapEvent {
@@ -554,6 +567,34 @@ function buildMap002(): MapData {
       type: 'npc', trigger: 'action', sprite: 'env_campfire', direction: 2,
       actions: [{ type: 'dialogue', dialogueId: 'DIA_206_TRAIN' }],
     },
+    createStaticTriggerEvent('SIDE_HUIHUI_START', 'huihui_front_idle_01', 'DIA_SIDE_HH_01', [
+      { flag: 'huihui_joined', value: true },
+      { flag: 'side_huihui_done', value: false },
+    ]),
+    createStaticTriggerEvent('SIDE_HUIHUI_AFTER', 'huihui_front_idle_01', 'DIA_SIDE_HH_01_AFTER', [
+      { flag: 'side_huihui_done', value: true },
+    ]),
+    createStaticTriggerEvent('SIDE_A_START', 'abo_front_idle_01', 'DIA_SIDE_A_01', [
+      { flag: 'a_joined', value: true },
+      { flag: 'side_a_done', value: false },
+    ]),
+    createStaticTriggerEvent('SIDE_A_AFTER', 'abo_front_idle_01', 'DIA_SIDE_A_01_AFTER', [
+      { flag: 'side_a_done', value: true },
+    ]),
+    createStaticTriggerEvent('SIDE_CONGCONG_START', 'congcong_front_idle_01', 'DIA_SIDE_CC_01', [
+      { flag: 'congcong_joined', value: true },
+      { flag: 'side_congcong_done', value: false },
+    ]),
+    createStaticTriggerEvent('SIDE_CONGCONG_AFTER', 'congcong_front_idle_01', 'DIA_SIDE_CC_01_AFTER', [
+      { flag: 'side_congcong_done', value: true },
+    ]),
+    createStaticTriggerEvent('SIDE_SUN_START', 'sun_front_idle_01', 'DIA_SIDE_SUN_01', [
+      { flag: 'sun_joined', value: true },
+      { flag: 'side_sun_done', value: false },
+    ]),
+    createStaticTriggerEvent('SIDE_SUN_AFTER', 'sun_front_idle_01', 'DIA_SIDE_SUN_01_AFTER', [
+      { flag: 'side_sun_done', value: true },
+    ]),
     {
       id: 'EXIT_EAST_2', x: W - 1, y: 10, width: 1, height: 4,
       type: 'transfer', trigger: 'touch',
@@ -1218,6 +1259,7 @@ function buildMap042(): MapData {
     {
       id: 'EVT_LAUREL', x: 15, y: 5, width: 1, height: 1,
       type: 'trigger', trigger: 'action',
+      conditions: [{ flag: 'has_divine_laurel', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_304_GET_LAUREL' }],
     },
   ]

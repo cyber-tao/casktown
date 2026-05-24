@@ -6,6 +6,7 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
+import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
@@ -434,7 +435,7 @@ export class MapScene extends Phaser.Scene {
 
   private spawnNPCs(): void {
     for (const event of this.mapData.events) {
-      if (event.type === 'npc' && event.sprite) {
+      if ((event.type === 'npc' || event.type === 'trigger') && event.sprite) {
         if (this.isSuppressedFieldEvent(event) || !this.areEventConditionsMet(event)) continue
         const sx = event.x * TILE_SIZE + TILE_SIZE / 2
         const sy = event.y * TILE_SIZE + TILE_SIZE / 2
@@ -442,7 +443,9 @@ export class MapScene extends Phaser.Scene {
         npc.setDisplaySize(TILE_SIZE, TILE_SIZE)
         npc.setDepth(10)
         this.npcs.set(event.id, npc)
-        this.fieldEntityBehaviors.set(event.id, this.getNpcFieldBehavior(event))
+        if (event.type === 'npc') {
+          this.fieldEntityBehaviors.set(event.id, this.getNpcFieldBehavior(event))
+        }
         this.fieldEntityOrigins.set(event.id, { x: sx, y: sy })
         this.updateFieldEntityFrame(event.id, npc, event.direction ?? DIRECTION.DOWN, false)
       }
@@ -1694,12 +1697,15 @@ export class MapScene extends Phaser.Scene {
           break
         case 'questComplete':
           qs.completeQuest(action.questId)
+          SkillGrowth.getInstance().checkAllUnlocks()
           break
         case 'setFlag':
           gd.setFlag(action.flag, action.value)
+          SkillGrowth.getInstance().checkAllUnlocks()
           break
         case 'setBranch':
           gd.updateBranch(action.branch, action.value)
+          SkillGrowth.getInstance().checkAllUnlocks()
           break
         case 'adjustTrust':
           gd.adjustTrust(action.characterId, action.amount || 1)
@@ -1712,12 +1718,14 @@ export class MapScene extends Phaser.Scene {
           break
         case 'addParty':
           gd.addPartyMember(action.characterId)
+          SkillGrowth.getInstance().checkAllUnlocks()
           this.removeSuppressedFieldEventSprites()
           this.refreshFollowers()
           this.createPartyHud()
           break
         case 'rebuild':
           RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level || 0))
+          SkillGrowth.getInstance().checkAllUnlocks()
           break
         case 'shop':
           this.pendingActions = actions.slice(i + 1)

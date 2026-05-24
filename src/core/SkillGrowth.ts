@@ -26,7 +26,7 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'yuliaoshu', characterId: 'HUIHUI', type: 'flag', value: 'has_sacred_water' },
   { skillId: 'fengleisan', characterId: 'HUIHUI', type: 'level', value: 14 },
   { skillId: 'huamantianji', characterId: 'HUIHUI', type: 'flag', value: 'temple_visited' },
-  { skillId: 'qingxinling', characterId: 'HUIHUI', type: 'flag', value: 'quest_huihui_side' },
+  { skillId: 'qingxinling', characterId: 'HUIHUI', type: 'flag', value: 'side_huihui_done' },
   { skillId: 'butaozhiling', characterId: 'HUIHUI', type: 'flag', value: 'true_route_unlocked' },
   // A skills
   { skillId: 'hengzhan', characterId: 'A', type: 'level', value: 1 },
@@ -35,13 +35,14 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'guiliandeng', characterId: 'A', type: 'flag', value: 'has_baihu_kai' },
   { skillId: 'nianbi', characterId: 'A', type: 'flag', value: 'has_baihu_kai' },
   { skillId: 'shanbeng', characterId: 'A', type: 'level', value: 20 },
+  { skillId: 'shanbeng', characterId: 'A', type: 'flag', value: 'side_a_done' },
   { skillId: 'shanyuexin', characterId: 'A', type: 'flag', value: 'true_route_unlocked' },
   // CONGCONG skills
   { skillId: 'yufengzhan', characterId: 'CONGCONG', type: 'level', value: 1 },
   { skillId: 'wuhuazhui', characterId: 'CONGCONG', type: 'level', value: 1 },
   { skillId: 'jingyuezhan', characterId: 'CONGCONG', type: 'level', value: 15 },
   { skillId: 'tiefengbu', characterId: 'CONGCONG', type: 'level', value: 16 },
-  { skillId: 'pozhankan', characterId: 'CONGCONG', type: 'flag', value: 'quest_congcong_side' },
+  { skillId: 'pozhankan', characterId: 'CONGCONG', type: 'flag', value: 'side_congcong_done' },
   { skillId: 'tianjianyishan', characterId: 'CONGCONG', type: 'level', value: 24 },
   { skillId: 'zhenfengbu', characterId: 'CONGCONG', type: 'flag', value: 'true_route_unlocked' },
   // SUN skills

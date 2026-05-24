@@ -22,8 +22,49 @@ const CONGCONG_JOIN_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']
 const XIYUAN_SACRED_WATER_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
   { type: 'setFlag', flag: 'xiyuan_quiz_completed', value: true },
   { type: 'setFlag', flag: 'has_sacred_water', value: true },
+  { type: 'addItem', itemId: 'holy_water', quantity: 1 },
+  { type: 'addItem', itemId: 'healing_book', quantity: 1 },
   { type: 'questComplete', questId: 'QST_006' },
   { type: 'questStart', questId: 'QST_007' },
+]
+
+const XIYUAN_KIND_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  ...XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
+  { type: 'addItem', itemId: 'water_mirror', quantity: 1 },
+]
+
+const XIYUAN_COLD_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'xiyuan_quiz_completed', value: true },
+  { type: 'setFlag', flag: 'has_sacred_water', value: true },
+  { type: 'addItem', itemId: 'holy_water', quantity: 1 },
+  { type: 'questComplete', questId: 'QST_006' },
+  { type: 'questStart', questId: 'QST_007' },
+  { type: 'adjustMercy', amount: -1 },
+]
+
+const TEMPLE_VISITED_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'temple_visited', value: true },
+]
+
+const LAUREL_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  ...TEMPLE_VISITED_COMPLETION_ACTIONS,
+  { type: 'setFlag', flag: 'has_divine_laurel', value: true },
+  { type: 'addItem', itemId: 'laurel', quantity: 1 },
+  { type: 'questComplete', questId: 'QST_007' },
+  { type: 'questStart', questId: 'QST_008' },
+]
+
+const SIDE_A_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'side_a_done', value: true },
+]
+
+const SIDE_A_REST_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  ...SIDE_A_COMPLETION_ACTIONS,
+  { type: 'addItem', itemId: 'guard_charm', quantity: 1 },
+]
+
+const SIDE_CONGCONG_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+  { type: 'setFlag', flag: 'side_congcong_done', value: true },
 ]
 
 export const DIALOGUES: Record<string, DialogueScript> = {
@@ -688,7 +729,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '旁白', text: '听风乐，白鹭轻吟，残雾撩萦。' },
       { speaker: '旁白', text: '镜中白雪，万年岁梦蝶舞飞。' },
     ],
-    onComplete: XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
+    onComplete: XIYUAN_KIND_COMPLETION_ACTIONS,
   },
   DIA_203_XIYUAN_NEUTRAL: {
     id: 'DIA_203_XIYUAN_NEUTRAL',
@@ -716,10 +757,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '系统', text: '获得【神水】。悲悯值-1。' },
       { speaker: '旁白', text: '圣水殿化为一潭水。熙苑化为七彩凤鸟飞向天空。' },
     ],
-    onComplete: [
-      ...XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
-      { type: 'adjustMercy', amount: -1 },
-    ],
+    onComplete: XIYUAN_COLD_COMPLETION_ACTIONS,
   },
   DIA_203_XIYUAN_AFTER: {
     id: 'DIA_203_XIYUAN_AFTER',
@@ -901,17 +939,20 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       },
       { speaker: 'sun', text: 'xiaoai被誉为近神的人。她的能力加上魔性，会变得更强。再见面时，你也要变得更强。' },
       { speaker: '慧慧', text: '终于找到你了！他们叫我们去旁殿。' },
+      { speaker: 'sun', text: '神之桂冠就在祭台上。若你们已经准备好，就亲手取走它。' },
+    ],
+    onComplete: TEMPLE_VISITED_COMPLETION_ACTIONS,
+  },
+  DIA_304_GET_LAUREL: {
+    id: 'DIA_304_GET_LAUREL',
+    lines: [
       { speaker: 'sun', text: '这是神之桂冠。神允许你们重建木桶镇。' },
       { speaker: 'T', text: '神允许？' },
       { speaker: 'sun', text: '你可以理解为，神不阻止。' },
       { speaker: 'T', text: '那我就当他帮忙了。' },
       { speaker: '系统', text: '获得关键道具【神之桂冠】。主线任务更新：返回木桶镇，完成重建。' },
     ],
-    onComplete: [
-      { type: 'setFlag', flag: 'has_divine_laurel', value: true },
-      { type: 'questComplete', questId: 'QST_007' },
-      { type: 'questStart', questId: 'QST_008' },
-    ],
+    onComplete: LAUREL_COMPLETION_ACTIONS,
   },
 
   // SCN_305 木桶镇重建
@@ -959,6 +1000,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: 'T', text: '你也知道我会来？' },
       { speaker: 'sun', text: '神知道。或者说，我猜到了。' },
     ],
+    onComplete: [{ type: 'setFlag', flag: 'life_spring_visited', value: true }],
   },
 
   // SCN_402 气壁与四封印
@@ -1716,8 +1758,9 @@ export const DIALOGUES: Record<string, DialogueScript> = {
     lines: [
       { speaker: 'T', text: '你已经很强了。不是每次都要硬撑。' },
       { speaker: '阿博', text: '……谢谢。' },
-      { speaker: '系统', text: '获得防御饰品。悲悯值+1。' },
+      { speaker: '系统', text: '获得防御饰品【守护护符】。悲悯值+1。' },
     ],
+    onComplete: SIDE_A_REST_COMPLETION_ACTIONS,
   },
   DIA_SIDE_A_01_HUIHUI: {
     id: 'DIA_SIDE_A_01_HUIHUI',
@@ -1727,6 +1770,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: '我们是一起的。拖累不拖累的，由不得你一个人说了算。' },
       { speaker: '阿博', text: '……好。' },
     ],
+    onComplete: SIDE_A_COMPLETION_ACTIONS,
   },
   DIA_SIDE_A_01_AFTER: {
     id: 'DIA_SIDE_A_01_AFTER',
@@ -1761,6 +1805,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: 'T', text: '你是我们的伙伴。这里需要你。' },
       { speaker: '葱葱', text: '……好。那我写信回绝。' },
     ],
+    onComplete: SIDE_CONGCONG_COMPLETION_ACTIONS,
   },
   DIA_SIDE_CC_01_VISIT: {
     id: 'DIA_SIDE_CC_01_VISIT',
@@ -1781,6 +1826,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '葱葱', text: '大小姐你这样我会以为你在乎我。' },
       { speaker: '慧慧', text: '我在乎的是队伍战斗力！' },
     ],
+    onComplete: SIDE_CONGCONG_COMPLETION_ACTIONS,
   },
   DIA_SIDE_CC_01_AFTER: {
     id: 'DIA_SIDE_CC_01_AFTER',
@@ -2863,7 +2909,6 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_106_ALTAR: { target: 'DIA_104_SEED' },
   DIA_107_SAILOR: { target: 'DIA_201_BOAT' },
   DIA_201_SHUIYAO: { target: 'DIA_202_SHUIYAO', includeOnComplete: true },
-  DIA_304_GET_LAUREL: { target: 'DIA_304_TEMPLE', includeOnComplete: true },
   DIA_511_POISON_GAS: { target: 'DIA_411_CHI_PRE' },
   DIA_512_DRAGON_SEAL: { target: 'DIA_411_CHI_PRE' },
   DIA_521_TIGER_MEMORY: { target: 'DIA_412_MEI_PRE' },

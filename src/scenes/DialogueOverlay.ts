@@ -22,6 +22,7 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { QuestSystem } from '../core/QuestSystem'
+import { SkillGrowth } from '../core/SkillGrowth'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
@@ -396,15 +397,18 @@ export class DialogueOverlay extends Phaser.Scene {
     for (const act of actions) {
       if (act.type === 'setFlag') {
         gd.setFlag(act.flag, act.value)
+        SkillGrowth.getInstance().checkAllUnlocks()
       }
       if (act.type === 'setBranch') {
         gd.updateBranch(act.branch, act.value)
+        SkillGrowth.getInstance().checkAllUnlocks()
       }
       if (act.type === 'addItem') {
         gd.addItem(act.itemId, act.quantity || 1)
       }
       if (act.type === 'addParty') {
         gd.addPartyMember(act.characterId)
+        SkillGrowth.getInstance().checkAllUnlocks()
       }
       if (act.type === 'questStart') {
         qs.startQuest(act.questId)
@@ -414,6 +418,7 @@ export class DialogueOverlay extends Phaser.Scene {
       }
       if (act.type === 'questComplete') {
         qs.completeQuest(act.questId)
+        SkillGrowth.getInstance().checkAllUnlocks()
       }
       if (act.type === 'adjustTrust') {
         gd.adjustTrust(act.characterId, act.amount || 1)
