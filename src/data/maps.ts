@@ -9,6 +9,7 @@ const T = {
   BARREL: 16, CAMPFIRE: 17, BENCH: 18, LAMP: 19,
   GRASS_CLUMP: 20, FLOWERS_WHITE: 21, SAPLING: 22,
   WHEAT: 23, CABBAGE: 24, FARMLAND: 25,
+  FESTIVAL: 26,
 }
 
 function createLayer(w: number, h: number, fill: number): MapLayer {

@@ -462,6 +462,8 @@ export class GameData {
     char.stats.speed = base.speed + bonus.speed
     char.stats.maxHp = base.maxHp + bonus.maxHp
     char.stats.maxMp = base.maxMp + bonus.maxMp
+    char.stats.hp = Math.min(char.stats.hp, char.stats.maxHp)
+    char.stats.mp = Math.min(char.stats.mp, char.stats.maxMp)
   }
 
   equipItem(charId: string, itemId: string, slot: 'weapon' | 'armor' | 'accessory'): void {

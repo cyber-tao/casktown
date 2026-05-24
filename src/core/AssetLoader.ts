@@ -15,6 +15,7 @@ import {
   TILE_TEXTURE_DETAIL_ALPHA_OVERRIDES,
   TILE_TEXTURE_INSET_OVERRIDES,
   TILE_TEXTURE_PROCESSING,
+  TOWN_MAP_IDS,
 } from '../utils/constants'
 import type { SpriteCropConfig } from '../data/spriteCrops'
 import type { EncounterData, MapData, MapEvent } from '../data/types'
@@ -200,6 +201,7 @@ export function queueImageAssets(scene: Phaser.Scene, keys: Iterable<string>): v
 export function collectMapTileTextureKeys(mapData: MapData): Set<string> {
   const keys = new Set<string>()
   const tileSprites = getConfiguredTileSprites()
+  const shouldApplyRebuildTiles = (TOWN_MAP_IDS as readonly string[]).includes(mapData.id)
   addConfiguredKey(keys, 'env_dirt_plain')
   addConfiguredKey(keys, 'env_barrel')
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
@@ -209,8 +211,10 @@ export function collectMapTileTextureKeys(mapData: MapData): Set<string> {
       if (key) addConfiguredKey(keys, key)
     }
   }
-  for (const replacement of REBUILD_TILE_REPLACEMENTS) {
-    addConfiguredKey(keys, tileSprites[replacement.targetTileId] ?? '')
+  if (shouldApplyRebuildTiles) {
+    for (const replacement of REBUILD_TILE_REPLACEMENTS) {
+      addConfiguredKey(keys, tileSprites[replacement.targetTileId] ?? '')
+    }
   }
   return keys
 }

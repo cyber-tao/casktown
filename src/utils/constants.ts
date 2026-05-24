@@ -588,6 +588,7 @@ export const MAP_TILE_KEYS = {
   BUSH: 'BUSH',
   STUMP: 'STUMP',
   RUIN: 'RUIN',
+  FESTIVAL: 'FESTIVAL',
   SIGN: 'SIGN',
   BARREL: 'BARREL',
   CAMPFIRE: 'CAMPFIRE',
@@ -661,7 +662,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 16, y: 23, width: 1, height: 2 },
     ],
     objects: [
-      { x: 22, y: 7, tile: MAP_TILE_KEYS.RUIN }, { x: 22, y: 16, tile: MAP_TILE_KEYS.RUIN },
+      { x: 22, y: 7, tile: MAP_TILE_KEYS.RUIN }, { x: 22, y: 16, tile: MAP_TILE_KEYS.FESTIVAL },
       { x: 22, y: 25, tile: MAP_TILE_KEYS.HOUSE }, { x: 10, y: 21, tile: MAP_TILE_KEYS.HOUSE },
       { x: 31, y: 22, tile: MAP_TILE_KEYS.RUIN }, { x: 15, y: 9, tile: MAP_TILE_KEYS.WELL },
       { x: 20, y: 15, tile: MAP_TILE_KEYS.BARREL }, { x: 24, y: 15, tile: MAP_TILE_KEYS.BARREL },
@@ -719,7 +720,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 20, y: 32, width: 5, height: 2 },
     ],
     objects: [
-      { x: 22, y: 7, tile: MAP_TILE_KEYS.HOUSE }, { x: 22, y: 16, tile: MAP_TILE_KEYS.RUIN },
+      { x: 22, y: 7, tile: MAP_TILE_KEYS.HOUSE }, { x: 22, y: 16, tile: MAP_TILE_KEYS.FESTIVAL },
       { x: 22, y: 25, tile: MAP_TILE_KEYS.HOUSE }, { x: 10, y: 21, tile: MAP_TILE_KEYS.HOUSE },
       { x: 31, y: 22, tile: MAP_TILE_KEYS.HOUSE }, { x: 28, y: 22, tile: MAP_TILE_KEYS.BENCH },
       { x: 15, y: 9, tile: MAP_TILE_KEYS.WELL }, { x: 19, y: 13, tile: MAP_TILE_KEYS.LAMP }, { x: 25, y: 13, tile: MAP_TILE_KEYS.LAMP },
@@ -1359,6 +1360,7 @@ export const BATTLE_RULES = {
   MAX_TP: 100,
   PERCENT_DIVISOR: 100,
   MIN_BAR_RATIO: 0.01,
+  MAX_BAR_RATIO: 1,
   DAMAGE_VARIANCE_MIN: 0.9,
   DAMAGE_VARIANCE_RANGE: 0.2,
   BREAK_DAMAGE_MULTIPLIER: 1.3,

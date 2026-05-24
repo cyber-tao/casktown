@@ -12,7 +12,7 @@ export const TILE_SPRITES: Record<number, string> = {
   11: 'env_dirt_pebbles',
   12: 'env_bush_round',
   13: 'env_stump_plain',
-  14: 'obj_festival_plaza',
+  14: 'env_altar_ruined',
   15: 'env_signpost',
   16: 'env_barrel',
   17: 'env_campfire',
@@ -24,4 +24,5 @@ export const TILE_SPRITES: Record<number, string> = {
   23: 'env_wheat',
   24: 'env_cabbage',
   25: 'env_farmland_plain',
+  26: 'obj_festival_plaza',
 }

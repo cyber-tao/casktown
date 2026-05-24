@@ -485,22 +485,23 @@ export class BattleScene extends Phaser.Scene {
 
   private updateUnitBars(unit: BattleUnit): void {
     if (unit.hpBar) {
-      const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.stats.hp / unit.stats.maxHp)
-      unit.hpBar.setScale(ratio, 1)
+      unit.hpBar.setScale(this.getBarRatio(unit.stats.hp, unit.stats.maxHp), 1)
     }
     if (unit.mpBar) {
-      const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.stats.maxMp > 0 ? unit.stats.mp / unit.stats.maxMp : 0)
-      unit.mpBar.setScale(ratio, 1)
+      unit.mpBar.setScale(this.getBarRatio(unit.stats.mp, unit.stats.maxMp), 1)
     }
     if (unit.tpBar) {
       if (unit.isPlayer) {
-        const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.tp / BATTLE_RULES.MAX_TP)
-        unit.tpBar.setScale(ratio, 1)
+        unit.tpBar.setScale(this.getBarRatio(unit.tp, BATTLE_RULES.MAX_TP), 1)
       } else {
-        const ratio = Math.max(BATTLE_RULES.MIN_BAR_RATIO, unit.breakGauge / unit.breakMax)
-        unit.tpBar.setScale(ratio, 1)
+        unit.tpBar.setScale(this.getBarRatio(unit.breakGauge, unit.breakMax), 1)
       }
     }
+  }
+
+  private getBarRatio(current: number, max: number): number {
+    if (max <= 0) return BATTLE_RULES.MIN_BAR_RATIO
+    return Math.min(BATTLE_RULES.MAX_BAR_RATIO, Math.max(BATTLE_RULES.MIN_BAR_RATIO, current / max))
   }
 
   private createUI(): void {

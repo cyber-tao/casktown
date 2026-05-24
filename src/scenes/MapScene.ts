@@ -344,7 +344,9 @@ export class MapScene extends Phaser.Scene {
   private renderMap(): void {
     const gd = GameData.getInstance()
     const tileSprites = GAME_CONFIG_DATABASE.getTable('tileSprites')
+    const shouldApplyRebuildTiles = (TOWN_MAP_IDS as readonly string[]).includes(this.mapData.id)
     const resolveTile = (idx: number): number => {
+      if (!shouldApplyRebuildTiles) return idx
       const replacement = REBUILD_TILE_REPLACEMENTS.find(rule => rule.sourceTileId === idx && gd.rebuildLevel >= rule.minRebuildLevel)
       if (replacement) return replacement.targetTileId
       return idx
