@@ -1474,8 +1474,9 @@ function buildMap070(): MapData {
       id: 'EVT_WUXIANG', x: 14, y: 8, width: 2, height: 2,
       type: 'trigger', trigger: 'action',
       actions: [
-        { type: 'dialogue', dialogueId: 'DIA_601_WUXIANG' },
-        { type: 'battle', encounterId: 'BTL_WUXIANG' },
+        { type: 'dialogue', dialogueId: 'DIA_720_WUXIANG' },
+        { type: 'dialogue', dialogueId: 'DIA_720_WUXIANG_END' },
+        { type: 'dialogue', dialogueId: 'DIA_730_TRUE_END' },
       ],
     },
   ]

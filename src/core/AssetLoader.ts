@@ -154,6 +154,12 @@ function addCharacterImageKeys(keys: Set<string>, characterId: string): void {
   addImageKeysByPrefix(keys, `${getCharacterSpriteBase(characterId)}_`)
 }
 
+function addPlayableCharacterImageKeys(keys: Set<string>): void {
+  for (const characterId of Object.keys(CHARACTER_SPRITE_BASE_KEYS)) {
+    addCharacterImageKeys(keys, characterId)
+  }
+}
+
 function addEnemyImageKeys(keys: Set<string>, enemyId: string): void {
   addImageKeysByPrefix(keys, `mon_${enemyId}_`)
 }
@@ -213,6 +219,7 @@ export function collectMapImageKeys(mapData: MapData, partyIds: readonly string[
   const keys = collectMapTileTextureKeys(mapData)
   addConfiguredKey(keys, DEFAULT_CHARACTER_SPRITE_KEY)
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
+  addPlayableCharacterImageKeys(keys)
   for (const characterId of partyIds) {
     addCharacterImageKeys(keys, characterId)
   }

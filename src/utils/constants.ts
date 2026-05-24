@@ -1030,6 +1030,12 @@ export const BATTLE_SPEED = {
   fastest: 2,
 } as const
 
+export const BATTLE_DIFFICULTY_MULTIPLIERS = {
+  story: { hp: 0.7, dmg: 0.85, exp: 1.2 },
+  standard: { hp: 1.0, dmg: 1.0, exp: 1.0 },
+  hard: { hp: 1.25, dmg: 1.2, exp: 1.0 },
+} as const
+
 export const TEXT_SPEED = {
   slow: 60,
   normal: 40,
@@ -1115,6 +1121,11 @@ export const COLORS = {
 
 export const MAP_INPUT_CODES = {
   WORLD_MAP: 'KeyM',
+} as const
+
+export const MAP_GAMEPAD_INPUT = {
+  AXIS_ACTIVATION_THRESHOLD: 0.3,
+  AXIS_DEAD_ZONE: 0.15,
 } as const
 
 export const VOICE_AUDIO_PATH = {
@@ -1325,6 +1336,11 @@ export const FIELD_ENTITY_BEHAVIOR = {
   SPAWN_TARGET_ATTEMPTS: 96,
   SPAWN_MARGIN_TILES: 2,
   PLAYER_SPAWN_CLEAR_RADIUS_TILES: 5,
+} as const
+
+export const FIELD_EVENT_FLAGS = {
+  DONE_PREFIX: 'event_done_',
+  CHEST_OPENED_PREFIX: 'chest_opened_',
 } as const
 
 export const FIELD_ENTITY_BEHAVIOR_PRESETS = {

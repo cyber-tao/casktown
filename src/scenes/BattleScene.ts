@@ -9,9 +9,11 @@ import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
 import {
+  BATTLE_DIFFICULTY_MULTIPLIERS,
   BATTLE_RANDOM_TARGET_HITS,
   BATTLE_RESULT_PANEL,
   BATTLE_RULES,
+  BATTLE_SPEED,
   BATTLE_TARGET_INDICATOR,
   CHARACTER_SPRITE_BASE_KEYS,
   COMBO_TP_COST,
@@ -147,18 +149,10 @@ export class BattleScene extends Phaser.Scene {
 
     // Apply settings
     const gd = GameData.getInstance()
-    const diff = gd.settings.difficulty as string
-    if (diff === 'story') {
-      this.difficultyMult = { hp: 0.7, dmg: 0.85, exp: 1.2 }
-    } else if (diff === 'hard') {
-      this.difficultyMult = { hp: 1.25, dmg: 1.2, exp: 1.0 }
-    } else {
-      this.difficultyMult = { hp: 1.0, dmg: 1.0, exp: 1.0 }
-    }
-    const bspd = gd.settings.battleSpeed as string
-    if (bspd === 'fast') this.speedMult = 1.5
-    else if (bspd === 'fastest') this.speedMult = 2.0
-    else this.speedMult = 1.0
+    const diff = gd.settings.difficulty as keyof typeof BATTLE_DIFFICULTY_MULTIPLIERS
+    this.difficultyMult = BATTLE_DIFFICULTY_MULTIPLIERS[diff] ?? BATTLE_DIFFICULTY_MULTIPLIERS.standard
+    const bspd = gd.settings.battleSpeed as keyof typeof BATTLE_SPEED
+    this.speedMult = BATTLE_SPEED[bspd] ?? BATTLE_SPEED.normal
 
     AudioManager.getInstance().setScene(this)
 
@@ -2165,7 +2159,10 @@ export class BattleScene extends Phaser.Scene {
       fontFamily: 'serif',
     }).setOrigin(0.5)
     const objects: Phaser.GameObjects.GameObject[] = [overlay, panel, title]
-    const visibleLines = summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines)
+    const hiddenLineCount = Math.max(0, summary.lines.length - BATTLE_RESULT_PANEL.maxLines + 1)
+    const visibleLines = hiddenLineCount > 0
+      ? [...summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines - 1), `另有 ${hiddenLineCount} 条结算记录`]
+      : summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines)
     for (let i = 0; i < visibleLines.length; i++) {
       const line = this.add.text(BATTLE_RESULT_PANEL.x - BATTLE_RESULT_PANEL.width / 2 + BATTLE_RESULT_PANEL.contentPaddingX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.lineStartOffsetY + i * BATTLE_RESULT_PANEL.lineGap, visibleLines[i]!, {
         fontSize: scaleFont(18),

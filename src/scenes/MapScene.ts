@@ -20,11 +20,13 @@ import {
   COLORS,
   FIELD_ENCOUNTER_RATE_THRESHOLDS,
   FIELD_ENCOUNTER_SPAWN_COUNTS,
+  FIELD_EVENT_FLAGS,
   FIELD_ENTITY_BEHAVIOR,
   FIELD_ENTITY_BEHAVIOR_PRESETS,
   FIELD_SPRITE_ANIMATION,
   FOLLOWER_MIN_DISTANCE_FACTOR,
   FOLLOWER_TRAIL_OFFSETS,
+  MAP_GAMEPAD_INPUT,
   MAP_ENCOUNTER_RATES,
   MAP_HUD,
   MAP_INPUT_CODES,
@@ -39,6 +41,7 @@ import {
   RUINED_TOWN_MAP_ID,
   TILE_SPRITE_FOOTPRINTS,
   TILE_SIZE,
+  TIME_MS_PER_SECOND,
   TOWN_MAP_IDS,
   GAME_WIDTH,
   GAME_HEIGHT,
@@ -200,6 +203,25 @@ export class MapScene extends Phaser.Scene {
     gd.setFlag(defeatedFlag, false)
     gd.setFlag(this.getRoamingDefeatedAtFlag(event.id), false)
     return false
+  }
+
+  private isCompletableFieldEvent(event: MapEvent): boolean {
+    return event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer'
+  }
+
+  private getFieldEventDoneFlag(eventId: string): string {
+    return `${FIELD_EVENT_FLAGS.DONE_PREFIX}${eventId}`
+  }
+
+  private getChestOpenedFlag(eventId: string): string {
+    return `${FIELD_EVENT_FLAGS.CHEST_OPENED_PREFIX}${eventId}`
+  }
+
+  private markFieldEventCompleted(eventId?: string): void {
+    if (!eventId) return
+    const event = this.mapData.events.find(candidate => candidate.id === eventId)
+    if (!event || !this.isCompletableFieldEvent(event)) return
+    GameData.getInstance().setFlag(this.getFieldEventDoneFlag(event.id), true)
   }
 
   private isSpriteUsable(sprite: Phaser.GameObjects.Sprite): boolean {
@@ -625,7 +647,7 @@ export class MapScene extends Phaser.Scene {
       }
       this.tweens.killTweensOf(sprite)
       const angle = Phaser.Math.Angle.Between(sprite.x, sprite.y, this.player.x, this.player.y)
-      const step = FIELD_ENTITY_BEHAVIOR.CHASE_SPEED_TILES_PER_SECOND * TILE_SIZE * delta / 1000
+      const step = FIELD_ENTITY_BEHAVIOR.CHASE_SPEED_TILES_PER_SECOND * TILE_SIZE * delta / TIME_MS_PER_SECOND
       const moveX = Math.cos(angle) * Math.min(step, dist)
       const moveY = Math.sin(angle) * Math.min(step, dist)
       const nx = sprite.x + moveX
@@ -682,7 +704,7 @@ export class MapScene extends Phaser.Scene {
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event) || !this.areEventConditionsMet(event)) continue
       if (event.type === 'chest') {
-        const opened = GameData.getInstance().getFlag(`chest_opened_${event.id}`) === true
+        const opened = GameData.getInstance().getFlag(this.getChestOpenedFlag(event.id)) === true
         if (!opened) {
           const img = this.add.image(
             event.x * TILE_SIZE, event.y * TILE_SIZE, 'env_barrel'
@@ -1227,10 +1249,10 @@ export class MapScene extends Phaser.Scene {
     if (dx === 0 && dy === 0 && InputManager.getInstance().isGamepadEnabled()) {
       const gp = this.pollGamepadAxes()
       if (gp) {
-        if (gp.dy < -0.3) { dy = -1; dir = DIRECTION.UP }
-        else if (gp.dy > 0.3) { dy = 1; dir = DIRECTION.DOWN }
-        else if (gp.dx < -0.3) { dx = -1; dir = DIRECTION.LEFT }
-        else if (gp.dx > 0.3) { dx = 1; dir = DIRECTION.RIGHT }
+        if (gp.dy < -MAP_GAMEPAD_INPUT.AXIS_ACTIVATION_THRESHOLD) { dy = -1; dir = DIRECTION.UP }
+        else if (gp.dy > MAP_GAMEPAD_INPUT.AXIS_ACTIVATION_THRESHOLD) { dy = 1; dir = DIRECTION.DOWN }
+        else if (gp.dx < -MAP_GAMEPAD_INPUT.AXIS_ACTIVATION_THRESHOLD) { dx = -1; dir = DIRECTION.LEFT }
+        else if (gp.dx > MAP_GAMEPAD_INPUT.AXIS_ACTIVATION_THRESHOLD) { dx = 1; dir = DIRECTION.RIGHT }
       }
     }
 
@@ -1263,7 +1285,7 @@ export class MapScene extends Phaser.Scene {
     const dx = axisX || (dRight - dLeft)
     const dy = axisY || (dDown - dUp)
 
-    if (Math.abs(dx) < 0.15 && Math.abs(dy) < 0.15) return null
+    if (Math.abs(dx) < MAP_GAMEPAD_INPUT.AXIS_DEAD_ZONE && Math.abs(dy) < MAP_GAMEPAD_INPUT.AXIS_DEAD_ZONE) return null
     return { dx, dy }
   }
 
@@ -1313,7 +1335,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private updateMovement(delta: number): void {
-    const dt = delta / 1000
+    const dt = delta / TIME_MS_PER_SECOND
     this.moveElapsed += dt
 
     const prevPx = this.player.x
@@ -1519,10 +1541,7 @@ export class MapScene extends Phaser.Scene {
       if (this.isSuppressedFieldEvent(event)) continue
       if (!this.areEventConditionsMet(event)) continue
       if (event.trigger === 'autorun' && this.checkEventCollision(event, px, py)) {
-        if (event.type !== 'npc' && event.type !== 'transfer') {
-          const doneFlag = `event_done_${event.id}`
-          if (gd.getFlag(doneFlag) === true) continue
-        }
+        if (this.isCompletableFieldEvent(event) && gd.getFlag(this.getFieldEventDoneFlag(event.id)) === true) continue
         this.triggerEvent(event)
         return
       }
@@ -1533,9 +1552,10 @@ export class MapScene extends Phaser.Scene {
     if (this.isSuppressedFieldEvent(event)) return
     this.inEvent = true
     const gd = GameData.getInstance()
+    const completionEventId = this.isCompletableFieldEvent(event) ? event.id : undefined
 
     if (event.type === 'chest') {
-      const flag = `chest_opened_${event.id}`
+      const flag = this.getChestOpenedFlag(event.id)
       if (gd.getFlag(flag) === true) {
         this.inEvent = false
         return
@@ -1543,9 +1563,8 @@ export class MapScene extends Phaser.Scene {
       gd.setFlag(flag, true)
     }
 
-    if (event.type !== 'npc' && event.type !== 'transfer') {
-      const doneFlag = `event_done_${event.id}`
-      if (gd.getFlag(doneFlag) === true) {
+    if (completionEventId) {
+      if (gd.getFlag(this.getFieldEventDoneFlag(completionEventId)) === true) {
         this.inEvent = false
         return
       }
@@ -1563,13 +1582,7 @@ export class MapScene extends Phaser.Scene {
       return
     }
 
-    this.executeActions(event.actions, event.type === 'battle' ? event.id : undefined)
-
-    if (event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer') {
-      if (event.trigger === 'touch' || event.trigger === 'autorun' || event.trigger === 'action') {
-        gd.setFlag(`event_done_${event.id}`, true)
-      }
-    }
+    this.executeActions(event.actions, event.type === 'battle' ? event.id : completionEventId)
   }
 
   private startDialogue(dialogueId: string): void {
@@ -1626,6 +1639,7 @@ export class MapScene extends Phaser.Scene {
       this.executeActions(pending, mapEventId)
       return
     }
+    this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
   }
 
@@ -1705,6 +1719,7 @@ export class MapScene extends Phaser.Scene {
     }
     this.pendingActions = []
     this.pendingMapEventId = ''
+    this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
   }
 
@@ -1752,6 +1767,7 @@ export class MapScene extends Phaser.Scene {
       this.executeActions(pending, mapEventId)
       return
     }
+    if (victory) this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
   }
 
@@ -1766,6 +1782,7 @@ export class MapScene extends Phaser.Scene {
       this.executeActions(pending, mapEventId)
       return
     }
+    this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
   }
 
