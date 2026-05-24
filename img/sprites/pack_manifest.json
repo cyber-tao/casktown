@@ -90,7 +90,7 @@
       "image": "08_item_icons.png",
       "json": "08_item_icons.json",
       "category": "items",
-      "sprite_count": 34,
+      "sprite_count": 35,
       "grid": {
         "cols": 8,
         "rows": 5,
