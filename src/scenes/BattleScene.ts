@@ -421,13 +421,12 @@ export class BattleScene extends Phaser.Scene {
   private applyConfiguredSkillStatuses(target: BattleUnit, skill: SkillData): boolean {
     const effects = BATTLE_SKILL_STATUS_EFFECTS[skill.id as keyof typeof BATTLE_SKILL_STATUS_EFFECTS]
     if (!effects) return false
-    let applied = false
     for (const effect of effects) {
       if (Math.random() <= effect.chance) {
-        applied = this.addStatus(target, effect.status, effect.duration) || applied
+        this.addStatus(target, effect.status, effect.duration)
       }
     }
-    return applied
+    return true
   }
 
   private tickStatusDurations(unit: BattleUnit): void {
@@ -1818,7 +1817,7 @@ export class BattleScene extends Phaser.Scene {
 
   private applyDebuff(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
     if (!this.applyConfiguredSkillStatuses(target, skill)) this.addStatus(target, skill.id)
-    this.log(`${actor.name} 使用 ${skill.name}，${target.name} 陷入异常！`)
+    this.log(`${actor.name} 使用 ${skill.name}！`)
   }
 
   private dealDamage(target: BattleUnit, damage: number, source?: BattleUnit, isMagic = false, allowRetaliation = true): number {
