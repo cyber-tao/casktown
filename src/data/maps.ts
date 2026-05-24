@@ -637,7 +637,7 @@ function buildMap011(): MapData {
     },
     {
       id: 'EVT_TIGER', x: 16, y: 12, width: 4, height: 4,
-      type: 'trigger', trigger: 'touch',
+      type: 'battle', trigger: 'touch',
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_103_TIGER' },
         { type: 'dialogue', dialogueId: 'DIA_103_TIGER_RING' },

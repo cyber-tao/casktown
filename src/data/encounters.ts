@@ -24,7 +24,7 @@ export const ENCOUNTERS: Record<string, EncounterData> = {
   BTL_101: { id: 'BTL_101', enemies: ['xiao_yao', 'xiao_yao'], bgm: 'battle_normal', rewards: [{ flag: 'huihui_joined', value: true }, { flag: 'a_joined', value: true }] },
   BTL_102: { id: 'BTL_102', enemies: ['teng_yao', 'teng_yao'], bgm: 'battle_normal' },
   BTL_103: { id: 'BTL_103', enemies: ['du_ye_chong', 'du_ye_chong', 'du_ye_chong'], bgm: 'battle_normal' },
-  BTL_110: { id: 'BTL_110', enemies: ['baihu'], bgm: 'battle_boss', victoryFlag: 'defeated_baihu', questId: 'QST_005', questProgress: 'complete', rewards: [{ flag: 'white_tiger_respected', value: true }] },
+  BTL_110: { id: 'BTL_110', enemies: ['baihu'], bgm: 'battle_boss', victoryFlag: 'defeated_baihu', questId: 'QST_005', questProgress: 'complete', rewards: [{ flag: 'has_baihu_kai', value: true }] },
   BTL_111: { id: 'BTL_111', enemies: ['teng_yao', 'teng_yao', 'du_ye_chong', 'du_ye_chong'], bgm: 'battle_normal' },
   BTL_112: { id: 'BTL_112', enemies: ['teng_yao', 'barrel_fake'], bgm: 'battle_normal' },
   BTL_113: { id: 'BTL_113', enemies: ['barrel_fake', 'barrel_fake', 'xiao_yao'], bgm: 'battle_boss', questId: 'QST_004', questProgress: 'complete', rewards: [{ itemId: 'seed', itemQty: 1 }, { flag: 'has_millennium_seed', value: true }] },

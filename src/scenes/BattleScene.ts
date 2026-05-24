@@ -13,6 +13,7 @@ import {
   BATTLE_RANDOM_TARGET_HITS,
   BATTLE_RESULT_PANEL,
   BATTLE_RULES,
+  BATTLE_SPECIAL_ENCOUNTERS,
   BATTLE_SPEED,
   BATTLE_TARGET_INDICATOR,
   CHARACTER_SPRITE_BASE_KEYS,
@@ -362,6 +363,41 @@ export class BattleScene extends Phaser.Scene {
     if (this.difficultyMult.dmg < 1.0) return BATTLE_RULES.STORY_PLAYER_DAMAGE_MULTIPLIER
     if (this.difficultyMult.dmg > 1.0) return BATTLE_RULES.HARD_PLAYER_DAMAGE_MULTIPLIER
     return 1.0
+  }
+
+  private isBaihuTrialEncounter(): boolean {
+    return this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.BAIHU_TRIAL
+  }
+
+  private getBaihuTrialUnit(liveEnemies = this.getLiveEnemies()): BattleUnit | undefined {
+    if (!this.isBaihuTrialEncounter()) return undefined
+    return liveEnemies.find(unit => (unit.data as EnemyData).id === BATTLE_RULES.BAIHU_TRIAL_ENEMY_ID)
+  }
+
+  private hasBaihuTrialSucceeded(liveEnemies = this.getLiveEnemies()): boolean {
+    const baihu = this.getBaihuTrialUnit(liveEnemies)
+    if (!baihu) return false
+    return this.turnCount >= BATTLE_RULES.BAIHU_TRIAL_SURVIVE_TURNS || baihu.stats.hp / baihu.stats.maxHp <= BATTLE_RULES.BAIHU_TRIAL_HP_RATIO
+  }
+
+  private completeBaihuTrial(message: string): boolean {
+    if (!this.isBaihuTrialEncounter()) return false
+    if (this.phase === 'victory' || this.phase === 'result') return true
+    this.phase = 'victory'
+    this.log(message)
+    this.time.delayedCall(Math.floor(1500 / this.speedMult), () => this.endBattle(true))
+    return true
+  }
+
+  private recoverPlayersAfterBaihuTrialLoss(): void {
+    for (const unit of this.units) {
+      if (!unit.isPlayer) continue
+      if (unit.stats.hp <= 0) {
+        unit.stats.hp = Math.max(1, Math.floor(unit.stats.maxHp * BATTLE_RULES.BAIHU_TRIAL_RECOVERY_HP_RATIO))
+        unit.sprite?.setAlpha(1)
+        this.updateUnitBars(unit)
+      }
+    }
   }
 
   private addTp(unit: BattleUnit, amount: number): void {
@@ -1651,6 +1687,11 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
+    if (this.hasBaihuTrialSucceeded()) {
+      this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
+      return
+    }
+
     // Clear defend status
     unit.status = unit.status.filter((s: string) => s !== 'defend')
 
@@ -1765,18 +1806,6 @@ export class BattleScene extends Phaser.Scene {
   private bossBaihuAI(unit: BattleUnit): void {
     const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
     if (targets.length === 0) return
-
-    // Survival trial: baihu stops attacking after 5 turns and acknowledges player
-    if (this.turnCount >= 5) {
-      this.log('白虎停下了攻击……"你通过了试炼。"')
-      const gd = GameData.getInstance()
-      gd.setFlag('white_tiger_respected', true)
-      // Deal reduced damage (demonstrating respect)
-      const target = targets[Math.floor(Math.random() * targets.length)]!
-      this.performAttack(unit, target)
-      this.nextTurn()
-      return
-    }
 
     const target = targets[Math.floor(Math.random() * targets.length)]!
     const hpRatio = unit.stats.hp / unit.stats.maxHp
@@ -1977,6 +2006,10 @@ export class BattleScene extends Phaser.Scene {
     const livePlayers = this.getLivePlayers()
     const liveEnemies = this.getLiveEnemies()
 
+    if (this.hasBaihuTrialSucceeded(liveEnemies)) {
+      this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
+      return
+    }
     if (liveEnemies.length === 0) {
       this.phase = 'victory'
       this.log('战斗胜利！')
@@ -1984,6 +2017,11 @@ export class BattleScene extends Phaser.Scene {
       return
     }
     if (livePlayers.length === 0) {
+      if (this.isBaihuTrialEncounter()) {
+        this.recoverPlayersAfterBaihuTrialLoss()
+        this.completeBaihuTrial('白虎击倒了队伍，但戒指的光让它停手。')
+        return
+      }
       this.phase = 'defeat'
       this.log('全队倒下……')
       this.time.delayedCall(Math.floor(1500 / this.speedMult), () => this.endBattle(false))
@@ -1991,11 +2029,11 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Dual boss synergy: shui_yao + feng_chi rage when partner falls
-    if (this.encounterId === 'BTL_201' && liveEnemies.length === 1) {
+    if (this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.SHUIYAO_FENGCHI_DUO && liveEnemies.length === 1) {
       const survivor = liveEnemies[0]!
       if (!survivor.status.includes('enraged')) {
         survivor.status.push('enraged')
-        survivor.stats.speed = Math.floor(survivor.stats.speed * 1.3)
+        survivor.stats.speed = Math.floor(survivor.stats.speed * BATTLE_RULES.DUAL_BOSS_ENRAGE_SPEED_MULTIPLIER)
         this.log(`${survivor.name} 因搭档倒下而狂暴！速度大幅提升！`)
       }
     }

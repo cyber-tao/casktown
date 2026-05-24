@@ -712,7 +712,15 @@ export class MapScene extends Phaser.Scene {
   }
 
   private getBattleEncounterId(event: MapEvent): string | undefined {
-    return event.actions.find(action => action.type === 'battle')?.encounterId
+    const directBattle = event.actions.find(action => action.type === 'battle')
+    if (directBattle?.type === 'battle') return directBattle.encounterId
+    const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
+    for (const action of event.actions) {
+      if (action.type !== 'dialogue') continue
+      const dialogueBattle = dialogues[action.dialogueId]?.onComplete?.find(completeAction => completeAction.type === 'battle')
+      if (dialogueBattle?.type === 'battle') return dialogueBattle.encounterId
+    }
+    return undefined
   }
 
   private createEvents(): void {
