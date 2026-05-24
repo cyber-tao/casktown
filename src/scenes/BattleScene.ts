@@ -14,8 +14,14 @@ import {
   BATTLE_RANDOM_TARGET_HITS,
   BATTLE_RESULT_PANEL,
   BATTLE_RULES,
+  BATTLE_CONTROL_STATUSES,
+  BATTLE_NEGATIVE_STATUSES,
+  BATTLE_SKILL_STATUS_EFFECTS,
   BATTLE_SPECIAL_ENCOUNTERS,
   BATTLE_SPEED,
+  BATTLE_STATUS,
+  BATTLE_STATUS_DURATIONS,
+  BATTLE_STATUS_LABELS,
   BATTLE_TARGET_INDICATOR,
   CHARACTER_SPRITE_BASE_KEYS,
   COMBO_TP_COST,
@@ -347,7 +353,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private pickRandomTarget(targets: BattleUnit[]): BattleUnit | null {
-    return targets[Math.floor(Math.random() * targets.length)] ?? null
+    const tauntingTargets = targets.filter(target => this.hasStatus(target, BATTLE_STATUS.TAUNT))
+    const pool = tauntingTargets.length > 0 ? tauntingTargets : targets
+    return pool[Math.floor(Math.random() * pool.length)] ?? null
   }
 
   private getRandomHitCount(skillId: string): number {
@@ -364,6 +372,165 @@ export class BattleScene extends Phaser.Scene {
     if (this.difficultyMult.dmg < 1.0) return BATTLE_RULES.STORY_PLAYER_DAMAGE_MULTIPLIER
     if (this.difficultyMult.dmg > 1.0) return BATTLE_RULES.HARD_PLAYER_DAMAGE_MULTIPLIER
     return 1.0
+  }
+
+  private parseStatus(status: string): { base: string; duration: number | null } {
+    const separatorIndex = status.lastIndexOf(BATTLE_RULES.STATUS_DURATION_SEPARATOR)
+    if (separatorIndex < 0) return { base: status, duration: null }
+    const duration = Number(status.slice(separatorIndex + 1))
+    if (!Number.isInteger(duration)) return { base: status, duration: null }
+    return { base: status.slice(0, separatorIndex), duration }
+  }
+
+  private formatTimedStatus(status: string, duration: number): string {
+    return `${status}${BATTLE_RULES.STATUS_DURATION_SEPARATOR}${duration}`
+  }
+
+  private hasStatus(unit: BattleUnit, status: string): boolean {
+    return unit.status.some(current => current === status || this.parseStatus(current).base === status)
+  }
+
+  private removeStatus(unit: BattleUnit, status: string): void {
+    unit.status = unit.status.filter(current => current !== status && this.parseStatus(current).base !== status)
+  }
+
+  private isNegativeStatus(status: string): boolean {
+    return (BATTLE_NEGATIVE_STATUSES as readonly string[]).includes(status)
+  }
+
+  private addStatus(unit: BattleUnit, status: string, duration?: number, announce = true): boolean {
+    const label = BATTLE_STATUS_LABELS[status] ?? status
+    if (this.isNegativeStatus(status)) {
+      if (status === BATTLE_STATUS.POISON && this.hasStatus(unit, BATTLE_STATUS.IMMUNITY_POISON)) {
+        if (announce) this.log(`${unit.name} 免疫中毒。`)
+        return false
+      }
+      if (this.hasStatus(unit, BATTLE_STATUS.STATUS_BARRIER)) {
+        this.removeStatus(unit, BATTLE_STATUS.STATUS_BARRIER)
+        if (announce) this.log(`${unit.name} 的异常护盾抵消了${label}。`)
+        return false
+      }
+    }
+
+    this.removeStatus(unit, status)
+    unit.status.push(duration ? this.formatTimedStatus(status, duration) : status)
+    if (announce) this.log(`${unit.name} 获得${label}。`)
+    return true
+  }
+
+  private applyConfiguredSkillStatuses(target: BattleUnit, skill: SkillData): boolean {
+    const effects = BATTLE_SKILL_STATUS_EFFECTS[skill.id as keyof typeof BATTLE_SKILL_STATUS_EFFECTS]
+    if (!effects) return false
+    let applied = false
+    for (const effect of effects) {
+      if (Math.random() <= effect.chance) {
+        applied = this.addStatus(target, effect.status, effect.duration) || applied
+      }
+    }
+    return applied
+  }
+
+  private tickStatusDurations(unit: BattleUnit): void {
+    let breakExpired = false
+    const nextStatuses: string[] = []
+
+    for (const status of unit.status) {
+      const parsed = this.parseStatus(status)
+      if (parsed.duration === null) {
+        nextStatuses.push(status)
+        continue
+      }
+      if (parsed.duration > 1) {
+        nextStatuses.push(this.formatTimedStatus(parsed.base, parsed.duration - 1))
+        continue
+      }
+      if (parsed.base === BATTLE_STATUS.BREAK_TURNS) {
+        breakExpired = true
+      }
+    }
+
+    unit.status = breakExpired ? nextStatuses.filter(status => status !== BATTLE_STATUS.BREAK) : nextStatuses
+    if (breakExpired) {
+      unit.breakGauge = 0
+      this.updateUnitBars(unit)
+      this.log(`${unit.name} 从破势状态中恢复！`)
+    }
+  }
+
+  private getEffectiveSpeed(unit: BattleUnit): number {
+    let speed = unit.stats.speed
+    if (this.hasStatus(unit, BATTLE_STATUS.SPEED_UP)) speed *= BATTLE_RULES.SPEED_UP_MULTIPLIER
+    if (this.hasStatus(unit, BATTLE_STATUS.SPEED_DOWN)) speed *= BATTLE_RULES.SPEED_DOWN_MULTIPLIER
+    return speed
+  }
+
+  private applyDamageModifiers(actor: BattleUnit, target: BattleUnit, damage: number, isMagic: boolean): number {
+    let adjusted = damage
+    if (this.hasStatus(actor, BATTLE_STATUS.ROAR)) adjusted *= BATTLE_RULES.ROAR_DAMAGE_MULTIPLIER
+    if (this.hasStatus(actor, BATTLE_STATUS.ATTACK_UP)) adjusted *= BATTLE_RULES.ATTACK_UP_DAMAGE_MULTIPLIER
+    if (this.hasStatus(target, BATTLE_STATUS.DEFEND)) adjusted *= BATTLE_RULES.DEFEND_DAMAGE_MULTIPLIER
+    if (this.hasStatus(target, BATTLE_STATUS.WATER_CURTAIN) || this.hasStatus(target, BATTLE_STATUS.WIND_WALL) || this.hasStatus(target, BATTLE_STATUS.ARMOR_UP) || this.hasStatus(target, BATTLE_STATUS.DEFENSE_UP) || this.hasStatus(target, BATTLE_STATUS.SHIELD)) {
+      adjusted *= BATTLE_RULES.BARRIER_DAMAGE_MULTIPLIER
+    }
+    if (this.hasStatus(target, BATTLE_STATUS.LIGHT_SHIELD)) adjusted *= BATTLE_RULES.STRONG_BARRIER_DAMAGE_MULTIPLIER
+    if (isMagic && this.hasStatus(target, BATTLE_STATUS.MAGIC_SHIELD)) adjusted *= BATTLE_RULES.STRONG_BARRIER_DAMAGE_MULTIPLIER
+    if (this.hasStatus(target, BATTLE_STATUS.DAMAGE_REDUCE)) adjusted *= BATTLE_RULES.DAMAGE_REDUCE_MULTIPLIER
+    if (this.hasStatus(target, BATTLE_STATUS.BREAK)) adjusted *= BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER
+    if (this.hasStatus(target, BATTLE_STATUS.WEAKNESS_EXPOSED)) adjusted *= BATTLE_RULES.WEAKNESS_EXPOSED_DAMAGE_MULTIPLIER
+    return Math.max(1, Math.floor(adjusted))
+  }
+
+  private getControlTargets(unit: BattleUnit): BattleUnit[] {
+    const allies = unit.isPlayer ? this.getLivePlayers() : this.getLiveEnemies()
+    return allies.filter(target => target !== unit)
+  }
+
+  private tryResolveControlStatus(unit: BattleUnit): boolean {
+    if (this.hasStatus(unit, BATTLE_STATUS.FEAR) && Math.random() < BATTLE_RULES.FEAR_SKIP_CHANCE) {
+      this.log(`${unit.name} 因恐惧无法行动。`)
+      this.nextTurn()
+      return true
+    }
+    const controlStatus = (BATTLE_CONTROL_STATUSES as readonly string[]).find(status => this.hasStatus(unit, status))
+    if (!controlStatus) return false
+    const targets = this.getControlTargets(unit)
+    const target = this.pickRandomTarget(targets)
+    if (!target) return false
+    this.log(`${unit.name} 受${BATTLE_STATUS_LABELS[controlStatus]}影响攻击了同伴！`)
+    this.performAttack(unit, target)
+    this.nextTurn()
+    return true
+  }
+
+  private healUnit(unit: BattleUnit, amount: number): number {
+    const heal = Math.max(1, Math.floor(amount))
+    const before = unit.stats.hp
+    unit.stats.hp = Math.min(unit.stats.maxHp, unit.stats.hp + heal)
+    if (unit.stats.hp > 0) unit.sprite?.setAlpha(1)
+    this.updateUnitBars(unit)
+    return unit.stats.hp - before
+  }
+
+  private resolveRetaliation(target: BattleUnit, source: BattleUnit | undefined, damageTaken: number, isMagic: boolean): void {
+    if (!source || source === target || source.stats.hp <= 0 || target.stats.hp <= 0 || damageTaken <= 0) return
+
+    if (this.hasStatus(target, BATTLE_STATUS.DARK_MIRROR)) {
+      const reflectDamage = Math.max(1, Math.floor(damageTaken * BATTLE_RULES.DARK_MIRROR_DAMAGE_RATIO))
+      this.log(`${target.name} 的暗镜反射了 ${reflectDamage} 点伤害！`)
+      this.dealDamage(source, reflectDamage, target, isMagic, false)
+    }
+
+    if (!isMagic && source.stats.hp > 0 && this.hasStatus(target, BATTLE_STATUS.COUNTER)) {
+      const counterDamage = Math.max(1, Math.floor(damageTaken * BATTLE_RULES.COUNTER_DAMAGE_RATIO))
+      this.log(`${target.name} 反击 ${source.name}，造成 ${counterDamage} 点伤害！`)
+      this.dealDamage(source, counterDamage, target, false, false)
+    }
+
+    if (source.stats.hp > 0 && this.hasStatus(target, BATTLE_STATUS.FIRE_COUNTER)) {
+      const fireDamage = Math.max(1, Math.floor(damageTaken * BATTLE_RULES.FIRE_COUNTER_DAMAGE_RATIO))
+      this.log(`${target.name} 的火焰反击灼伤 ${source.name}，造成 ${fireDamage} 点伤害！`)
+      this.dealDamage(source, fireDamage, target, false, false)
+    }
   }
 
   private isBaihuTrialEncounter(): boolean {
@@ -791,7 +958,7 @@ export class BattleScene extends Phaser.Scene {
     const actor = this.getCurrentUnit()
     if (!actor) return
     this.log(`${actor.name} 采取防御姿态。`)
-    actor.status.push('defend')
+    this.addStatus(actor, BATTLE_STATUS.DEFEND)
     // TP recovery on defend
     this.addTp(actor, BATTLE_RULES.DEFEND_TP_GAIN)
     this.nextTurn()
@@ -1194,9 +1361,9 @@ export class BattleScene extends Phaser.Scene {
     })
 
     if (skill.type === 'buff') {
-      const party = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+      const party = this.getLivePlayers()
       for (const u of party) {
-        if (!u.status.includes(skill.id)) u.status.push(skill.id)
+        if (!this.applyConfiguredSkillStatuses(u, skill)) this.addStatus(u, skill.id)
         this.updateUnitBars(u)
       }
       this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}！`)
@@ -1216,20 +1383,20 @@ export class BattleScene extends Phaser.Scene {
       for (const t of targets) {
         const def = isMagic ? (t.data as EnemyData).stats.mdef : (t.data as EnemyData).stats.def
         let damage = Math.max(1, Math.floor(skill.power * stat / 10 / Math.max(1, def * 0.5)))
-        if (t.status.includes('break')) damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
+        damage = this.applyDamageModifiers(unit1, t, damage, isMagic)
         damage = this.applyDamageVariance(damage)
         this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}，对 ${t.name} 造成 ${damage} 点伤害！`)
-        this.dealDamage(t, damage)
+        this.dealDamage(t, damage, unit1, isMagic)
       }
     } else {
       const target = targets.length > 0 ? targets[0]! : targets[0]
       if (target) {
         const def = isMagic ? (target.data as EnemyData).stats.mdef : (target.data as EnemyData).stats.def
         let damage = Math.max(1, Math.floor(skill.power * stat / 10 / Math.max(1, def * 0.5)))
-        if (target.status.includes('break')) damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
+        damage = this.applyDamageModifiers(unit1, target, damage, isMagic)
         damage = this.applyDamageVariance(damage)
         this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`)
-        this.dealDamage(target, damage)
+        this.dealDamage(target, damage, unit1, isMagic)
       }
     }
 
@@ -1240,7 +1407,7 @@ export class BattleScene extends Phaser.Scene {
   private markComboUnitActed(unit: BattleUnit): void {
     const idx = this.turnOrder.indexOf(this.units.indexOf(unit))
     if (idx > this.currentTurn) {
-      unit.status.push('combo_acted')
+      this.addStatus(unit, BATTLE_STATUS.COMBO_ACTED, undefined, false)
     }
   }
 
@@ -1258,65 +1425,63 @@ export class BattleScene extends Phaser.Scene {
 
     switch (result.effect) {
       case 'heal_poison': {
-        const party = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+        const party = this.getLivePlayers()
         for (const u of party) {
-          const heal = Math.floor(u.stats.maxHp * 0.3)
-          u.stats.hp = Math.min(u.stats.maxHp, u.stats.hp + heal)
-          u.status = u.status.filter(s => s !== 'poison')
-          this.updateUnitBars(u)
+          this.healUnit(u, u.stats.maxHp * BATTLE_RULES.BARREL_HEAL_HP_RATIO)
+          this.removeStatus(u, BATTLE_STATUS.POISON)
         }
         this.log('全队回复30%HP，解除中毒！')
         break
       }
       case 'restore_mp': {
-        actor.stats.mp = Math.min(actor.stats.maxMp, actor.stats.mp + 20)
-        actor.status = actor.status.filter(s => s !== 'burn')
+        actor.stats.mp = Math.min(actor.stats.maxMp, actor.stats.mp + BATTLE_RULES.BARREL_RESTORE_MP_AMOUNT)
+        this.removeStatus(actor, BATTLE_STATUS.BURN)
         this.updateUnitBars(actor)
-        this.log(`${actor.name} 回复20MP，解除灼烧！`)
+        this.log(`${actor.name} 回复${BATTLE_RULES.BARREL_RESTORE_MP_AMOUNT}MP，解除灼烧！`)
         break
       }
       case 'light_shield': {
-        const party = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+        const party = this.getLivePlayers()
         for (const u of party) {
-          u.status.push('light_shield_2')
+          this.addStatus(u, BATTLE_STATUS.LIGHT_SHIELD, BATTLE_STATUS_DURATIONS.SHORT)
         }
         this.log('全队获得光属性护盾，防御+50%持续2回合！')
         break
       }
       case 'immunity_poison': {
-        const party = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+        const party = this.getLivePlayers()
         for (const u of party) {
-          u.status.push('immunity_poison_3')
+          this.addStatus(u, BATTLE_STATUS.IMMUNITY_POISON, BATTLE_STATUS_DURATIONS.STANDARD)
         }
         this.log('全队获得毒免疫，持续3回合！')
         break
       }
       case 'defense_up': {
-        actor.status.push('defense_up_3')
+        this.addStatus(actor, BATTLE_STATUS.DEFENSE_UP, BATTLE_STATUS_DURATIONS.STANDARD)
         this.updateUnitBars(actor)
         this.log(`${actor.name} 防御+30%持续3回合！`)
         break
       }
       case 'fire_counter': {
-        actor.status.push('fire_counter_2')
+        this.addStatus(actor, BATTLE_STATUS.FIRE_COUNTER, BATTLE_STATUS_DURATIONS.SHORT)
         this.updateUnitBars(actor)
         this.log(`${actor.name} 获得火属性反击，持续2回合！`)
         break
       }
       case 'taunt_damage_reduce': {
-        actor.status.push('taunt')
-        actor.status.push('damage_reduce_2')
+        this.addStatus(actor, BATTLE_STATUS.TAUNT, BATTLE_STATUS_DURATIONS.SHORT)
+        this.addStatus(actor, BATTLE_STATUS.DAMAGE_REDUCE, BATTLE_STATUS_DURATIONS.SHORT)
         this.updateUnitBars(actor)
         this.log(`${actor.name} 发起嘲讽并减伤30%，持续2回合！`)
         break
       }
       case 'ultimate_resonance': {
-        const party = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+        const party = this.getLivePlayers()
         for (const u of party) {
-          u.tp = Math.min(100, u.tp + 30)
+          u.tp = Math.min(BATTLE_RULES.MAX_TP, u.tp + BATTLE_RULES.BARREL_RESONANCE_TP_GAIN)
           this.updateUnitBars(u)
         }
-        this.log('全队共鸣！TP+30！')
+        this.log(`全队共鸣！TP+${BATTLE_RULES.BARREL_RESONANCE_TP_GAIN}！`)
         break
       }
     }
@@ -1348,13 +1513,11 @@ export class BattleScene extends Phaser.Scene {
       if (this.isAllTargetItemEffect(effect)) {
         const targets = this.getLivePlayers()
         for (const t of targets) {
-          t.stats.hp = Math.min(t.stats.maxHp, t.stats.hp + amount)
-          this.updateUnitBars(t)
+          this.healUnit(t, amount)
         }
         this.log(`${item.name}！全队回复 ${amount} HP！`)
       } else {
-        target.stats.hp = Math.min(target.stats.maxHp, target.stats.hp + amount)
-        this.updateUnitBars(target)
+        this.healUnit(target, amount)
         this.log(`${item.name}！${target.name} 回复 ${amount} HP！`)
       }
     } else if (effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX)) {
@@ -1362,22 +1525,24 @@ export class BattleScene extends Phaser.Scene {
       target.stats.mp = Math.min(target.stats.maxMp, target.stats.mp + amount)
       this.log(`${item.name}！${target.name} 回复 ${amount} MP！`)
     } else if (effect === 'cure_poison') {
-      target.status = target.status.filter((s: string) => s !== 'poison')
+      this.removeStatus(target, BATTLE_STATUS.POISON)
       this.log(`${item.name}！${target.name} 解毒成功！`)
     } else if (effect === 'cure_confuse_charm_fear') {
-      target.status = target.status.filter((s: string) => !['confuse', 'charm', 'fear'].includes(s))
+      this.removeStatus(target, BATTLE_STATUS.CONFUSE)
+      this.removeStatus(target, BATTLE_STATUS.CHARM)
+      this.removeStatus(target, BATTLE_STATUS.FEAR)
       this.log(`${item.name}！${target.name} 状态恢复！`)
-    } else if (effect.startsWith('revive:')) {
+    } else if (effect.startsWith(BATTLE_RULES.REVIVE_EFFECT_PREFIX)) {
       const pct = parseInt(effect.split(':')[1]!)
       target.stats.hp = Math.floor(target.stats.maxHp * pct / BATTLE_RULES.PERCENT_DIVISOR)
       target.sprite!.setAlpha(1)
       this.updateUnitBars(target)
       this.log(`${item.name}！${target.name} 复活了！`)
     } else if (effect === 'buff_speed') {
-      target.status.push('speed_up')
+      this.addStatus(target, BATTLE_STATUS.SPEED_UP, BATTLE_STATUS_DURATIONS.SHORT)
       this.log(`${item.name}！${target.name} 速度提升！`)
     } else if (effect === 'barrier_status') {
-      target.status.push('status_barrier')
+      this.addStatus(target, BATTLE_STATUS.STATUS_BARRIER, BATTLE_STATUS_DURATIONS.STANDARD)
       this.log(`${item.name}！${target.name} 获得异常护盾！`)
     } else {
       this.log(`使用了 ${item.name}`)
@@ -1401,13 +1566,7 @@ export class BattleScene extends Phaser.Scene {
     const atk = isPlayer ? (actor.data as CharacterData).stats.atk : (actor.data as EnemyData).stats.atk
     const def = target.isPlayer ? (target.data as CharacterData).stats.def : (target.data as EnemyData).stats.def
     let damage = Math.max(1, Math.floor(atk * 1.5 - def * 0.5))
-
-    if (target.status.includes('defend')) {
-      damage = Math.floor(damage * BATTLE_RULES.DEFEND_DAMAGE_MULTIPLIER)
-    }
-    if (target.status.includes('break')) {
-      damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
-    }
+    damage = this.applyDamageModifiers(actor, target, damage, false)
 
     // Difficulty scaling
     if (!isPlayer) {
@@ -1420,7 +1579,7 @@ export class BattleScene extends Phaser.Scene {
 
     AudioManager.getInstance().playSFX('attack_slash')
     this.log(`${actor.name} 攻击 ${target.name}，造成 ${damage} 点伤害！`)
-    this.dealDamage(target, damage)
+    this.dealDamage(target, damage, actor, false)
 
     // TP generation for player
     if (isPlayer) {
@@ -1432,7 +1591,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Break gauge for enemies
-    if (!target.isPlayer && !target.status.includes('break')) {
+    if (!target.isPlayer && !this.hasStatus(target, BATTLE_STATUS.BREAK)) {
       target.breakGauge = Math.min(target.breakMax, target.breakGauge + BATTLE_RULES.NORMAL_BREAK_GAIN)
       this.updateUnitBars(target)
     }
@@ -1509,13 +1668,14 @@ export class BattleScene extends Phaser.Scene {
     if (skill.type === 'special') {
       AudioManager.getInstance().playSFX('magic_cast')
       this.log(`${actor.name} 使用 ${skill.name}！`)
+      if (this.performSpecialSkill(actor, targets, skill)) return true
       if (skill.power > 0) {
         for (const currentTarget of targets) {
           this.calculateAndDealSkillDamage(actor, currentTarget, skill)
         }
       } else {
         for (const currentTarget of targets) {
-          if (!currentTarget.status.includes(skill.id)) currentTarget.status.push(skill.id)
+          if (!this.applyConfiguredSkillStatuses(currentTarget, skill)) this.addStatus(currentTarget, skill.id)
         }
       }
       return true
@@ -1535,6 +1695,36 @@ export class BattleScene extends Phaser.Scene {
       this.calculateAndDealSkillDamage(actor, currentTarget, skill)
     }
     return true
+  }
+
+  private performSpecialSkill(actor: BattleUnit, targets: BattleUnit[], skill: SkillData): boolean {
+    if (skill.id === 'afternoon_tea') {
+      const healed = this.healUnit(actor, actor.stats.maxHp * BATTLE_RULES.AFTERNOON_TEA_HEAL_RATIO)
+      this.addStatus(actor, BATTLE_STATUS.ATTACK_UP, BATTLE_STATUS_DURATIONS.SHORT)
+      this.log(`${actor.name} 悠闲地喝下午茶，回复 ${healed} HP。`)
+      return true
+    }
+    if (skill.id === 'copy_party') {
+      this.addStatus(actor, BATTLE_STATUS.ATTACK_UP, BATTLE_STATUS_DURATIONS.STANDARD)
+      this.addStatus(actor, BATTLE_STATUS.DEFENSE_UP, BATTLE_STATUS_DURATIONS.STANDARD)
+      this.log(`${actor.name} 复制了队伍的战意。`)
+      return true
+    }
+    if (skill.id === 'shouxiangxin') {
+      this.addStatus(actor, BATTLE_STATUS.SHIELD, BATTLE_STATUS_DURATIONS.STANDARD)
+      this.addStatus(actor, BATTLE_STATUS.ATTACK_UP, BATTLE_STATUS_DURATIONS.STANDARD)
+      this.log(`${actor.name} 凝聚守乡心。`)
+      return true
+    }
+    if (skill.id === 'rendeqiyuan') {
+      for (const target of targets) {
+        this.healUnit(target, target.stats.maxHp * BATTLE_RULES.PARTY_PRAYER_HEAL_RATIO)
+        this.addStatus(target, BATTLE_STATUS.ATTACK_UP, BATTLE_STATUS_DURATIONS.SHORT)
+      }
+      this.log(`${actor.name} 让众人的祈愿回应了战场。`)
+      return true
+    }
+    return false
   }
 
   private calculateAndDealSkillDamage(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
@@ -1557,13 +1747,7 @@ export class BattleScene extends Phaser.Scene {
     let damage = Math.max(1, Math.floor((stat * skill.power / 10) - def * 0.5))
 
     // Buff modifiers
-    if (actor.status.includes('roar')) damage = Math.floor(damage * BATTLE_RULES.ROAR_DAMAGE_MULTIPLIER)
-    if (target.status.includes('water_curtain') || target.status.includes('wind_wall') || target.status.includes('armor_up')) {
-      damage = Math.floor(damage * 0.7)
-    }
-    if (target.status.includes('break')) {
-      damage = Math.floor(damage * BATTLE_RULES.BREAK_DAMAGE_MULTIPLIER)
-    }
+    damage = this.applyDamageModifiers(actor, target, damage, isMagic)
 
     // Difficulty scaling
     if (!isPlayer) {
@@ -1589,44 +1773,58 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Break gauge for enemies
-    if (!target.isPlayer && !target.status.includes('break')) {
+    if (!target.isPlayer && !this.hasStatus(target, BATTLE_STATUS.BREAK)) {
       const breakGain = isWeakHit ? BATTLE_RULES.WEAK_SKILL_BREAK_GAIN : BATTLE_RULES.SKILL_BREAK_GAIN
       target.breakGauge = Math.min(target.breakMax, target.breakGauge + breakGain)
       this.updateUnitBars(target)
       if (target.breakGauge >= target.breakMax) {
-        target.status.push('break')
+        this.addStatus(target, BATTLE_STATUS.BREAK, undefined, false)
         this.log(`${target.name} 陷入破势状态！`)
         // Break lasts 2 turns
-        target.status.push('break_turns_2')
+        this.addStatus(target, BATTLE_STATUS.BREAK_TURNS, BATTLE_STATUS_DURATIONS.SHORT, false)
       }
     }
 
     AudioManager.getInstance().playSFX(skill.type === 'magic' ? 'magic_cast' : 'attack_slash')
     this.log(`${actor.name} 使用 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`)
-    this.dealDamage(target, damage)
+    const damageDealt = this.dealDamage(target, damage, actor, isMagic)
+    if (skill.id === 'soul_drain' && damageDealt > 0 && actor.stats.hp > 0) {
+      const healed = this.healUnit(actor, damageDealt * BATTLE_RULES.SOUL_DRAIN_HEAL_RATIO)
+      this.log(`${actor.name} 吸取了 ${healed} HP！`)
+    }
+    if (target.stats.hp > 0) {
+      this.applyConfiguredSkillStatuses(target, skill)
+    }
   }
 
   private performHeal(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
     const isPlayer = actor.isPlayer
     const matk = isPlayer ? (actor.data as CharacterData).stats.matk : (actor.data as EnemyData).stats.matk
     const heal = Math.max(1, Math.floor(matk * skill.power / 10))
-    target.stats.hp = Math.min(target.stats.maxHp, target.stats.hp + heal)
-    this.updateUnitBars(target)
-    this.log(`${actor.name} 使用 ${skill.name}，${target.name} 回复 ${heal} 点生命！`)
+    const healed = skill.power > 0 ? this.healUnit(target, heal) : 0
+    this.applyConfiguredSkillStatuses(target, skill)
+    if (skill.id === 'qingxinling') {
+      this.removeStatus(target, BATTLE_STATUS.CONFUSE)
+      this.removeStatus(target, BATTLE_STATUS.CHARM)
+      this.removeStatus(target, BATTLE_STATUS.FEAR)
+    }
+    this.log(healed > 0 ? `${actor.name} 使用 ${skill.name}，${target.name} 回复 ${healed} 点生命！` : `${actor.name} 使用 ${skill.name}，${target.name} 状态恢复！`)
   }
 
   private applyBuff(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
-    if (!target.status.includes(skill.id)) target.status.push(skill.id)
+    if (!this.applyConfiguredSkillStatuses(target, skill)) this.addStatus(target, skill.id)
     this.log(`${actor.name} 使用 ${skill.name}！`)
   }
 
   private applyDebuff(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
-    if (!target.status.includes(skill.id)) target.status.push(skill.id)
+    if (!this.applyConfiguredSkillStatuses(target, skill)) this.addStatus(target, skill.id)
     this.log(`${actor.name} 使用 ${skill.name}，${target.name} 陷入异常！`)
   }
 
-  private dealDamage(target: BattleUnit, damage: number): void {
+  private dealDamage(target: BattleUnit, damage: number, source?: BattleUnit, isMagic = false, allowRetaliation = true): number {
+    const beforeHp = target.stats.hp
     target.stats.hp = Math.max(0, target.stats.hp - damage)
+    const damageTaken = beforeHp - target.stats.hp
     this.updateUnitBars(target)
 
     // Damage number popup
@@ -1669,21 +1867,25 @@ export class BattleScene extends Phaser.Scene {
 
     if (target.stats.hp <= 0) {
       const enemy = target.data as EnemyData
-      if (enemy.id === 'fenghuang' && !target.status.includes('rebirth_used')) {
-        target.status.push('rebirth_used')
+      if (enemy.id === 'fenghuang' && !this.hasStatus(target, BATTLE_STATUS.REBIRTH_USED)) {
+        this.addStatus(target, BATTLE_STATUS.REBIRTH_USED, undefined, false)
         target.stats.hp = Math.floor(target.stats.maxHp * BATTLE_RULES.PHOENIX_REBIRTH_HP_RATIO)
         this.updateUnitBars(target)
         this.log(`${target.name} 涅槃重生！恢复了 ${target.stats.hp} 点生命！`)
         target.sprite!.setAlpha(1)
-        return
+        return beforeHp
       }
       this.log(`${target.name} 倒下了！`)
       target.sprite!.setAlpha(0.5)
+      return beforeHp
     }
+
+    if (allowRetaliation) this.resolveRetaliation(target, source, damageTaken, isMagic)
+    return damageTaken
   }
 
   private calculateTurnOrder(): void {
-    const speeds = this.units.map((u, i) => ({ index: i, speed: u.stats.speed + Math.random() * 5 }))
+    const speeds = this.units.map((u, i) => ({ index: i, speed: this.getEffectiveSpeed(u) + Math.random() * BATTLE_RULES.TURN_ORDER_RANDOM_RANGE }))
     speeds.sort((a, b) => b.speed - a.speed)
     this.turnOrder = speeds.map(s => s.index)
   }
@@ -1698,8 +1900,8 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
-    if (unit.status.includes('combo_acted')) {
-      unit.status = unit.status.filter((s: string) => s !== 'combo_acted')
+    if (this.hasStatus(unit, BATTLE_STATUS.COMBO_ACTED)) {
+      this.removeStatus(unit, BATTLE_STATUS.COMBO_ACTED)
       this.nextTurn()
       return
     }
@@ -1710,30 +1912,18 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Clear defend status
-    unit.status = unit.status.filter((s: string) => s !== 'defend')
+    this.removeStatus(unit, BATTLE_STATUS.DEFEND)
 
     // Status tick - poison damage
-    if (unit.status.includes('poison') && unit.stats.hp > 0) {
-      const poisonDmg = Math.max(1, Math.floor(unit.stats.maxHp * 0.05))
+    if (this.hasStatus(unit, BATTLE_STATUS.POISON) && unit.stats.hp > 0) {
+      const poisonDmg = Math.max(1, Math.floor(unit.stats.maxHp * BATTLE_RULES.POISON_DAMAGE_RATIO))
       unit.stats.hp = Math.max(1, unit.stats.hp - poisonDmg)
       this.updateUnitBars(unit)
       this.log(`${unit.name} 受到中毒伤害 ${poisonDmg} 点！`)
     }
 
     // Break state countdown and removal
-    const breakTurnIdx = unit.status.findIndex((s: string) => s.startsWith('break_turns_'))
-    if (breakTurnIdx >= 0) {
-      const turnsStr = unit.status[breakTurnIdx]!
-      const turns = parseInt(turnsStr.split('_')[2]!)
-      if (turns <= 1) {
-        unit.status = unit.status.filter((s: string) => s !== 'break' && !s.startsWith('break_turns_'))
-        unit.breakGauge = 0
-        this.updateUnitBars(unit)
-        this.log(`${unit.name} 从破势状态中恢复！`)
-      } else {
-        unit.status[breakTurnIdx] = `break_turns_${turns - 1}`
-      }
-    }
+    this.tickStatusDurations(unit)
 
     // Skip turn if dead after poison
     if (unit.stats.hp <= 0) {
@@ -1741,6 +1931,8 @@ export class BattleScene extends Phaser.Scene {
       this.nextTurn()
       return
     }
+
+    if (this.tryResolveControlStatus(unit)) return
 
     if (unit.isPlayer) {
       this.phase = 'player'
@@ -1773,9 +1965,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private basicAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
-    const target = targets[Math.floor(Math.random() * targets.length)]!
+    const target = this.pickRandomTarget(targets)!
     const enemy = unit.data as EnemyData
     if (enemy.skills.length > 1 && Math.random() < 0.4) {
       const skillId = enemy.skills[Math.floor(Math.random() * enemy.skills.length)]!
@@ -1790,11 +1982,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private defensiveAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
-    const target = targets[Math.floor(Math.random() * targets.length)]!
+    const target = this.pickRandomTarget(targets)!
     const roll = Math.random()
-    if (roll < 0.2 && !unit.status.includes('counter')) {
+    if (roll < 0.2 && !this.hasStatus(unit, BATTLE_STATUS.COUNTER)) {
       this.performSkill(unit, unit, 'counter')
     } else if (roll < 0.5) {
       this.performSkill(unit, target, 'shield_bash')
@@ -1805,9 +1997,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private mageAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
-    const target = targets[Math.floor(Math.random() * targets.length)]!
+    const target = this.pickRandomTarget(targets)!
     const roll = Math.random()
     if (roll < 0.3) {
       this.performSkill(unit, target, 'magic_attack')
@@ -1821,15 +2013,15 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private bossBaihuAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
 
-    const target = targets[Math.floor(Math.random() * targets.length)]!
+    const target = this.pickRandomTarget(targets)!
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
     if (hpRatio < 0.3 && roll < 0.4) {
       this.performSkill(unit, target, 'heavenly_strike')
-    } else if (!unit.status.includes('roar') && roll < 0.3) {
+    } else if (!this.hasStatus(unit, BATTLE_STATUS.ROAR) && roll < 0.3) {
       this.performSkill(unit, unit, 'roar')
     } else {
       this.performSkill(unit, target, 'tiger_claw')
@@ -1838,30 +2030,30 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private bossShuiyaoAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const allies = this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
     const woundedAlly = allies.find(u => u.stats.hp / u.stats.maxHp < 0.4)
     const roll = Math.random()
     if (woundedAlly && roll < 0.5) {
       this.performSkill(unit, woundedAlly, 'heal')
-    } else if (roll < 0.3 && !unit.status.includes('water_curtain')) {
+    } else if (roll < 0.3 && !this.hasStatus(unit, BATTLE_STATUS.WATER_CURTAIN)) {
       this.performSkill(unit, unit, 'water_curtain')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'ice_shard')
     }
     this.nextTurn()
   }
 
   private bossFengchiAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (!unit.status.includes('wind_wall') && roll < 0.25) {
+    if (!this.hasStatus(unit, BATTLE_STATUS.WIND_WALL) && roll < 0.25) {
       this.performSkill(unit, unit, 'wind_wall')
     } else if (roll < 0.55) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'gale_slash')
     } else {
       this.performSkill(unit, targets[0]!, 'feather_storm')
@@ -1870,44 +2062,44 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private bossPhoenixAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
     if (roll < 0.4) {
       this.performSkill(unit, targets[0]!, 'fire_breath')
     } else if (roll < 0.8) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'wind_pressure')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performAttack(unit, target)
     }
     this.nextTurn()
   }
 
   private bossQilinAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (!unit.status.includes('armor_up') && roll < 0.25) {
+    if (!this.hasStatus(unit, BATTLE_STATUS.ARMOR_UP) && roll < 0.25) {
       this.performSkill(unit, unit, 'armor_up')
     } else if (roll < 0.6) {
       this.performSkill(unit, targets[0]!, 'earthquake')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'flame_charge')
     }
     this.nextTurn()
   }
 
   private bossChiAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
     if (roll < 0.35) {
       this.performSkill(unit, targets[0]!, 'poison_mist')
     } else if (roll < 0.65) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'venom_fang')
     } else {
       this.performSkill(unit, targets[0]!, 'toxic_burst')
@@ -1916,14 +2108,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private bossMeiAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
     if (roll < 0.3) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'charm')
     } else if (roll < 0.6) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'illusion_strike')
     } else {
       this.performSkill(unit, targets[0]!, 'shadow_dance')
@@ -1932,46 +2124,46 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private bossWangAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
     if (roll < 0.35) {
       this.performSkill(unit, targets[0]!, 'wind_poison')
     } else if (roll < 0.65) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'feather_dart')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'aerial_dive')
     }
     this.nextTurn()
   }
 
   private bossLiangAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
     if (hpRatio < 0.4 && roll < 0.5) {
       this.performSkill(unit, targets[0]!, 'flame_stomp')
     } else if (roll < 0.4) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'rock_smash')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'armor_pierce')
     }
     this.nextTurn()
   }
 
   private bossFakeXiaoaiAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (roll < 0.3 && !unit.status.includes('dark_mirror')) {
+    if (roll < 0.3 && !this.hasStatus(unit, BATTLE_STATUS.DARK_MIRROR)) {
       this.performSkill(unit, unit, 'dark_mirror')
     } else if (roll < 0.6) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'shadow_blade')
     } else {
       this.performSkill(unit, unit, 'afternoon_tea')
@@ -1980,7 +2172,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private bossXiaoaiTrueAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
@@ -1989,17 +2181,17 @@ export class BattleScene extends Phaser.Scene {
     } else if (roll < 0.3) {
       this.performSkill(unit, targets[0]!, 'dark_purge')
     } else if (roll < 0.6) {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'soul_drain')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'wind_moon_slash')
     }
     this.nextTurn()
   }
 
   private bossWuxiangAI(unit: BattleUnit): void {
-    const targets = this.units.filter(u => u.isPlayer && u.stats.hp > 0)
+    const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
@@ -2012,7 +2204,7 @@ export class BattleScene extends Phaser.Scene {
     } else if (roll < 0.75) {
       this.performSkill(unit, targets[0]!, 'heart_void')
     } else {
-      const target = targets[Math.floor(Math.random() * targets.length)]!
+      const target = this.pickRandomTarget(targets)!
       this.performAttack(unit, target)
     }
     this.nextTurn()
@@ -2048,8 +2240,8 @@ export class BattleScene extends Phaser.Scene {
     // Dual boss synergy: shui_yao + feng_chi rage when partner falls
     if (this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.SHUIYAO_FENGCHI_DUO && liveEnemies.length === 1) {
       const survivor = liveEnemies[0]!
-      if (!survivor.status.includes('enraged')) {
-        survivor.status.push('enraged')
+      if (!this.hasStatus(survivor, BATTLE_STATUS.ENRAGED)) {
+        this.addStatus(survivor, BATTLE_STATUS.ENRAGED, undefined, false)
         survivor.stats.speed = Math.floor(survivor.stats.speed * BATTLE_RULES.DUAL_BOSS_ENRAGE_SPEED_MULTIPLIER)
         this.log(`${survivor.name} 因搭档倒下而狂暴！速度大幅提升！`)
       }

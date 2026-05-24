@@ -280,7 +280,7 @@ export const SKILLS: Record<string, SkillData> = {
 
   // sun skills
   shenyu: {
-    id: 'shenyu', name: '神谕', type: 'buff', target: 'single',
+    id: 'shenyu', name: '神谕', type: 'debuff', target: 'single',
     element: 'light', power: 0, costMp: 10, costTp: 0,
     description: '显示敌人弱点，提升命中',
   },
