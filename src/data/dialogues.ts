@@ -92,7 +92,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '好吧，我去。', next: 'DIA_001_HELP', actions: [{ type: 'setFlag', flag: 'trust_huihui', value: 1 }, { type: 'questStart', questId: 'QST_002' }] },
+          { text: '好吧，我去。', next: 'DIA_001_HELP', actions: [{ type: 'setFlag', flag: 'trust_huihui', value: 1 }] },
           { text: '我先去会场。', next: 'DIA_001_REFUSE' },
           { text: '我再睡五分钟。', next: 'DIA_001_SLEEP', actions: [{ type: 'setFlag', flag: 'trust_huihui', value: 1 }, { type: 'setFlag', flag: 'achieve_late', value: true }] },
         ],
@@ -109,6 +109,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: '这才是我认识的T。快去吧，菠萝大叔在小镇西南角的菜园门口等你。' },
       { speaker: '系统', text: '慧慧信赖度+1。目标：前往小镇西南角菜园。' },
     ],
+    onComplete: [{ type: 'questStart', questId: 'QST_002' }],
   },
   DIA_001_REFUSE: {
     id: 'DIA_001_REFUSE',
@@ -118,6 +119,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '慧慧', text: '不行，你现在就去。不然我告诉镇长你偷吃菠萝饭团。' },
       { speaker: 'T', text: '……好吧好吧。' },
     ],
+    onComplete: [{ type: 'questStart', questId: 'QST_002' }],
   },
   DIA_001_SLEEP: {
     id: 'DIA_001_SLEEP',
@@ -127,6 +129,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: 'T', text: '你这是叫我起床还是处刑？' },
       { speaker: '系统', text: '获得成就【差点迟到】。慧慧信赖度+1。' },
     ],
+    onComplete: [{ type: 'questStart', questId: 'QST_002' }],
   },
 
   // SCN_002 菠萝大叔的菜园子

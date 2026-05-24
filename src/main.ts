@@ -2,6 +2,8 @@ import 'phaser'
 import { CaskTownGame } from './game'
 import { STARTUP_LOADING } from './utils/constants'
 
+let gameInstance: CaskTownGame | null = null
+
 function hideStartupLoading(): void {
   document.getElementById(STARTUP_LOADING.ELEMENT_ID)?.remove()
 }
@@ -9,9 +11,8 @@ function hideStartupLoading(): void {
 window.addEventListener(STARTUP_LOADING.READY_EVENT, hideStartupLoading, { once: true })
 
 function startGame(): void {
-  if ((window as any).game) return
-  const game = new CaskTownGame()
-  ;(window as any).game = game
+  if (gameInstance) return
+  gameInstance = new CaskTownGame()
 }
 
 if (document.readyState === 'loading') {

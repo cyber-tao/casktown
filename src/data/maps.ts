@@ -289,7 +289,6 @@ function buildMap001(): MapData {
       id: 'EVT_START', x: 15, y: 12, width: 1, height: 1,
       type: 'trigger', trigger: 'autorun',
       actions: [
-        { type: 'questStart', questId: 'QST_002' },
         { type: 'dialogue', dialogueId: 'DIA_001_START' },
       ],
     },

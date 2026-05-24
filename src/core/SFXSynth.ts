@@ -1,8 +1,14 @@
+type WebAudioWindow = Window & typeof globalThis & {
+  webkitAudioContext?: typeof AudioContext
+}
+
 export class SFXSynth {
   private ctx: AudioContext
 
   constructor() {
-    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const AudioContextCtor = window.AudioContext || (window as WebAudioWindow).webkitAudioContext
+    if (!AudioContextCtor) throw new Error('Web Audio API is unavailable')
+    this.ctx = new AudioContextCtor()
   }
 
   private ensureContext(): void {
