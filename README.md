@@ -6,7 +6,11 @@
 
 ## 游戏预告
 
-<video src="assets/trailer.mp4" controls muted loop playsinline poster="assets/sprites/title_bg_1080p.jpg" width="100%"></video>
+<a href="assets/trailer.mp4">
+  <img src="assets/trailer-preview.gif" alt="木桶镇游戏预告" width="100%">
+</a>
+
+[观看高清 MP4 预告片](assets/trailer.mp4)
 
 ## 项目起源
 
