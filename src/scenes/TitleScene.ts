@@ -11,6 +11,7 @@ import {
   PROJECT_GITHUB_URL,
   START_MAP_ID,
   STARTUP_LOADING,
+  TITLE_BACKGROUND,
   TITLE_GITHUB_LINK,
   TITLE_MENU_ACTION_INDEX,
   TITLE_MENU_ITEMS,
@@ -44,13 +45,10 @@ export class TitleScene extends Phaser.Scene {
     this.menuItems = []
     this.titleBgmRequested = false
 
-    // Background
-    this.bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ui_title_bg')
-    this.bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
-    this.bg.setAlpha(0.6)
+    this.createBackground()
 
     // Dark overlay for text readability
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.3)
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, TITLE_BACKGROUND.OVERLAY_COLOR, TITLE_BACKGROUND.OVERLAY_ALPHA)
 
     // Title
     this.add.text(GAME_WIDTH / 2, scalePx(120), '木桶镇', {
@@ -101,6 +99,38 @@ export class TitleScene extends Phaser.Scene {
     // Fade in
     this.cameras.main.fadeIn(500)
     window.dispatchEvent(new CustomEvent(STARTUP_LOADING.READY_EVENT))
+  }
+
+  private createBackground(): void {
+    this.bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, TITLE_BACKGROUND.IMAGE_KEY)
+    this.bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
+    this.bg.setAlpha(TITLE_BACKGROUND.IMAGE_ALPHA)
+
+    if (!this.cache.video.exists(TITLE_BACKGROUND.VIDEO_KEY)) return
+
+    const video = this.add.video(GAME_WIDTH / 2, GAME_HEIGHT / 2, TITLE_BACKGROUND.VIDEO_KEY)
+    video.setVisible(false)
+    const videoElement = video.video
+    if (videoElement) {
+      videoElement.muted = TITLE_BACKGROUND.VIDEO_MUTED
+      videoElement.defaultMuted = TITLE_BACKGROUND.VIDEO_MUTED
+      videoElement.playsInline = TITLE_BACKGROUND.VIDEO_PLAYS_INLINE
+    }
+    video.setLoop(TITLE_BACKGROUND.VIDEO_LOOP)
+
+    const fitVideo = (): void => {
+      video.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
+      video.setVisible(true)
+    }
+    const playVideo = (): void => {
+      video.setMute(TITLE_BACKGROUND.VIDEO_MUTED)
+      video.play(TITLE_BACKGROUND.VIDEO_LOOP)
+    }
+
+    video.once(Phaser.GameObjects.Events.VIDEO_CREATED, fitVideo)
+    playVideo()
+    this.input.once('pointerdown', playVideo)
+    this.input.keyboard?.once('keydown', playVideo)
   }
 
   private changeMenu(dir: number): void {

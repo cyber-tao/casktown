@@ -371,6 +371,19 @@ export const TITLE_GITHUB_LINK = {
   features: 'noopener,noreferrer',
 } as const
 
+export const TITLE_BACKGROUND = {
+  IMAGE_KEY: 'ui_title_bg',
+  VIDEO_KEY: 'title_trailer_bg',
+  VIDEO_PATH: 'trailer.mp4',
+  VIDEO_NO_AUDIO: true,
+  VIDEO_LOOP: true,
+  VIDEO_MUTED: true,
+  VIDEO_PLAYS_INLINE: true,
+  IMAGE_ALPHA: 0.6,
+  OVERLAY_COLOR: 0x000000,
+  OVERLAY_ALPHA: 0.3,
+} as const
+
 export const TITLE_MENU_ITEMS = ['开始游戏', '继续游戏', '编辑器', '设置', '退出'] as const
 export const TITLE_MENU_ACTION_INDEX = {
   NEW_GAME: 0,
