@@ -4,6 +4,10 @@
 
 项目当前使用 Phaser 4.1.0、TypeScript、Vite 和 Bun，资源由 Vite 的 `assets` 公共目录提供。
 
+## 游戏预告
+
+<video src="assets/trailer.mp4" controls muted loop playsinline poster="assets/sprites/title_bg_1080p.jpg" width="100%"></video>
+
 ## 项目起源
 
 《木桶镇 / CaskTown》的灵感来自 Hoker.JT 学生时代参加“火客论坛”（Hoker）时，一群朋友共同产生的游戏想法。游戏里的角色都来自当时论坛里的朋友，那些昵称、性格和彼此之间的玩笑，构成了最早版本的角色关系与冒险气质。
