@@ -4,6 +4,12 @@
 
 项目当前使用 Phaser 4.1.0、TypeScript、Vite 和 Bun，资源由 Vite 的 `assets` 公共目录提供。
 
+## 在线体验
+
+- Github: [https://cyber-tao.github.io/casktown](https://cyber-tao.github.io/casktown)
+- Vercel: [https://casktown.vercel.app](https://casktown.vercel.app)
+- Cloudflare: [https://casktown.pages.dev](https://casktown.pages.dev)
+
 ## 游戏预告
 
 <a href="assets/trailer.mp4">
