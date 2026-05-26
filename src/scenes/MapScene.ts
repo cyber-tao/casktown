@@ -114,6 +114,7 @@ export class MapScene extends Phaser.Scene {
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
+  private restartingMap = false
   private inputResumeBlockedUntilMs = 0
   private animationTimeMs = 0
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
@@ -130,7 +131,7 @@ export class MapScene extends Phaser.Scene {
 
   private handleQuickLoad = (): void => {
     if (SaveManager.getInstance().quickLoad()) {
-      this.scene.restart({ mapId: GameData.getInstance().currentMap })
+      this.requestMapRestart(GameData.getInstance().currentMap)
     }
   }
 
@@ -138,7 +139,7 @@ export class MapScene extends Phaser.Scene {
     this.pendingActions = []
     this.pendingMapEventId = ''
     this.inEvent = false
-    this.scene.restart({ mapId: GameData.getInstance().currentMap })
+    this.requestMapRestart(GameData.getInstance().currentMap)
   }
 
   private handleQuestUpdate = (): void => {
@@ -158,7 +159,7 @@ export class MapScene extends Phaser.Scene {
     const gd = GameData.getInstance()
     const nextMapId = value >= REBUILD_VISUAL_MAP_THRESHOLD ? REBUILT_TOWN_MAP_ID : RUINED_TOWN_MAP_ID
     gd.currentMap = nextMapId
-    this.scene.restart({ mapId: nextMapId })
+    this.requestMapRestart(nextMapId)
   }
 
   private isJoinFlag(key: string): boolean {
@@ -266,6 +267,7 @@ export class MapScene extends Phaser.Scene {
     this.npcTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
+    this.restartingMap = false
     this.inputResumeBlockedUntilMs = 0
     this.weatherEmitter = null
     this.minimapPlayerMarker = undefined
@@ -1647,6 +1649,12 @@ export class MapScene extends Phaser.Scene {
     AudioManager.getInstance().playSFX('warp')
     gd.currentMap = mapId
     gd.playerPosition = { x, y }
+    this.requestMapRestart(mapId)
+  }
+
+  private requestMapRestart(mapId: string): void {
+    if (this.restartingMap) return
+    this.restartingMap = true
     this.scene.restart({ mapId })
   }
 
