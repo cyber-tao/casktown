@@ -167,6 +167,9 @@ export const MENU_CODEX_TAB_LABELS: Record<typeof MENU_CODEX_TAB_KEYS[number], s
   story: '故事',
 } as const
 export const CODEX_STORY_BRANCH_COUNT = 10
+export const PROPHECY_NUMERIC_CONDITION_MIN = 0
+export const QUEST_STARTED_CONDITION_PREFIX = 'quest_started_'
+export const QUEST_COMPLETED_CONDITION_PREFIX = 'quest_completed_'
 export const CODEX_BOSS_DISCOVERY_FLAGS = {
   barrel_fake: 'barrel_fake',
   baihu: 'baihu',

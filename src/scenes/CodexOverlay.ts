@@ -2,14 +2,23 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { QuestSystem } from '../core/QuestSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
+import {
+  CODEX_STORY_BRANCH_COUNT,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  PROPHECY_NUMERIC_CONDITION_MIN,
+  QUEST_COMPLETED_CONDITION_PREFIX,
+  QUEST_STARTED_CONDITION_PREFIX,
+  TOUCH_INPUT,
+  scaleFont,
+  scalePx,
+} from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 
 type CodexTab = 'monsters' | 'items' | 'story'
-
-const STORY_BRANCH_COUNT = 10
 
 export class CodexOverlay extends Phaser.Scene {
   private tab: CodexTab = 'monsters'
@@ -139,7 +148,7 @@ export class CodexOverlay extends Phaser.Scene {
   private getListCount(): number {
     if (this.tab === 'monsters') return Math.max(1, this.discoveredEnemies.length)
     if (this.tab === 'items') return Math.max(1, this.discoveredItems.length)
-    return STORY_BRANCH_COUNT + GAME_CONFIG_DATABASE.getTable('prophecies').length
+    return CODEX_STORY_BRANCH_COUNT + GAME_CONFIG_DATABASE.getTable('prophecies').length
   }
 
   private updateTabs(): void {
@@ -227,15 +236,14 @@ export class CodexOverlay extends Phaser.Scene {
       }
       for (let i = 0; i < prophecies.length; i++) {
         const prophecy = prophecies[i]!
-        const conditionValue = prophecy.condition ? gd.getFlag(prophecy.condition) : true
-        const conditionMet = !prophecy.condition || conditionValue === true || (typeof conditionValue === 'number' && conditionValue > 0)
+        const conditionMet = this.isStoryConditionMet(prophecy.condition)
         const label = conditionMet ? `📖 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
         const color = conditionMet ? '#f39c12' : '#5a5a5a'
-        const t = this.add.text(scalePx(150), scalePx(90 + (STORY_BRANCH_COUNT + i) * 26), label, {
+        const t = this.add.text(scalePx(150), scalePx(90 + (CODEX_STORY_BRANCH_COUNT + i) * 26), label, {
           fontSize: scaleFont(14), color,
         })
         t.setScrollFactor(0).setDepth(201)
-        bindTouchText(t, () => this.selectListItem(STORY_BRANCH_COUNT + i))
+        bindTouchText(t, () => this.selectListItem(CODEX_STORY_BRANCH_COUNT + i))
         this.listItems.push(t)
       }
     }
@@ -282,7 +290,7 @@ export class CodexOverlay extends Phaser.Scene {
         ].join('\n'))
       }
     } else if (this.tab === 'story') {
-      if (this.cursorIndex < STORY_BRANCH_COUNT) {
+      if (this.cursorIndex < CODEX_STORY_BRANCH_COUNT) {
         this.detailText.setText([
           '故事分支记录',
           '',
@@ -290,14 +298,14 @@ export class CodexOverlay extends Phaser.Scene {
           '不同的选择会影响结局走向。',
         ].join('\n'))
       } else {
-        const prophecyIndex = this.cursorIndex - STORY_BRANCH_COUNT
+        const prophecyIndex = this.cursorIndex - CODEX_STORY_BRANCH_COUNT
         const prophecy = prophecies[prophecyIndex]
         if (!prophecy) {
           this.detailText.setText('')
           return
         }
         const gd = GameData.getInstance()
-        const conditionMet = !prophecy.condition || gd.getFlag(prophecy.condition) === true || gd.hasFlag(prophecy.condition)
+        const conditionMet = this.isStoryConditionMet(prophecy.condition)
         if (!conditionMet) {
           this.detailText.setText([
             prophecy.chapter,
@@ -328,6 +336,20 @@ export class CodexOverlay extends Phaser.Scene {
     } else {
       this.detailText.setText('')
     }
+  }
+
+  private isStoryConditionMet(condition?: string): boolean {
+    if (!condition) return true
+    const questSystem = QuestSystem.getInstance()
+    if (condition.startsWith(QUEST_STARTED_CONDITION_PREFIX)) {
+      const questId = condition.slice(QUEST_STARTED_CONDITION_PREFIX.length)
+      return questSystem.isQuestActive(questId) || questSystem.isQuestCompleted(questId)
+    }
+    if (condition.startsWith(QUEST_COMPLETED_CONDITION_PREFIX)) {
+      return questSystem.isQuestCompleted(condition.slice(QUEST_COMPLETED_CONDITION_PREFIX.length))
+    }
+    const conditionValue = GameData.getInstance().getFlag(condition)
+    return conditionValue === true || (typeof conditionValue === 'number' && conditionValue > PROPHECY_NUMERIC_CONDITION_MIN)
   }
 
   private close(): void {
