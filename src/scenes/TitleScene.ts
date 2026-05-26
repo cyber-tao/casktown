@@ -34,6 +34,7 @@ export class TitleScene extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Rectangle
   private bg!: Phaser.GameObjects.Image
   private titleBgmRequested = false
+  private transitioning = false
 
   constructor() {
     super({ key: 'TitleScene' })
@@ -44,6 +45,7 @@ export class TitleScene extends Phaser.Scene {
     this.menuIndex = 0
     this.menuItems = []
     this.titleBgmRequested = false
+    this.transitioning = false
 
     this.createBackground()
 
@@ -151,6 +153,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private selectMenu(): void {
+    if (this.transitioning) return
     switch (this.menuIndex) {
       case TITLE_MENU_ACTION_INDEX.NEW_GAME:
         this.startNewGame()
@@ -205,10 +208,7 @@ export class TitleScene extends Phaser.Scene {
     const gd = GameData.getInstance()
     gd.reset()
     InputManager.getInstance().syncFromGameData()
-    this.cameras.main.fadeOut(500)
-    this.time.delayedCall(500, () => {
-      this.scene.start('MapScene', { mapId: START_MAP_ID })
-    })
+    this.startSceneAfterFade('MapScene', { mapId: START_MAP_ID })
   }
 
   private loadGame(): void {
@@ -218,10 +218,7 @@ export class TitleScene extends Phaser.Scene {
         this.showMessage('读取失败')
         return
       }
-      this.cameras.main.fadeOut(500)
-      this.time.delayedCall(500, () => {
-        this.scene.start('MapScene', { mapId: GameData.getInstance().currentMap })
-      })
+      this.startSceneAfterFade('MapScene', { mapId: GameData.getInstance().currentMap })
     } else {
       this.showMessage('无存档')
     }
@@ -239,5 +236,14 @@ export class TitleScene extends Phaser.Scene {
       color: '#e74c3c',
     }).setOrigin(0.5)
     this.time.delayedCall(1500, () => text.destroy())
+  }
+
+  private startSceneAfterFade(sceneKey: string, data?: object): void {
+    if (this.transitioning) return
+    this.transitioning = true
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.start(sceneKey, data)
+    })
+    this.cameras.main.fadeOut(TITLE_BACKGROUND.FADE_MS)
   }
 }

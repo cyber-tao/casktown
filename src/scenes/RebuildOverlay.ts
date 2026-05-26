@@ -3,19 +3,9 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
+import { GAME_WIDTH, GAME_HEIGHT, REBUILD_MENU, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
-
-
-const REBUILD_OPTIONS = [
-  { id: 'farm', name: '菜园', material: 1, desc: '恢复菠萝大叔的菜园' },
-  { id: 'plaza', name: '广场', material: 2, desc: '重建盛典广场' },
-  { id: 'tower', name: '木桶塔', material: 3, desc: '修复中央木桶塔' },
-  { id: 'shop', name: '杂货铺', material: 1, desc: '重开杂货铺' },
-  { id: 'mayor', name: '镇长家', material: 2, desc: '修缮镇长宅邸' },
-  { id: 'dock', name: '码头', material: 2, desc: '修复码头设施' },
-]
 
 export class RebuildOverlay extends Phaser.Scene {
   private cursorIndex = 0
@@ -23,6 +13,7 @@ export class RebuildOverlay extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Rectangle
   private titleText!: Phaser.GameObjects.Text
   private descText!: Phaser.GameObjects.Text
+  private goldText!: Phaser.GameObjects.Text
 
   constructor() {
     super({ key: 'RebuildOverlay', active: false })
@@ -45,14 +36,13 @@ export class RebuildOverlay extends Phaser.Scene {
     this.titleText.setDepth(201)
 
     const gd = GameData.getInstance()
-    const matCount = gd.getItemQuantity('rebuild_material')
 
-    const matText = this.add.text(GAME_WIDTH / 2, scalePx(70), `建材: ${matCount}`, {
+    this.goldText = this.add.text(GAME_WIDTH / 2, scalePx(70), `${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`, {
       fontSize: scaleFont(16), color: '#ecf0f1',
     })
-    matText.setOrigin(0.5)
-    matText.setScrollFactor(0)
-    matText.setDepth(201)
+    this.goldText.setOrigin(0.5)
+    this.goldText.setScrollFactor(0)
+    this.goldText.setDepth(201)
 
     this.cursor = this.add.rectangle(GAME_WIDTH / 2 - scalePx(160), scalePx(120), scalePx(320), scalePx(28), 0x3498db, 0.3)
     this.cursor.setOrigin(0, 0.5)
@@ -61,10 +51,10 @@ export class RebuildOverlay extends Phaser.Scene {
 
     this.items = []
     const startY = scalePx(120)
-    for (let i = 0; i < REBUILD_OPTIONS.length; i++) {
-      const opt = REBUILD_OPTIONS[i]!
-      const built = gd.getFlag(`rebuilt_${opt.id}`) === true
-      const label = built ? `${opt.name} [已完成]` : `${opt.name} (建材x${opt.material})`
+    for (let i = 0; i < REBUILD_MENU.OPTIONS.length; i++) {
+      const opt = REBUILD_MENU.OPTIONS[i]!
+      const built = gd.getFlag(`${REBUILD_MENU.BUILT_FLAG_PREFIX}${opt.id}`) === true
+      const label = built ? `${opt.name} [已完成]` : `${opt.name} (${opt.goldCost}G)`
       const color = built ? '#7f8c8d' : '#ecf0f1'
       const text = this.add.text(GAME_WIDTH / 2 - scalePx(140), startY + scalePx(i * 36), label, {
         fontSize: scaleFont(16), color,
@@ -93,11 +83,11 @@ export class RebuildOverlay extends Phaser.Scene {
     this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
       switch (event.code) {
         case 'ArrowUp': case 'KeyW':
-          this.cursorIndex = (this.cursorIndex - 1 + REBUILD_OPTIONS.length) % REBUILD_OPTIONS.length
+          this.cursorIndex = (this.cursorIndex - 1 + REBUILD_MENU.OPTIONS.length) % REBUILD_MENU.OPTIONS.length
           this.updateCursor()
           break
         case 'ArrowDown': case 'KeyS':
-          this.cursorIndex = (this.cursorIndex + 1) % REBUILD_OPTIONS.length
+          this.cursorIndex = (this.cursorIndex + 1) % REBUILD_MENU.OPTIONS.length
           this.updateCursor()
           break
         case 'Enter': case 'Space':
@@ -116,41 +106,37 @@ export class RebuildOverlay extends Phaser.Scene {
   }
 
   private updateDescription(): void {
-    const opt = REBUILD_OPTIONS[this.cursorIndex]!
+    const opt = REBUILD_MENU.OPTIONS[this.cursorIndex]!
     this.descText.setText(opt.desc)
   }
 
   private selectItem(): void {
     const gd = GameData.getInstance()
-    const opt = REBUILD_OPTIONS[this.cursorIndex]!
+    const opt = REBUILD_MENU.OPTIONS[this.cursorIndex]!
+    const builtFlag = `${REBUILD_MENU.BUILT_FLAG_PREFIX}${opt.id}`
 
-    if (gd.getFlag(`rebuilt_${opt.id}`) === true) {
+    if (gd.getFlag(builtFlag) === true) {
       return
     }
 
-    if (!gd.removeItem('rebuild_material', opt.material)) {
-      this.descText.setText('建材不足！')
+    if (!gd.spendGold(opt.goldCost)) {
+      this.descText.setText('金币不足！')
+      AudioManager.getInstance().playSFX('cancel')
       return
     }
-    gd.setFlag(`rebuilt_${opt.id}`, true)
+    gd.setFlag(builtFlag, true)
     RebuildSystem.getInstance().addProgress(1)
     AudioManager.getInstance().playSFX('open_menu')
 
     this.items[this.cursorIndex]!.setText(`${opt.name} [已完成]`)
     this.items[this.cursorIndex]!.setColor('#7f8c8d')
-
-    const matText = this.titleText.scene.children.list.find(
-      c => c instanceof Phaser.GameObjects.Text && c !== this.titleText && c.y === scalePx(70)
-    ) as Phaser.GameObjects.Text | null
-    if (matText) {
-      matText.setText(`建材: ${gd.getItemQuantity('rebuild_material')}`)
-    }
+    this.goldText.setText(`${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`)
 
     this.descText.setText(`${opt.name} 重建完成！`)
   }
 
   private selectTouchItem(index: number): void {
-    if (index < 0 || index >= REBUILD_OPTIONS.length) return
+    if (index < 0 || index >= REBUILD_MENU.OPTIONS.length) return
     this.cursorIndex = index
     this.updateCursor()
     this.selectItem()

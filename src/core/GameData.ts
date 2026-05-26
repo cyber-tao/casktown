@@ -10,6 +10,7 @@ import {
   CONTROL_MODE,
   DEFAULT_GAME_SETTINGS,
   PARTY_RULES,
+  REBUILD_LEVEL_LIMITS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   START_MAP_ID,
@@ -131,6 +132,10 @@ export class GameData {
     return GameData.instance
   }
 
+  private clampRebuildLevel(level: number): number {
+    return Math.max(REBUILD_LEVEL_LIMITS.MIN, Math.min(REBUILD_LEVEL_LIMITS.MAX, level))
+  }
+
   reset(): void {
     this.playTime = 0
     this.playTimeSyncedAtMs = Date.now()
@@ -146,7 +151,7 @@ export class GameData {
     this.quests = new Map()
     this.flags = {}
     this.branches = createDefaultBranches()
-    this.rebuildLevel = 0
+    this.rebuildLevel = REBUILD_LEVEL_LIMITS.MIN
     this.gold = INITIAL_GOLD
     this.unlockedCodex = []
     this.settings = { ...DEFAULT_GAME_SETTINGS }
@@ -157,22 +162,23 @@ export class GameData {
   }
 
   setFlag(key: string, value: unknown): void {
-    this.flags[key] = value
-    if (value === true && JOIN_FLAG_TO_CHARACTER[key]) {
+    const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
+    this.flags[key] = normalizedValue
+    if (normalizedValue === true && JOIN_FLAG_TO_CHARACTER[key]) {
       this.addPartyMember(JOIN_FLAG_TO_CHARACTER[key])
     }
     if (BRANCH_KEYS.has(key as keyof BranchState)) {
-      this.applyBranchValue(key as keyof BranchState, value)
+      this.applyBranchValue(key as keyof BranchState, normalizedValue)
     }
-    if (key === 'rebuild_level' && typeof value === 'number') {
-      this.rebuildLevel = Math.max(this.rebuildLevel, value)
+    if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
+      this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
       this.branches.rebuild_level = this.rebuildLevel
       if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
         this.currentMap = REBUILT_TOWN_MAP_ID
       }
     }
     this.syncProgressionFlags()
-    EventBus.emit(GameEvents.FLAG_SET, key, value)
+    EventBus.emit(GameEvents.FLAG_SET, key, normalizedValue)
   }
 
   getFlag(key: string): unknown {
@@ -187,9 +193,11 @@ export class GameData {
   }
 
   updateBranch(key: keyof BranchState, value: unknown): void {
-    ;(this.branches as unknown as Record<string, unknown>)[key] = value
-    if (key === 'rebuild_level' && typeof value === 'number') {
-      this.rebuildLevel = value
+    const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
+    ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
+    if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
+      this.rebuildLevel = normalizedValue
+      this.flags.rebuild_level = normalizedValue
     }
     this.syncTrueRouteState()
     this.syncProgressionFlags()
@@ -198,10 +206,13 @@ export class GameData {
   private applyBranchValue(key: keyof BranchState, value: unknown): void {
     if (BRANCH_NUMBER_KEYS.has(key)) {
       const current = this.branches[key]
-      const next = key === 'rebuild_level' ? value : typeof value === 'number' && typeof current === 'number' ? current + value : value
+      const next = key === 'rebuild_level'
+        ? (typeof value === 'number' ? this.clampRebuildLevel(value) : current)
+        : typeof value === 'number' && typeof current === 'number' ? current + value : value
       ;(this.branches as unknown as Record<string, unknown>)[key] = next
       if (key === 'rebuild_level' && typeof next === 'number') {
         this.rebuildLevel = next
+        this.flags.rebuild_level = next
       }
     } else {
       ;(this.branches as unknown as Record<string, unknown>)[key] = value
@@ -599,8 +610,10 @@ export class GameData {
     this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {}).map(([id, quest]) => [id, { ...quest }]))
     this.flags = { ...((d.flags as GameFlags) ?? {}) }
     this.branches = { ...createDefaultBranches(), ...((d.branches as Partial<BranchState>) ?? {}) }
-    this.rebuildLevel = (d.rebuildLevel as number) ?? this.branches.rebuild_level
+    const serializedRebuildLevel = typeof d.rebuildLevel === 'number' ? d.rebuildLevel : this.branches.rebuild_level
+    this.rebuildLevel = this.clampRebuildLevel(serializedRebuildLevel)
     this.branches.rebuild_level = this.rebuildLevel
+    this.flags.rebuild_level = this.rebuildLevel
     this.gold = (d.gold as number) ?? INITIAL_GOLD
     this.unlockedCodex = [...((d.unlockedCodex as string[] | undefined) ?? [])]
     this.settings = { ...DEFAULT_GAME_SETTINGS, ...((d.settings as Partial<GameSettings>) ?? {}) }

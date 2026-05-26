@@ -31,6 +31,7 @@ import {
   MAP_ENCOUNTER_RATES,
   MAP_HUD,
   MAP_INPUT_CODES,
+  MAP_INPUT_GUARD,
   MAP_WEATHER_GROUPS,
   LOADING_SCREEN,
   MAP_MOVE_SPEED_TILES_PER_SECOND,
@@ -113,6 +114,7 @@ export class MapScene extends Phaser.Scene {
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
+  private inputResumeBlockedUntilMs = 0
   private animationTimeMs = 0
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
   private touchControls: Phaser.GameObjects.GameObject[] = []
@@ -264,6 +266,7 @@ export class MapScene extends Phaser.Scene {
     this.npcTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
+    this.inputResumeBlockedUntilMs = 0
     this.weatherEmitter = null
     this.minimapPlayerMarker = undefined
 
@@ -775,6 +778,7 @@ export class MapScene extends Phaser.Scene {
     }
 
     kb.on('keydown', (event: KeyboardEvent) => {
+      if (this.time.now < this.inputResumeBlockedUntilMs) return
       const input = InputManager.getInstance()
       if (event.code === MAP_INPUT_CODES.WORLD_MAP) {
         this.openWorldMap()
@@ -1324,18 +1328,25 @@ export class MapScene extends Phaser.Scene {
     if (!pad) return
 
     const aPressed = !!pad.A
+    const bPressed = !!pad.B
+    const startPressed = !!(pad.buttons && pad.buttons[9]?.pressed)
+    if (this.time.now < this.inputResumeBlockedUntilMs) {
+      this.gpConfirmPrev = aPressed
+      this.gpCancelPrev = bPressed
+      this.gpMenuPrev = startPressed
+      return
+    }
+
     if (aPressed && !this.gpConfirmPrev) {
       this.interact()
     }
     this.gpConfirmPrev = aPressed
 
-    const bPressed = !!pad.B
     if (bPressed && !this.gpCancelPrev) {
       this.openMenu()
     }
     this.gpCancelPrev = bPressed
 
-    const startPressed = !!(pad.buttons && pad.buttons[9]?.pressed)
     if (startPressed && !this.gpMenuPrev) {
       this.openMenu()
     }
@@ -1803,6 +1814,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private onMenuClose(): void {
+    this.inputResumeBlockedUntilMs = this.time.now + MAP_INPUT_GUARD.RESUME_LOCK_MS
     this.scene.resume()
     const pending = this.pendingActions
     const mapEventId = this.pendingMapEventId

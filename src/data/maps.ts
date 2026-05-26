@@ -382,8 +382,14 @@ function buildMap001(): MapData {
     {
       id: 'EVT_REBUILD_CEREMONY', x: 14, y: 5, width: 4, height: 3,
       type: 'trigger', trigger: 'action',
-      conditions: [{ flag: 'has_all_relics', value: true }],
+      conditions: [{ flag: 'has_all_relics', value: true }, { flag: 'rebuild_ceremony_done', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_305_REBUILD' }],
+    },
+    {
+      id: 'EVT_REBUILD_MENU', x: 14, y: 5, width: 4, height: 3,
+      type: 'trigger', trigger: 'action',
+      conditions: [{ flag: 'rebuild_ceremony_done', value: true }],
+      actions: [{ type: 'rebuildMenu' }],
     },
   ]
 
@@ -603,8 +609,14 @@ function buildMap002(): MapData {
     {
       id: 'EVT_REBUILD_CEREMONY', x: 14, y: 5, width: 4, height: 3,
       type: 'trigger', trigger: 'action',
-      conditions: [{ flag: 'has_all_relics', value: true }],
+      conditions: [{ flag: 'has_all_relics', value: true }, { flag: 'rebuild_ceremony_done', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_305_REBUILD' }],
+    },
+    {
+      id: 'EVT_REBUILD_MENU', x: 14, y: 5, width: 4, height: 3,
+      type: 'trigger', trigger: 'action',
+      conditions: [{ flag: 'rebuild_ceremony_done', value: true }],
+      actions: [{ type: 'rebuildMenu' }],
     },
   ]
 

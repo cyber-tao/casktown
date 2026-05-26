@@ -25,6 +25,7 @@ export class SettingsScene extends Phaser.Scene {
   private returnTo: string = 'TitleScene'
   private overlay!: Phaser.GameObjects.Rectangle
   private panel!: Phaser.GameObjects.Rectangle
+  private closing = false
 
   constructor() {
     super({ key: 'SettingsScene', active: false })
@@ -34,12 +35,13 @@ export class SettingsScene extends Phaser.Scene {
     this.returnTo = data.returnTo || 'TitleScene'
     this.menuIndex = 0
     this.menuItems = []
+    this.closing = false
 
     this.createBackground()
     this.createSettingsUI()
     this.setupInput()
 
-    this.cameras.main.fadeIn(300)
+    this.cameras.main.fadeIn(SETTINGS_PANEL.fadeMs)
   }
 
   private createBackground(): void {
@@ -251,9 +253,10 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private goBack(): void {
+    if (this.closing) return
+    this.closing = true
     AudioManager.getInstance().playSFX('cancel')
-    this.cameras.main.fadeOut(300)
-    this.time.delayedCall(300, () => {
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       if (this.returnTo === 'MenuOverlay') {
         this.scene.resume('MenuOverlay')
       } else {
@@ -262,5 +265,6 @@ export class SettingsScene extends Phaser.Scene {
       }
       this.scene.stop()
     })
+    this.cameras.main.fadeOut(SETTINGS_PANEL.fadeMs)
   }
 }

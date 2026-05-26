@@ -979,6 +979,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { type: 'questStart', questId: 'QST_008' },
       { type: 'questComplete', questId: 'QST_008' },
       { type: 'setFlag', flag: 'rebuild_level', value: 3 },
+      { type: 'setFlag', flag: 'rebuild_ceremony_done', value: true },
       { type: 'questStart', questId: 'QST_009' },
     ],
   },

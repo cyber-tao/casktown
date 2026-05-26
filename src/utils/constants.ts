@@ -382,6 +382,7 @@ export const TITLE_BACKGROUND = {
   IMAGE_ALPHA: 0.6,
   OVERLAY_COLOR: 0x000000,
   OVERLAY_ALPHA: 0.3,
+  FADE_MS: 500,
 } as const
 
 export const TITLE_MENU_ITEMS = ['开始游戏', '继续游戏', '编辑器', '设置', '退出'] as const
@@ -501,6 +502,22 @@ export const PARTY_FIELD_EVENT_CHARACTER_IDS: Record<string, string> = {
 export const RUINED_TOWN_MAP_ID = 'MAP_001'
 export const REBUILT_TOWN_MAP_ID = 'MAP_002'
 export const TOWN_MAP_IDS = [RUINED_TOWN_MAP_ID, REBUILT_TOWN_MAP_ID] as const
+export const REBUILD_LEVEL_LIMITS = {
+  MIN: 0,
+  MAX: 5,
+} as const
+export const REBUILD_MENU = {
+  BUILT_FLAG_PREFIX: 'rebuilt_',
+  GOLD_COST_LABEL: '金币',
+  OPTIONS: [
+    { id: 'farm', name: '菜园', goldCost: 80, desc: '恢复菠萝大叔的菜园' },
+    { id: 'plaza', name: '广场', goldCost: 160, desc: '重建盛典广场' },
+    { id: 'tower', name: '木桶塔', goldCost: 240, desc: '修复中央木桶塔' },
+    { id: 'shop', name: '杂货铺', goldCost: 120, desc: '重开杂货铺' },
+    { id: 'mayor', name: '镇长家', goldCost: 180, desc: '修缮镇长宅邸' },
+    { id: 'dock', name: '码头', goldCost: 180, desc: '修复码头设施' },
+  ],
+} as const
 export const BARREL_UNLOCK_PROGRESS_FLAGS = [
   { sourceFlag: 'has_millennium_seed', unlockFlag: 'barrel_green' },
   { sourceFlag: 'has_sacred_water', unlockFlag: 'barrel_blue' },
@@ -1221,6 +1238,10 @@ export const MAP_INPUT_CODES = {
   WORLD_MAP: 'KeyM',
 } as const
 
+export const MAP_INPUT_GUARD = {
+  RESUME_LOCK_MS: 120,
+} as const
+
 export const MAP_GAMEPAD_INPUT = {
   AXIS_ACTIVATION_THRESHOLD: 0.3,
   AXIS_DEAD_ZONE: 0.15,
@@ -1593,6 +1614,7 @@ export const SETTINGS_PANEL = {
   cursorX: scalePx(200),
   cursorOffsetY: scalePx(7),
   cursorSize: scalePx(10),
+  fadeMs: 300,
 } as const
 
 export const FIELD_ENTITY_BEHAVIOR = {

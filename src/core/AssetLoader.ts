@@ -22,6 +22,7 @@ import type { EncounterData, MapData, MapEvent } from '../data/types'
 
 const processedTileTextures = new WeakMap<Phaser.Textures.TextureManager, Set<string>>()
 const processedSpriteCrops = new WeakMap<Phaser.Textures.TextureManager, Map<string, string>>()
+const pendingImageLoads = new WeakMap<Phaser.Textures.TextureManager, Set<string>>()
 
 function getProcessedTileSet(scene: Phaser.Scene): Set<string> {
   let set = processedTileTextures.get(scene.textures)
@@ -39,6 +40,15 @@ function getProcessedSpriteCropMap(scene: Phaser.Scene): Map<string, string> {
     processedSpriteCrops.set(scene.textures, map)
   }
   return map
+}
+
+function getPendingImageLoadSet(scene: Phaser.Scene): Set<string> {
+  let set = pendingImageLoads.get(scene.textures)
+  if (!set) {
+    set = new Set()
+    pendingImageLoads.set(scene.textures, set)
+  }
+  return set
 }
 
 function getConfiguredImageAssets(): Record<string, string> {
@@ -132,6 +142,7 @@ function applySpriteCrop(scene: Phaser.Scene, key: string): void {
   ctx.clearRect(0, 0, crop.outputWidth, crop.outputHeight)
   ctx.drawImage(source, crop.sourceX, crop.sourceY, crop.sourceWidth, crop.sourceHeight, crop.offsetX, crop.offsetY, crop.sourceWidth, crop.sourceHeight)
   scene.textures.remove(key)
+  if (scene.textures.exists(key)) return
   scene.textures.addCanvas(key, canvas)
   processed.set(key, signature)
 }
@@ -183,12 +194,30 @@ export function queueImageAsset(scene: Phaser.Scene, key: string): void {
     applySpriteCrop(scene, key)
     return
   }
+  const pendingLoads = getPendingImageLoadSet(scene)
+  if (pendingLoads.has(key)) return
   const path = getConfiguredImageAssets()[key]
   if (!path) {
     console.warn(`Image asset ${key} is not configured`)
     return
   }
-  scene.load.once(`filecomplete-image-${key}`, () => applySpriteCrop(scene, key))
+  pendingLoads.add(key)
+  const completeEvent = `filecomplete-image-${key}`
+  const clearPendingLoad = (): void => {
+    pendingLoads.delete(key)
+    scene.load.off(completeEvent, handleComplete)
+    scene.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR, handleLoadError)
+  }
+  const handleComplete = (): void => {
+    clearPendingLoad()
+    applySpriteCrop(scene, key)
+  }
+  const handleLoadError = (file: { key?: string }): void => {
+    if (file.key === key) clearPendingLoad()
+  }
+  scene.load.once(completeEvent, handleComplete)
+  scene.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, handleLoadError)
+  scene.events.once(Phaser.Scenes.Events.SHUTDOWN, clearPendingLoad)
   scene.load.image(key, `sprites/${path}`)
 }
 
@@ -371,6 +400,10 @@ export function processTileTextures(scene: Phaser.Scene, keys: Iterable<string>)
     }
 
     scene.textures.remove(key)
+    if (scene.textures.exists(key)) {
+      processed.add(key)
+      continue
+    }
     scene.textures.addCanvas(key, canvas)
     processed.add(key)
   }
