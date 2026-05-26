@@ -1193,6 +1193,7 @@ export const DIALOGUE_CHOICE = {
 
 export const SAVE_SLOTS = 3
 export const QUICK_SAVE_SLOT = SAVE_SLOTS + 1
+export const SAVE_STORAGE_KEY = 'casktown_save'
 export const SAVE_LOAD_FEEDBACK_DELAY_MS = 1000
 export const TRUE_ROUTE_MIN_MERCY = 3
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3

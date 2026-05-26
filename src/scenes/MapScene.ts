@@ -1824,6 +1824,7 @@ export class MapScene extends Phaser.Scene {
   private onMenuClose(): void {
     this.inputResumeBlockedUntilMs = this.time.now + MAP_INPUT_GUARD.RESUME_LOCK_MS
     this.scene.resume()
+    AudioManager.getInstance().setScene(this)
     const pending = this.pendingActions
     const mapEventId = this.pendingMapEventId
     this.pendingActions = []

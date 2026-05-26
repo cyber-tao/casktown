@@ -1,8 +1,6 @@
 import { GameData } from './GameData'
 import { InputManager } from './InputManager'
-import { QUICK_SAVE_SLOT, SAVE_SLOTS } from '../utils/constants'
-
-const SAVE_KEY = 'casktown_save'
+import { QUICK_SAVE_SLOT, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
 
 export interface SaveMeta {
   slot: number
@@ -53,8 +51,8 @@ export class SaveManager {
         currentMap: this.gameData.currentMap,
         preview: this.gameData.party.join(', '),
       }
-      storage.setItem(`${SAVE_KEY}_data_${slot}`, JSON.stringify(data))
-      storage.setItem(`${SAVE_KEY}_meta_${slot}`, JSON.stringify(meta))
+      storage.setItem(`${SAVE_STORAGE_KEY}_data_${slot}`, JSON.stringify(data))
+      storage.setItem(`${SAVE_STORAGE_KEY}_meta_${slot}`, JSON.stringify(meta))
       return true
     } catch (e) {
       console.error('Save failed:', e)
@@ -67,7 +65,7 @@ export class SaveManager {
     const storage = this.getStorage()
     if (!storage) return false
     try {
-      const raw = storage.getItem(`${SAVE_KEY}_data_${slot}`)
+      const raw = storage.getItem(`${SAVE_STORAGE_KEY}_data_${slot}`)
       if (!raw) return false
       const data = JSON.parse(raw)
       this.gameData.deserialize(data)
@@ -83,7 +81,7 @@ export class SaveManager {
     const storage = this.getStorage()
     if (!storage) return null
     try {
-      const raw = storage.getItem(`${SAVE_KEY}_meta_${slot}`)
+      const raw = storage.getItem(`${SAVE_STORAGE_KEY}_meta_${slot}`)
       return raw ? (JSON.parse(raw) as SaveMeta) : null
     } catch {
       return null
@@ -94,7 +92,7 @@ export class SaveManager {
     const storage = this.getStorage()
     if (!storage) return false
     try {
-      return storage.getItem(`${SAVE_KEY}_data_${slot}`) !== null
+      return storage.getItem(`${SAVE_STORAGE_KEY}_data_${slot}`) !== null
     } catch {
       return false
     }
@@ -105,8 +103,8 @@ export class SaveManager {
     const storage = this.getStorage()
     if (!storage) return false
     try {
-      storage.removeItem(`${SAVE_KEY}_data_${slot}`)
-      storage.removeItem(`${SAVE_KEY}_meta_${slot}`)
+      storage.removeItem(`${SAVE_STORAGE_KEY}_data_${slot}`)
+      storage.removeItem(`${SAVE_STORAGE_KEY}_meta_${slot}`)
       return true
     } catch (e) {
       console.error('Delete save failed:', e)
@@ -126,7 +124,7 @@ export class SaveManager {
     const storage = this.getStorage()
     if (!storage) return null
     try {
-      const raw = storage.getItem(`${SAVE_KEY}_data_${slot}`)
+      const raw = storage.getItem(`${SAVE_STORAGE_KEY}_data_${slot}`)
       return raw
     } catch {
       return null
