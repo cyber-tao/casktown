@@ -135,6 +135,7 @@ export class MapScene extends Phaser.Scene {
   private animationTimeMs = 0
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
   private touchControls: Phaser.GameObjects.GameObject[] = []
+  private minimapGraphics?: Phaser.GameObjects.Graphics
   private minimapPlayerMarker?: Phaser.GameObjects.Rectangle
 
   constructor() {
@@ -181,9 +182,12 @@ export class MapScene extends Phaser.Scene {
 
   private handleQuestUpdate = (): void => {
     this.createQuestHud()
+    this.refreshMinimapStatic()
   }
 
   private handleFlagSet = (key: string, value: unknown): void => {
+    this.refreshMinimapStatic()
+
     if (value === true && this.isJoinFlag(key)) {
       this.removeSuppressedFieldEventSprites()
       this.refreshFollowers()
@@ -251,6 +255,12 @@ export class MapScene extends Phaser.Scene {
     return event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer'
   }
 
+  private isFieldEventCompleted(event: MapEvent): boolean {
+    const gd = GameData.getInstance()
+    if (event.type === 'chest') return gd.getFlag(this.getChestOpenedFlag(event.id)) === true
+    return this.isCompletableFieldEvent(event) && gd.getFlag(this.getFieldEventDoneFlag(event.id)) === true
+  }
+
   private getFieldEventDoneFlag(eventId: string): string {
     return `${FIELD_EVENT_FLAGS.DONE_PREFIX}${eventId}`
   }
@@ -310,6 +320,7 @@ export class MapScene extends Phaser.Scene {
     this.feedbackToken = 0
     this.promptText = undefined
     this.weatherEmitter = null
+    this.minimapGraphics = undefined
     this.minimapPlayerMarker = undefined
 
     this.cameras.main.setBackgroundColor('#2d4a22')
@@ -1248,6 +1259,7 @@ export class MapScene extends Phaser.Scene {
     const graphics = this.add.graphics()
     graphics.setScrollFactor(0)
     graphics.setDepth(MAP_HUD.DEPTH)
+    this.minimapGraphics = graphics
     this.drawMinimapStatic(graphics)
 
     const geometry = this.getMinimapGeometry()
@@ -1287,6 +1299,7 @@ export class MapScene extends Phaser.Scene {
       graphics.fillRect(geometry.offsetX + x * geometry.scale, geometry.offsetY + y * geometry.scale, geometry.scale, geometry.scale)
     }
     for (const event of this.mapData.events) {
+      if (!this.isMinimapEventVisible(event)) continue
       const color = MAP_HUD.EVENT_COLORS[event.type] ?? MAP_HUD.EVENT_COLORS.trigger
       const width = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, event.width * geometry.scale)
       const height = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, event.height * geometry.scale)
@@ -1296,6 +1309,18 @@ export class MapScene extends Phaser.Scene {
     graphics.lineStyle(MAP_HUD.BORDER_WIDTH, MAP_HUD.BORDER_COLOR, MAP_HUD.BORDER_ALPHA)
     graphics.strokeRect(MAP_HUD.MINIMAP_X, MAP_HUD.MINIMAP_Y, MAP_HUD.MINIMAP_WIDTH, MAP_HUD.MINIMAP_HEIGHT)
     graphics.strokeRect(geometry.offsetX, geometry.offsetY, geometry.width, geometry.height)
+  }
+
+  private refreshMinimapStatic(): void {
+    if (!this.minimapGraphics) return
+    this.drawMinimapStatic(this.minimapGraphics)
+  }
+
+  private isMinimapEventVisible(event: MapEvent): boolean {
+    if (this.isSuppressedFieldEvent(event)) return false
+    if (!this.areEventConditionsMet(event)) return false
+    if (event.type === 'battle') return this.battleEnemies.has(event.id)
+    return !this.isFieldEventCompleted(event)
   }
 
   private getMinimapGeometry(): { scale: number; offsetX: number; offsetY: number; width: number; height: number } {

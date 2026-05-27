@@ -377,7 +377,7 @@ function buildMap001(): MapData {
       id: 'EVT_FESTIVAL', x: 15, y: 5, width: 3, height: 2,
       type: 'trigger', trigger: 'action',
       conditions: [{ flag: 'met_mayor', value: true }],
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_006_FESTIVAL' }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_006_FESTIVAL' }, { type: 'dialogue', dialogueId: 'DIA_004_FESTIVAL_MID' }],
     },
     {
       id: 'EVT_REBUILD_CEREMONY', x: 14, y: 5, width: 4, height: 3,

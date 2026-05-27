@@ -254,6 +254,7 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '镇长', text: '今晚到我家来。我有东西交给你。' },
       { speaker: '系统', text: '主线任务更新【镇长的嘱托】。' },
     ],
+    onComplete: [{ type: 'questStart', questId: 'QST_001' }, { type: 'questComplete', questId: 'QST_001' }],
   },
 
   // SCN_005 镇长的嘱托
