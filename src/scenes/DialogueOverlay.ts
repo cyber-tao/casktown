@@ -23,6 +23,7 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { QuestSystem } from '../core/QuestSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
+import { areEventConditionsMet } from '../core/EventConditions'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
@@ -79,6 +80,7 @@ export class DialogueOverlay extends Phaser.Scene {
   private nameText!: Phaser.GameObjects.Text
   private textObj!: Phaser.GameObjects.Text
   private choices: Phaser.GameObjects.Text[] = []
+  private visibleChoices: DialogueChoice[] = []
   private cursor!: Phaser.GameObjects.Rectangle
   private currentScript!: DialogueScript
   private lineIndex = 0
@@ -130,6 +132,7 @@ export class DialogueOverlay extends Phaser.Scene {
     this.inChoice = false
     this.choiceIndex = 0
     this.choices = []
+    this.visibleChoices = []
 
     const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
     const script = dialogues[data.dialogueId]
@@ -234,6 +237,7 @@ export class DialogueOverlay extends Phaser.Scene {
     // Clear old choices
     for (const c of this.choices) c.destroy()
     this.choices = []
+    this.visibleChoices = []
     this.inChoice = false
     if (this.cursor) this.cursor.destroy()
 
@@ -267,12 +271,21 @@ export class DialogueOverlay extends Phaser.Scene {
     this.canAdvance = true
     const line = this.currentScript.lines[this.lineIndex]!
 
-    if (line.choices && line.choices.length > 0) {
-      this.showChoices(line.choices)
+    const choices = this.getVisibleChoices(line.choices)
+    if (choices.length > 0) {
+      this.showChoices(choices)
     }
   }
 
+  private getVisibleChoices(choices: DialogueChoice[] | undefined): DialogueChoice[] {
+    if (!choices) return []
+    const gd = GameData.getInstance()
+    return choices.filter(choice => areEventConditionsMet(choice.condition ? [choice.condition] : undefined, flag => gd.getFlag(flag)))
+  }
+
   private showChoices(choices: DialogueChoice[]): void {
+    if (choices.length === 0) return
+    this.visibleChoices = choices
     this.inChoice = true
     this.choiceIndex = 0
     const boxTop = DIALOGUE_BOX.y - DIALOGUE_BOX.height / 2
@@ -341,7 +354,7 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   private selectChoice(index: number): void {
-    if (!this.inChoice || index >= this.choices.length) return
+    if (!this.inChoice || index >= this.visibleChoices.length) return
     this.choiceIndex = index
     this.cursor.setY(this.getChoiceCursorY())
     this.advance()
@@ -365,11 +378,10 @@ export class DialogueOverlay extends Phaser.Scene {
 
     if (!this.canAdvance) return
 
-    const line = this.currentScript.lines[this.lineIndex]!
-
-    if (this.inChoice && line.choices) {
+    if (this.inChoice) {
       AudioManager.getInstance().playSFX('confirm')
-      const choice = line.choices[this.choiceIndex]!
+      const choice = this.visibleChoices[this.choiceIndex]
+      if (!choice) return
       this.applyChoiceActions(choice.actions)
       if (choice.next) {
         const nextScript = GAME_CONFIG_DATABASE.getTable('dialogues')[choice.next]

@@ -8,6 +8,7 @@ import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
+import { areEventConditionsMet as areConditionsMet } from '../core/EventConditions'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
 import {
@@ -39,6 +40,7 @@ import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILD_TILE_REPLACEMENTS,
   REBUILT_TOWN_MAP_ID,
+  QUICK_SAVE_SLOT,
   ROAMING_ENCOUNTER_RESPAWN,
   SEQUENCE_TEXTURE_FRAME_PATTERN,
   RUINED_TOWN_MAP_ID,
@@ -74,6 +76,16 @@ interface PartyHudRow {
   lastLevel?: number
 }
 
+interface MapSceneFeedback {
+  text: string
+  success: boolean
+}
+
+interface MapSceneStartData {
+  mapId?: string
+  feedback?: MapSceneFeedback
+}
+
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
   private player!: Phaser.GameObjects.Sprite
@@ -99,6 +111,10 @@ export class MapScene extends Phaser.Scene {
   private questHudObjects: PartyHudObject[] = []
   private questHudKey = ''
   private mapNameText!: Phaser.GameObjects.Text
+  private mapFeedbackText?: Phaser.GameObjects.Text
+  private promptText?: Phaser.GameObjects.Text
+  private initialFeedback: MapSceneFeedback | null = null
+  private feedbackToken = 0
 
   private followers: Phaser.GameObjects.Sprite[] = []
   private followerMemberIds: string[] = []
@@ -126,13 +142,34 @@ export class MapScene extends Phaser.Scene {
   }
 
   private handleQuickSave = (): void => {
-    SaveManager.getInstance().quickSave()
+    if (!this.canUseQuickSaveLoad()) {
+      this.showMapFeedback(MAP_HUD.QUICK_ACTION_BLOCKED_TEXT, false)
+      AudioManager.getInstance().playSFX('cancel')
+      return
+    }
+
+    const success = SaveManager.getInstance().quickSave()
+    this.showMapFeedback(success ? MAP_HUD.QUICK_SAVE_SUCCESS_TEXT : MAP_HUD.QUICK_SAVE_FAILED_TEXT, success)
+    AudioManager.getInstance().playSFX(success ? 'confirm' : 'cancel')
   }
 
   private handleQuickLoad = (): void => {
-    if (SaveManager.getInstance().quickLoad()) {
-      this.requestMapRestart(GameData.getInstance().currentMap)
+    if (!this.canUseQuickSaveLoad()) {
+      this.showMapFeedback(MAP_HUD.QUICK_ACTION_BLOCKED_TEXT, false)
+      AudioManager.getInstance().playSFX('cancel')
+      return
     }
+
+    const saveManager = SaveManager.getInstance()
+    const hadQuickSave = saveManager.hasSave(QUICK_SAVE_SLOT)
+    if (saveManager.quickLoad()) {
+      AudioManager.getInstance().playSFX('confirm')
+      this.requestMapRestart(GameData.getInstance().currentMap, { text: MAP_HUD.QUICK_LOAD_SUCCESS_TEXT, success: true })
+      return
+    }
+
+    this.showMapFeedback(hadQuickSave ? MAP_HUD.QUICK_LOAD_FAILED_TEXT : MAP_HUD.QUICK_LOAD_EMPTY_TEXT, false)
+    AudioManager.getInstance().playSFX('cancel')
   }
 
   private handleSaveLoaded = (): void => {
@@ -233,10 +270,11 @@ export class MapScene extends Phaser.Scene {
     return Boolean(sprite.active && sprite.scene)
   }
 
-  init(data: { mapId?: string }): void {
+  init(data: MapSceneStartData = {}): void {
     const mapId = data.mapId || GameData.getInstance().currentMap
     const maps = GAME_CONFIG_DATABASE.getTable('maps')
     this.mapData = maps[mapId] || maps.MAP_001!
+    this.initialFeedback = data.feedback ?? null
     GameData.getInstance().currentMap = this.mapData.id
   }
 
@@ -269,6 +307,8 @@ export class MapScene extends Phaser.Scene {
     this.pendingMapEventId = ''
     this.restartingMap = false
     this.inputResumeBlockedUntilMs = 0
+    this.feedbackToken = 0
+    this.promptText = undefined
     this.weatherEmitter = null
     this.minimapPlayerMarker = undefined
 
@@ -288,6 +328,10 @@ export class MapScene extends Phaser.Scene {
 
     // Show map name
     this.showMapName()
+    if (this.initialFeedback) {
+      this.showMapFeedback(this.initialFeedback.text, this.initialFeedback.success)
+      this.initialFeedback = null
+    }
     this.createWeather()
     this.startNPCMovement()
 
@@ -909,6 +953,51 @@ export class MapScene extends Phaser.Scene {
     if (this.touchDirection?.pointerId === pointer.id) this.touchDirection = null
   }
 
+  private canUseQuickSaveLoad(): boolean {
+    return !this.inEvent && !this.restartingMap
+  }
+
+  private showMapFeedback(text: string, success: boolean): void {
+    const token = ++this.feedbackToken
+    const feedbackColor = success ? MAP_HUD.FEEDBACK_SUCCESS_COLOR : MAP_HUD.FEEDBACK_ERROR_COLOR
+    if (this.promptText) {
+      this.promptText.setText(text)
+      this.promptText.setColor(feedbackColor)
+      this.promptText.setBackgroundColor(MAP_HUD.FEEDBACK_BACKGROUND_COLOR)
+      this.time.delayedCall(MAP_HUD.FEEDBACK_HOLD_MS, () => {
+        if (this.feedbackToken !== token || !this.promptText) return
+        this.promptText.setText(MAP_HUD.PROMPT_TEXT)
+        this.promptText.setColor(MAP_HUD.PROMPT_COLOR)
+        this.promptText.setBackgroundColor(MAP_HUD.PROMPT_BACKGROUND_COLOR)
+      })
+    }
+
+    this.mapFeedbackText?.destroy()
+    const feedback = this.add.text(GAME_WIDTH / 2, MAP_HUD.FEEDBACK_Y, text, {
+      fontSize: `${MAP_HUD.FEEDBACK_FONT_SIZE}px`,
+      color: feedbackColor,
+      fontFamily: UI_FONT_FAMILY,
+      backgroundColor: MAP_HUD.FEEDBACK_BACKGROUND_COLOR,
+      padding: { x: MAP_HUD.FEEDBACK_PADDING_X, y: MAP_HUD.FEEDBACK_PADDING_Y },
+    })
+    feedback.setOrigin(0.5)
+    feedback.setScrollFactor(0)
+    feedback.setDepth(MAP_HUD.FEEDBACK_DEPTH)
+    this.mapFeedbackText = feedback
+    this.time.delayedCall(MAP_HUD.FEEDBACK_HOLD_MS, () => {
+      if (this.mapFeedbackText !== feedback) return
+      this.tweens.add({
+        targets: feedback,
+        alpha: 0,
+        duration: MAP_HUD.FEEDBACK_FADE_MS,
+        onComplete: () => {
+          if (this.mapFeedbackText === feedback) this.mapFeedbackText = undefined
+          feedback.destroy()
+        },
+      })
+    })
+  }
+
   private createUI(): void {
     this.createPartyHud()
     this.createQuestHud()
@@ -923,6 +1012,7 @@ export class MapScene extends Phaser.Scene {
     prompt.setOrigin(0.5)
     prompt.setScrollFactor(0)
     prompt.setDepth(MAP_HUD.PROMPT_DEPTH)
+    this.promptText = prompt
     this.uiTexts.push(prompt)
   }
 
@@ -1570,15 +1660,8 @@ export class MapScene extends Phaser.Scene {
   }
 
   private areEventConditionsMet(event: MapEvent): boolean {
-    if (!event.conditions || event.conditions.length === 0) return true
     const gd = GameData.getInstance()
-    for (const cond of event.conditions) {
-      if (cond.flag !== undefined) {
-        const flagValue = gd.getFlag(cond.flag) ?? false
-        if (flagValue !== cond.value) return false
-      }
-    }
-    return true
+    return areConditionsMet(event.conditions, flag => gd.getFlag(flag))
   }
 
   private checkAutorunEvents(): void {
@@ -1660,10 +1743,10 @@ export class MapScene extends Phaser.Scene {
     this.requestMapRestart(mapId)
   }
 
-  private requestMapRestart(mapId: string): void {
+  private requestMapRestart(mapId: string, feedback?: MapSceneFeedback): void {
     if (this.restartingMap) return
     this.restartingMap = true
-    this.scene.restart({ mapId })
+    this.scene.restart({ mapId, feedback })
   }
 
   private openMenu(): void {
@@ -1923,6 +2006,9 @@ export class MapScene extends Phaser.Scene {
     this.destroyTouchControls()
     this.destroyPartyHud()
     this.destroyQuestHud()
+    this.mapFeedbackText?.destroy()
+    this.mapFeedbackText = undefined
+    this.promptText = undefined
     for (const timer of this.enemyPatrolTimers) timer.remove(false)
     for (const timer of this.npcTimers) timer.remove(false)
     this.enemyPatrolTimers = []
