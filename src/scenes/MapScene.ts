@@ -381,6 +381,7 @@ export class MapScene extends Phaser.Scene {
       this.updateMovement(delta)
     } else {
       this.handleInput()
+      this.updatePrompt()
     }
     this.updateMinimapPlayerMarker()
   }
@@ -1027,6 +1028,45 @@ export class MapScene extends Phaser.Scene {
     this.uiTexts.push(prompt)
   }
 
+  private updatePrompt(): void {
+    if (!this.promptText) return
+    const event = this.getActionEventAhead()
+    const nextText = event ? this.formatActionPrompt(event) : MAP_HUD.PROMPT_TEXT
+    if (this.promptText.text !== nextText) {
+      this.promptText.setText(nextText)
+    }
+  }
+
+  private getActionEventAhead(): MapEvent | null {
+    const px = Math.floor(this.player.x / TILE_SIZE)
+    const py = Math.floor(this.player.y / TILE_SIZE)
+    const dx = DIRECTION_VECTORS[this.currentDir]!.x
+    const dy = DIRECTION_VECTORS[this.currentDir]!.y
+    const fx = px + dx
+    const fy = py + dy
+
+    for (const event of this.mapData.events) {
+      if (this.isSuppressedFieldEvent(event)) continue
+      if (event.trigger !== 'action') continue
+      if (!this.areEventConditionsMet(event)) continue
+      if (this.canInteractWithEvent(event, px, py, fx, fy)) return event
+    }
+    return null
+  }
+
+  private formatActionPrompt(event: MapEvent): string {
+    const label = this.getPromptActionLabel(event)
+    return `${MAP_HUD.PROMPT_CONFIRM_PREFIX}${label}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
+  }
+
+  private getPromptActionLabel(event: MapEvent): string {
+    const labels = MAP_HUD.PROMPT_ACTION_LABELS
+    if (event.actions.some(action => action.type === 'shop')) return labels.shop
+    if (event.actions.some(action => action.type === 'training')) return labels.training
+    if (event.actions.some(action => action.type === 'rebuildMenu')) return labels.rebuildMenu
+    return labels[event.type]
+  }
+
   private createPartyHud(): void {
     this.destroyPartyHud()
     const gd = GameData.getInstance()
@@ -1647,23 +1687,8 @@ export class MapScene extends Phaser.Scene {
 
   private interact(): void {
     if (this.inEvent) return
-
-    const px = Math.floor(this.player.x / TILE_SIZE)
-    const py = Math.floor(this.player.y / TILE_SIZE)
-    const dx = DIRECTION_VECTORS[this.currentDir]!.x
-    const dy = DIRECTION_VECTORS[this.currentDir]!.y
-    const fx = px + dx
-    const fy = py + dy
-
-    for (const event of this.mapData.events) {
-      if (this.isSuppressedFieldEvent(event)) continue
-      if (event.trigger !== 'action') continue
-      if (!this.areEventConditionsMet(event)) continue
-      if (this.canInteractWithEvent(event, px, py, fx, fy)) {
-        this.triggerEvent(event)
-        return
-      }
-    }
+    const event = this.getActionEventAhead()
+    if (event) this.triggerEvent(event)
   }
 
   private canInteractWithEvent(event: MapEvent, px: number, py: number, fx: number, fy: number): boolean {
