@@ -578,6 +578,10 @@ export class MapScene extends Phaser.Scene {
   }
 
   private getBattleFieldBehavior(event: MapEvent): FieldEntityBehavior {
+    if (event.trigger === 'action') {
+      return { ...FIELD_ENTITY_BEHAVIOR_PRESETS.NPC_IDLE, ...event.fieldBehavior } as FieldEntityBehavior
+    }
+
     const encounterId = this.getBattleEncounterId(event)
     const encounters = GAME_CONFIG_DATABASE.getTable('encounters')
     const enemyDefs = GAME_CONFIG_DATABASE.getTable('enemies')
@@ -692,6 +696,7 @@ export class MapScene extends Phaser.Scene {
         this.removeBattleEnemy(id, sprite)
         continue
       }
+      if (event.trigger !== 'touch') continue
       const behavior = this.fieldEntityBehaviors.get(id) ?? this.getBattleFieldBehavior(event)
       const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
       if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) {
@@ -1360,6 +1365,9 @@ export class MapScene extends Phaser.Scene {
     if (this.collisionGrid[y]![x]) return false
     for (const npc of this.npcs.values()) {
       if (Math.floor(npc.x / TILE_SIZE) === x && Math.floor(npc.y / TILE_SIZE) === y) return false
+    }
+    for (const event of this.battleEnemyEvents.values()) {
+      if (event.trigger === 'action' && this.checkEventCollision(event, x, y)) return false
     }
     return true
   }
