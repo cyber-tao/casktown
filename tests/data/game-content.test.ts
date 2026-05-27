@@ -9,7 +9,7 @@ import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
-import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -306,13 +306,17 @@ describe('game content data', () => {
 
   test('critical story npcs switch to follow-up dialogue after completion flags', () => {
     const mayorBefore = findEvent('MAP_001', 'NPC_MAYOR')
+    const mayorStory = findEvent('MAP_001', 'NPC_MAYOR_STORY')
     const mayorAfter = findEvent('MAP_001', 'NPC_MAYOR_AFTER')
     const xiyuanBefore = findEvent('MAP_031', 'NPC_XIYUAN')
     const xiyuanAfter = findEvent('MAP_031', 'NPC_XIYUAN_AFTER')
 
-    expectCondition(mayorBefore, 'met_mayor', false)
+    expectCondition(mayorBefore, STORY_PROGRESS_FLAGS.FESTIVAL_DONE, false)
     expect(mayorBefore.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_004_MAYOR' })
-    expectCondition(mayorAfter, 'met_mayor', true)
+    expectCondition(mayorStory, STORY_PROGRESS_FLAGS.FESTIVAL_DONE, true)
+    expectCondition(mayorStory, STORY_PROGRESS_FLAGS.MET_MAYOR, false)
+    expect(mayorStory.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_005_MAYOR' })
+    expectCondition(mayorAfter, STORY_PROGRESS_FLAGS.MET_MAYOR, true)
     expect(mayorAfter.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_005_MAYOR_AFTER' })
 
     expectCondition(xiyuanBefore, 'xiyuan_quiz_completed', false)

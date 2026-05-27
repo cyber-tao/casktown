@@ -538,6 +538,34 @@ export class BattleScene extends Phaser.Scene {
     return this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.BAIHU_TRIAL
   }
 
+  private isFestivalDefenseEncounter(): boolean {
+    return this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.FESTIVAL_DEFENSE
+  }
+
+  private hasFestivalDefenseSucceeded(): boolean {
+    return this.isFestivalDefenseEncounter() && this.turnCount >= BATTLE_RULES.FESTIVAL_DEFENSE_SURVIVE_TURNS
+  }
+
+  private completeFestivalDefense(message: string): boolean {
+    if (!this.isFestivalDefenseEncounter()) return false
+    if (this.phase === 'victory' || this.phase === 'result') return true
+    this.phase = 'victory'
+    this.log(message)
+    this.time.delayedCall(Math.floor(1500 / this.speedMult), () => this.endBattle(true))
+    return true
+  }
+
+  private recoverPlayersAfterFestivalDefenseLoss(): void {
+    for (const unit of this.units) {
+      if (!unit.isPlayer) continue
+      if (unit.stats.hp <= 0) {
+        unit.stats.hp = Math.max(1, Math.floor(unit.stats.maxHp * BATTLE_RULES.FESTIVAL_DEFENSE_RECOVERY_HP_RATIO))
+        unit.sprite?.setAlpha(1)
+        this.updateUnitBars(unit)
+      }
+    }
+  }
+
   private getBaihuTrialUnit(liveEnemies = this.getLiveEnemies()): BattleUnit | undefined {
     if (!this.isBaihuTrialEncounter()) return undefined
     return liveEnemies.find(unit => (unit.data as EnemyData).id === BATTLE_RULES.BAIHU_TRIAL_ENEMY_ID)
@@ -1906,6 +1934,11 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
+    if (this.hasFestivalDefenseSucceeded()) {
+      this.completeFestivalDefense('无名戒指发出白光，黑暗小妖被迫退开。')
+      return
+    }
+
     if (this.hasBaihuTrialSucceeded()) {
       this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
       return
@@ -2215,6 +2248,11 @@ export class BattleScene extends Phaser.Scene {
     const livePlayers = this.getLivePlayers()
     const liveEnemies = this.getLiveEnemies()
 
+    if (this.hasFestivalDefenseSucceeded()) {
+      this.completeFestivalDefense('无名戒指发出白光，黑暗小妖被迫退开。')
+      return
+    }
+
     if (this.hasBaihuTrialSucceeded(liveEnemies)) {
       this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
       return
@@ -2226,6 +2264,11 @@ export class BattleScene extends Phaser.Scene {
       return
     }
     if (livePlayers.length === 0) {
+      if (this.isFestivalDefenseEncounter()) {
+        this.recoverPlayersAfterFestivalDefenseLoss()
+        this.completeFestivalDefense('T 倒下前，无名戒指的光挡住了黑暗。')
+        return
+      }
       if (this.isBaihuTrialEncounter()) {
         this.recoverPlayersAfterBaihuTrialLoss()
         this.completeBaihuTrial('白虎击倒了队伍，但戒指的光让它停手。')

@@ -170,6 +170,11 @@ export const CODEX_STORY_BRANCH_COUNT = 10
 export const PROPHECY_NUMERIC_CONDITION_MIN = 0
 export const QUEST_STARTED_CONDITION_PREFIX = 'quest_started_'
 export const QUEST_COMPLETED_CONDITION_PREFIX = 'quest_completed_'
+export const STORY_PROGRESS_FLAGS = {
+  GARDEN_REPORTED: 'garden_reported',
+  FESTIVAL_DONE: 'festival_done',
+  MET_MAYOR: 'met_mayor',
+} as const
 export const CODEX_BOSS_DISCOVERY_FLAGS = {
   barrel_fake: 'barrel_fake',
   baihu: 'baihu',
@@ -1450,6 +1455,7 @@ export const LEVEL_GROWTH = {
 
 export const COMBO_TP_COST = 25
 export const BATTLE_SPECIAL_ENCOUNTERS = {
+  FESTIVAL_DEFENSE: 'BTL_002',
   BAIHU_TRIAL: 'BTL_110',
   SHUIYAO_FENGCHI_DUO: 'BTL_201',
 } as const
@@ -1494,6 +1500,8 @@ export const BATTLE_RULES = {
   SKILL_BREAK_GAIN: 15,
   WEAK_SKILL_BREAK_GAIN: 25,
   PHOENIX_REBIRTH_HP_RATIO: 0.3,
+  FESTIVAL_DEFENSE_SURVIVE_TURNS: 3,
+  FESTIVAL_DEFENSE_RECOVERY_HP_RATIO: 0.5,
   BAIHU_TRIAL_ENEMY_ID: 'baihu',
   BAIHU_TRIAL_SURVIVE_TURNS: 5,
   BAIHU_TRIAL_HP_RATIO: 0.6,

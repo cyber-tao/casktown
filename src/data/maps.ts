@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { DIRECTION, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
+import { DIRECTION, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -306,13 +306,19 @@ function buildMap001(): MapData {
     {
       id: 'NPC_MAYOR', x: 16, y: 5, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
-      conditions: [{ flag: 'met_mayor', value: false }],
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_004_MAYOR' }],
+    },
+    {
+      id: 'NPC_MAYOR_STORY', x: 16, y: 5, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: true }, { flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: false }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_005_MAYOR' }],
     },
     {
       id: 'NPC_MAYOR_AFTER', x: 16, y: 5, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
-      conditions: [{ flag: 'met_mayor', value: true }],
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_005_MAYOR_AFTER' }],
     },
     {
@@ -340,19 +346,21 @@ function buildMap001(): MapData {
     {
       id: 'NPC_PINEAPPLE_REPORT', x: 11, y: 19, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: 2,
-      conditions: [{ flag: 'garden_cleaned', value: true }, { flag: 'garden_reported', value: false }],
+      conditions: [{ flag: 'garden_cleaned', value: true }, { flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: false }],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_002_GARDEN_AFTER' },
         { type: 'addItem', itemId: 'pineapple_rice', quantity: 3 },
         { type: 'questStart', questId: 'QST_002' },
         { type: 'questComplete', questId: 'QST_002' },
-        { type: 'setFlag', flag: 'garden_reported', value: true },
+        { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true },
+        { type: 'questStart', questId: 'QST_001' },
+        { type: 'questAdvance', questId: 'QST_001' },
       ],
     },
     {
       id: 'NPC_PINEAPPLE_DONE', x: 11, y: 19, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: 2,
-      conditions: [{ flag: 'garden_reported', value: true }],
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_002_GARDEN_DONE' }],
     },
     {
@@ -375,8 +383,8 @@ function buildMap001(): MapData {
     },
     {
       id: 'EVT_FESTIVAL', x: 15, y: 5, width: 3, height: 2,
-      type: 'trigger', trigger: 'action',
-      conditions: [{ flag: 'met_mayor', value: true }],
+      type: 'trigger', trigger: 'touch',
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true }, { flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_006_FESTIVAL' }, { type: 'dialogue', dialogueId: 'DIA_004_FESTIVAL_MID' }],
     },
     {

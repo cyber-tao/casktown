@@ -1,7 +1,8 @@
 import type { DialogueScript } from '../scenes/DialogueOverlay'
+import { STORY_PROGRESS_FLAGS } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
-  { type: 'setFlag', flag: 'met_mayor', value: true },
+  { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
   { type: 'addItem', itemId: 'prophecy_book', quantity: 1 },
   { type: 'addItem', itemId: 'fathers_sword', quantity: 1 },
   { type: 'addItem', itemId: 'fathers_armor', quantity: 1 },
@@ -254,7 +255,19 @@ export const DIALOGUES: Record<string, DialogueScript> = {
       { speaker: '镇长', text: '今晚到我家来。我有东西交给你。' },
       { speaker: '系统', text: '主线任务更新【镇长的嘱托】。' },
     ],
-    onComplete: [{ type: 'questStart', questId: 'QST_001' }, { type: 'questComplete', questId: 'QST_001' }],
+    onComplete: [
+      { type: 'questStart', questId: 'QST_001' },
+      { type: 'questComplete', questId: 'QST_001' },
+      { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: true },
+      { type: 'questStart', questId: 'QST_003' },
+    ],
+  },
+  DIA_004_MAYOR: {
+    id: 'DIA_004_MAYOR',
+    lines: [
+      { speaker: '镇长', text: '都到会场中央来。盛典马上开始，别在边上磨蹭。' },
+      { speaker: '木桶精灵', text: '重要场合，请站在能被命运看见的位置。' },
+    ],
   },
 
   // SCN_005 镇长的嘱托
@@ -2900,7 +2913,6 @@ export const DIALOGUES: Record<string, DialogueScript> = {
 const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boolean }> = {
   DIA_002_HUIHUI: { target: 'DIA_001_HELP' },
   DIA_003_A: { target: 'DIA_101_COLD' },
-  DIA_004_MAYOR: { target: 'DIA_005_MAYOR', includeOnComplete: true },
   DIA_005_BARREL: { target: 'DIA_REBUILD_BOARD' },
   DIA_006_FESTIVAL: { target: 'DIA_004_FESTIVAL', includeOnComplete: true },
   DIA_202_PINE: { target: 'DIA_NPC_REBUILD1_PINE', includeOnComplete: true },
