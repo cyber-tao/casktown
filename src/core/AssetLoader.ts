@@ -203,10 +203,14 @@ export function queueImageAsset(scene: Phaser.Scene, key: string): void {
   }
   pendingLoads.add(key)
   const completeEvent = `filecomplete-image-${key}`
+  let cleared = false
   const clearPendingLoad = (): void => {
+    if (cleared) return
+    cleared = true
     pendingLoads.delete(key)
     scene.load.off(completeEvent, handleComplete)
     scene.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR, handleLoadError)
+    scene.events.off(Phaser.Scenes.Events.SHUTDOWN, clearPendingLoad)
   }
   const handleComplete = (): void => {
     clearPendingLoad()

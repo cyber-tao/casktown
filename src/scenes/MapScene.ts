@@ -143,6 +143,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private handleQuickSave = (): void => {
+    if (!this.isGameplayInputActive()) return
     if (!this.canUseQuickSaveLoad()) {
       this.showMapFeedback(MAP_HUD.QUICK_ACTION_BLOCKED_TEXT, false)
       AudioManager.getInstance().playSFX('cancel')
@@ -155,6 +156,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private handleQuickLoad = (): void => {
+    if (!this.isGameplayInputActive()) return
     if (!this.canUseQuickSaveLoad()) {
       this.showMapFeedback(MAP_HUD.QUICK_ACTION_BLOCKED_TEXT, false)
       AudioManager.getInstance().playSFX('cancel')
@@ -966,7 +968,11 @@ export class MapScene extends Phaser.Scene {
   }
 
   private canUseQuickSaveLoad(): boolean {
-    return !this.inEvent && !this.restartingMap
+    return this.isGameplayInputActive() && !this.inEvent && !this.restartingMap
+  }
+
+  private isGameplayInputActive(): boolean {
+    return this.scene.isActive() === true
   }
 
   private showMapFeedback(text: string, success: boolean): void {

@@ -59,7 +59,12 @@ class EventEmitter {
   off<T extends GameEventName>(event: T, handler: (...args: EventPayload<T>) => void, context?: unknown): this {
     const listeners = this.listeners.get(event)
     if (!listeners) return this
-    this.listeners.set(event, listeners.filter(listener => listener.handler !== handler as EventHandler || listener.context !== context))
+    const remaining = listeners.filter(listener => listener.handler !== handler as EventHandler || listener.context !== context)
+    if (remaining.length > 0) {
+      this.listeners.set(event, remaining)
+    } else {
+      this.listeners.delete(event)
+    }
     return this
   }
 
