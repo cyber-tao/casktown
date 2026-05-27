@@ -1161,6 +1161,49 @@ export const TEXT_SPEED = {
   instant: 0,
 } as const
 
+export const BATTLE_COMMAND_LABELS = ['攻击', '技能', '连携', '防御', '道具', '木桶', '逃跑'] as const
+
+export const BATTLE_LAYOUT = {
+  PLAYER_START_X: scalePx(120),
+  PLAYER_GAP_X: scalePx(100),
+  PLAYER_Y: scalePx(320),
+  ENEMY_START_X: scalePx(700),
+  ENEMY_START_Y: scalePx(230),
+  ENEMY_COLUMNS: 2,
+  ENEMY_GAP_X: scalePx(120),
+  ENEMY_ROW_GAP_Y: scalePx(62),
+  UNIT_SPRITE_SIZE: scalePx(64),
+  UNIT_UI_OFFSET_Y: scalePx(55),
+  UNIT_NAME_OFFSET_Y: scalePx(16),
+  UNIT_NAME_FONT_SIZE: scalePx(12),
+  UNIT_BAR_WIDTH: scalePx(70),
+  UNIT_BAR_HEIGHT: scalePx(5),
+  UNIT_BAR_INSET: scalePx(1),
+  UNIT_BAR_GAP_Y: scalePx(1),
+  COMMAND_PANEL_X: scalePx(800),
+  COMMAND_PANEL_Y: scalePx(430),
+  COMMAND_PANEL_WIDTH: scalePx(280),
+  COMMAND_PANEL_HEIGHT: scalePx(194),
+  COMMAND_PANEL_ALPHA: 0.95,
+  COMMAND_PANEL_COLOR: 0x2a2a3e,
+  COMMAND_PANEL_STROKE_WIDTH: scalePx(2),
+  COMMAND_PANEL_STROKE_COLOR: 0x5a5a7e,
+  COMMAND_ITEM_X: scalePx(680),
+  COMMAND_ITEM_START_Y: scalePx(354),
+  COMMAND_ITEM_GAP_Y: scalePx(24),
+  COMMAND_ITEM_FONT_SIZE: scalePx(18),
+  COMMAND_CURSOR_X: scalePx(670),
+  COMMAND_CURSOR_Y_OFFSET: scalePx(6),
+  COMMAND_CURSOR_SIZE: scalePx(8),
+  COMMAND_CURSOR_COLOR: 0xf1c40f,
+  LOG_X: scalePx(20),
+  LOG_Y: scalePx(20),
+  LOG_FONT_SIZE: scalePx(14),
+  LOG_PADDING_X: scalePx(8),
+  LOG_PADDING_Y: scalePx(4),
+  LOG_WRAP_WIDTH: scalePx(400),
+} as const
+
 export const DIALOGUE_TEXT_WIDTH = scalePx(720)
 export const DIALOGUE_TEXT_WRAP_CHARS = 33
 export const DIALOGUE_BOX = {

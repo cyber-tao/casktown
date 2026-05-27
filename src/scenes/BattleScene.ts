@@ -10,7 +10,9 @@ import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
 import {
+  BATTLE_COMMAND_LABELS,
   BATTLE_DIFFICULTY_MULTIPLIERS,
+  BATTLE_LAYOUT,
   BATTLE_RANDOM_TARGET_HITS,
   BATTLE_RESULT_PANEL,
   BATTLE_RULES,
@@ -234,12 +236,12 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < party.length; i++) {
       const char = gd.characters.get(party[i]!)
       if (!char) continue
-      const x = scalePx(120 + i * 100)
-      const y = scalePx(320)
+      const x = BATTLE_LAYOUT.PLAYER_START_X + i * BATTLE_LAYOUT.PLAYER_GAP_X
+      const y = BATTLE_LAYOUT.PLAYER_Y
       const baseKey = this.getCharacterSpriteBase(char.id)
       const textureKey = this.resolveTextureKey(`${baseKey}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
-      sprite.setDisplaySize(scalePx(64), scalePx(64))
+      sprite.setDisplaySize(BATTLE_LAYOUT.UNIT_SPRITE_SIZE, BATTLE_LAYOUT.UNIT_SPRITE_SIZE)
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
 
@@ -264,7 +266,7 @@ export class BattleScene extends Phaser.Scene {
       sprite.setInteractive({ useHandCursor: true })
       sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
-      this.createUnitUI(unit, x, y - scalePx(55))
+      this.createUnitUI(unit, x, y - BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
     }
 
     // Spawn enemies (demo: use encounterId to pick enemies)
@@ -273,11 +275,11 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < enemyIds.length; i++) {
       const ed = enemies[enemyIds[i]!]
       if (!ed) continue
-      const x = scalePx(700 + i * 100)
-      const y = scalePx(280 + (i % 2) * 80)
+      const x = BATTLE_LAYOUT.ENEMY_START_X + (i % BATTLE_LAYOUT.ENEMY_COLUMNS) * BATTLE_LAYOUT.ENEMY_GAP_X
+      const y = BATTLE_LAYOUT.ENEMY_START_Y + Math.floor(i / BATTLE_LAYOUT.ENEMY_COLUMNS) * BATTLE_LAYOUT.ENEMY_ROW_GAP_Y
       const textureKey = this.resolveTextureKey(`mon_${ed.id}_01`, DEFAULT_ENEMY_SPRITE_KEY) ?? DEFAULT_ENEMY_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
-      sprite.setDisplaySize(scalePx(64), scalePx(64))
+      sprite.setDisplaySize(BATTLE_LAYOUT.UNIT_SPRITE_SIZE, BATTLE_LAYOUT.UNIT_SPRITE_SIZE)
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
 
@@ -304,7 +306,7 @@ export class BattleScene extends Phaser.Scene {
       sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
       this.enemyData.push(ed)
-      this.createUnitUI(unit, x, y - scalePx(55))
+      this.createUnitUI(unit, x, y - BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
     }
   }
 
@@ -592,16 +594,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private createUnitUI(unit: BattleUnit, x: number, y: number): void {
-    const barWidth = scalePx(70)
-    const barHeight = scalePx(5)
+    const barWidth = BATTLE_LAYOUT.UNIT_BAR_WIDTH
+    const barHeight = BATTLE_LAYOUT.UNIT_BAR_HEIGHT
     const isPlayer = unit.isPlayer
     const barColors = isPlayer
       ? { hp: 0xe74c3c, mp: 0x3498db, tp: 0xf1c40f }
       : { hp: 0xe74c3c, mp: 0x3498db, tp: 0xf1c40f }
 
     // Name
-    const nameText = this.add.text(x, y - scalePx(16), unit.name, {
-      fontSize: scaleFont(12),
+    const nameText = this.add.text(x, y - BATTLE_LAYOUT.UNIT_NAME_OFFSET_Y, unit.name, {
+      fontSize: `${BATTLE_LAYOUT.UNIT_NAME_FONT_SIZE}px`,
       color: '#ffffff',
     })
     nameText.setOrigin(0.5)
@@ -612,35 +614,35 @@ export class BattleScene extends Phaser.Scene {
 
     // HP bar
     this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-    const hpBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), barColors.hp)
+    const hpBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barColors.hp)
     hpBar.setOrigin(0, 0.5)
     hpBar.setDepth(307)
     hpBar.setScrollFactor(0)
     unit.hpBar = hpBar
-    cy += barHeight + scalePx(1)
+    cy += barHeight + BATTLE_LAYOUT.UNIT_BAR_GAP_Y
 
     if (isPlayer) {
       // MP bar
       this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const mpBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), barColors.mp)
+      const mpBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barColors.mp)
       mpBar.setOrigin(0, 0.5)
       mpBar.setDepth(307)
       mpBar.setScrollFactor(0)
       unit.mpBar = mpBar
-      cy += barHeight + scalePx(1)
+      cy += barHeight + BATTLE_LAYOUT.UNIT_BAR_GAP_Y
 
       // TP bar
       this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const tpBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), barColors.tp)
+      const tpBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barColors.tp)
       tpBar.setOrigin(0, 0.5)
       tpBar.setDepth(307)
       tpBar.setScrollFactor(0)
       unit.tpBar = tpBar
-      cy += barHeight + scalePx(1)
+      cy += barHeight + BATTLE_LAYOUT.UNIT_BAR_GAP_Y
     } else {
       // Break gauge for enemies
       this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const breakBar = this.add.rectangle(x - barWidth / 2 + scalePx(1), cy, barWidth - scalePx(2), barHeight - scalePx(2), 0x9b59b6)
+      const breakBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, 0x9b59b6)
       breakBar.setOrigin(0, 0.5)
       breakBar.setDepth(307)
       breakBar.setScrollFactor(0)
@@ -672,17 +674,16 @@ export class BattleScene extends Phaser.Scene {
 
   private createUI(): void {
     // Command menu background
-    const menuBg = this.add.rectangle(scalePx(800), scalePx(430), scalePx(280), scalePx(194), 0x2a2a3e, 0.95)
-    menuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
+    const menuBg = this.add.rectangle(BATTLE_LAYOUT.COMMAND_PANEL_X, BATTLE_LAYOUT.COMMAND_PANEL_Y, BATTLE_LAYOUT.COMMAND_PANEL_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_HEIGHT, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA)
+    menuBg.setStrokeStyle(BATTLE_LAYOUT.COMMAND_PANEL_STROKE_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_STROKE_COLOR)
     menuBg.setDepth(310)
     menuBg.setScrollFactor(0)
     this.commandMenuObjects.push(menuBg)
 
     // Menu items
-    const commands = ['攻击', '技能', '连携', '防御', '道具', '木桶', '逃跑']
-    for (let i = 0; i < commands.length; i++) {
-      const text = this.add.text(scalePx(680), scalePx(354 + i * 24), commands[i]!, {
-        fontSize: scaleFont(18),
+    for (let i = 0; i < BATTLE_COMMAND_LABELS.length; i++) {
+      const text = this.add.text(BATTLE_LAYOUT.COMMAND_ITEM_X, BATTLE_LAYOUT.COMMAND_ITEM_START_Y + i * BATTLE_LAYOUT.COMMAND_ITEM_GAP_Y, BATTLE_COMMAND_LABELS[i]!, {
+        fontSize: `${BATTLE_LAYOUT.COMMAND_ITEM_FONT_SIZE}px`,
         color: '#c0c0d0',
       })
       text.setDepth(311)
@@ -692,18 +693,18 @@ export class BattleScene extends Phaser.Scene {
       this.commandMenuObjects.push(text)
     }
 
-    this.cursor = this.add.rectangle(scalePx(670), scalePx(354 + 6), scalePx(8), scalePx(8), 0xf1c40f)
+    this.cursor = this.add.rectangle(BATTLE_LAYOUT.COMMAND_CURSOR_X, BATTLE_LAYOUT.COMMAND_ITEM_START_Y + BATTLE_LAYOUT.COMMAND_CURSOR_Y_OFFSET, BATTLE_LAYOUT.COMMAND_CURSOR_SIZE, BATTLE_LAYOUT.COMMAND_CURSOR_SIZE, BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
     this.cursor.setDepth(312)
     this.cursor.setScrollFactor(0)
     this.commandMenuObjects.push(this.cursor)
 
     // Battle log
-    this.logText = this.add.text(scalePx(20), scalePx(20), '', {
-      fontSize: scaleFont(14),
+    this.logText = this.add.text(BATTLE_LAYOUT.LOG_X, BATTLE_LAYOUT.LOG_Y, '', {
+      fontSize: `${BATTLE_LAYOUT.LOG_FONT_SIZE}px`,
       color: '#cccccc',
       backgroundColor: '#00000060',
-      padding: { x: scalePx(8), y: scalePx(4) },
-      wordWrap: { width: scalePx(400) },
+      padding: { x: BATTLE_LAYOUT.LOG_PADDING_X, y: BATTLE_LAYOUT.LOG_PADDING_Y },
+      wordWrap: { width: BATTLE_LAYOUT.LOG_WRAP_WIDTH },
     })
     this.logText.setDepth(310)
     this.logText.setScrollFactor(0)
