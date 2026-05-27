@@ -104,14 +104,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   preload(): void {
     showLoadingScreen(this, LOADING_SCREEN.MENU_LABEL)
-    const characterKeys = Object.keys(GAME_CONFIG_DATABASE.getTable('characters'))
-      .map(charId => `${CHARACTER_SPRITE_BASE_KEYS[charId] ?? charId.toLowerCase()}_front_idle_01`)
-    const itemKeys = Object.keys(this.getItems()).map(itemId => this.getItemIconKey(itemId))
-    const imageAssets = GAME_CONFIG_DATABASE.getTable('imageAssets')
-    const enemyKeys = Object.keys(GAME_CONFIG_DATABASE.getTable('enemies'))
-      .map(enemyId => this.getEnemyIconKey(enemyId))
-      .filter(key => Boolean(imageAssets[key]))
-    queueImageAssets(this, [...characterKeys, ...itemKeys, ...enemyKeys, DEFAULT_ENEMY_SPRITE_KEY, WORLD_MAP_BACKGROUND_LAYOUT.KEY])
+    queueImageAssets(this, this.getPartyCharacterImageKeys())
   }
 
   create(): void {
@@ -144,6 +137,32 @@ export class MenuOverlay extends Phaser.Scene {
 
   private getItems(): Record<string, ItemData> {
     return GAME_CONFIG_DATABASE.getTable('items')
+  }
+
+  private getPartyCharacterImageKeys(): string[] {
+    const gd = GameData.getInstance()
+    return [...gd.party, ...gd.reserve].map(charId => `${CHARACTER_SPRITE_BASE_KEYS[charId] ?? charId.toLowerCase()}_front_idle_01`)
+  }
+
+  private getInventoryEntryImageKeys(entries: readonly InventoryEntry[]): string[] {
+    return entries.map(entry => this.getItemIconKey(entry.itemId))
+  }
+
+  private getCodexImageKeys(): string[] {
+    const tab = this.getCodexTab()
+    if (tab === 'items') return this.getDiscoveredItems().map(itemId => this.getItemIconKey(itemId))
+    if (tab === 'monsters') return this.getDiscoveredEnemies().map(enemyId => this.getEnemyIconKey(enemyId))
+    return []
+  }
+
+  private queueDynamicImageAssets(keys: Iterable<string>): void {
+    const imageAssets = GAME_CONFIG_DATABASE.getTable('imageAssets')
+    const missingKeys = [...new Set(keys)].filter(key => Boolean(imageAssets[key]) && !this.textures.exists(key))
+    if (missingKeys.length === 0) return
+    queueImageAssets(this, missingKeys)
+    if (this.load.isLoading()) return
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => this.renderActiveContent())
+    this.load.start()
   }
 
   private drawShell(): void {
@@ -535,6 +554,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private renderPartyCards(interactive: boolean): void {
+    this.queueDynamicImageAssets(this.getPartyCharacterImageKeys())
     const members = this.getPartyMembers()
     for (let i = 0; i < members.length; i++) {
       const member = members[i]!
@@ -585,6 +605,7 @@ export class MenuOverlay extends Phaser.Scene {
   private renderInventorySummary(): void {
     this.renderHeader('背包', '物品与装备')
     this.inventoryEntries = this.getInventoryEntries()
+    this.queueDynamicImageAssets(this.getInventoryEntryImageKeys(this.inventoryEntries))
     this.renderInventoryList(false)
     this.renderFeedback()
   }
@@ -600,6 +621,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.renderHeader('背包', '物品 / 装备 / 材料')
     this.renderInventoryTabs()
     this.inventoryEntries = this.getInventoryEntries()
+    this.queueDynamicImageAssets(this.getInventoryEntryImageKeys(this.inventoryEntries))
     this.inventoryIndex = this.clampIndex(this.inventoryIndex, this.inventoryEntries.length)
     this.renderInventoryList(true)
     this.renderInventoryDetail()
@@ -696,6 +718,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private renderInventoryTarget(): void {
     this.clearContent()
+    this.queueDynamicImageAssets(this.getPartyCharacterImageKeys())
     const action = this.pendingInventoryAction
     if (!action) {
       this.showInventory()
@@ -926,6 +949,7 @@ export class MenuOverlay extends Phaser.Scene {
   private renderCodexContent(interactive: boolean): void {
     this.renderCodexTabs(interactive)
     this.codexIndex = this.clampIndex(this.codexIndex, this.getCodexListCount())
+    this.queueDynamicImageAssets(this.getCodexImageKeys())
     this.renderCodexList(interactive)
     this.renderCodexDetail()
   }
@@ -1064,6 +1088,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private renderMapContent(): void {
+    this.queueDynamicImageAssets([WORLD_MAP_BACKGROUND_LAYOUT.KEY])
     const mapWidth = MENU_OVERLAY_UI.MAP_IMAGE_WIDTH
     const mapHeight = Math.round(mapWidth * WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_HEIGHT / WORLD_MAP_BACKGROUND_LAYOUT.SOURCE_WIDTH)
     const mapX = MENU_OVERLAY_UI.CONTENT_WIDTH / 2
