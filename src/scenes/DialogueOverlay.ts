@@ -25,14 +25,8 @@ import { QuestSystem } from '../core/QuestSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { areEventConditionsMet } from '../core/EventConditions'
 import { showLoadingScreen } from '../utils/loadingScreen'
-import type { DialogueLine, DialogueChoice, EventAction } from '../data/types'
+import type { DialogueChoice, DialogueData, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
-
-export interface DialogueScript {
-  id: string
-  lines: DialogueLine[]
-  onComplete?: EventAction[]
-}
 
 const SPEAKER_FACE_MAP: Record<string, string> = {
   T: 't_front_idle_01',
@@ -82,7 +76,7 @@ export class DialogueOverlay extends Phaser.Scene {
   private choices: Phaser.GameObjects.Text[] = []
   private visibleChoices: DialogueChoice[] = []
   private cursor!: Phaser.GameObjects.Rectangle
-  private currentScript!: DialogueScript
+  private currentScript!: DialogueData
   private lineIndex = 0
   private charIndex = 0
   private typeTimer?: Phaser.Time.TimerEvent

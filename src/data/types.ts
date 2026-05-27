@@ -174,6 +174,7 @@ export interface DialogueChoice {
 export interface DialogueData {
   id: string
   lines: DialogueLine[]
+  onComplete?: EventAction[]
 }
 
 export interface QuestDef {

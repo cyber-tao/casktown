@@ -12,11 +12,10 @@ import { IMAGE_ASSETS } from './assets'
 import { BGM_TRACKS, MAP_BGM_MAP, SFX_TRACKS } from './audio'
 import { SPRITE_CROPS } from './spriteCrops'
 import { CONFIG_DATABASE_STORAGE_KEY, CONFIG_EDITOR_TABLE_LABELS } from '../utils/constants'
-import type { DialogueScript } from '../scenes/DialogueOverlay'
 import type { ProphecyVerse } from './prophecies'
 import type { BGMConfig, SFXConfig } from './audio'
 import type { SpriteCropConfig } from './spriteCrops'
-import type { CharacterData, EncounterData, EnemyData, ItemData, MapData, QuestDef, SkillData } from './types'
+import type { CharacterData, DialogueData, EncounterData, EnemyData, ItemData, MapData, QuestDef, SkillData } from './types'
 
 export interface GameConfigTables {
   maps: Record<string, MapData>
@@ -26,7 +25,7 @@ export interface GameConfigTables {
   enemies: Record<string, EnemyData>
   encounters: Record<string, EncounterData>
   quests: Record<string, QuestDef>
-  dialogues: Record<string, DialogueScript>
+  dialogues: Record<string, DialogueData>
   prophecies: ProphecyVerse[]
   tileSprites: Record<number, string>
   imageAssets: Record<string, string>

@@ -1,7 +1,7 @@
-import type { DialogueScript } from '../scenes/DialogueOverlay'
+import type { DialogueData } from './types'
 import { STORY_PROGRESS_FLAGS } from '../utils/constants'
 
-const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
   { type: 'addItem', itemId: 'prophecy_book', quantity: 1 },
   { type: 'addItem', itemId: 'fathers_sword', quantity: 1 },
@@ -12,15 +12,15 @@ const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> 
   { type: 'questStart', questId: 'QST_004' },
 ]
 
-const FOREST_PARTY_JOIN_BATTLE_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const FOREST_PARTY_JOIN_BATTLE_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'battle', encounterId: 'BTL_101' },
 ]
 
-const CONGCONG_JOIN_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const CONGCONG_JOIN_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'congcong_joined', value: true },
 ]
 
-const XIYUAN_SACRED_WATER_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const XIYUAN_SACRED_WATER_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'xiyuan_quiz_completed', value: true },
   { type: 'setFlag', flag: 'has_sacred_water', value: true },
   { type: 'addItem', itemId: 'holy_water', quantity: 1 },
@@ -29,12 +29,12 @@ const XIYUAN_SACRED_WATER_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComp
   { type: 'questStart', questId: 'QST_007' },
 ]
 
-const XIYUAN_KIND_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const XIYUAN_KIND_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   ...XIYUAN_SACRED_WATER_COMPLETION_ACTIONS,
   { type: 'addItem', itemId: 'water_mirror', quantity: 1 },
 ]
 
-const XIYUAN_COLD_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const XIYUAN_COLD_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'xiyuan_quiz_completed', value: true },
   { type: 'setFlag', flag: 'has_sacred_water', value: true },
   { type: 'addItem', itemId: 'holy_water', quantity: 1 },
@@ -43,11 +43,11 @@ const XIYUAN_COLD_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> 
   { type: 'adjustMercy', amount: -1 },
 ]
 
-const TEMPLE_VISITED_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const TEMPLE_VISITED_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'temple_visited', value: true },
 ]
 
-const LAUREL_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const LAUREL_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   ...TEMPLE_VISITED_COMPLETION_ACTIONS,
   { type: 'setFlag', flag: 'has_divine_laurel', value: true },
   { type: 'addItem', itemId: 'laurel', quantity: 1 },
@@ -55,20 +55,20 @@ const LAUREL_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
   { type: 'questStart', questId: 'QST_008' },
 ]
 
-const SIDE_A_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const SIDE_A_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'side_a_done', value: true },
 ]
 
-const SIDE_A_REST_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const SIDE_A_REST_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   ...SIDE_A_COMPLETION_ACTIONS,
   { type: 'addItem', itemId: 'guard_charm', quantity: 1 },
 ]
 
-const SIDE_CONGCONG_COMPLETION_ACTIONS: NonNullable<DialogueScript['onComplete']> = [
+const SIDE_CONGCONG_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'side_congcong_done', value: true },
 ]
 
-export const DIALOGUES: Record<string, DialogueScript> = {
+export const DIALOGUES: Record<string, DialogueData> = {
   // ============================================================
   // 序章：盛典之日 (SCN_001 - SCN_005)
   // ============================================================
