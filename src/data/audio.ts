@@ -16,7 +16,7 @@ export const BGM_TRACKS: Record<string, BGMConfig> = {
   town_ruins: { key: 'bgm_town_ruins', path: 'audio/bgm/town_ruins.ogg', loop: true, volume: 0.6 },
   town_rebuilt: { key: 'bgm_town_rebuilt', path: 'audio/bgm/town_rebuilt.ogg', loop: true, volume: 0.6 },
   forest: { key: 'bgm_forest', path: 'audio/bgm/forest.ogg', loop: true, volume: 0.6 },
-  forest_mystery: { key: 'bgm_forest_mystery', path: 'audio/bgm/forest.ogg', loop: true, volume: 0.5 },
+  forest_mystery: { key: 'bgm_forest_mystery', path: 'audio/bgm/forest_mystery.ogg', loop: true, volume: 0.5 },
   holy_water: { key: 'bgm_holy_water', path: 'audio/bgm/holy_water.ogg', loop: true, volume: 0.6 },
   holy_temple: { key: 'bgm_holy_temple', path: 'audio/bgm/holy_temple.ogg', loop: true, volume: 0.6 },
   mountain: { key: 'bgm_mountain', path: 'audio/bgm/mountain.ogg', loop: true, volume: 0.6 },

@@ -1242,6 +1242,7 @@ export const DIALOGUE_CHOICE = {
   minGap: scalePx(2),
 } as const
 
+export const SAVE_SLOT_MIN = 1
 export const SAVE_SLOTS = 3
 export const QUICK_SAVE_SLOT = SAVE_SLOTS + 1
 export const SAVE_STORAGE_KEY = 'casktown_save'
@@ -1367,8 +1368,10 @@ export const MAP_HUD = {
   LABEL_FONT_SIZE: scalePx(10),
   LABEL_OFFSET_X: scalePx(8),
   LABEL_OFFSET_Y: scalePx(10),
-  PROMPT_TEXT: 'Space 调查/对话 | M 地图 | Esc 菜单',
-  PROMPT_CONFIRM_PREFIX: 'Space ',
+  PROMPT_TEXT: 'Enter/Space 调查/对话 | M 地图 | Esc 菜单',
+  PROMPT_CONFIRM_FALLBACK: 'Space',
+  PROMPT_CONFIRM_PREFIX_SUFFIX: ' ',
+  PROMPT_KEY_JOIN: '/',
   PROMPT_COMMAND_SEPARATOR: ' | ',
   PROMPT_MENU_TEXT: 'Esc 菜单',
   PROMPT_ACTION_LABELS: {
@@ -1524,6 +1527,7 @@ export const BATTLE_RULES = {
   HEAL_HP_EFFECT_PREFIX: 'heal_hp:',
   HEAL_MP_EFFECT_PREFIX: 'heal_mp:',
   ALL_TARGET_EFFECT_SUFFIX: '_all',
+  PLAYER_TARGET_ITEM_EFFECT_MARKERS: ['buff', 'barrier', 'cure'],
 } as const
 
 export const BATTLE_STATUS = {

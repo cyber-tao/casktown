@@ -984,7 +984,7 @@ export class MapScene extends Phaser.Scene {
       this.promptText.setBackgroundColor(MAP_HUD.FEEDBACK_BACKGROUND_COLOR)
       this.time.delayedCall(MAP_HUD.FEEDBACK_HOLD_MS, () => {
         if (this.feedbackToken !== token || !this.promptText) return
-        this.promptText.setText(MAP_HUD.PROMPT_TEXT)
+        this.promptText.setText(this.formatDefaultPrompt())
         this.promptText.setColor(MAP_HUD.PROMPT_COLOR)
         this.promptText.setBackgroundColor(MAP_HUD.PROMPT_BACKGROUND_COLOR)
       })
@@ -1037,7 +1037,7 @@ export class MapScene extends Phaser.Scene {
   private updatePrompt(): void {
     if (!this.promptText) return
     const event = this.getActionEventAhead()
-    const nextText = event ? this.formatActionPrompt(event) : MAP_HUD.PROMPT_TEXT
+    const nextText = event ? this.formatActionPrompt(event) : this.formatDefaultPrompt()
     if (this.promptText.text !== nextText) {
       this.promptText.setText(nextText)
     }
@@ -1062,7 +1062,19 @@ export class MapScene extends Phaser.Scene {
 
   private formatActionPrompt(event: MapEvent): string {
     const label = this.getPromptActionLabel(event)
-    return `${MAP_HUD.PROMPT_CONFIRM_PREFIX}${label}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
+    return `${this.getPromptConfirmPrefix()}${label}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
+  }
+
+  private formatDefaultPrompt(): string {
+    return `${this.getPromptConfirmPrefix()}调查/对话${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
+  }
+
+  private getPromptConfirmPrefix(): string {
+    const confirmKey = InputManager.getInstance().getActionName('confirm')
+    const promptKey = confirmKey === MAP_HUD.PROMPT_CONFIRM_FALLBACK
+      ? confirmKey
+      : `${confirmKey}${MAP_HUD.PROMPT_KEY_JOIN}${MAP_HUD.PROMPT_CONFIRM_FALLBACK}`
+    return `${promptKey}${MAP_HUD.PROMPT_CONFIRM_PREFIX_SUFFIX}`
   }
 
   private getPromptActionLabel(event: MapEvent): string {

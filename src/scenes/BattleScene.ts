@@ -1167,8 +1167,15 @@ export class BattleScene extends Phaser.Scene {
       }
       return
     }
-    const targetPlayers = item ? item.effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX) || this.isReviveEffect(item.effect) || item.effect.includes('buff') || item.effect.includes('barrier') || item.effect.includes('cure') || item.effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX) : true
+    const targetPlayers = item ? this.isPlayerTargetItemEffect(item.effect) : true
     this.startTargetSelect(targetPlayers)
+  }
+
+  private isPlayerTargetItemEffect(effect: string): boolean {
+    return effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)
+      || effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX)
+      || this.isReviveEffect(effect)
+      || BATTLE_RULES.PLAYER_TARGET_ITEM_EFFECT_MARKERS.some(marker => effect.includes(marker))
   }
 
   private closeItemMenu(): void {

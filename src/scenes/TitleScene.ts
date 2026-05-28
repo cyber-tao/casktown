@@ -213,15 +213,16 @@ export class TitleScene extends Phaser.Scene {
 
   private loadGame(): void {
     const saveManager = SaveManager.getInstance()
-    if (saveManager.hasSave(1)) {
-      if (!saveManager.load(1)) {
-        this.showMessage('读取失败')
-        return
-      }
-      this.startSceneAfterFade('MapScene', { mapId: GameData.getInstance().currentMap })
-    } else {
+    const slot = saveManager.getLatestSaveSlot()
+    if (!slot) {
       this.showMessage('无存档')
+      return
     }
+    if (!saveManager.load(slot)) {
+      this.showMessage('读取失败')
+      return
+    }
+    this.startSceneAfterFade('MapScene', { mapId: GameData.getInstance().currentMap })
   }
 
   private openSettings(): void {

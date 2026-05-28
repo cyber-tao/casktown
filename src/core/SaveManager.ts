@@ -1,6 +1,6 @@
 import { GameData } from './GameData'
 import { InputManager } from './InputManager'
-import { QUICK_SAVE_SLOT, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
+import { QUICK_SAVE_SLOT, SAVE_SLOT_MIN, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
 
 export interface SaveMeta {
   slot: number
@@ -26,7 +26,7 @@ export class SaveManager {
   }
 
   private isValidSlot(slot: number): boolean {
-    return (slot >= 1 && slot <= SAVE_SLOTS) || slot === QUICK_SAVE_SLOT
+    return (slot >= SAVE_SLOT_MIN && slot <= SAVE_SLOTS) || slot === QUICK_SAVE_SLOT
   }
 
   private getStorage(): Storage | null {
@@ -96,6 +96,20 @@ export class SaveManager {
     } catch {
       return false
     }
+  }
+
+  getLatestSaveSlot(): number | null {
+    let latestSlot: number | null = null
+    let latestTimestamp = Number.NEGATIVE_INFINITY
+    for (let slot = SAVE_SLOT_MIN; slot <= QUICK_SAVE_SLOT; slot++) {
+      if (!this.isValidSlot(slot) || !this.hasSave(slot)) continue
+      const timestamp = this.getMeta(slot)?.timestamp ?? 0
+      if (latestSlot === null || timestamp >= latestTimestamp) {
+        latestSlot = slot
+        latestTimestamp = timestamp
+      }
+    }
+    return latestSlot
   }
 
   deleteSave(slot: number): boolean {
