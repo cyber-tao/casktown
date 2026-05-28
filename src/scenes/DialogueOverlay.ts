@@ -28,6 +28,11 @@ import { showLoadingScreen } from '../utils/loadingScreen'
 import type { DialogueChoice, DialogueData, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
 
+interface DialogueContinuation {
+  script: DialogueData
+  lineIndex: number
+}
+
 const SPEAKER_FACE_MAP: Record<string, string> = {
   T: 't_front_idle_01',
   慧慧: 'huihui_front_idle_01',
@@ -85,6 +90,8 @@ export class DialogueOverlay extends Phaser.Scene {
   private choiceIndex = 0
   private inChoice = false
   private dialogueId = ''
+  private continuations: DialogueContinuation[] = []
+  private completionActions: EventAction[] = []
 
   constructor() {
     super({ key: 'DialogueOverlay', active: false })
@@ -127,6 +134,8 @@ export class DialogueOverlay extends Phaser.Scene {
     this.choiceIndex = 0
     this.choices = []
     this.visibleChoices = []
+    this.continuations = []
+    this.completionActions = []
 
     const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
     const script = dialogues[data.dialogueId]
@@ -380,6 +389,9 @@ export class DialogueOverlay extends Phaser.Scene {
       if (choice.next) {
         const nextScript = GAME_CONFIG_DATABASE.getTable('dialogues')[choice.next]
         if (nextScript) {
+          if (this.lineIndex < this.currentScript.lines.length - 1) {
+            this.continuations.push({ script: this.currentScript, lineIndex: this.lineIndex + 1 })
+          }
           this.currentScript = nextScript
           this.lineIndex = 0
           this.showLine()
@@ -443,12 +455,34 @@ export class DialogueOverlay extends Phaser.Scene {
 
   private closeDialogue(): void {
     this.typeTimer?.remove()
-    const actions = this.currentScript?.onComplete
+    if (this.currentScript?.onComplete?.length) {
+      this.completionActions.push(...this.currentScript.onComplete)
+    }
+    const continuation = this.continuations.pop()
+    if (continuation) {
+      this.currentScript = continuation.script
+      this.lineIndex = continuation.lineIndex
+      this.showLine()
+      return
+    }
+    const actions = this.getUniqueCompletionActions()
     this.scene.stop()
     if (actions && actions.length > 0) {
       EventBus.emit(GameEvents.DIALOGUE_END, { actions })
     } else {
       EventBus.emit(GameEvents.DIALOGUE_END)
     }
+  }
+
+  private getUniqueCompletionActions(): EventAction[] {
+    const uniqueActions: EventAction[] = []
+    const seen = new Set<string>()
+    for (const action of this.completionActions) {
+      const key = JSON.stringify(action)
+      if (seen.has(key)) continue
+      seen.add(key)
+      uniqueActions.push(action)
+    }
+    return uniqueActions
   }
 }
