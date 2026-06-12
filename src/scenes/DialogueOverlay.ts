@@ -13,6 +13,8 @@ import {
   DIALOGUE_UI,
   DIALOGUE_TEXT_WIDTH,
   DIALOGUE_TEXT_WRAP_CHARS,
+  DEFAULT_EVENT_ACTION_AMOUNT,
+  DEFAULT_ITEM_QUANTITY,
   GAME_HEIGHT,
   GAME_WIDTH,
   LOADING_SCREEN,
@@ -441,7 +443,7 @@ export class DialogueOverlay extends Phaser.Scene {
         SkillGrowth.getInstance().checkAllUnlocks()
       }
       if (act.type === 'addItem') {
-        gd.addItem(act.itemId, act.quantity || 1)
+        gd.addItem(act.itemId, act.quantity ?? DEFAULT_ITEM_QUANTITY)
       }
       if (act.type === 'addParty') {
         gd.addPartyMember(act.characterId)
@@ -451,17 +453,17 @@ export class DialogueOverlay extends Phaser.Scene {
         qs.startQuest(act.questId)
       }
       if (act.type === 'questAdvance') {
-        qs.advanceQuest(act.questId, act.amount || 1)
+        qs.advanceQuest(act.questId, act.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
       }
       if (act.type === 'questComplete') {
         qs.completeQuest(act.questId)
         SkillGrowth.getInstance().checkAllUnlocks()
       }
       if (act.type === 'adjustTrust') {
-        gd.adjustTrust(act.characterId, act.amount || 1)
+        gd.adjustTrust(act.characterId, act.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
       }
       if (act.type === 'adjustMercy') {
-        gd.adjustMercy(act.amount || 1)
+        gd.adjustMercy(act.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
       }
     }
   }

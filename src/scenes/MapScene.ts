@@ -19,6 +19,8 @@ import {
   DEFAULT_CHARACTER_SPRITE_BASE_KEY,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
+  DEFAULT_EVENT_ACTION_AMOUNT,
+  DEFAULT_ITEM_QUANTITY,
   DIRECTION,
   COLORS,
   FIELD_ENCOUNTER_RATE_THRESHOLDS,
@@ -1941,7 +1943,7 @@ export class MapScene extends Phaser.Scene {
           qs.startQuest(action.questId)
           break
         case 'questAdvance':
-          qs.advanceQuest(action.questId, action.amount || 1)
+          qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
           break
         case 'questComplete':
           qs.completeQuest(action.questId)
@@ -1956,13 +1958,13 @@ export class MapScene extends Phaser.Scene {
           SkillGrowth.getInstance().checkAllUnlocks()
           break
         case 'adjustTrust':
-          gd.adjustTrust(action.characterId, action.amount || 1)
+          gd.adjustTrust(action.characterId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
           break
         case 'adjustMercy':
-          gd.adjustMercy(action.amount || 1)
+          gd.adjustMercy(action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
           break
         case 'addItem':
-          gd.addItem(action.itemId, action.quantity || 1)
+          gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
           break
         case 'addParty':
           gd.addPartyMember(action.characterId)

@@ -13,6 +13,8 @@ export const PROJECT_GITHUB_URL = 'https://github.com/cyber-tao/casktown'
 export const UI_FONT_FAMILY = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif'
 export const UI_TITLE_FONT_FAMILY = '"Songti SC", "STSong", "Noto Serif CJK SC", serif'
 export const GAME_CANVAS_BACKGROUND_COLOR = '#24170e'
+export const DEFAULT_EVENT_ACTION_AMOUNT = 1
+export const DEFAULT_ITEM_QUANTITY = 1
 
 export const STARTUP_LOADING = {
   ELEMENT_ID: 'startup-loading',

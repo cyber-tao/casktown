@@ -7,6 +7,8 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import {
+  DEFAULT_EVENT_ACTION_AMOUNT,
+  DEFAULT_ITEM_QUANTITY,
   FIELD_EVENT_FLAGS,
   MAINLINE_QA,
   MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
@@ -212,7 +214,7 @@ class MainlineQaRunner {
         qs.startQuest(action.questId)
         break
       case 'questAdvance':
-        qs.advanceQuest(action.questId, action.amount ?? 1)
+        qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
         break
       case 'questComplete':
         qs.completeQuest(action.questId)
@@ -227,13 +229,13 @@ class MainlineQaRunner {
         SkillGrowth.getInstance().checkAllUnlocks()
         break
       case 'adjustTrust':
-        gd.adjustTrust(action.characterId, action.amount ?? 1)
+        gd.adjustTrust(action.characterId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
         break
       case 'adjustMercy':
-        gd.adjustMercy(action.amount ?? 1)
+        gd.adjustMercy(action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
         break
       case 'addItem':
-        gd.addItem(action.itemId, action.quantity ?? 1)
+        gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
         break
       case 'addParty':
         gd.addPartyMember(action.characterId)
@@ -294,7 +296,7 @@ class MainlineQaRunner {
     }
 
     for (const reward of encounter.rewards ?? []) {
-      if (reward.itemId) gd.addItem(reward.itemId, reward.itemQty ?? 1)
+      if (reward.itemId) gd.addItem(reward.itemId, reward.itemQty ?? DEFAULT_ITEM_QUANTITY)
       if (reward.flag) gd.setFlag(reward.flag, reward.value ?? true)
       if (reward.branch) gd.updateBranch(reward.branch, reward.branchValue ?? true)
     }
@@ -368,7 +370,7 @@ class MainlineQaRunner {
         this.addError(`config:${encounterId}: Quest ${encounter.questId} not found`)
       }
       this.validateActions(encounter.rewards?.map(reward => reward.itemId
-        ? { type: 'addItem', itemId: reward.itemId, quantity: reward.itemQty ?? 1 }
+        ? { type: 'addItem', itemId: reward.itemId, quantity: reward.itemQty ?? DEFAULT_ITEM_QUANTITY }
         : reward.flag
           ? { type: 'setFlag', flag: reward.flag, value: reward.value ?? true }
           : { type: 'setBranch', branch: reward.branch!, value: reward.branchValue ?? true }) as EventAction[] ?? [], `config:${encounterId}:rewards`)

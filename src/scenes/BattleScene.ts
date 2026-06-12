@@ -30,6 +30,7 @@ import {
   COMBO_TP_COST,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
+  DEFAULT_ITEM_QUANTITY,
   ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -2407,8 +2408,9 @@ export class BattleScene extends Phaser.Scene {
     if (encounter?.rewards) {
       for (const reward of encounter.rewards) {
         if (reward.itemId) {
-          gd.addItem(reward.itemId, reward.itemQty ?? 1)
-          rewardLines.push(`${this.getItemName(reward.itemId)} x${reward.itemQty ?? 1}`)
+          const itemQty = reward.itemQty ?? DEFAULT_ITEM_QUANTITY
+          gd.addItem(reward.itemId, itemQty)
+          rewardLines.push(`${this.getItemName(reward.itemId)} x${itemQty}`)
         }
         if (reward.flag) {
           gd.setFlag(reward.flag, reward.value ?? true)
