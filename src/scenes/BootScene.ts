@@ -15,6 +15,7 @@ export class BootScene extends Phaser.Scene {
     showLoadingScreen(this, LOADING_SCREEN.STARTUP_LABEL)
     queueImageAsset(this, LOADING_SCREEN.BACKGROUND_KEY)
     queueImageAsset(this, TITLE_BACKGROUND.IMAGE_KEY)
+    this.load.video(TITLE_BACKGROUND.VIDEO_KEY, TITLE_BACKGROUND.VIDEO_PATH, TITLE_BACKGROUND.VIDEO_NO_AUDIO)
     AudioManager.getInstance().preload(this.load)
   }
 

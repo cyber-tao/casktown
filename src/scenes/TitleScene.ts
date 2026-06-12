@@ -103,6 +103,32 @@ export class TitleScene extends Phaser.Scene {
     this.bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, TITLE_BACKGROUND.IMAGE_KEY)
     this.bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
     this.bg.setAlpha(TITLE_BACKGROUND.IMAGE_ALPHA)
+
+    if (!this.cache.video.exists(TITLE_BACKGROUND.VIDEO_KEY)) return
+
+    const video = this.add.video(GAME_WIDTH / 2, GAME_HEIGHT / 2, TITLE_BACKGROUND.VIDEO_KEY)
+    video.setVisible(false)
+    const videoElement = video.video
+    if (videoElement) {
+      videoElement.muted = TITLE_BACKGROUND.VIDEO_MUTED
+      videoElement.defaultMuted = TITLE_BACKGROUND.VIDEO_MUTED
+      videoElement.playsInline = TITLE_BACKGROUND.VIDEO_PLAYS_INLINE
+    }
+    video.setLoop(TITLE_BACKGROUND.VIDEO_LOOP)
+
+    const fitVideo = (): void => {
+      video.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
+      video.setVisible(true)
+    }
+    const playVideo = (): void => {
+      video.setMute(TITLE_BACKGROUND.VIDEO_MUTED)
+      video.play(TITLE_BACKGROUND.VIDEO_LOOP)
+    }
+
+    video.once(Phaser.GameObjects.Events.VIDEO_CREATED, fitVideo)
+    playVideo()
+    this.input.once('pointerdown', playVideo)
+    this.input.keyboard?.once('keydown', playVideo)
   }
 
   private changeMenu(dir: number): void {

@@ -405,6 +405,12 @@ export const TITLE_GITHUB_LINK = {
 
 export const TITLE_BACKGROUND = {
   IMAGE_KEY: 'ui_title_bg',
+  VIDEO_KEY: 'title_trailer_bg',
+  VIDEO_PATH: 'trailer.mp4',
+  VIDEO_NO_AUDIO: true,
+  VIDEO_LOOP: true,
+  VIDEO_MUTED: true,
+  VIDEO_PLAYS_INLINE: true,
   IMAGE_ALPHA: 0.6,
   OVERLAY_COLOR: 0x000000,
   OVERLAY_ALPHA: 0.3,
