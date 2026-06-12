@@ -1,5 +1,4 @@
-import { BATTLE_BACKGROUND_KEYS, ITEM_ICON_KEY_PREFIX, LOADING_SCREEN } from '../utils/constants'
-import { ITEMS } from './items'
+import { APPROVED_ITEM_ICON_IDS, BATTLE_BACKGROUND_KEYS, ITEM_ICON_KEY_PREFIX, LOADING_SCREEN, RUNTIME_IMAGE_ASSET_PATHS } from '../utils/constants'
 
 const CHARACTER_POSES = {
   T: ['front_idle_01', 'front_idle_02', 'back_idle_01', 'back_idle_02', 'side_walk_01', 'side_walk_02', 'attack_01', 'attack_02'],
@@ -144,6 +143,10 @@ const imageAssets: Record<string, string> = {
   ui_world_map: 'map-world.png',
 }
 
+for (const [key, path] of Object.entries(RUNTIME_IMAGE_ASSET_PATHS)) {
+  imageAssets[key] = path
+}
+
 const BATTLE_BACKGROUND_PATHS: Record<string, string> = {
   [BATTLE_BACKGROUND_KEYS.FIELD]: 'battle_bg_field_1080p.jpg',
   [BATTLE_BACKGROUND_KEYS.TOWN_RUINS]: 'battle_bg_town_ruins_1080p.jpg',
@@ -214,7 +217,7 @@ for (const tile of DARK_TILES) {
   imageAssets[`dark_${tile}`] = `dark_fantasy/misc/${tile}.png`
 }
 
-for (const itemId of Object.keys(ITEMS)) {
+for (const itemId of APPROVED_ITEM_ICON_IDS) {
   imageAssets[`${ITEM_ICON_KEY_PREFIX}${itemId}`] = `items/misc/${itemId}.png`
 }
 

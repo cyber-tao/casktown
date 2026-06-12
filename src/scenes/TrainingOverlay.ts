@@ -4,9 +4,11 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TRAINING_COST, TRAINING_EXP_BASE, TRAINING_EXP_PER_LEVEL, scaleFont, scalePx } from '../utils/constants'
+import { queueImageAssets } from '../core/AssetLoader'
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, FACILITY_OVERLAY_UI, MENU_OVERLAY_UI, RUNTIME_UI_ASSET_KEYS, TRAINING_COST, TRAINING_EXP_BASE, TRAINING_EXP_PER_LEVEL, scaleFont } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { addRuntimePanel } from '../utils/runtimePanels'
 
 export class TrainingOverlay extends Phaser.Scene {
   private selectedIndex = 0
@@ -19,36 +21,41 @@ export class TrainingOverlay extends Phaser.Scene {
     super({ key: 'TrainingOverlay', active: false })
   }
 
+  preload(): void {
+    queueImageAssets(this, Object.values(RUNTIME_UI_ASSET_KEYS))
+  }
+
   create(): void {
     this.selectedIndex = 0
     AudioManager.getInstance().playSFX('open_menu')
 
-    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, 0.5)
-    overlay.setDepth(400).setScrollFactor(0)
+    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, FACILITY_OVERLAY_UI.OVERLAY_ALPHA)
+    overlay.setDepth(FACILITY_OVERLAY_UI.OVERLAY_DEPTH).setScrollFactor(0)
 
-    const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, scalePx(600), scalePx(420), COLORS.uiBg, 0.95)
-    panel.setStrokeStyle(scalePx(2), COLORS.uiBorder).setDepth(401).setScrollFactor(0)
+    addRuntimePanel(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, FACILITY_OVERLAY_UI.PANEL_WIDTH, FACILITY_OVERLAY_UI.PANEL_HEIGHT, RUNTIME_UI_ASSET_KEYS.MENU_PANEL, COLORS.uiBg, FACILITY_OVERLAY_UI.PANEL_ALPHA, FACILITY_OVERLAY_UI.PANEL_DEPTH)
+    const panelBorder = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, FACILITY_OVERLAY_UI.PANEL_WIDTH, FACILITY_OVERLAY_UI.PANEL_HEIGHT, COLORS.black, 0)
+    panelBorder.setStrokeStyle(FACILITY_OVERLAY_UI.BORDER_WIDTH, COLORS.uiBorder).setDepth(FACILITY_OVERLAY_UI.BORDER_DEPTH).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(195), '训练场', {
-      fontSize: scaleFont(24), color: COLORS.uiText,
-    }).setDepth(402).setScrollFactor(0)
+    this.add.text(FACILITY_OVERLAY_UI.TITLE_X, FACILITY_OVERLAY_UI.TITLE_Y, '训练场', {
+      fontSize: scaleFont(FACILITY_OVERLAY_UI.TITLE_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
+    }).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
 
-    this.add.text(GAME_WIDTH / 2 - scalePx(280), GAME_HEIGHT / 2 - scalePx(162), `每次消耗 ${TRAINING_COST}G`, {
-      fontSize: scaleFont(16), color: '#a0a0b0',
-    }).setDepth(402).setScrollFactor(0)
+    this.add.text(FACILITY_OVERLAY_UI.TITLE_X, FACILITY_OVERLAY_UI.SUBTITLE_Y, `每次消耗 ${TRAINING_COST}G`, {
+      fontSize: scaleFont(FACILITY_OVERLAY_UI.DETAIL_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.muted,
+    }).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
 
-    this.goldText = this.add.text(GAME_WIDTH / 2 + scalePx(100), GAME_HEIGHT / 2 - scalePx(195), '', {
-      fontSize: scaleFont(20), color: '#f1c40f',
-    }).setDepth(402).setScrollFactor(0)
+    this.goldText = this.add.text(FACILITY_OVERLAY_UI.GOLD_X, FACILITY_OVERLAY_UI.GOLD_Y, '', {
+      fontSize: scaleFont(FACILITY_OVERLAY_UI.GOLD_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
+    }).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
     this.updateGold()
 
-    this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(185), '', {
-      fontSize: scaleFont(16), color: '#f1c40f',
-    }).setOrigin(0.5).setDepth(402).setScrollFactor(0)
+    this.messageText = this.add.text(FACILITY_OVERLAY_UI.MESSAGE_X, FACILITY_OVERLAY_UI.MESSAGE_Y, '', {
+      fontSize: scaleFont(FACILITY_OVERLAY_UI.MESSAGE_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title, wordWrap: { width: FACILITY_OVERLAY_UI.MESSAGE_WRAP_WIDTH },
+    }).setOrigin(0.5).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + scalePx(200), '↑↓ 选择 | Enter 训练 | Esc 返回', {
-      fontSize: scaleFont(12), color: '#808090',
-    }).setOrigin(0.5).setDepth(402).setScrollFactor(0), () => this.close())
+    bindTouchText(this.add.text(FACILITY_OVERLAY_UI.FOOTER_X, FACILITY_OVERLAY_UI.FOOTER_Y, '↑↓ 选择 | Enter 训练 | Esc 返回', {
+      fontSize: scaleFont(FACILITY_OVERLAY_UI.FOOTER_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.text,
+    }).setOrigin(0.5).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0), () => this.close())
 
     this.renderList()
     this.setupInput()
@@ -60,41 +67,47 @@ export class TrainingOverlay extends Phaser.Scene {
     this.cursor?.destroy()
 
     const gd = GameData.getInstance()
-    const startY = GAME_HEIGHT / 2 - scalePx(115)
+    const startY = FACILITY_OVERLAY_UI.LIST_START_Y
 
     for (let i = 0; i < gd.party.length; i++) {
       const charId = gd.party[i]!
       const char = gd.characters.get(charId)
       if (!char) continue
 
-      const color = i === this.selectedIndex ? '#f1c40f' : COLORS.uiText
-      const expPct = char.stats.expToNext > 0 ? Math.floor((char.stats.exp / char.stats.expToNext) * 100) : 0
-      const expGain = TRAINING_EXP_BASE + char.stats.level * TRAINING_EXP_PER_LEVEL
-
-      const t1 = this.add.text(GAME_WIDTH / 2 - scalePx(260), startY + scalePx(i * 70),
-        `${char.name} Lv.${char.stats.level}  EXP ${char.stats.exp}/${char.stats.expToNext} (${expPct}%)`,
-        { fontSize: scaleFont(18), color },
-      ).setDepth(402).setScrollFactor(0)
+      const color = i === this.selectedIndex ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text
+      const rowY = startY + i * FACILITY_OVERLAY_UI.TRAINING_ROW_GAP_Y
+      const t1 = this.add.text(FACILITY_OVERLAY_UI.LIST_X, rowY,
+        `${char.name} Lv.${char.stats.level}`,
+        { fontSize: scaleFont(FACILITY_OVERLAY_UI.BODY_FONT_SIZE), color },
+      ).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
       bindTouchText(t1, () => this.selectPartyMember(i))
       this.textObjects.push(t1)
-
-      const t2 = this.add.text(GAME_WIDTH / 2 - scalePx(240), startY + scalePx(i * 70 + 24),
-        `HP:${char.stats.maxHp} MP:${char.stats.maxMp} ATK:${char.stats.atk} DEF:${char.stats.def} SPD:${char.stats.speed}`,
-        { fontSize: scaleFont(14), color: '#a0a0b0' },
-      ).setDepth(402).setScrollFactor(0)
-      bindTouchText(t2, () => this.selectPartyMember(i))
-      this.textObjects.push(t2)
-
-      const t3 = this.add.text(GAME_WIDTH / 2 - scalePx(240), startY + scalePx(i * 70 + 42),
-        `+${expGain} EXP per session`,
-        { fontSize: scaleFont(12), color: '#606070' },
-      ).setDepth(402).setScrollFactor(0)
-      bindTouchText(t3, () => this.selectPartyMember(i))
-      this.textObjects.push(t3)
     }
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - scalePx(275), startY + scalePx(this.selectedIndex * 70 + 9), scalePx(8), scalePx(8), COLORS.tpBar)
-    this.cursor.setDepth(403).setScrollFactor(0)
+    const selectedCharId = gd.party[this.selectedIndex]
+    const selectedChar = selectedCharId ? gd.characters.get(selectedCharId) : null
+    if (selectedChar) {
+      const expPct = selectedChar.stats.expToNext > 0 ? Math.floor((selectedChar.stats.exp / selectedChar.stats.expToNext) * 100) : 0
+      const expGain = TRAINING_EXP_BASE + selectedChar.stats.level * TRAINING_EXP_PER_LEVEL
+      const detailLines = [
+        `${selectedChar.name} Lv.${selectedChar.stats.level}`,
+        `EXP ${selectedChar.stats.exp}/${selectedChar.stats.expToNext} (${expPct}%)`,
+        `HP ${selectedChar.stats.maxHp} / MP ${selectedChar.stats.maxMp}`,
+        `ATK ${selectedChar.stats.atk}  DEF ${selectedChar.stats.def}`,
+        `SPD ${selectedChar.stats.speed}`,
+        `本次训练 +${expGain} EXP`,
+      ]
+
+      const detailText = this.add.text(FACILITY_OVERLAY_UI.DESC_X, FACILITY_OVERLAY_UI.DESC_Y, detailLines.join('\n'), {
+        fontSize: scaleFont(FACILITY_OVERLAY_UI.DETAIL_FONT_SIZE),
+        color: MENU_OVERLAY_UI.COLORS.text,
+        wordWrap: { width: FACILITY_OVERLAY_UI.DESC_WRAP_WIDTH },
+      }).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
+      this.textObjects.push(detailText)
+    }
+
+    this.cursor = this.add.rectangle(FACILITY_OVERLAY_UI.CURSOR_X, startY + this.selectedIndex * FACILITY_OVERLAY_UI.TRAINING_ROW_GAP_Y + FACILITY_OVERLAY_UI.CURSOR_OFFSET_Y, FACILITY_OVERLAY_UI.CURSOR_SIZE, FACILITY_OVERLAY_UI.CURSOR_SIZE, COLORS.tpBar)
+    this.cursor.setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
   }
 
   private updateGold(): void {

@@ -3,9 +3,11 @@ import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
-import { GAME_WIDTH, GAME_HEIGHT, REBUILD_MENU, TOUCH_INPUT, scaleFont, scalePx } from '../utils/constants'
+import { queueImageAssets } from '../core/AssetLoader'
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, MENU_OVERLAY_UI, REBUILD_MENU, RUNTIME_UI_ASSET_KEYS, scaleFont } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { addRuntimePanel } from '../utils/runtimePanels'
 
 export class RebuildOverlay extends Phaser.Scene {
   private cursorIndex = 0
@@ -19,63 +21,69 @@ export class RebuildOverlay extends Phaser.Scene {
     super({ key: 'RebuildOverlay', active: false })
   }
 
+  preload(): void {
+    queueImageAssets(this, Object.values(RUNTIME_UI_ASSET_KEYS))
+  }
+
   create(): void {
     this.cursorIndex = 0
     this.items = []
     AudioManager.getInstance().setScene(this)
 
-    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7)
-    overlay.setDepth(200)
+    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, REBUILD_MENU.OVERLAY_ALPHA)
+    overlay.setDepth(REBUILD_MENU.PANEL_DEPTH)
     overlay.setScrollFactor(0)
 
-    this.titleText = this.add.text(GAME_WIDTH / 2, scalePx(40), '木桶镇重建', {
-      fontSize: scaleFont(24), color: '#f1c40f',
+    addRuntimePanel(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, REBUILD_MENU.PANEL_WIDTH, REBUILD_MENU.PANEL_HEIGHT, RUNTIME_UI_ASSET_KEYS.MENU_PANEL, REBUILD_MENU.PANEL_TINT, REBUILD_MENU.PANEL_ALPHA, REBUILD_MENU.PANEL_DEPTH + 1)
+    const panelBorder = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, REBUILD_MENU.PANEL_WIDTH, REBUILD_MENU.PANEL_HEIGHT, COLORS.black, 0)
+    panelBorder.setStrokeStyle(REBUILD_MENU.BORDER_WIDTH, REBUILD_MENU.BORDER_COLOR)
+    panelBorder.setDepth(REBUILD_MENU.CONTENT_DEPTH)
+    panelBorder.setScrollFactor(0)
+
+    this.titleText = this.add.text(REBUILD_MENU.TITLE_X, REBUILD_MENU.TITLE_Y, '木桶镇重建', {
+      fontSize: scaleFont(REBUILD_MENU.TITLE_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
     })
-    this.titleText.setOrigin(0.5)
     this.titleText.setScrollFactor(0)
-    this.titleText.setDepth(201)
+    this.titleText.setDepth(REBUILD_MENU.CONTENT_DEPTH)
 
     const gd = GameData.getInstance()
 
-    this.goldText = this.add.text(GAME_WIDTH / 2, scalePx(70), `${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`, {
-      fontSize: scaleFont(16), color: '#ecf0f1',
+    this.goldText = this.add.text(REBUILD_MENU.GOLD_X, REBUILD_MENU.GOLD_Y, `${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`, {
+      fontSize: scaleFont(REBUILD_MENU.GOLD_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
     })
-    this.goldText.setOrigin(0.5)
     this.goldText.setScrollFactor(0)
-    this.goldText.setDepth(201)
+    this.goldText.setDepth(REBUILD_MENU.CONTENT_DEPTH)
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - scalePx(160), scalePx(120), scalePx(320), scalePx(28), 0x3498db, 0.3)
+    this.cursor = this.add.rectangle(REBUILD_MENU.CURSOR_X, REBUILD_MENU.OPTION_START_Y, REBUILD_MENU.CURSOR_WIDTH, REBUILD_MENU.CURSOR_HEIGHT, REBUILD_MENU.CURSOR_COLOR, REBUILD_MENU.CURSOR_ALPHA)
     this.cursor.setOrigin(0, 0.5)
-    this.cursor.setDepth(201)
+    this.cursor.setDepth(REBUILD_MENU.CONTENT_DEPTH)
     this.cursor.setScrollFactor(0)
 
     this.items = []
-    const startY = scalePx(120)
     for (let i = 0; i < REBUILD_MENU.OPTIONS.length; i++) {
       const opt = REBUILD_MENU.OPTIONS[i]!
       const built = gd.getFlag(`${REBUILD_MENU.BUILT_FLAG_PREFIX}${opt.id}`) === true
       const label = built ? `${opt.name} [已完成]` : `${opt.name} (${opt.goldCost}G)`
-      const color = built ? '#7f8c8d' : '#ecf0f1'
-      const text = this.add.text(GAME_WIDTH / 2 - scalePx(140), startY + scalePx(i * 36), label, {
-        fontSize: scaleFont(16), color,
+      const color = built ? MENU_OVERLAY_UI.COLORS.dim : MENU_OVERLAY_UI.COLORS.text
+      const text = this.add.text(REBUILD_MENU.OPTION_X, REBUILD_MENU.OPTION_START_Y + i * REBUILD_MENU.OPTION_GAP_Y, label, {
+        fontSize: scaleFont(REBUILD_MENU.OPTION_FONT_SIZE), color,
       })
       text.setScrollFactor(0)
-      text.setDepth(201)
+      text.setDepth(REBUILD_MENU.CONTENT_DEPTH)
       bindTouchText(text, () => this.selectTouchItem(i))
       this.items.push(text)
     }
 
-    this.descText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - scalePx(80), '', {
-      fontSize: scaleFont(14), color: '#bdc3c7',
+    this.descText = this.add.text(REBUILD_MENU.DESC_X, REBUILD_MENU.DESC_Y, '', {
+      fontSize: scaleFont(REBUILD_MENU.DESC_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.text, wordWrap: { width: REBUILD_MENU.DESC_WRAP_WIDTH },
     })
-    this.descText.setOrigin(0.5)
     this.descText.setScrollFactor(0)
-    this.descText.setDepth(201)
+    this.descText.setDepth(REBUILD_MENU.CONTENT_DEPTH)
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, TOUCH_INPUT.OVERLAY_BACK_Y, '返回', {
-      fontSize: `${TOUCH_INPUT.OVERLAY_BACK_FONT_SIZE}px`,
-      color: '#ecf0f1',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(201), () => this.close())
+    bindTouchText(this.add.text(REBUILD_MENU.BACK_X, REBUILD_MENU.BACK_Y, '返回', {
+      fontSize: scaleFont(REBUILD_MENU.BACK_FONT_SIZE),
+      color: MENU_OVERLAY_UI.COLORS.text,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(REBUILD_MENU.CONTENT_DEPTH), () => this.close())
 
     this.updateDescription()
 
@@ -101,7 +109,7 @@ export class RebuildOverlay extends Phaser.Scene {
   }
 
   private updateCursor(): void {
-    this.cursor.y = scalePx(120 + this.cursorIndex * 36)
+    this.cursor.y = REBUILD_MENU.OPTION_START_Y + this.cursorIndex * REBUILD_MENU.OPTION_GAP_Y
     this.updateDescription()
   }
 
@@ -129,7 +137,7 @@ export class RebuildOverlay extends Phaser.Scene {
     AudioManager.getInstance().playSFX('open_menu')
 
     this.items[this.cursorIndex]!.setText(`${opt.name} [已完成]`)
-    this.items[this.cursorIndex]!.setColor('#7f8c8d')
+    this.items[this.cursorIndex]!.setColor(MENU_OVERLAY_UI.COLORS.dim)
     this.goldText.setText(`${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`)
 
     this.descText.setText(`${opt.name} 重建完成！`)

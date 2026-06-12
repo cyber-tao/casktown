@@ -1,0 +1,175 @@
+{
+  "note": "Preview-only gap fill mapping. Runtime assets are unchanged.",
+  "sources": {
+    "monsters": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/11-gap-fill-monsters.png",
+    "world_objects": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/12-gap-fill-world-objects.png",
+    "holy_clouds": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/13-gap-fill-holy-clouds.png"
+  },
+  "targets": [
+    {
+      "category": "monsters",
+      "frameName": "mei_01",
+      "sourceId": "monsters",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "category": "monsters",
+      "frameName": "mei_02",
+      "sourceId": "monsters",
+      "crop": {
+        "left": 512,
+        "top": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "category": "monsters",
+      "frameName": "wang_01",
+      "sourceId": "monsters",
+      "crop": {
+        "left": 0,
+        "top": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "category": "monsters",
+      "frameName": "wang_02",
+      "sourceId": "monsters",
+      "crop": {
+        "left": 512,
+        "top": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "category": "monsters",
+      "frameName": "liang_01",
+      "sourceId": "monsters",
+      "crop": {
+        "left": 0,
+        "top": 1024,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "category": "monsters",
+      "frameName": "liang_02",
+      "sourceId": "monsters",
+      "crop": {
+        "left": 512,
+        "top": 1024,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "steamship",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 0,
+        "top": 45,
+        "width": 525,
+        "height": 430
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "sailboat",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 470,
+        "top": 50,
+        "width": 390,
+        "height": 420
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "rowboat",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 760,
+        "top": 85,
+        "width": 410,
+        "height": 390
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "lighthouse",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 1145,
+        "top": 20,
+        "width": 330,
+        "height": 405
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "dark_castle",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 95,
+        "top": 485,
+        "width": 545,
+        "height": 430
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "dark_swamp_cave",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 625,
+        "top": 500,
+        "width": 455,
+        "height": 390
+      }
+    },
+    {
+      "category": "world_objects",
+      "frameName": "buoy",
+      "sourceId": "world_objects",
+      "crop": {
+        "left": 1125,
+        "top": 545,
+        "width": 395,
+        "height": 340
+      }
+    },
+    {
+      "category": "holy_temple",
+      "frameName": "cloud_small",
+      "sourceId": "holy_clouds",
+      "crop": {
+        "left": 130,
+        "top": 235,
+        "width": 530,
+        "height": 350
+      }
+    },
+    {
+      "category": "holy_temple",
+      "frameName": "cloud_large",
+      "sourceId": "holy_clouds",
+      "crop": {
+        "left": 780,
+        "top": 125,
+        "width": 850,
+        "height": 430
+      }
+    }
+  ]
+}

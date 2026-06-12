@@ -16,8 +16,9 @@ import {
   TITLE_MENU_ACTION_INDEX,
   TITLE_MENU_ITEMS,
   TITLE_MENU_LAYOUT,
+  UI_FONT_FAMILY,
+  UI_TITLE_FONT_FAMILY,
   scaleFont,
-  scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
@@ -49,39 +50,35 @@ export class TitleScene extends Phaser.Scene {
 
     this.createBackground()
 
-    // Dark overlay for text readability
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, TITLE_BACKGROUND.OVERLAY_COLOR, TITLE_BACKGROUND.OVERLAY_ALPHA)
 
-    // Title
-    this.add.text(GAME_WIDTH / 2, scalePx(120), '木桶镇', {
-      fontSize: scaleFont(64),
-      color: '#e8e8f0',
-      fontFamily: 'serif',
-      stroke: '#1a1a2e',
-      strokeThickness: scalePx(6),
+    this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.TITLE_Y, '木桶镇', {
+      fontSize: scaleFont(TITLE_MENU_LAYOUT.TITLE_FONT_SIZE),
+      color: TITLE_MENU_LAYOUT.TITLE_COLOR,
+      fontFamily: UI_TITLE_FONT_FAMILY,
+      stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
+      strokeThickness: TITLE_MENU_LAYOUT.TITLE_STROKE_THICKNESS,
     }).setOrigin(0.5)
 
-    this.add.text(GAME_WIDTH / 2, scalePx(190), 'CaskTown', {
-      fontSize: scaleFont(28),
-      color: '#a0a0c0',
-      fontFamily: 'sans-serif',
-      stroke: '#1a1a2e',
-      strokeThickness: scalePx(4),
+    this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.SUBTITLE_Y, 'CaskTown', {
+      fontSize: scaleFont(TITLE_MENU_LAYOUT.SUBTITLE_FONT_SIZE),
+      color: TITLE_MENU_LAYOUT.SUBTITLE_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+      stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
+      strokeThickness: TITLE_MENU_LAYOUT.SUBTITLE_STROKE_THICKNESS,
     }).setOrigin(0.5)
 
-    // Menu
     for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
       const text = this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
-        fontSize: scaleFont(24),
-        color: '#c0c0d0',
-        fontFamily: 'sans-serif',
+        fontSize: scaleFont(TITLE_MENU_LAYOUT.MENU_FONT_SIZE),
+        color: TITLE_MENU_LAYOUT.MENU_COLOR,
+        fontFamily: UI_FONT_FAMILY,
       }).setOrigin(0.5)
       bindTouchText(text, () => this.selectMenuItem(i))
       this.menuItems.push(text)
     }
 
-    // Cursor
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, 0xf1c40f)
+    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_COLOR)
     this.cursor.setOrigin(0.5)
 
     cleanupKeyboardOnShutdown(this)
@@ -92,14 +89,13 @@ export class TitleScene extends Phaser.Scene {
 
     bindTouchText(this.add.text(TITLE_GITHUB_LINK.x, TITLE_GITHUB_LINK.y, 'GitHub', {
       fontSize: `${TITLE_GITHUB_LINK.fontSize}px`,
-      color: '#a0a0c0',
-      fontFamily: 'sans-serif',
-      stroke: '#1a1a2e',
-      strokeThickness: scalePx(3),
+      color: TITLE_MENU_LAYOUT.LINK_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+      stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
+      strokeThickness: TITLE_MENU_LAYOUT.LINK_STROKE_THICKNESS,
     }).setOrigin(0.5), () => this.openGithub())
 
-    // Fade in
-    this.cameras.main.fadeIn(500)
+    this.cameras.main.fadeIn(TITLE_BACKGROUND.FADE_MS)
     window.dispatchEvent(new CustomEvent(STARTUP_LOADING.READY_EVENT))
   }
 
@@ -107,32 +103,6 @@ export class TitleScene extends Phaser.Scene {
     this.bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, TITLE_BACKGROUND.IMAGE_KEY)
     this.bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
     this.bg.setAlpha(TITLE_BACKGROUND.IMAGE_ALPHA)
-
-    if (!this.cache.video.exists(TITLE_BACKGROUND.VIDEO_KEY)) return
-
-    const video = this.add.video(GAME_WIDTH / 2, GAME_HEIGHT / 2, TITLE_BACKGROUND.VIDEO_KEY)
-    video.setVisible(false)
-    const videoElement = video.video
-    if (videoElement) {
-      videoElement.muted = TITLE_BACKGROUND.VIDEO_MUTED
-      videoElement.defaultMuted = TITLE_BACKGROUND.VIDEO_MUTED
-      videoElement.playsInline = TITLE_BACKGROUND.VIDEO_PLAYS_INLINE
-    }
-    video.setLoop(TITLE_BACKGROUND.VIDEO_LOOP)
-
-    const fitVideo = (): void => {
-      video.setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
-      video.setVisible(true)
-    }
-    const playVideo = (): void => {
-      video.setMute(TITLE_BACKGROUND.VIDEO_MUTED)
-      video.play(TITLE_BACKGROUND.VIDEO_LOOP)
-    }
-
-    video.once(Phaser.GameObjects.Events.VIDEO_CREATED, fitVideo)
-    playVideo()
-    this.input.once('pointerdown', playVideo)
-    this.input.keyboard?.once('keydown', playVideo)
   }
 
   private changeMenu(dir: number): void {
@@ -232,11 +202,12 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private showMessage(msg: string): void {
-    const text = this.add.text(GAME_WIDTH / 2, scalePx(480), msg, {
-      fontSize: scaleFont(20),
-      color: '#e74c3c',
+    const text = this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.MESSAGE_Y, msg, {
+      fontSize: scaleFont(TITLE_MENU_LAYOUT.MESSAGE_FONT_SIZE),
+      color: TITLE_MENU_LAYOUT.MESSAGE_COLOR,
+      fontFamily: UI_FONT_FAMILY,
     }).setOrigin(0.5)
-    this.time.delayedCall(1500, () => text.destroy())
+    this.time.delayedCall(TITLE_MENU_LAYOUT.MESSAGE_DURATION_MS, () => text.destroy())
   }
 
   private startSceneAfterFade(sceneKey: string, data?: object): void {

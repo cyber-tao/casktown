@@ -3,18 +3,24 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
+import { queueImageAssets } from '../core/AssetLoader'
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
+  MENU_OVERLAY_UI,
   MENU_SETTINGS_OPTION_LABELS,
   MENU_SETTINGS_OPTIONS,
   TEXT_SPEED,
   BATTLE_SPEED,
+  RUNTIME_UI_ASSET_KEYS,
   SETTINGS_PANEL,
+  UI_FONT_FAMILY,
+  UI_TITLE_FONT_FAMILY,
   scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { addRuntimePanel } from '../utils/runtimePanels'
 
 type SettingOption = typeof MENU_SETTINGS_OPTIONS[number]
 
@@ -24,11 +30,15 @@ export class SettingsScene extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Rectangle
   private returnTo: string = 'TitleScene'
   private overlay!: Phaser.GameObjects.Rectangle
-  private panel!: Phaser.GameObjects.Rectangle
+  private panel!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
   private closing = false
 
   constructor() {
     super({ key: 'SettingsScene', active: false })
+  }
+
+  preload(): void {
+    queueImageAssets(this, Object.values(RUNTIME_UI_ASSET_KEYS))
   }
 
   create(data: { returnTo?: string }): void {
@@ -45,20 +55,20 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private createBackground(): void {
-    this.overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, SETTINGS_PANEL.overlayAlpha)
+    this.overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, SETTINGS_PANEL.overlayColor, SETTINGS_PANEL.overlayAlpha)
     this.overlay.setScrollFactor(0)
     this.overlay.setDepth(500)
 
-    this.panel = this.add.rectangle(SETTINGS_PANEL.x, SETTINGS_PANEL.y, SETTINGS_PANEL.width, SETTINGS_PANEL.height, 0x2a2a3e, SETTINGS_PANEL.alpha)
-    this.panel.setStrokeStyle(SETTINGS_PANEL.strokeWidth, 0x5a5a7e)
-    this.panel.setScrollFactor(0)
-    this.panel.setDepth(501)
+    this.panel = addRuntimePanel(this, SETTINGS_PANEL.x, SETTINGS_PANEL.y, SETTINGS_PANEL.width, SETTINGS_PANEL.height, RUNTIME_UI_ASSET_KEYS.MENU_PANEL, SETTINGS_PANEL.fallbackColor, SETTINGS_PANEL.alpha, 501)
+    if (this.panel instanceof Phaser.GameObjects.Rectangle) {
+      this.panel.setStrokeStyle(SETTINGS_PANEL.strokeWidth, SETTINGS_PANEL.borderColor)
+    }
 
-    this.add.text(GAME_WIDTH / 2, SETTINGS_PANEL.titleY, '设置', {
+    this.add.text(SETTINGS_PANEL.titleX, SETTINGS_PANEL.titleY, '设置', {
       fontSize: `${SETTINGS_PANEL.titleFontSize}px`,
-      color: '#f1c40f',
-      fontFamily: 'sans-serif',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(502)
+      color: MENU_OVERLAY_UI.COLORS.title,
+      fontFamily: UI_TITLE_FONT_FAMILY,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(503)
   }
 
   private createSettingsUI(): void {
@@ -72,7 +82,8 @@ export class SettingsScene extends Phaser.Scene {
 
       const label = this.add.text(0, 0, config.label, {
         fontSize: `${SETTINGS_PANEL.labelFontSize}px`,
-        color: '#c0c0d0',
+        color: MENU_OVERLAY_UI.COLORS.text,
+        fontFamily: UI_FONT_FAMILY,
       }).setDepth(502)
       bindTouchText(label, () => this.selectTouchMenuItem(i))
       container.add(label)
@@ -89,13 +100,13 @@ export class SettingsScene extends Phaser.Scene {
     const backContainer = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + MENU_SETTINGS_OPTIONS.length * SETTINGS_PANEL.rowHeight + SETTINGS_PANEL.backOffsetY)
     backContainer.setDepth(502)
     backContainer.setScrollFactor(0)
-    const backText = this.add.text(0, 0, '返回', { fontSize: `${SETTINGS_PANEL.backFontSize}px`, color: '#e74c3c' })
+    const backText = this.add.text(0, 0, '返回', { fontSize: `${SETTINGS_PANEL.backFontSize}px`, color: MENU_OVERLAY_UI.COLORS.danger, fontFamily: UI_FONT_FAMILY })
     backText.setDepth(502)
     bindTouchText(backText, () => this.selectTouchMenuItem(MENU_SETTINGS_OPTIONS.length))
     backContainer.add(backText)
     this.menuItems.push(backContainer)
 
-    this.cursor = this.add.rectangle(SETTINGS_PANEL.cursorX, SETTINGS_PANEL.rowStartY + SETTINGS_PANEL.cursorOffsetY, SETTINGS_PANEL.cursorSize, SETTINGS_PANEL.cursorSize, 0xf1c40f)
+    this.cursor = this.add.rectangle(SETTINGS_PANEL.cursorX, SETTINGS_PANEL.rowStartY + SETTINGS_PANEL.cursorOffsetY, SETTINGS_PANEL.cursorSize, SETTINGS_PANEL.cursorSize, SETTINGS_PANEL.cursorColor)
     this.cursor.setDepth(503)
     this.cursor.setScrollFactor(0)
   }
@@ -123,7 +134,8 @@ export class SettingsScene extends Phaser.Scene {
 
     return this.add.text(0, 0, displayText, {
       fontSize: `${SETTINGS_PANEL.valueFontSize}px`,
-      color: '#e8e8f0',
+      color: MENU_OVERLAY_UI.COLORS.title,
+      fontFamily: UI_FONT_FAMILY,
     })
   }
 
@@ -141,6 +153,7 @@ export class SettingsScene extends Phaser.Scene {
       newText.setX(oldText.x)
       newText.setY(oldText.y)
       newText.setDepth(502)
+      bindTouchText(newText, () => this.selectTouchMenuItem(index))
       container.remove(oldText)
       oldText.destroy()
       container.add(newText)

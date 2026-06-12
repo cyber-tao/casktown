@@ -35,14 +35,13 @@ img/
 |------|------|--------|------|-----------|
 | `01_characters_main` | characters | 48 | 8x6 | 181x181 |
 | `02_npcs_bosses_creatures` | npcs_bosses | 29 | 8x4 | 181x271 |
-| `03_monsters` | monsters | 53 | 8x5 | 181x217 |
+| `03_monsters` | monsters | 53 | 8x7 | 181x217 |
 | `04_town_world_objects` | world_objects | 24 | 6x4 | 241x271 |
 | `05_nature_environment_tiles` | environment | 80 | 10x8 | 144x135 |
-| `06_holy_temple_tiles` | holy_temple | 55 | 12x6 | 120x181 |
+| `06_holy_temple_tiles` | holy_temple | 55 | 12x5 | 120x181 |
 | `07_dark_fantasy_tiles` | dark_fantasy | 48 | 8x6 | 181x181 |
-| `08_item_icons` | items | 34 | 8x5 | 96x96 |
 
-**总计**: 371 个精灵
+**总计**: 337 个精灵
 
 ### pack_manifest.json
 

@@ -68,6 +68,10 @@ const SIDE_CONGCONG_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> 
   { type: 'setFlag', flag: 'side_congcong_done', value: true },
 ]
 
+const DARK_PALACE_CAPTURED_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
+  { type: 'questStart', questId: 'QST_012' },
+]
+
 export const DIALOGUES: Record<string, DialogueData> = {
   // ============================================================
   // 序章：盛典之日 (SCN_001 - SCN_005)
@@ -415,7 +419,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: 'T', text: '那就先让它冷静下来。' },
       { speaker: '系统', text: '白虎误会战开始！撑过5回合或将其HP降至60%即可。' },
     ],
-    onComplete: [{ type: 'battle', encounterId: 'BTL_110' }],
+    onComplete: [{ type: 'questStart', questId: 'QST_005' }, { type: 'battle', encounterId: 'BTL_110' }],
   },
   DIA_103_TIGER_RING: {
     id: 'DIA_103_TIGER_RING',
@@ -1291,6 +1295,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       },
       { speaker: '系统', text: '主线任务更新【前往魔宫】。' },
     ],
+    onComplete: DARK_PALACE_CAPTURED_COMPLETION_ACTIONS,
   },
   DIA_501_CHECK: {
     id: 'DIA_501_CHECK',
@@ -1300,6 +1305,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '慧慧', text: '谢谢你的关心，T。' },
       { speaker: '系统', text: '获得额外补给。悲悯值+1。' },
     ],
+    onComplete: DARK_PALACE_CAPTURED_COMPLETION_ACTIONS,
   },
   DIA_501_SOLO: {
     id: 'DIA_501_SOLO',
@@ -1308,6 +1314,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '慧慧', text: '不是你的错。是我们的战斗。' },
       { speaker: '葱葱', text: '别说丧气话了。我们走。' },
     ],
+    onComplete: DARK_PALACE_CAPTURED_COMPLETION_ACTIONS,
   },
 
   // SCN_510 黑暗沼泽
@@ -2938,7 +2945,7 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_553_MEMORY_2: { target: 'DIA_420_R3' },
   DIA_554_MEMORY_3: { target: 'DIA_420_END' },
   DIA_555_MEMORY_FINAL: { target: 'DIA_420_END' },
-  DIA_501_MASK: { target: 'DIA_501_CAPTURED' },
+  DIA_501_MASK: { target: 'DIA_501_CAPTURED', includeOnComplete: true },
   DIA_611_CHAIN_1: { target: 'DIA_510_SWAMP' },
   DIA_612_CHAIN_2: { target: 'DIA_510_SWAMP_MOSS' },
   DIA_613_CHAIN_3: { target: 'DIA_510_SWAMP_MECH' },

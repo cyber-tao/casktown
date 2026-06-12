@@ -7,7 +7,9 @@ import {
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
   MAP_BATTLE_BACKGROUND_KEYS,
+  PUBLIC_ASSET_CACHE_VERSION,
   REBUILD_TILE_REPLACEMENTS,
+  RUNTIME_UI_ASSET_KEYS,
   SPRITE_CROP_DEFAULTS,
   STRETCHED_TILE_TEXTURE_KEYS,
   TILE_SIZE,
@@ -155,6 +157,16 @@ function addConfiguredKey(keys: Set<string>, key: string): void {
   if (getConfiguredImageAssets()[key]) keys.add(key)
 }
 
+function addRuntimeUiImageKeys(keys: Set<string>): void {
+  for (const key of Object.values(RUNTIME_UI_ASSET_KEYS)) {
+    addConfiguredKey(keys, key)
+  }
+}
+
+function getVersionedSpritePath(path: string): string {
+  return `sprites/${path}?v=${PUBLIC_ASSET_CACHE_VERSION}`
+}
+
 function addImageKeysByPrefix(keys: Set<string>, prefix: string): void {
   const imageAssets = getConfiguredImageAssets()
   for (const key of Object.keys(imageAssets)) {
@@ -222,7 +234,7 @@ export function queueImageAsset(scene: Phaser.Scene, key: string): void {
   scene.load.once(completeEvent, handleComplete)
   scene.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, handleLoadError)
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, clearPendingLoad)
-  scene.load.image(key, `sprites/${path}`)
+  scene.load.image(key, getVersionedSpritePath(path))
 }
 
 export function queueImageAssets(scene: Phaser.Scene, keys: Iterable<string>): void {
@@ -254,6 +266,7 @@ export function collectMapTileTextureKeys(mapData: MapData): Set<string> {
 
 export function collectMapImageKeys(mapData: MapData, partyIds: readonly string[]): Set<string> {
   const keys = collectMapTileTextureKeys(mapData)
+  addRuntimeUiImageKeys(keys)
   addConfiguredKey(keys, DEFAULT_CHARACTER_SPRITE_KEY)
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
   addPlayableCharacterImageKeys(keys)
@@ -277,6 +290,7 @@ export function collectMapImageKeys(mapData: MapData, partyIds: readonly string[
 
 export function collectBattleImageKeys(encounterId: string, partyIds: readonly string[], mapId?: string): Set<string> {
   const keys = new Set<string>()
+  addRuntimeUiImageKeys(keys)
   addConfiguredKey(keys, resolveBattleBackgroundKey(encounterId, mapId))
   addConfiguredKey(keys, DEFAULT_CHARACTER_SPRITE_KEY)
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)

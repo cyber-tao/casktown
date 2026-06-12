@@ -33,7 +33,7 @@
       "sprite_count": 53,
       "grid": {
         "cols": 8,
-        "rows": 5,
+        "rows": 7,
         "cellW": 181,
         "cellH": 217
       }
@@ -69,7 +69,7 @@
       "sprite_count": 55,
       "grid": {
         "cols": 12,
-        "rows": 6,
+        "rows": 5,
         "cellW": 120,
         "cellH": 181
       }
@@ -84,18 +84,6 @@
         "rows": 6,
         "cellW": 181,
         "cellH": 181
-      }
-    },
-    {
-      "image": "08_item_icons.png",
-      "json": "08_item_icons.json",
-      "category": "items",
-      "sprite_count": 35,
-      "grid": {
-        "cols": 8,
-        "rows": 5,
-        "cellW": 96,
-        "cellH": 96
       }
     }
   ],

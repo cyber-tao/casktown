@@ -12,7 +12,7 @@ import { TrainingOverlay } from './scenes/TrainingOverlay'
 import { RebuildOverlay } from './scenes/RebuildOverlay'
 import { CodexOverlay } from './scenes/CodexOverlay'
 import { WorldMapOverlay } from './scenes/WorldMapOverlay'
-import { GAME_HEIGHT, GAME_WIDTH, TOUCH_INPUT } from './utils/constants'
+import { GAME_CANVAS_BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH, TOUCH_INPUT } from './utils/constants'
 
 export class CaskTownGame extends Phaser.Game {
   constructor() {
@@ -21,7 +21,7 @@ export class CaskTownGame extends Phaser.Game {
       parent: 'game-container',
       width: GAME_WIDTH,
       height: GAME_HEIGHT,
-      backgroundColor: '#1a1a2e',
+      backgroundColor: GAME_CANVAS_BACKGROUND_COLOR,
       pixelArt: true,
       roundPixels: true,
       scale: {

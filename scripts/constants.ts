@@ -25,6 +25,13 @@ export const EDGE_BLEED_ZONE_RATIO = 0.22
 export const TOP_BLEED_ZONE_RATIO = 0.28
 export const FRAME_BACKGROUND_MAX_PRIMARY_AREA_RATIO = 0.12
 export const ACTOR_SPRITE_PACK_CATEGORIES = ['characters', 'npcs_bosses', 'monsters'] as const
+export const SPRITE_PREVIEW_MAPPING_FILE = 'output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-mapping.json'
+export const SPRITE_PREVIEW_APPLY_CATEGORIES = ['characters', 'npcs_bosses'] as const
+export const SPRITE_MAPPING_FRAME_INSET_PX = 12
+export const SPRITE_MAPPING_BACKGROUND_DISTANCE_THRESHOLD = 56
+export const SPRITE_MAPPING_LIGHT_BACKGROUND_MIN_CHANNEL = 225
+export const SPRITE_MAPPING_LIGHT_BACKGROUND_MAX_CHANNEL_DELTA = 42
+export const SPRITE_MAPPING_OPAQUE_ALPHA = 255
 export const VOICE_LINES_FILE = 'voice_lines.json'
 export const VOICE_AUDIO_OUTPUT_DIR = 'assets/audio/voice'
 export const VOICE_TEMP_DIR = '.voice-tmp'
@@ -47,14 +54,126 @@ export const AUDIO_CONVERSION_QUALITY = '4'
 export const AUDIO_CONVERSION_STRICT_MODE = '-2'
 export const VOICE_GENERATION_LIMIT_ENV = 'VOICE_GENERATION_LIMIT'
 export const PROCESS_ERROR_MESSAGE_MAX_LENGTH = 600
-export const ITEM_ICON_ATLAS_IMAGE_FILE = '08_item_icons.png'
-export const ITEM_ICON_ATLAS_JSON_FILE = '08_item_icons.json'
-export const ITEM_ICON_ATLAS_CATEGORY = 'items'
-export const ITEM_ICON_CELL_SIZE = 96
-export const ITEM_ICON_GRID_COLUMNS = 8
-export const ITEM_ICON_INNER_SIZE = 72
-export const ITEM_ICON_BACKGROUND_RADIUS = 18
-export const ITEM_ICON_SHADOW_BLUR = 6
-export const ITEM_ICON_STROKE_WIDTH = 4
-export const ITEM_ICON_MINOR_STROKE_WIDTH = 3
-export const ITEM_ICON_PATTERN_OPACITY = 0.18
+export const DESIGN_RUNTIME_ASSET_DIR = 'img/desiges/runtime-ui-assets'
+export const RUNTIME_UI_OUTPUT_DIR = 'assets/sprites/ui'
+export const RUNTIME_UI_DESIGN_SOURCE_FILE = 'img/desiges/design-sources/08-production-ui-kit.png'
+export const RUNTIME_UI_IMAGEGEN_MENU_PANEL_SOURCE_FILE = 'img/desiges/runtime-ui-assets/source/panel_menu_large-imagegen-alpha.png'
+export const RUNTIME_UI_SCALE_MODE = {
+  CONTAIN: 'contain',
+  NINE_SLICE: 'nineSlice',
+} as const
+export const RUNTIME_VISUAL_ASSET_DEFINITIONS = {
+  ui: [
+    {
+      name: 'panel_menu_large',
+      kind: 'book',
+      target: { width: 1320, height: 960 },
+    },
+    {
+      name: 'panel_menu_sidebar',
+      kind: 'sidebar',
+      target: { width: 480, height: 960 },
+    },
+    {
+      name: 'panel_dialogue',
+      kind: 'dialogue',
+      target: { width: 1800, height: 320 },
+    },
+    {
+      name: 'panel_dialogue_face',
+      kind: 'panel',
+      target: { width: 300, height: 300 },
+    },
+    {
+      name: 'panel_card',
+      kind: 'card',
+      target: { width: 420, height: 260 },
+    },
+    {
+      name: 'panel_quest',
+      kind: 'panel',
+      target: { width: 520, height: 260 },
+    },
+    {
+      name: 'panel_minimap',
+      kind: 'minimap',
+      target: { width: 300, height: 260 },
+    },
+    {
+      name: 'panel_prompt',
+      kind: 'prompt',
+      target: { width: 720, height: 160 },
+    },
+    {
+      name: 'button_selected',
+      kind: 'button',
+      target: { width: 420, height: 72 },
+    },
+    {
+      name: 'panel_battle_command',
+      kind: 'battle',
+      target: { width: 880, height: 360 },
+    },
+  ],
+} as const
+export const RUNTIME_UI_IMAGE_SOURCE_DEFINITIONS = {
+  panel_menu_large: {
+    source: RUNTIME_UI_IMAGEGEN_MENU_PANEL_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.CONTAIN,
+    paddingRatio: 0.02,
+  },
+  panel_menu_sidebar: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 193, top: 12, width: 196, height: 196 },
+    slice: { left: 28, right: 28, top: 28, bottom: 28 },
+  },
+  panel_dialogue: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 13, top: 608, width: 358, height: 44 },
+    slice: { left: 34, right: 34, top: 16, bottom: 16 },
+  },
+  panel_dialogue_face: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 8, top: 12, width: 176, height: 196 },
+    slice: { left: 28, right: 28, top: 30, bottom: 30 },
+  },
+  panel_card: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 193, top: 12, width: 196, height: 196 },
+    slice: { left: 28, right: 28, top: 28, bottom: 28 },
+  },
+  panel_quest: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 1405, top: 390, width: 120, height: 100 },
+    slice: { left: 20, right: 20, top: 20, bottom: 20 },
+  },
+  panel_minimap: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 1007, top: 430, width: 220, height: 188 },
+    slice: { left: 18, right: 22, top: 18, bottom: 22 },
+  },
+  panel_prompt: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 13, top: 498, width: 358, height: 38 },
+    slice: { left: 34, right: 34, top: 14, bottom: 14 },
+  },
+  button_selected: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 397, top: 134, width: 299, height: 54 },
+    slice: { left: 28, right: 28, top: 16, bottom: 16 },
+  },
+  panel_battle_command: {
+    source: RUNTIME_UI_DESIGN_SOURCE_FILE,
+    mode: RUNTIME_UI_SCALE_MODE.NINE_SLICE,
+    crop: { left: 1405, top: 390, width: 120, height: 100 },
+    slice: { left: 20, right: 20, top: 20, bottom: 20 },
+  },
+} as const

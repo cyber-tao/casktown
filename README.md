@@ -10,14 +10,6 @@
 - Vercel: [https://casktown.vercel.app](https://casktown.vercel.app)
 - Cloudflare: [https://casktown.pages.dev](https://casktown.pages.dev)
 
-## 游戏预告
-
-<a href="assets/trailer.mp4">
-  <img src="assets/trailer-preview.gif" alt="木桶镇游戏预告" width="100%">
-</a>
-
-[观看高清 MP4 预告片](assets/trailer.mp4)
-
 ## 项目起源
 
 《木桶镇 / CaskTown》的灵感来自 Hoker.JT 学生时代参加“火客论坛”（Hoker）时，一群朋友共同产生的游戏想法。游戏里的角色都来自当时论坛里的朋友，那些昵称、性格和彼此之间的玩笑，构成了最早版本的角色关系与冒险气质。

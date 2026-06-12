@@ -63,22 +63,6 @@ const manifestPath = join(sourceSpritePackDir, SPRITE_PACK_MANIFEST_FILE)
 const actorSpritePackCategories = new Set<string>(ACTOR_SPRITE_PACK_CATEGORIES)
 
 const FRAME_ALIASES: Record<string, Record<string, string>> = {
-  monsters: {
-    chi_01: 'horned_wraith_01',
-    chi_02: 'horned_wraith_02',
-    mei_01: 'charm_spirit_01',
-    mei_02: 'charm_spirit_02',
-    wang_01: 'feather_spirit_01',
-    wang_02: 'feather_spirit_02',
-    liang_01: 'fire_qilin_cub_01',
-    liang_02: 'fire_qilin_cub_02',
-    fake_xiaoai_01: 'mask_minion_01',
-    fake_xiaoai_02: 'mask_minion_02',
-    xiaoai_true_01: 'mask_minion_03',
-    xiaoai_true_02: 'mask_minion_04',
-    wuxiang_01: 'dark_swamp_01',
-    wuxiang_02: 'dark_swamp_02',
-  },
 }
 
 async function readJsonFile<T>(filePath: string): Promise<T> {
@@ -220,7 +204,7 @@ function isBleedComponent(component: FrameComponent, primary: FrameComponent, fr
   const maxTopBleedArea = primary.area * TOP_BLEED_MAX_PRIMARY_AREA_RATIO
 
   if (component.minY >= bottomBleedStart && component.area <= maxBottomBleedArea) return true
-  if (!isActorPack && component.minY === 0 && component.maxY <= topBleedEnd && component.area <= maxTopBleedArea) return true
+  if (!isActorPack && component.minY <= topBleedEnd && component.maxY <= topBleedEnd && component.area <= maxTopBleedArea) return true
   if (isActorPack && (component.minX === 0 || component.maxX === frame.w - 1) && component.area <= maxTopBleedArea) return true
   return false
 }

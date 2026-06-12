@@ -1,0 +1,4537 @@
+{
+  "note": "Preview-only mapping draft. It does not update img/sprites, assets/sprites, or src.",
+  "sources": {
+    "town": {
+      "label": "Town, Tiles, Objects",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/06-production-town-tileset.png",
+      "candidates": 180
+    },
+    "main-cast": {
+      "label": "Main Cast",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/07-production-character-sprites.png",
+      "candidates": 65
+    },
+    "ui": {
+      "label": "UI Kit",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/08-production-ui-kit.png",
+      "candidates": 108
+    },
+    "npcs-guardians": {
+      "label": "NPCs and Guardians",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/09-production-npcs-guardians.png",
+      "candidates": 84
+    },
+    "enemies-bosses": {
+      "label": "Enemies and Bosses",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/10-production-enemies-bosses.png",
+      "candidates": 82
+    }
+  },
+  "atlases": {
+    "characters": {
+      "image": "01_characters_main.png",
+      "json": "01_characters_main.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-characters.png",
+      "stats": {
+        "mapped": 46,
+        "review": 2,
+        "unmapped": 0,
+        "invalid": 0
+      },
+      "frames": {
+        "T/front_idle_01": {
+          "frameName": "T/front_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 2,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 51,
+            "y": 34,
+            "width": 95,
+            "height": 156,
+            "area": 7586
+          },
+          "useTargetAtlas": false
+        },
+        "T/front_idle_02": {
+          "frameName": "T/front_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 3,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 187,
+            "y": 35,
+            "width": 95,
+            "height": 155,
+            "area": 7345
+          },
+          "useTargetAtlas": false
+        },
+        "T/side_walk_01": {
+          "frameName": "T/side_walk_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 6,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 326,
+            "y": 37,
+            "width": 90,
+            "height": 152,
+            "area": 6481
+          },
+          "useTargetAtlas": false
+        },
+        "T/side_walk_02": {
+          "frameName": "T/side_walk_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 7,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 442,
+            "y": 37,
+            "width": 97,
+            "height": 153,
+            "area": 6744
+          },
+          "useTargetAtlas": false
+        },
+        "T/back_idle_01": {
+          "frameName": "T/back_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 4,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 576,
+            "y": 36,
+            "width": 92,
+            "height": 154,
+            "area": 7349
+          },
+          "useTargetAtlas": false
+        },
+        "T/back_idle_02": {
+          "frameName": "T/back_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 5,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 697,
+            "y": 36,
+            "width": 93,
+            "height": 154,
+            "area": 7465
+          },
+          "useTargetAtlas": false
+        },
+        "T/attack_01": {
+          "frameName": "T/attack_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 8,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 851,
+            "y": 37,
+            "width": 182,
+            "height": 153,
+            "area": 9431
+          },
+          "useTargetAtlas": false
+        },
+        "T/attack_02": {
+          "frameName": "T/attack_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 9,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1022,
+            "y": 40,
+            "width": 176,
+            "height": 150,
+            "area": 8466
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/front_idle_01": {
+          "frameName": "huihui/front_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 11,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 52,
+            "y": 200,
+            "width": 96,
+            "height": 141,
+            "area": 6833
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/front_idle_02": {
+          "frameName": "huihui/front_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 12,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 189,
+            "y": 200,
+            "width": 93,
+            "height": 141,
+            "area": 6688
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/side_walk_01": {
+          "frameName": "huihui/side_walk_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 13,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 443,
+            "y": 200,
+            "width": 101,
+            "height": 141,
+            "area": 6601
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/side_walk_02": {
+          "frameName": "huihui/side_walk_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 17,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 326,
+            "y": 203,
+            "width": 99,
+            "height": 138,
+            "area": 6227
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/back_idle_01": {
+          "frameName": "huihui/back_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 14,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 576,
+            "y": 200,
+            "width": 93,
+            "height": 141,
+            "area": 6468
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/back_idle_02": {
+          "frameName": "huihui/back_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 16,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 700,
+            "y": 202,
+            "width": 91,
+            "height": 139,
+            "area": 6311
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/attack_01": {
+          "frameName": "huihui/attack_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 15,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1023,
+            "y": 200,
+            "width": 154,
+            "height": 142,
+            "area": 8855
+          },
+          "useTargetAtlas": false
+        },
+        "huihui/attack_02": {
+          "frameName": "huihui/attack_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 18,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 845,
+            "y": 205,
+            "width": 166,
+            "height": 137,
+            "area": 8739
+          },
+          "useTargetAtlas": false
+        },
+        "abo/front_idle_01": {
+          "frameName": "abo/front_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 20,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 31,
+            "y": 334,
+            "width": 136,
+            "height": 163,
+            "area": 12225
+          },
+          "useTargetAtlas": false
+        },
+        "abo/front_idle_02": {
+          "frameName": "abo/front_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 21,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 170,
+            "y": 334,
+            "width": 133,
+            "height": 163,
+            "area": 12014
+          },
+          "useTargetAtlas": false
+        },
+        "abo/side_walk_01": {
+          "frameName": "abo/side_walk_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 23,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 328,
+            "y": 337,
+            "width": 96,
+            "height": 160,
+            "area": 8537
+          },
+          "useTargetAtlas": false
+        },
+        "abo/side_walk_02": {
+          "frameName": "abo/side_walk_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 26,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 440,
+            "y": 338,
+            "width": 101,
+            "height": 159,
+            "area": 8709
+          },
+          "useTargetAtlas": false
+        },
+        "abo/back_idle_01": {
+          "frameName": "abo/back_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 24,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 553,
+            "y": 337,
+            "width": 133,
+            "height": 160,
+            "area": 11526
+          },
+          "useTargetAtlas": false
+        },
+        "abo/back_idle_02": {
+          "frameName": "abo/back_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 25,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 679,
+            "y": 337,
+            "width": 131,
+            "height": 160,
+            "area": 11423
+          },
+          "useTargetAtlas": false
+        },
+        "abo/attack_01": {
+          "frameName": "abo/attack_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 22,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1016,
+            "y": 334,
+            "width": 178,
+            "height": 165,
+            "area": 13943
+          },
+          "useTargetAtlas": false
+        },
+        "abo/attack_02": {
+          "frameName": "abo/attack_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 27,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 838,
+            "y": 338,
+            "width": 211,
+            "height": 161,
+            "area": 15238
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/front_idle_01": {
+          "frameName": "congcong/front_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 32,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 43,
+            "y": 493,
+            "width": 101,
+            "height": 149,
+            "area": 6903
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/front_idle_02": {
+          "frameName": "congcong/front_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 33,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 188,
+            "y": 493,
+            "width": 103,
+            "height": 149,
+            "area": 7020
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/side_walk_01": {
+          "frameName": "congcong/side_walk_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 28,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 329,
+            "y": 492,
+            "width": 91,
+            "height": 148,
+            "area": 5748
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/side_walk_02": {
+          "frameName": "congcong/side_walk_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 29,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 437,
+            "y": 492,
+            "width": 97,
+            "height": 148,
+            "area": 5983
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/back_idle_01": {
+          "frameName": "congcong/back_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 30,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 576,
+            "y": 492,
+            "width": 90,
+            "height": 149,
+            "area": 6474
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/back_idle_02": {
+          "frameName": "congcong/back_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 31,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 699,
+            "y": 492,
+            "width": 89,
+            "height": 148,
+            "area": 6415
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/attack_01": {
+          "frameName": "congcong/attack_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 34,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 817,
+            "y": 494,
+            "width": 237,
+            "height": 145,
+            "area": 10900
+          },
+          "useTargetAtlas": false
+        },
+        "congcong/attack_02": {
+          "frameName": "congcong/attack_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 35,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1015,
+            "y": 496,
+            "width": 209,
+            "height": 141,
+            "area": 9139
+          },
+          "useTargetAtlas": false
+        },
+        "sun/front_idle_01": {
+          "frameName": "sun/front_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 41,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 52,
+            "y": 631,
+            "width": 94,
+            "height": 138,
+            "area": 6167
+          },
+          "useTargetAtlas": false
+        },
+        "sun/front_idle_02": {
+          "frameName": "sun/front_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 42,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 191,
+            "y": 631,
+            "width": 91,
+            "height": 137,
+            "area": 5941
+          },
+          "useTargetAtlas": false
+        },
+        "sun/side_walk_01": {
+          "frameName": "sun/side_walk_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 39,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 332,
+            "y": 630,
+            "width": 90,
+            "height": 139,
+            "area": 5198
+          },
+          "useTargetAtlas": false
+        },
+        "sun/side_walk_02": {
+          "frameName": "sun/side_walk_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 40,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 443,
+            "y": 630,
+            "width": 92,
+            "height": 138,
+            "area": 5340
+          },
+          "useTargetAtlas": false
+        },
+        "sun/back_idle_01": {
+          "frameName": "sun/back_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 37,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 574,
+            "y": 629,
+            "width": 96,
+            "height": 139,
+            "area": 4839
+          },
+          "useTargetAtlas": false
+        },
+        "sun/back_idle_02": {
+          "frameName": "sun/back_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 38,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 696,
+            "y": 629,
+            "width": 95,
+            "height": 139,
+            "area": 4790
+          },
+          "useTargetAtlas": false
+        },
+        "sun/cast_01": {
+          "frameName": "sun/cast_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 43,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 837,
+            "y": 631,
+            "width": 179,
+            "height": 137,
+            "area": 9219
+          },
+          "useTargetAtlas": false
+        },
+        "sun/cast_02": {
+          "frameName": "sun/cast_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 44,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1028,
+            "y": 631,
+            "width": 161,
+            "height": 137,
+            "area": 8499
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/front_idle_01": {
+          "frameName": "xiaoai/front_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 46,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 41,
+            "y": 758,
+            "width": 116,
+            "height": 140,
+            "area": 7036
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/front_idle_02": {
+          "frameName": "xiaoai/front_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 47,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 177,
+            "y": 758,
+            "width": 116,
+            "height": 140,
+            "area": 7028
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/side_walk_01": {
+          "frameName": "xiaoai/side_walk_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 48,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 330,
+            "y": 759,
+            "width": 102,
+            "height": 139,
+            "area": 6348
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/side_walk_02": {
+          "frameName": "xiaoai/side_walk_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 49,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 440,
+            "y": 759,
+            "width": 103,
+            "height": 139,
+            "area": 6431
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/back_idle_01": {
+          "frameName": "xiaoai/back_idle_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 51,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 570,
+            "y": 760,
+            "width": 104,
+            "height": 140,
+            "area": 7205
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/back_idle_02": {
+          "frameName": "xiaoai/back_idle_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 52,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 690,
+            "y": 760,
+            "width": 101,
+            "height": 140,
+            "area": 7042
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/cast_01": {
+          "frameName": "xiaoai/cast_01",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 50,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 796,
+            "y": 759,
+            "width": 434,
+            "height": 140,
+            "area": 26968
+          },
+          "useTargetAtlas": false
+        },
+        "xiaoai/cast_02": {
+          "frameName": "xiaoai/cast_02",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 50,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 796,
+            "y": 759,
+            "width": 434,
+            "height": 140,
+            "area": 26968
+          },
+          "useTargetAtlas": false
+        }
+      }
+    },
+    "npcs_bosses": {
+      "image": "02_npcs_bosses_creatures.png",
+      "json": "02_npcs_bosses_creatures.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-npcs-bosses.png",
+      "stats": {
+        "mapped": 23,
+        "review": 6,
+        "unmapped": 0,
+        "invalid": 0
+      },
+      "frames": {
+        "mayor": {
+          "frameName": "mayor",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 6,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 37,
+            "y": 33,
+            "width": 118,
+            "height": 137,
+            "area": 7551
+          },
+          "useTargetAtlas": false
+        },
+        "uncle_boluo": {
+          "frameName": "uncle_boluo",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 10,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 985,
+            "y": 37,
+            "width": 83,
+            "height": 130,
+            "area": 5075
+          },
+          "useTargetAtlas": false
+        },
+        "barrel_spirit": {
+          "frameName": "barrel_spirit",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 55,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 407,
+            "y": 893,
+            "width": 112,
+            "height": 122,
+            "area": 6503
+          },
+          "useTargetAtlas": false
+        },
+        "white_tiger_idle": {
+          "frameName": "white_tiger_idle",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 74,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 765,
+            "y": 708,
+            "width": 186,
+            "height": 127,
+            "area": 11904
+          },
+          "useTargetAtlas": false
+        },
+        "shuiyao": {
+          "frameName": "shuiyao",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 51,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 21,
+            "y": 574,
+            "width": 130,
+            "height": 133,
+            "area": 7493
+          },
+          "useTargetAtlas": false
+        },
+        "fengchi": {
+          "frameName": "fengchi",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 52,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 761,
+            "y": 575,
+            "width": 121,
+            "height": 130,
+            "area": 7486
+          },
+          "useTargetAtlas": false
+        },
+        "xiyuan": {
+          "frameName": "xiyuan",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 70,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 150,
+            "y": 705,
+            "width": 92,
+            "height": 132,
+            "area": 5883
+          },
+          "useTargetAtlas": false
+        },
+        "rainbow_phoenix": {
+          "frameName": "rainbow_phoenix",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 78,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 23,
+            "y": 829,
+            "width": 166,
+            "height": 137,
+            "area": 8916
+          },
+          "useTargetAtlas": false
+        },
+        "phoenix_idle": {
+          "frameName": "phoenix_idle",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 77,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 324,
+            "y": 828,
+            "width": 199,
+            "height": 141,
+            "area": 13439
+          },
+          "useTargetAtlas": false
+        },
+        "qilin_idle": {
+          "frameName": "qilin_idle",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 76,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 756,
+            "y": 827,
+            "width": 204,
+            "height": 143,
+            "area": 13386
+          },
+          "useTargetAtlas": false
+        },
+        "priestess_sun": {
+          "frameName": "priestess_sun",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 41,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 52,
+            "y": 631,
+            "width": 94,
+            "height": 138,
+            "area": 6167
+          },
+          "useTargetAtlas": false
+        },
+        "white_tiger_roar": {
+          "frameName": "white_tiger_roar",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 75,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 943,
+            "y": 719,
+            "width": 157,
+            "height": 115,
+            "area": 8063
+          },
+          "useTargetAtlas": false
+        },
+        "white_tiger_leap": {
+          "frameName": "white_tiger_leap",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 69,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1095,
+            "y": 704,
+            "width": 189,
+            "height": 132,
+            "area": 12965
+          },
+          "useTargetAtlas": false
+        },
+        "white_tiger_slam": {
+          "frameName": "white_tiger_slam",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 69,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1095,
+            "y": 704,
+            "width": 189,
+            "height": 132,
+            "area": 12965
+          },
+          "useTargetAtlas": false
+        },
+        "white_tiger_charge": {
+          "frameName": "white_tiger_charge",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 74,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 765,
+            "y": 708,
+            "width": 186,
+            "height": 127,
+            "area": 11904
+          },
+          "useTargetAtlas": false
+        },
+        "white_tiger_dash": {
+          "frameName": "white_tiger_dash",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 75,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 943,
+            "y": 719,
+            "width": 157,
+            "height": 115,
+            "area": 8063
+          },
+          "useTargetAtlas": false
+        },
+        "barrel_spirit_idle": {
+          "frameName": "barrel_spirit_idle",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 57,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 32,
+            "y": 894,
+            "width": 132,
+            "height": 121,
+            "area": 7379
+          },
+          "useTargetAtlas": false
+        },
+        "barrel_spirit_guard": {
+          "frameName": "barrel_spirit_guard",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 56,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 692,
+            "y": 893,
+            "width": 126,
+            "height": 122,
+            "area": 7160
+          },
+          "useTargetAtlas": false
+        },
+        "barrel_spirit_flower": {
+          "frameName": "barrel_spirit_flower",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 54,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 1228,
+            "y": 891,
+            "width": 238,
+            "height": 133,
+            "area": 17403
+          },
+          "useTargetAtlas": false
+        },
+        "barrel_spirit_leafcloak": {
+          "frameName": "barrel_spirit_leafcloak",
+          "sourceId": "main-cast",
+          "sourceLabel": "Main Cast",
+          "candidate": 58,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 190,
+            "y": 894,
+            "width": 176,
+            "height": 123,
+            "area": 9586
+          },
+          "useTargetAtlas": false
+        },
+        "xiyuan_idle": {
+          "frameName": "xiyuan_idle",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 71,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 244,
+            "y": 705,
+            "width": 89,
+            "height": 130,
+            "area": 5566
+          },
+          "useTargetAtlas": false
+        },
+        "xiyuan_spell": {
+          "frameName": "xiyuan_spell",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 73,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 421,
+            "y": 706,
+            "width": 157,
+            "height": 130,
+            "area": 8774
+          },
+          "useTargetAtlas": false
+        },
+        "xiyuan_umbrella": {
+          "frameName": "xiyuan_umbrella",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 70,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 150,
+            "y": 705,
+            "width": 92,
+            "height": 132,
+            "area": 5883
+          },
+          "useTargetAtlas": false
+        },
+        "xiyuan_magic_ring": {
+          "frameName": "xiyuan_magic_ring",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 73,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 421,
+            "y": 706,
+            "width": 157,
+            "height": 130,
+            "area": 8774
+          },
+          "useTargetAtlas": false
+        },
+        "phoenix_flame": {
+          "frameName": "phoenix_flame",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 81,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 189,
+            "y": 841,
+            "width": 132,
+            "height": 126,
+            "area": 7050
+          },
+          "useTargetAtlas": false
+        },
+        "phoenix_spread": {
+          "frameName": "phoenix_spread",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 78,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 23,
+            "y": 829,
+            "width": 166,
+            "height": 137,
+            "area": 8916
+          },
+          "useTargetAtlas": false
+        },
+        "qilin_aura": {
+          "frameName": "qilin_aura",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 80,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1112,
+            "y": 840,
+            "width": 184,
+            "height": 128,
+            "area": 11174
+          },
+          "useTargetAtlas": false
+        },
+        "qilin_charge": {
+          "frameName": "qilin_charge",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 79,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 955,
+            "y": 833,
+            "width": 165,
+            "height": 135,
+            "area": 11026
+          },
+          "useTargetAtlas": false
+        },
+        "qilin_idle_alt": {
+          "frameName": "qilin_idle_alt",
+          "sourceId": "npcs-guardians",
+          "sourceLabel": "NPCs and Guardians",
+          "candidate": 80,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1112,
+            "y": 840,
+            "width": 184,
+            "height": 128,
+            "area": 11174
+          },
+          "useTargetAtlas": false
+        }
+      }
+    },
+    "monsters": {
+      "image": "03_monsters.png",
+      "json": "03_monsters.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-monsters.png",
+      "stats": {
+        "mapped": 0,
+        "review": 53,
+        "unmapped": 0,
+        "invalid": 0
+      },
+      "frames": {
+        "small_goblin_01": {
+          "frameName": "small_goblin_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "small_goblin_02": {
+          "frameName": "small_goblin_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "vine_demon_01": {
+          "frameName": "vine_demon_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "vine_demon_02": {
+          "frameName": "vine_demon_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "poison_leaf_bug_01": {
+          "frameName": "poison_leaf_bug_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "poison_leaf_bug_02": {
+          "frameName": "poison_leaf_bug_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "barrel_mimic_01": {
+          "frameName": "barrel_mimic_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "barrel_mimic_02": {
+          "frameName": "barrel_mimic_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "water_drop_01": {
+          "frameName": "water_drop_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "water_drop_02": {
+          "frameName": "water_drop_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wind_guard_01": {
+          "frameName": "wind_guard_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wind_guard_02": {
+          "frameName": "wind_guard_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "crystal_parasite_01": {
+          "frameName": "crystal_parasite_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "crystal_parasite_02": {
+          "frameName": "crystal_parasite_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "feather_spirit_01": {
+          "frameName": "feather_spirit_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "feather_spirit_02": {
+          "frameName": "feather_spirit_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stone_guard_01": {
+          "frameName": "stone_guard_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stone_guard_02": {
+          "frameName": "stone_guard_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "fire_qilin_cub_01": {
+          "frameName": "fire_qilin_cub_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "fire_qilin_cub_02": {
+          "frameName": "fire_qilin_cub_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "bewilder_shadow_01": {
+          "frameName": "bewilder_shadow_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "bewilder_shadow_02": {
+          "frameName": "bewilder_shadow_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "jiangshi_01": {
+          "frameName": "jiangshi_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "jiangshi_02": {
+          "frameName": "jiangshi_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "charm_spirit_01": {
+          "frameName": "charm_spirit_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "charm_spirit_02": {
+          "frameName": "charm_spirit_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "water_wisp_01": {
+          "frameName": "water_wisp_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "water_wisp_02": {
+          "frameName": "water_wisp_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "horned_wraith_01": {
+          "frameName": "horned_wraith_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "horned_wraith_02": {
+          "frameName": "horned_wraith_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "hut_ghost_01": {
+          "frameName": "hut_ghost_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "hut_ghost_02": {
+          "frameName": "hut_ghost_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "dark_swamp_01": {
+          "frameName": "dark_swamp_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "dark_swamp_02": {
+          "frameName": "dark_swamp_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mask_minion_01": {
+          "frameName": "mask_minion_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mask_minion_02": {
+          "frameName": "mask_minion_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mask_minion_03": {
+          "frameName": "mask_minion_03",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mask_minion_04": {
+          "frameName": "mask_minion_04",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mask_minion_05": {
+          "frameName": "mask_minion_05",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "chi_01": {
+          "frameName": "chi_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "chi_02": {
+          "frameName": "chi_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mei_01": {
+          "frameName": "mei_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mei_02": {
+          "frameName": "mei_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wang_01": {
+          "frameName": "wang_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wang_02": {
+          "frameName": "wang_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "liang_01": {
+          "frameName": "liang_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "liang_02": {
+          "frameName": "liang_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "fake_xiaoai_01": {
+          "frameName": "fake_xiaoai_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "fake_xiaoai_02": {
+          "frameName": "fake_xiaoai_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "xiaoai_true_01": {
+          "frameName": "xiaoai_true_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "xiaoai_true_02": {
+          "frameName": "xiaoai_true_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wuxiang_01": {
+          "frameName": "wuxiang_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wuxiang_02": {
+          "frameName": "wuxiang_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        }
+      }
+    },
+    "world_objects": {
+      "image": "04_town_world_objects.png",
+      "json": "04_town_world_objects.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-town-world-objects.png",
+      "stats": {
+        "mapped": 8,
+        "review": 9,
+        "unmapped": 7,
+        "invalid": 0
+      },
+      "frames": {
+        "central_tower": {
+          "frameName": "central_tower",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 44,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1262,
+            "y": 197,
+            "width": 53,
+            "height": 89,
+            "area": 1545
+          },
+          "useTargetAtlas": false
+        },
+        "mayor_house": {
+          "frameName": "mayor_house",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 57,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1312,
+            "y": 201,
+            "width": 80,
+            "height": 89,
+            "area": 3584
+          },
+          "useTargetAtlas": false
+        },
+        "T_house": {
+          "frameName": "T_house",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 57,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1312,
+            "y": 201,
+            "width": 80,
+            "height": 89,
+            "area": 3584
+          },
+          "useTargetAtlas": false
+        },
+        "festival_plaza": {
+          "frameName": "festival_plaza",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 35,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 517,
+            "y": 102,
+            "width": 115,
+            "height": 105,
+            "area": 7922
+          },
+          "useTargetAtlas": false
+        },
+        "boluo_farmhouse": {
+          "frameName": "boluo_farmhouse",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 59,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1444,
+            "y": 205,
+            "width": 90,
+            "height": 87,
+            "area": 3438
+          },
+          "useTargetAtlas": false
+        },
+        "prophecy_tree": {
+          "frameName": "prophecy_tree",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 116,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 738,
+            "y": 430,
+            "width": 131,
+            "height": 181,
+            "area": 13457
+          },
+          "useTargetAtlas": false
+        },
+        "life_spring_fountain": {
+          "frameName": "life_spring_fountain",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 13,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 622,
+            "y": 5,
+            "width": 97,
+            "height": 101,
+            "area": 5342
+          },
+          "useTargetAtlas": false
+        },
+        "dock": {
+          "frameName": "dock",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 25,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1131,
+            "y": 70,
+            "width": 94,
+            "height": 126,
+            "area": 6918
+          },
+          "useTargetAtlas": false
+        },
+        "bridge": {
+          "frameName": "bridge",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 25,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1131,
+            "y": 70,
+            "width": 94,
+            "height": 126,
+            "area": 6918
+          },
+          "useTargetAtlas": false
+        },
+        "shop": {
+          "frameName": "shop",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 59,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1444,
+            "y": 205,
+            "width": 90,
+            "height": 87,
+            "area": 3438
+          },
+          "useTargetAtlas": false
+        },
+        "cottage": {
+          "frameName": "cottage",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 57,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1312,
+            "y": 201,
+            "width": 80,
+            "height": 89,
+            "area": 3584
+          },
+          "useTargetAtlas": false
+        },
+        "well": {
+          "frameName": "well",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 42,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1031,
+            "y": 197,
+            "width": 118,
+            "height": 137,
+            "area": 7756
+          },
+          "useTargetAtlas": false
+        },
+        "steamship": {
+          "frameName": "steamship",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "sailboat": {
+          "frameName": "sailboat",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "rowboat": {
+          "frameName": "rowboat",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "temple": {
+          "frameName": "temple",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 44,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1262,
+            "y": 197,
+            "width": 53,
+            "height": 89,
+            "area": 1545
+          },
+          "useTargetAtlas": false
+        },
+        "dark_castle": {
+          "frameName": "dark_castle",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "portal_gate": {
+          "frameName": "portal_gate",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 56,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 939,
+            "y": 201,
+            "width": 106,
+            "height": 96,
+            "area": 3801
+          },
+          "useTargetAtlas": false
+        },
+        "sacred_spring": {
+          "frameName": "sacred_spring",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 27,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 705,
+            "y": 94,
+            "width": 98,
+            "height": 113,
+            "area": 6818
+          },
+          "useTargetAtlas": false
+        },
+        "dark_swamp_cave": {
+          "frameName": "dark_swamp_cave",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "rainbow_path_gate": {
+          "frameName": "rainbow_path_gate",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 56,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 939,
+            "y": 201,
+            "width": 106,
+            "height": 96,
+            "area": 3801
+          },
+          "useTargetAtlas": false
+        },
+        "lighthouse": {
+          "frameName": "lighthouse",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "buoy": {
+          "frameName": "buoy",
+          "sourceId": null,
+          "sourceLabel": null,
+          "candidate": null,
+          "status": "unmapped",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": false
+        },
+        "harbor_props": {
+          "frameName": "harbor_props",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 55,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 747,
+            "y": 201,
+            "width": 78,
+            "height": 86,
+            "area": 2475
+          },
+          "useTargetAtlas": false
+        }
+      }
+    },
+    "environment": {
+      "image": "05_nature_environment_tiles.png",
+      "json": "05_nature_environment_tiles.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-nature-environment.png",
+      "stats": {
+        "mapped": 58,
+        "review": 22,
+        "unmapped": 0,
+        "invalid": 0
+      },
+      "frames": {
+        "grass_plain": {
+          "frameName": "grass_plain",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 1,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 171,
+            "y": 3,
+            "width": 83,
+            "height": 106,
+            "area": 4977
+          },
+          "useTargetAtlas": false
+        },
+        "grass_white_flower": {
+          "frameName": "grass_white_flower",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 1,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 171,
+            "y": 3,
+            "width": 83,
+            "height": 106,
+            "area": 4977
+          },
+          "useTargetAtlas": false
+        },
+        "grass_pink_flower": {
+          "frameName": "grass_pink_flower",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 8,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 98,
+            "y": 4,
+            "width": 89,
+            "height": 106,
+            "area": 5539
+          },
+          "useTargetAtlas": false
+        },
+        "grass_yellow_flower": {
+          "frameName": "grass_yellow_flower",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 2,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 239,
+            "y": 3,
+            "width": 78,
+            "height": 106,
+            "area": 4558
+          },
+          "useTargetAtlas": false
+        },
+        "dirt_plain": {
+          "frameName": "dirt_plain",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 5,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 444,
+            "y": 3,
+            "width": 82,
+            "height": 62,
+            "area": 2383
+          },
+          "useTargetAtlas": false
+        },
+        "dirt_pebbles": {
+          "frameName": "dirt_pebbles",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 3,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 302,
+            "y": 3,
+            "width": 85,
+            "height": 106,
+            "area": 4905
+          },
+          "useTargetAtlas": false
+        },
+        "cliff_left": {
+          "frameName": "cliff_left",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 31,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 935,
+            "y": 96,
+            "width": 59,
+            "height": 107,
+            "area": 3096
+          },
+          "useTargetAtlas": false
+        },
+        "cliff_right": {
+          "frameName": "cliff_right",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 32,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 982,
+            "y": 96,
+            "width": 72,
+            "height": 106,
+            "area": 4252
+          },
+          "useTargetAtlas": false
+        },
+        "river_vertical": {
+          "frameName": "river_vertical",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 30,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 864,
+            "y": 96,
+            "width": 81,
+            "height": 106,
+            "area": 4907
+          },
+          "useTargetAtlas": false
+        },
+        "river_edge": {
+          "frameName": "river_edge",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 18,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1447,
+            "y": 6,
+            "width": 82,
+            "height": 75,
+            "area": 3335
+          },
+          "useTargetAtlas": false
+        },
+        "river_curve_01": {
+          "frameName": "river_curve_01",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 16,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1067,
+            "y": 5,
+            "width": 74,
+            "height": 84,
+            "area": 3269
+          },
+          "useTargetAtlas": false
+        },
+        "river_curve_02": {
+          "frameName": "river_curve_02",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 17,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1375,
+            "y": 6,
+            "width": 85,
+            "height": 151,
+            "area": 8019
+          },
+          "useTargetAtlas": false
+        },
+        "waterfall": {
+          "frameName": "waterfall",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 14,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 796,
+            "y": 5,
+            "width": 81,
+            "height": 101,
+            "area": 4658
+          },
+          "useTargetAtlas": false
+        },
+        "wood_bridge": {
+          "frameName": "wood_bridge",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 21,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1282,
+            "y": 9,
+            "width": 99,
+            "height": 186,
+            "area": 10726
+          },
+          "useTargetAtlas": false
+        },
+        "rope_bridge": {
+          "frameName": "rope_bridge",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 25,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1131,
+            "y": 70,
+            "width": 94,
+            "height": 126,
+            "area": 6918
+          },
+          "useTargetAtlas": false
+        },
+        "pond_lily": {
+          "frameName": "pond_lily",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 9,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 708,
+            "y": 4,
+            "width": 98,
+            "height": 102,
+            "area": 5950
+          },
+          "useTargetAtlas": false
+        },
+        "pond_round": {
+          "frameName": "pond_round",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 13,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 622,
+            "y": 5,
+            "width": 97,
+            "height": 101,
+            "area": 5342
+          },
+          "useTargetAtlas": false
+        },
+        "tree_round": {
+          "frameName": "tree_round",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 119,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 201,
+            "y": 431,
+            "width": 111,
+            "height": 143,
+            "area": 8527
+          },
+          "useTargetAtlas": false
+        },
+        "tree_pine": {
+          "frameName": "tree_pine",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 118,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 121,
+            "y": 431,
+            "width": 91,
+            "height": 160,
+            "area": 6212
+          },
+          "useTargetAtlas": false
+        },
+        "tree_pink": {
+          "frameName": "tree_pink",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 120,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 310,
+            "y": 433,
+            "width": 123,
+            "height": 161,
+            "area": 10423
+          },
+          "useTargetAtlas": false
+        },
+        "tree_autumn": {
+          "frameName": "tree_autumn",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 117,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 0,
+            "y": 431,
+            "width": 130,
+            "height": 171,
+            "area": 12553
+          },
+          "useTargetAtlas": false
+        },
+        "bush_round": {
+          "frameName": "bush_round",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 90,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1098,
+            "y": 329,
+            "width": 72,
+            "height": 73,
+            "area": 2015
+          },
+          "useTargetAtlas": false
+        },
+        "bush_berries": {
+          "frameName": "bush_berries",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 105,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 472,
+            "y": 381,
+            "width": 58,
+            "height": 64,
+            "area": 1146
+          },
+          "useTargetAtlas": false
+        },
+        "grass_clump_01": {
+          "frameName": "grass_clump_01",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 96,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 909,
+            "y": 344,
+            "width": 61,
+            "height": 61,
+            "area": 1235
+          },
+          "useTargetAtlas": false
+        },
+        "grass_clump_02": {
+          "frameName": "grass_clump_02",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 97,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 856,
+            "y": 345,
+            "width": 60,
+            "height": 59,
+            "area": 1109
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_white": {
+          "frameName": "flowers_white",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 97,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 856,
+            "y": 345,
+            "width": 60,
+            "height": 59,
+            "area": 1109
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_yellow": {
+          "frameName": "flowers_yellow",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 99,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1171,
+            "y": 358,
+            "width": 72,
+            "height": 77,
+            "area": 1922
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_pink": {
+          "frameName": "flowers_pink",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 98,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 966,
+            "y": 345,
+            "width": 69,
+            "height": 62,
+            "area": 1440
+          },
+          "useTargetAtlas": false
+        },
+        "mushrooms": {
+          "frameName": "mushrooms",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 97,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 856,
+            "y": 345,
+            "width": 60,
+            "height": 59,
+            "area": 1109
+          },
+          "useTargetAtlas": false
+        },
+        "rock_large": {
+          "frameName": "rock_large",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 101,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1453,
+            "y": 367,
+            "width": 80,
+            "height": 78,
+            "area": 2316
+          },
+          "useTargetAtlas": false
+        },
+        "rock_small": {
+          "frameName": "rock_small",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 113,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1243,
+            "y": 423,
+            "width": 58,
+            "height": 53,
+            "area": 903
+          },
+          "useTargetAtlas": false
+        },
+        "rock_tall": {
+          "frameName": "rock_tall",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 104,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1342,
+            "y": 378,
+            "width": 68,
+            "height": 65,
+            "area": 1565
+          },
+          "useTargetAtlas": false
+        },
+        "pebbles": {
+          "frameName": "pebbles",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 113,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1243,
+            "y": 423,
+            "width": 58,
+            "height": 53,
+            "area": 903
+          },
+          "useTargetAtlas": false
+        },
+        "stump_plain": {
+          "frameName": "stump_plain",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 112,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1034,
+            "y": 399,
+            "width": 69,
+            "height": 68,
+            "area": 1627
+          },
+          "useTargetAtlas": false
+        },
+        "stump_mossy": {
+          "frameName": "stump_mossy",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 112,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1034,
+            "y": 399,
+            "width": 69,
+            "height": 68,
+            "area": 1627
+          },
+          "useTargetAtlas": false
+        },
+        "log_fallen": {
+          "frameName": "log_fallen",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 108,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1093,
+            "y": 391,
+            "width": 71,
+            "height": 75,
+            "area": 1860
+          },
+          "useTargetAtlas": false
+        },
+        "farmland_plain": {
+          "frameName": "farmland_plain",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 85,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 338,
+            "y": 324,
+            "width": 144,
+            "height": 118,
+            "area": 11570
+          },
+          "useTargetAtlas": false
+        },
+        "farmland_seedlings": {
+          "frameName": "farmland_seedlings",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 87,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 474,
+            "y": 326,
+            "width": 49,
+            "height": 70,
+            "area": 1095
+          },
+          "useTargetAtlas": false
+        },
+        "cabbage": {
+          "frameName": "cabbage",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 84,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 219,
+            "y": 324,
+            "width": 131,
+            "height": 118,
+            "area": 10326
+          },
+          "useTargetAtlas": false
+        },
+        "wheat": {
+          "frameName": "wheat",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 86,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 114,
+            "y": 325,
+            "width": 117,
+            "height": 117,
+            "area": 8929
+          },
+          "useTargetAtlas": false
+        },
+        "barrel": {
+          "frameName": "barrel",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 55,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 747,
+            "y": 201,
+            "width": 78,
+            "height": 86,
+            "area": 2475
+          },
+          "useTargetAtlas": false
+        },
+        "crate": {
+          "frameName": "crate",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 66,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 309,
+            "y": 254,
+            "width": 66,
+            "height": 70,
+            "area": 1751
+          },
+          "useTargetAtlas": false
+        },
+        "pot": {
+          "frameName": "pot",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 68,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 489,
+            "y": 255,
+            "width": 65,
+            "height": 71,
+            "area": 1870
+          },
+          "useTargetAtlas": false
+        },
+        "jug": {
+          "frameName": "jug",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 68,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 489,
+            "y": 255,
+            "width": 65,
+            "height": 71,
+            "area": 1870
+          },
+          "useTargetAtlas": false
+        },
+        "fence_short": {
+          "frameName": "fence_short",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 46,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 104,
+            "y": 198,
+            "width": 87,
+            "height": 58,
+            "area": 1470
+          },
+          "useTargetAtlas": false
+        },
+        "fence_long": {
+          "frameName": "fence_long",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 45,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1,
+            "y": 198,
+            "width": 109,
+            "height": 59,
+            "area": 2482
+          },
+          "useTargetAtlas": false
+        },
+        "rope_fence": {
+          "frameName": "rope_fence",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 46,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 104,
+            "y": 198,
+            "width": 87,
+            "height": 58,
+            "area": 1470
+          },
+          "useTargetAtlas": false
+        },
+        "signpost": {
+          "frameName": "signpost",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 39,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 878,
+            "y": 196,
+            "width": 69,
+            "height": 94,
+            "area": 2185
+          },
+          "useTargetAtlas": false
+        },
+        "lantern_post": {
+          "frameName": "lantern_post",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 43,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1135,
+            "y": 197,
+            "width": 64,
+            "height": 107,
+            "area": 2272
+          },
+          "useTargetAtlas": false
+        },
+        "campfire": {
+          "frameName": "campfire",
+          "sourceId": "enemies-bosses",
+          "sourceLabel": "Enemies and Bosses",
+          "candidate": 41,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 1197,
+            "y": 368,
+            "width": 68,
+            "height": 107,
+            "area": 1948
+          },
+          "useTargetAtlas": false
+        },
+        "clothesline": {
+          "frameName": "clothesline",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 79,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1422,
+            "y": 286,
+            "width": 111,
+            "height": 90,
+            "area": 3423
+          },
+          "useTargetAtlas": false
+        },
+        "axe_stump": {
+          "frameName": "axe_stump",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 108,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1093,
+            "y": 391,
+            "width": 71,
+            "height": 75,
+            "area": 1860
+          },
+          "useTargetAtlas": false
+        },
+        "mechanism_tree_green": {
+          "frameName": "mechanism_tree_green",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 116,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 738,
+            "y": 430,
+            "width": 131,
+            "height": 181,
+            "area": 13457
+          },
+          "useTargetAtlas": false
+        },
+        "mechanism_tree_blue": {
+          "frameName": "mechanism_tree_blue",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 116,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 738,
+            "y": 430,
+            "width": 131,
+            "height": 181,
+            "area": 13457
+          },
+          "useTargetAtlas": false
+        },
+        "mechanism_tree_fire": {
+          "frameName": "mechanism_tree_fire",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 116,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 738,
+            "y": 430,
+            "width": 131,
+            "height": 181,
+            "area": 13457
+          },
+          "useTargetAtlas": false
+        },
+        "altar_green": {
+          "frameName": "altar_green",
+          "sourceId": "ui",
+          "sourceLabel": "UI Kit",
+          "candidate": 60,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 505,
+            "y": 612,
+            "width": 69,
+            "height": 69,
+            "area": 1914
+          },
+          "useTargetAtlas": false
+        },
+        "altar_blue": {
+          "frameName": "altar_blue",
+          "sourceId": "ui",
+          "sourceLabel": "UI Kit",
+          "candidate": 59,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 446,
+            "y": 612,
+            "width": 68,
+            "height": 69,
+            "area": 1860
+          },
+          "useTargetAtlas": false
+        },
+        "altar_fire": {
+          "frameName": "altar_fire",
+          "sourceId": "ui",
+          "sourceLabel": "UI Kit",
+          "candidate": 58,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 384,
+            "y": 612,
+            "width": 70,
+            "height": 69,
+            "area": 1944
+          },
+          "useTargetAtlas": false
+        },
+        "altar_mossy": {
+          "frameName": "altar_mossy",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 101,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1453,
+            "y": 367,
+            "width": 80,
+            "height": 78,
+            "area": 2316
+          },
+          "useTargetAtlas": false
+        },
+        "altar_ruined": {
+          "frameName": "altar_ruined",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 101,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1453,
+            "y": 367,
+            "width": 80,
+            "height": 78,
+            "area": 2316
+          },
+          "useTargetAtlas": false
+        },
+        "stone_slab": {
+          "frameName": "stone_slab",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 35,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 517,
+            "y": 102,
+            "width": 115,
+            "height": 105,
+            "area": 7922
+          },
+          "useTargetAtlas": false
+        },
+        "stone_lantern": {
+          "frameName": "stone_lantern",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 44,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 1262,
+            "y": 197,
+            "width": 53,
+            "height": 89,
+            "area": 1545
+          },
+          "useTargetAtlas": false
+        },
+        "flower_cart": {
+          "frameName": "flower_cart",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 80,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 878,
+            "y": 291,
+            "width": 81,
+            "height": 59,
+            "area": 1958
+          },
+          "useTargetAtlas": false
+        },
+        "well_small": {
+          "frameName": "well_small",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 42,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1031,
+            "y": 197,
+            "width": 118,
+            "height": 137,
+            "area": 7756
+          },
+          "useTargetAtlas": false
+        },
+        "standing_stone_01": {
+          "frameName": "standing_stone_01",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 104,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1342,
+            "y": 378,
+            "width": 68,
+            "height": 65,
+            "area": 1565
+          },
+          "useTargetAtlas": false
+        },
+        "standing_stone_02": {
+          "frameName": "standing_stone_02",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 102,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1289,
+            "y": 368,
+            "width": 60,
+            "height": 67,
+            "area": 1310
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_patch_white": {
+          "frameName": "flowers_patch_white",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 97,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 856,
+            "y": 345,
+            "width": 60,
+            "height": 59,
+            "area": 1109
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_patch_orange": {
+          "frameName": "flowers_patch_orange",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 99,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1171,
+            "y": 358,
+            "width": 72,
+            "height": 77,
+            "area": 1922
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_patch_blue": {
+          "frameName": "flowers_patch_blue",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 98,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 966,
+            "y": 345,
+            "width": 69,
+            "height": 62,
+            "area": 1440
+          },
+          "useTargetAtlas": false
+        },
+        "flowers_patch_pink": {
+          "frameName": "flowers_patch_pink",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 98,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 966,
+            "y": 345,
+            "width": 69,
+            "height": 62,
+            "area": 1440
+          },
+          "useTargetAtlas": false
+        },
+        "fallen_leaves": {
+          "frameName": "fallen_leaves",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 107,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": {
+            "x": 518,
+            "y": 382,
+            "width": 59,
+            "height": 63,
+            "area": 1293
+          },
+          "useTargetAtlas": false
+        },
+        "sapling": {
+          "frameName": "sapling",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 89,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 578,
+            "y": 328,
+            "width": 48,
+            "height": 68,
+            "area": 1023
+          },
+          "useTargetAtlas": false
+        },
+        "birdhouse": {
+          "frameName": "birdhouse",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 43,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1135,
+            "y": 197,
+            "width": 64,
+            "height": 107,
+            "area": 2272
+          },
+          "useTargetAtlas": false
+        },
+        "bench": {
+          "frameName": "bench",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 78,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 1169,
+            "y": 284,
+            "width": 110,
+            "height": 73,
+            "area": 4070
+          },
+          "useTargetAtlas": false
+        },
+        "log_short": {
+          "frameName": "log_short",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 73,
+          "status": "mapped",
+          "duplicate": false,
+          "crop": {
+            "x": 590,
+            "y": 277,
+            "width": 52,
+            "height": 58,
+            "area": 1082
+          },
+          "useTargetAtlas": false
+        },
+        "lamp_post": {
+          "frameName": "lamp_post",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 43,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1135,
+            "y": 197,
+            "width": 64,
+            "height": 107,
+            "area": 2272
+          },
+          "useTargetAtlas": false
+        },
+        "spike_pile": {
+          "frameName": "spike_pile",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 101,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 1453,
+            "y": 367,
+            "width": 80,
+            "height": 78,
+            "area": 2316
+          },
+          "useTargetAtlas": false
+        },
+        "rock_pile": {
+          "frameName": "rock_pile",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 102,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1289,
+            "y": 368,
+            "width": 60,
+            "height": 67,
+            "area": 1310
+          },
+          "useTargetAtlas": false
+        },
+        "moss_rock": {
+          "frameName": "moss_rock",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 102,
+          "status": "mapped",
+          "duplicate": true,
+          "crop": {
+            "x": 1289,
+            "y": 368,
+            "width": 60,
+            "height": 67,
+            "area": 1310
+          },
+          "useTargetAtlas": false
+        },
+        "lily_pad": {
+          "frameName": "lily_pad",
+          "sourceId": "town",
+          "sourceLabel": "Town, Tiles, Objects",
+          "candidate": 9,
+          "status": "needs_manual_review",
+          "duplicate": true,
+          "crop": {
+            "x": 708,
+            "y": 4,
+            "width": 98,
+            "height": 102,
+            "area": 5950
+          },
+          "useTargetAtlas": false
+        }
+      }
+    },
+    "holy_temple": {
+      "image": "06_holy_temple_tiles.png",
+      "json": "06_holy_temple_tiles.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-holy-temple.png",
+      "stats": {
+        "mapped": 0,
+        "review": 55,
+        "unmapped": 0,
+        "invalid": 0
+      },
+      "frames": {
+        "floor_tile_01": {
+          "frameName": "floor_tile_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_tile_02": {
+          "frameName": "floor_tile_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_tile_03": {
+          "frameName": "floor_tile_03",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_tile_04": {
+          "frameName": "floor_tile_04",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stairs_small": {
+          "frameName": "stairs_small",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stairs_large": {
+          "frameName": "stairs_large",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "pool_square": {
+          "frameName": "pool_square",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "pool_round": {
+          "frameName": "pool_round",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "fountain": {
+          "frameName": "fountain",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "waterfall_vertical": {
+          "frameName": "waterfall_vertical",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "waterfall_horizontal": {
+          "frameName": "waterfall_horizontal",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "water_corner": {
+          "frameName": "water_corner",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wind_effect_small": {
+          "frameName": "wind_effect_small",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wind_effect_large": {
+          "frameName": "wind_effect_large",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "holy_light_small": {
+          "frameName": "holy_light_small",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "holy_light_large": {
+          "frameName": "holy_light_large",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wall_plain": {
+          "frameName": "wall_plain",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wall_window": {
+          "frameName": "wall_window",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "wall_banner": {
+          "frameName": "wall_banner",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "door_wood": {
+          "frameName": "door_wood",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "gate_golden": {
+          "frameName": "gate_golden",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "column_plain": {
+          "frameName": "column_plain",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "column_gem": {
+          "frameName": "column_gem",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "crystal_blue": {
+          "frameName": "crystal_blue",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "crystal_purple": {
+          "frameName": "crystal_purple",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "brazier_fire": {
+          "frameName": "brazier_fire",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "brazier_ice": {
+          "frameName": "brazier_ice",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "brazier_arcane": {
+          "frameName": "brazier_arcane",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "altar_main": {
+          "frameName": "altar_main",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "altar_lectern": {
+          "frameName": "altar_lectern",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "statue_angel": {
+          "frameName": "statue_angel",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "statue_priest": {
+          "frameName": "statue_priest",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "statue_trumpet": {
+          "frameName": "statue_trumpet",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "pedestal_orb": {
+          "frameName": "pedestal_orb",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "pedestal_crown": {
+          "frameName": "pedestal_crown",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "pedestal_book": {
+          "frameName": "pedestal_book",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "barrier_blue": {
+          "frameName": "barrier_blue",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "barrier_purple": {
+          "frameName": "barrier_purple",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "barrier_gold": {
+          "frameName": "barrier_gold",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_red": {
+          "frameName": "path_red",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_orange": {
+          "frameName": "path_orange",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_yellow": {
+          "frameName": "path_yellow",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_green": {
+          "frameName": "path_green",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_blue": {
+          "frameName": "path_blue",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_indigo": {
+          "frameName": "path_indigo",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "path_purple": {
+          "frameName": "path_purple",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cloud_small": {
+          "frameName": "cloud_small",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cloud_large": {
+          "frameName": "cloud_large",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "spring_edge_01": {
+          "frameName": "spring_edge_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "spring_edge_02": {
+          "frameName": "spring_edge_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stele_qinglong": {
+          "frameName": "stele_qinglong",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stele_baihu": {
+          "frameName": "stele_baihu",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stele_zhuque": {
+          "frameName": "stele_zhuque",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "stele_xuanwu": {
+          "frameName": "stele_xuanwu",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "sparkles": {
+          "frameName": "sparkles",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        }
+      }
+    },
+    "dark_fantasy": {
+      "image": "07_dark_fantasy_tiles.png",
+      "json": "07_dark_fantasy_tiles.json",
+      "preview": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-dark-fantasy.png",
+      "stats": {
+        "mapped": 0,
+        "review": 48,
+        "unmapped": 0,
+        "invalid": 0
+      },
+      "frames": {
+        "floor_stone_01": {
+          "frameName": "floor_stone_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_stone_02": {
+          "frameName": "floor_stone_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_stone_03": {
+          "frameName": "floor_stone_03",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_bones": {
+          "frameName": "floor_bones",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_skull_panel": {
+          "frameName": "floor_skull_panel",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_purple_cracks": {
+          "frameName": "floor_purple_cracks",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "floor_brick": {
+          "frameName": "floor_brick",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "soil_mushroom": {
+          "frameName": "soil_mushroom",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cliff_block": {
+          "frameName": "cliff_block",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cliff_corner": {
+          "frameName": "cliff_corner",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cliff_vertical": {
+          "frameName": "cliff_vertical",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cliff_horizontal": {
+          "frameName": "cliff_horizontal",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cliff_pillar": {
+          "frameName": "cliff_pillar",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cliff_inner_corner": {
+          "frameName": "cliff_inner_corner",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "rocks_pile": {
+          "frameName": "rocks_pile",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "rocks_crystal": {
+          "frameName": "rocks_crystal",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cave_floor": {
+          "frameName": "cave_floor",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "earth_floor": {
+          "frameName": "earth_floor",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "drain_grate": {
+          "frameName": "drain_grate",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "mud_puddles": {
+          "frameName": "mud_puddles",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "swamp_water_01": {
+          "frameName": "swamp_water_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "swamp_water_02": {
+          "frameName": "swamp_water_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "swamp_bridge": {
+          "frameName": "swamp_bridge",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "swamp_edge": {
+          "frameName": "swamp_edge",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "dead_tree_01": {
+          "frameName": "dead_tree_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "dead_tree_02": {
+          "frameName": "dead_tree_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "thorn_bush": {
+          "frameName": "thorn_bush",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "purple_torch": {
+          "frameName": "purple_torch",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "hanging_lantern": {
+          "frameName": "hanging_lantern",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "chain_hook": {
+          "frameName": "chain_hook",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "hanging_cage": {
+          "frameName": "hanging_cage",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "tombstone": {
+          "frameName": "tombstone",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "bones_01": {
+          "frameName": "bones_01",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "bones_02": {
+          "frameName": "bones_02",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "crystal_cluster": {
+          "frameName": "crystal_cluster",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "demon_gate_large": {
+          "frameName": "demon_gate_large",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "demon_gate_small": {
+          "frameName": "demon_gate_small",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "ritual_altar": {
+          "frameName": "ritual_altar",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "throne_platform": {
+          "frameName": "throne_platform",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "arena_platform": {
+          "frameName": "arena_platform",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "spike_trap": {
+          "frameName": "spike_trap",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "cracked_plate": {
+          "frameName": "cracked_plate",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "block_face": {
+          "frameName": "block_face",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "hidden_trap": {
+          "frameName": "hidden_trap",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "magic_circle_purple": {
+          "frameName": "magic_circle_purple",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "magic_circle_red": {
+          "frameName": "magic_circle_red",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "magic_circle_green": {
+          "frameName": "magic_circle_green",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        },
+        "banner": {
+          "frameName": "banner",
+          "sourceId": null,
+          "sourceLabel": "Target Atlas Frame",
+          "candidate": null,
+          "status": "needs_manual_review",
+          "duplicate": false,
+          "crop": null,
+          "useTargetAtlas": true
+        }
+      }
+    }
+  }
+}

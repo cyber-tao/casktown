@@ -26,6 +26,7 @@ import {
   BATTLE_STATUS_LABELS,
   BATTLE_TARGET_INDICATOR,
   CHARACTER_SPRITE_BASE_KEYS,
+  COLORS,
   COMBO_TP_COST,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
@@ -33,9 +34,12 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   LOADING_SCREEN,
+  MENU_OVERLAY_UI,
+  RUNTIME_UI_ASSET_KEYS,
   ROAMING_ENCOUNTER_RESPAWN,
   scaleFont,
   scalePx,
+  UI_TITLE_FONT_FAMILY,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
@@ -89,7 +93,7 @@ export class BattleScene extends Phaser.Scene {
   private enemyData: EnemyData[] = []
   private bg!: Phaser.GameObjects.Rectangle
   private logText!: Phaser.GameObjects.Text
-  private commandMenuObjects: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text> = []
+  private commandMenuObjects: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text> = []
   private menuIndex = 0
   private menuItems: Phaser.GameObjects.Text[] = []
   private cursor!: Phaser.GameObjects.Rectangle
@@ -173,12 +177,12 @@ export class BattleScene extends Phaser.Scene {
     bgImg.setScrollFactor(0)
 
     // Background overlay
-    this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e, 0.3)
+    this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, BATTLE_LAYOUT.BACKGROUND_OVERLAY_COLOR, BATTLE_LAYOUT.BACKGROUND_OVERLAY_ALPHA)
     this.bg.setDepth(300)
     this.bg.setScrollFactor(0)
 
     // Ground
-    const ground = this.add.rectangle(GAME_WIDTH / 2, scalePx(380), GAME_WIDTH, scalePx(200), 0x2d4a22, 0.5)
+    const ground = this.add.ellipse(GAME_WIDTH / 2, BATTLE_LAYOUT.GROUND_Y, BATTLE_LAYOUT.GROUND_WIDTH, BATTLE_LAYOUT.GROUND_HEIGHT, BATTLE_LAYOUT.GROUND_COLOR, BATTLE_LAYOUT.GROUND_ALPHA)
     ground.setDepth(301)
     ground.setScrollFactor(0)
 
@@ -195,8 +199,8 @@ export class BattleScene extends Phaser.Scene {
     this.calculateTurnOrder()
 
     // Battle intro transition
-    const flashColor = isBoss ? 0xff0000 : 0xffffff
-    const introFlash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, flashColor, 1)
+    const flashColor = isBoss ? BATTLE_LAYOUT.INTRO_FLASH_BOSS_COLOR : BATTLE_LAYOUT.INTRO_FLASH_NORMAL_COLOR
+    const introFlash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, flashColor, BATTLE_LAYOUT.INTRO_FLASH_ALPHA)
     introFlash.setDepth(400)
     introFlash.setScrollFactor(0)
     this.tweens.add({
@@ -625,14 +629,17 @@ export class BattleScene extends Phaser.Scene {
     const barWidth = BATTLE_LAYOUT.UNIT_BAR_WIDTH
     const barHeight = BATTLE_LAYOUT.UNIT_BAR_HEIGHT
     const isPlayer = unit.isPlayer
-    const barColors = isPlayer
-      ? { hp: 0xe74c3c, mp: 0x3498db, tp: 0xf1c40f }
-      : { hp: 0xe74c3c, mp: 0x3498db, tp: 0xf1c40f }
+    const barColors = {
+      hp: BATTLE_LAYOUT.UNIT_HP_COLOR,
+      mp: BATTLE_LAYOUT.UNIT_MP_COLOR,
+      tp: BATTLE_LAYOUT.UNIT_TP_COLOR,
+    }
 
     // Name
     const nameText = this.add.text(x, y - BATTLE_LAYOUT.UNIT_NAME_OFFSET_Y, unit.name, {
       fontSize: `${BATTLE_LAYOUT.UNIT_NAME_FONT_SIZE}px`,
-      color: '#ffffff',
+      color: BATTLE_LAYOUT.UNIT_NAME_COLOR,
+      fontFamily: BATTLE_LAYOUT.UNIT_NAME_FONT_FAMILY,
     })
     nameText.setOrigin(0.5)
     nameText.setDepth(307)
@@ -641,7 +648,7 @@ export class BattleScene extends Phaser.Scene {
     let cy = y
 
     // HP bar
-    this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
+    this.add.rectangle(x, cy, barWidth, barHeight, BATTLE_LAYOUT.UNIT_BAR_BACKGROUND_COLOR).setDepth(306).setScrollFactor(0)
     const hpBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barColors.hp)
     hpBar.setOrigin(0, 0.5)
     hpBar.setDepth(307)
@@ -651,7 +658,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (isPlayer) {
       // MP bar
-      this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
+      this.add.rectangle(x, cy, barWidth, barHeight, BATTLE_LAYOUT.UNIT_BAR_BACKGROUND_COLOR).setDepth(306).setScrollFactor(0)
       const mpBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barColors.mp)
       mpBar.setOrigin(0, 0.5)
       mpBar.setDepth(307)
@@ -660,7 +667,7 @@ export class BattleScene extends Phaser.Scene {
       cy += barHeight + BATTLE_LAYOUT.UNIT_BAR_GAP_Y
 
       // TP bar
-      this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
+      this.add.rectangle(x, cy, barWidth, barHeight, BATTLE_LAYOUT.UNIT_BAR_BACKGROUND_COLOR).setDepth(306).setScrollFactor(0)
       const tpBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barColors.tp)
       tpBar.setOrigin(0, 0.5)
       tpBar.setDepth(307)
@@ -669,8 +676,8 @@ export class BattleScene extends Phaser.Scene {
       cy += barHeight + BATTLE_LAYOUT.UNIT_BAR_GAP_Y
     } else {
       // Break gauge for enemies
-      this.add.rectangle(x, cy, barWidth, barHeight, 0x000000).setDepth(306).setScrollFactor(0)
-      const breakBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, 0x9b59b6)
+      this.add.rectangle(x, cy, barWidth, barHeight, BATTLE_LAYOUT.UNIT_BAR_BACKGROUND_COLOR).setDepth(306).setScrollFactor(0)
+      const breakBar = this.add.rectangle(x - barWidth / 2 + BATTLE_LAYOUT.UNIT_BAR_INSET, cy, barWidth - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, barHeight - BATTLE_LAYOUT.UNIT_BAR_INSET * 2, BATTLE_LAYOUT.UNIT_BREAK_COLOR)
       breakBar.setOrigin(0, 0.5)
       breakBar.setDepth(307)
       breakBar.setScrollFactor(0)
@@ -700,19 +707,33 @@ export class BattleScene extends Phaser.Scene {
     return Math.min(BATTLE_RULES.MAX_BAR_RATIO, Math.max(BATTLE_RULES.MIN_BAR_RATIO, current / max))
   }
 
+  private addRuntimePanel(x: number, y: number, width: number, height: number, textureKey: string, fallbackColor: number, fallbackAlpha: number, depth: number): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
+    if (this.textures.exists(textureKey)) {
+      const panel = this.add.image(x, y, textureKey)
+      panel.setDisplaySize(width, height)
+      panel.setAlpha(fallbackAlpha)
+      panel.setDepth(depth)
+      panel.setScrollFactor(0)
+      return panel
+    }
+
+    const panel = this.add.rectangle(x, y, width, height, fallbackColor, fallbackAlpha)
+    panel.setStrokeStyle(BATTLE_LAYOUT.COMMAND_PANEL_STROKE_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_STROKE_COLOR)
+    panel.setDepth(depth)
+    panel.setScrollFactor(0)
+    return panel
+  }
+
   private createUI(): void {
     // Command menu background
-    const menuBg = this.add.rectangle(BATTLE_LAYOUT.COMMAND_PANEL_X, BATTLE_LAYOUT.COMMAND_PANEL_Y, BATTLE_LAYOUT.COMMAND_PANEL_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_HEIGHT, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA)
-    menuBg.setStrokeStyle(BATTLE_LAYOUT.COMMAND_PANEL_STROKE_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_STROKE_COLOR)
-    menuBg.setDepth(310)
-    menuBg.setScrollFactor(0)
+    const menuBg = this.addRuntimePanel(BATTLE_LAYOUT.COMMAND_PANEL_X, BATTLE_LAYOUT.COMMAND_PANEL_Y, BATTLE_LAYOUT.COMMAND_PANEL_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_HEIGHT, RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 310)
     this.commandMenuObjects.push(menuBg)
 
     // Menu items
     for (let i = 0; i < BATTLE_COMMAND_LABELS.length; i++) {
       const text = this.add.text(BATTLE_LAYOUT.COMMAND_ITEM_X, BATTLE_LAYOUT.COMMAND_ITEM_START_Y + i * BATTLE_LAYOUT.COMMAND_ITEM_GAP_Y, BATTLE_COMMAND_LABELS[i]!, {
         fontSize: `${BATTLE_LAYOUT.COMMAND_ITEM_FONT_SIZE}px`,
-        color: '#c0c0d0',
+        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
       })
       text.setDepth(311)
       text.setScrollFactor(0)
@@ -729,8 +750,8 @@ export class BattleScene extends Phaser.Scene {
     // Battle log
     this.logText = this.add.text(BATTLE_LAYOUT.LOG_X, BATTLE_LAYOUT.LOG_Y, '', {
       fontSize: `${BATTLE_LAYOUT.LOG_FONT_SIZE}px`,
-      color: '#cccccc',
-      backgroundColor: '#00000060',
+      color: BATTLE_LAYOUT.LOG_TEXT_COLOR,
+      backgroundColor: BATTLE_LAYOUT.LOG_BACKGROUND_COLOR,
       padding: { x: BATTLE_LAYOUT.LOG_PADDING_X, y: BATTLE_LAYOUT.LOG_PADDING_Y },
       wordWrap: { width: BATTLE_LAYOUT.LOG_WRAP_WIDTH },
     })
@@ -996,7 +1017,7 @@ export class BattleScene extends Phaser.Scene {
   private skillMenuCursor!: Phaser.GameObjects.Rectangle
   private skillMenuIndex = 0
   private inSkillMenu = false
-  private skillMenuBg!: Phaser.GameObjects.Rectangle
+  private skillMenuBg!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
 
   private showSkills(): void {
     const actor = this.getCurrentUnit()
@@ -1017,24 +1038,21 @@ export class BattleScene extends Phaser.Scene {
     this.skillMenuItems = []
 
     // Skill menu panel
-    this.skillMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
-    this.skillMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
-    this.skillMenuBg.setDepth(320)
-    this.skillMenuBg.setScrollFactor(0)
+    this.skillMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
 
     for (let i = 0; i < skills.length; i++) {
       const sk = skillDefs[skills[i]!]!
       const cost = sk.costTp > 0 ? `TP${sk.costTp}` : `MP${sk.costMp}`
       const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${sk.name} [${cost}]`, {
         fontSize: scaleFont(14),
-        color: '#c0c0d0',
+        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
       })
       text.setDepth(321)
       text.setScrollFactor(0)
       bindTouchText(text, () => this.selectSkillMenuItem(i))
       this.skillMenuItems.push(text)
     }
-    this.skillMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
+    this.skillMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
     this.skillMenuCursor.setDepth(322)
     this.skillMenuCursor.setScrollFactor(0)
   }
@@ -1092,7 +1110,7 @@ export class BattleScene extends Phaser.Scene {
   private itemMenuCursor!: Phaser.GameObjects.Rectangle
   private itemMenuIndex = 0
   private inItemMenu = false
-  private itemMenuBg!: Phaser.GameObjects.Rectangle
+  private itemMenuBg!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
 
   private showItems(): void {
     const gd = GameData.getInstance()
@@ -1110,10 +1128,7 @@ export class BattleScene extends Phaser.Scene {
     this.itemMenuIndex = 0
     this.itemMenuItems = []
 
-    this.itemMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
-    this.itemMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
-    this.itemMenuBg.setDepth(320)
-    this.itemMenuBg.setScrollFactor(0)
+    this.itemMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
 
     for (let i = 0; i < items.length; i++) {
       const [itemId, qty] = items[i]!
@@ -1121,14 +1136,14 @@ export class BattleScene extends Phaser.Scene {
       if (!item) continue
       const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${item.name} x${qty}`, {
         fontSize: scaleFont(14),
-        color: '#c0c0d0',
+        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
       })
       text.setDepth(321)
       text.setScrollFactor(0)
       bindTouchText(text, () => this.selectItemMenuItem(i))
       this.itemMenuItems.push(text)
     }
-    this.itemMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
+    this.itemMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
     this.itemMenuCursor.setDepth(322)
     this.itemMenuCursor.setScrollFactor(0)
   }
@@ -1190,13 +1205,13 @@ export class BattleScene extends Phaser.Scene {
   private barrelMenuCursor!: Phaser.GameObjects.Rectangle
   private barrelMenuIndex = 0
   private inBarrelMenu = false
-  private barrelMenuBg!: Phaser.GameObjects.Rectangle
+  private barrelMenuBg!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
   private barrelMenuColors: BarrelColor[] = []
   private comboMenuItems: Phaser.GameObjects.Text[] = []
   private comboMenuCursor!: Phaser.GameObjects.Rectangle
   private comboMenuIndex = 0
   private inComboMenu = false
-  private comboMenuBg!: Phaser.GameObjects.Rectangle
+  private comboMenuBg!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
   private availableCombos: { skillId: string; name: string; char1: string; char2: string }[] = []
 
   private showBarrels(): void {
@@ -1213,23 +1228,20 @@ export class BattleScene extends Phaser.Scene {
     this.barrelMenuItems = []
     this.barrelMenuColors = unlocked
 
-    this.barrelMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
-    this.barrelMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
-    this.barrelMenuBg.setDepth(320)
-    this.barrelMenuBg.setScrollFactor(0)
+    this.barrelMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
 
     for (let i = 0; i < unlocked.length; i++) {
       const ability = bs.getAbility(unlocked[i]!)
       const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${ability!.name} - ${ability!.battleDescription}`, {
         fontSize: scaleFont(14),
-        color: '#c0c0d0',
+        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
       })
       text.setDepth(321)
       text.setScrollFactor(0)
       bindTouchText(text, () => this.selectBarrelMenuItem(i))
       this.barrelMenuItems.push(text)
     }
-    this.barrelMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
+    this.barrelMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
     this.barrelMenuCursor.setDepth(322)
     this.barrelMenuCursor.setScrollFactor(0)
   }
@@ -1306,10 +1318,7 @@ export class BattleScene extends Phaser.Scene {
     this.comboMenuItems = []
     this.availableCombos = combos
 
-    this.comboMenuBg = this.add.rectangle(scalePx(560), scalePx(440), scalePx(280), scalePx(140), 0x1a1a2e, 0.95)
-    this.comboMenuBg.setStrokeStyle(scalePx(2), 0x5a5a7e)
-    this.comboMenuBg.setDepth(320)
-    this.comboMenuBg.setScrollFactor(0)
+    this.comboMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
 
     for (let i = 0; i < combos.length; i++) {
       const combo = combos[i]!
@@ -1318,14 +1327,14 @@ export class BattleScene extends Phaser.Scene {
       const label = `${combo.name} [${char1Unit?.name}+${char2Unit?.name}]`
       const text = this.add.text(scalePx(430), scalePx(390 + i * 22), label, {
         fontSize: scaleFont(14),
-        color: '#f1c40f',
+        color: BATTLE_LAYOUT.COMBO_ITEM_COLOR,
       })
       text.setDepth(321)
       text.setScrollFactor(0)
       bindTouchText(text, () => this.selectComboMenuItem(i))
       this.comboMenuItems.push(text)
     }
-    this.comboMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), 0xf1c40f)
+    this.comboMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
     this.comboMenuCursor.setDepth(322)
     this.comboMenuCursor.setScrollFactor(0)
   }
@@ -1379,9 +1388,9 @@ export class BattleScene extends Phaser.Scene {
 
     const comboText = this.add.text(GAME_WIDTH / 2, scalePx(200), '连携！', {
       fontSize: scaleFont(32),
-      color: '#ffd700',
+      color: BATTLE_LAYOUT.COMBO_TEXT_COLOR,
       fontStyle: 'bold',
-      stroke: '#000000',
+      stroke: BATTLE_LAYOUT.COMBO_TEXT_STROKE_COLOR,
       strokeThickness: scalePx(4),
     })
     comboText.setOrigin(0.5)
@@ -1865,9 +1874,9 @@ export class BattleScene extends Phaser.Scene {
     // Damage number popup
     const dmgText = this.add.text(target.sprite!.x, target.sprite!.y - scalePx(40), `-${damage}`, {
       fontSize: scaleFont(20),
-      color: '#ff4444',
+      color: BATTLE_LAYOUT.DAMAGE_TEXT_COLOR,
       fontStyle: 'bold',
-      stroke: '#000000',
+      stroke: BATTLE_LAYOUT.DAMAGE_TEXT_STROKE_COLOR,
       strokeThickness: scalePx(3),
     })
     dmgText.setOrigin(0.5)
@@ -1890,7 +1899,7 @@ export class BattleScene extends Phaser.Scene {
     })
 
     // Flash red
-    const flash = this.add.rectangle(target.sprite!.x, target.sprite!.y, scalePx(64), scalePx(64), 0xff0000, 0.5)
+    const flash = this.add.rectangle(target.sprite!.x, target.sprite!.y, scalePx(64), scalePx(64), BATTLE_LAYOUT.DAMAGE_FLASH_COLOR, BATTLE_LAYOUT.DAMAGE_FLASH_ALPHA)
     flash.setDepth(308)
     flash.setScrollFactor(0)
     this.tweens.add({
@@ -2447,32 +2456,32 @@ export class BattleScene extends Phaser.Scene {
     this.hideTargetIndicator()
     this.log(summary.title)
 
-    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, BATTLE_RESULT_PANEL.overlayAlpha)
-    const panel = this.add.rectangle(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y, BATTLE_RESULT_PANEL.width, BATTLE_RESULT_PANEL.height, 0x1a1a2e, 0.96)
-    panel.setStrokeStyle(scalePx(2), summary.victory ? 0xf1c40f : 0x9b59b6)
-    const title = this.add.text(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.titleOffsetY, summary.title, {
-      fontSize: scaleFont(28),
-      color: summary.victory ? '#f1c40f' : '#e8e8f0',
-      fontFamily: 'serif',
+    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, BATTLE_RESULT_PANEL.overlayAlpha)
+    const panel = this.addRuntimePanel(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y, BATTLE_RESULT_PANEL.width, BATTLE_RESULT_PANEL.height, RUNTIME_UI_ASSET_KEYS.MENU_PANEL, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 0)
+    const panelBorder = this.add.rectangle(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y, BATTLE_RESULT_PANEL.width, BATTLE_RESULT_PANEL.height, COLORS.black, 0)
+    panelBorder.setStrokeStyle(BATTLE_RESULT_PANEL.borderWidth, summary.victory ? BATTLE_RESULT_PANEL.victoryBorderColor : BATTLE_RESULT_PANEL.defeatBorderColor)
+    const title = this.add.text(BATTLE_RESULT_PANEL.titleX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.titleOffsetY, summary.title, {
+      fontSize: scaleFont(BATTLE_RESULT_PANEL.titleFontSize),
+      color: MENU_OVERLAY_UI.COLORS.title,
+      fontFamily: UI_TITLE_FONT_FAMILY,
     }).setOrigin(0.5)
-    const objects: Phaser.GameObjects.GameObject[] = [overlay, panel, title]
+    const objects: Phaser.GameObjects.GameObject[] = [overlay, panel, panelBorder, title]
     const hiddenLineCount = Math.max(0, summary.lines.length - BATTLE_RESULT_PANEL.maxLines + 1)
     const visibleLines = hiddenLineCount > 0
       ? [...summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines - 1), `另有 ${hiddenLineCount} 条结算记录`]
       : summary.lines.slice(0, BATTLE_RESULT_PANEL.maxLines)
-    for (let i = 0; i < visibleLines.length; i++) {
-      const line = this.add.text(BATTLE_RESULT_PANEL.x - BATTLE_RESULT_PANEL.width / 2 + BATTLE_RESULT_PANEL.contentPaddingX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.lineStartOffsetY + i * BATTLE_RESULT_PANEL.lineGap, visibleLines[i]!, {
-        fontSize: scaleFont(18),
-        color: '#e8e8f0',
-        wordWrap: { width: BATTLE_RESULT_PANEL.width - BATTLE_RESULT_PANEL.contentPaddingX * 2 },
-      })
-      objects.push(line)
-    }
+    const summaryText = this.add.text(BATTLE_RESULT_PANEL.contentX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.lineStartOffsetY, visibleLines.join('\n'), {
+      fontSize: scaleFont(BATTLE_RESULT_PANEL.lineFontSize),
+      color: MENU_OVERLAY_UI.COLORS.text,
+      wordWrap: { width: BATTLE_RESULT_PANEL.contentWrapWidth },
+      lineSpacing: BATTLE_RESULT_PANEL.lineSpacing,
+    })
+    objects.push(summaryText)
     const confirmLabel = summary.victory || summary.escaped ? '继续' : 'GAME OVER'
-    const confirm = this.add.text(BATTLE_RESULT_PANEL.x, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.confirmOffsetY, confirmLabel, {
-      fontSize: scaleFont(20),
-      color: '#ffffff',
-      backgroundColor: '#5a5a7e',
+    const confirm = this.add.text(BATTLE_RESULT_PANEL.confirmX, BATTLE_RESULT_PANEL.y + BATTLE_RESULT_PANEL.confirmOffsetY, confirmLabel, {
+      fontSize: scaleFont(BATTLE_RESULT_PANEL.confirmFontSize),
+      color: BATTLE_RESULT_PANEL.confirmTextColor,
+      backgroundColor: BATTLE_RESULT_PANEL.confirmBackgroundColor,
       padding: { x: BATTLE_RESULT_PANEL.confirmPaddingX, y: BATTLE_RESULT_PANEL.confirmPaddingY },
     }).setOrigin(0.5)
     bindTouchText(confirm, () => this.finishBattleResult())

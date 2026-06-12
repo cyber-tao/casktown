@@ -15,6 +15,7 @@ import {
   CHARACTER_SPRITE_BASE_KEYS,
   CHARACTER_DIRECTION_FRAME_STEMS,
   CHARACTER_DIRECTION_TEXTURE_PATTERN,
+  CHARACTER_SIDE_WALK_FLIP_DIRECTION,
   DEFAULT_CHARACTER_SPRITE_BASE_KEY,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
@@ -39,6 +40,7 @@ import {
   PARTY_FIELD_EVENT_CHARACTER_IDS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILD_TILE_REPLACEMENTS,
+  RUNTIME_UI_ASSET_KEYS,
   REBUILT_TOWN_MAP_ID,
   QUICK_SAVE_SLOT,
   ROAMING_ENCOUNTER_RESPAWN,
@@ -110,7 +112,7 @@ export class MapScene extends Phaser.Scene {
   private partyHudPartyKey = ''
   private questHudObjects: PartyHudObject[] = []
   private questHudKey = ''
-  private mapNameText!: Phaser.GameObjects.Text
+  private mapNameText?: Phaser.GameObjects.Text
   private mapFeedbackText?: Phaser.GameObjects.Text
   private promptText?: Phaser.GameObjects.Text
   private initialFeedback: MapSceneFeedback | null = null
@@ -1085,6 +1087,20 @@ export class MapScene extends Phaser.Scene {
     return labels[event.type]
   }
 
+  private addRuntimePanel(x: number, y: number, width: number, height: number, textureKey: string, fallbackColor: number, fallbackAlpha: number): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
+    if (this.textures.exists(textureKey)) {
+      const panel = this.add.image(x, y, textureKey)
+      panel.setOrigin(0, 0)
+      panel.setDisplaySize(width, height)
+      panel.setAlpha(fallbackAlpha)
+      return panel
+    }
+
+    const panel = this.add.rectangle(x, y, width, height, fallbackColor, fallbackAlpha)
+    panel.setOrigin(0, 0)
+    return panel
+  }
+
   private createPartyHud(): void {
     this.destroyPartyHud()
     const gd = GameData.getInstance()
@@ -1097,14 +1113,16 @@ export class MapScene extends Phaser.Scene {
 
       const rowX = MAP_HUD.PARTY_X
       const rowY = MAP_HUD.PARTY_Y + index * (MAP_HUD.PARTY_ROW_HEIGHT + MAP_HUD.PARTY_ROW_GAP)
-      const panel = this.add.rectangle(rowX, rowY, MAP_HUD.PARTY_ROW_WIDTH, MAP_HUD.PARTY_ROW_HEIGHT, MAP_HUD.PARTY_BACKGROUND_COLOR, MAP_HUD.PARTY_PANEL_ALPHA)
-      panel.setOrigin(0, 0)
-      panel.setStrokeStyle(
+      const panel = this.addRuntimePanel(rowX, rowY, MAP_HUD.PARTY_ROW_WIDTH, MAP_HUD.PARTY_ROW_HEIGHT, RUNTIME_UI_ASSET_KEYS.CARD, MAP_HUD.PARTY_BACKGROUND_COLOR, MAP_HUD.PARTY_PANEL_ALPHA)
+      this.addPartyHudObject(panel)
+      const panelBorder = this.add.rectangle(rowX, rowY, MAP_HUD.PARTY_ROW_WIDTH, MAP_HUD.PARTY_ROW_HEIGHT, COLORS.black, 0)
+      panelBorder.setOrigin(0, 0)
+      panelBorder.setStrokeStyle(
         MAP_HUD.BORDER_WIDTH,
         index === MAP_HUD.PARTY_LEADER_INDEX ? COLORS.uiHighlight : COLORS.uiBorder,
         index === MAP_HUD.PARTY_LEADER_INDEX ? MAP_HUD.PARTY_LEADER_BORDER_ALPHA : MAP_HUD.PARTY_BORDER_ALPHA,
       )
-      this.addPartyHudObject(panel)
+      this.addPartyHudObject(panelBorder)
 
       const portraitX = rowX + MAP_HUD.PARTY_INNER_PADDING
       const portraitY = rowY + MAP_HUD.PARTY_INNER_PADDING
@@ -1253,10 +1271,12 @@ export class MapScene extends Phaser.Scene {
     this.questHudKey = nextKey
     if (states.length === 0) return
 
-    const panel = this.add.rectangle(MAP_HUD.QUEST_X, MAP_HUD.QUEST_Y, MAP_HUD.QUEST_WIDTH, MAP_HUD.QUEST_HEIGHT, MAP_HUD.BACKGROUND_COLOR, MAP_HUD.QUEST_PANEL_ALPHA)
-    panel.setOrigin(0, 0)
-    panel.setStrokeStyle(MAP_HUD.BORDER_WIDTH, MAP_HUD.BORDER_COLOR, MAP_HUD.QUEST_BORDER_ALPHA)
+    const panel = this.addRuntimePanel(MAP_HUD.QUEST_X, MAP_HUD.QUEST_Y, MAP_HUD.QUEST_WIDTH, MAP_HUD.QUEST_HEIGHT, RUNTIME_UI_ASSET_KEYS.QUEST, MAP_HUD.BACKGROUND_COLOR, MAP_HUD.QUEST_PANEL_ALPHA)
     this.addQuestHudObject(panel)
+    const panelBorder = this.add.rectangle(MAP_HUD.QUEST_X, MAP_HUD.QUEST_Y, MAP_HUD.QUEST_WIDTH, MAP_HUD.QUEST_HEIGHT, COLORS.black, 0)
+    panelBorder.setOrigin(0, 0)
+    panelBorder.setStrokeStyle(MAP_HUD.BORDER_WIDTH, MAP_HUD.BORDER_COLOR, MAP_HUD.QUEST_BORDER_ALPHA)
+    this.addQuestHudObject(panelBorder)
 
     const title = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_TITLE_Y, MAP_HUD.QUEST_TITLE_TEXT, {
       fontSize: `${MAP_HUD.QUEST_TITLE_FONT_SIZE}px`,
@@ -1314,6 +1334,10 @@ export class MapScene extends Phaser.Scene {
   }
 
   private createMinimap(): void {
+    const panel = this.addRuntimePanel(MAP_HUD.MINIMAP_X, MAP_HUD.MINIMAP_Y, MAP_HUD.MINIMAP_WIDTH, MAP_HUD.MINIMAP_HEIGHT, RUNTIME_UI_ASSET_KEYS.MINIMAP, MAP_HUD.BACKGROUND_COLOR, MAP_HUD.PANEL_ALPHA)
+    panel.setScrollFactor(0)
+    panel.setDepth(MAP_HUD.DEPTH - MAP_HUD.MARKER_DEPTH_OFFSET)
+
     const graphics = this.add.graphics()
     graphics.setScrollFactor(0)
     graphics.setDepth(MAP_HUD.DEPTH)
@@ -1406,31 +1430,40 @@ export class MapScene extends Phaser.Scene {
   }
 
   private showMapName(): void {
-    this.mapNameText = this.add.text(GAME_WIDTH / 2, scalePx(40), this.mapData.name, {
+    const mapNameText = this.add.text(GAME_WIDTH / 2, scalePx(40), this.mapData.name, {
       fontSize: scaleFont(24),
       color: '#ffffff',
       backgroundColor: '#00000060',
       padding: { x: scalePx(12), y: scalePx(6) },
     })
-    this.mapNameText.setOrigin(0.5)
-    this.mapNameText.setScrollFactor(0)
-    this.mapNameText.setDepth(100)
-    this.mapNameText.setAlpha(0)
+    this.mapNameText = mapNameText
+    mapNameText.setOrigin(0.5)
+    mapNameText.setScrollFactor(0)
+    mapNameText.setDepth(100)
+    mapNameText.setAlpha(0)
 
     this.tweens.add({
-      targets: this.mapNameText,
+      targets: mapNameText,
       alpha: 1,
       duration: 500,
       onComplete: () => {
         this.time.delayedCall(2000, () => {
+          if (!mapNameText.active) return
           this.tweens.add({
-            targets: this.mapNameText,
+            targets: mapNameText,
             alpha: 0,
             duration: 500,
           })
         })
       },
     })
+  }
+
+  private clearMapNameText(): void {
+    if (!this.mapNameText) return
+    this.tweens.killTweensOf(this.mapNameText)
+    this.mapNameText.destroy()
+    this.mapNameText = undefined
   }
 
   private handleInput(): void {
@@ -1637,7 +1670,7 @@ export class MapScene extends Phaser.Scene {
     const textureKey = this.resolveTextureKey(`${baseKey}_${frameStem}_${frameSuffix}`, `${baseKey}_${frameStem}_${idleSuffix}`)
     if (!textureKey) return false
     sprite.setTexture(textureKey)
-    sprite.setFlipX(direction === DIRECTION.LEFT)
+    sprite.setFlipX(direction === CHARACTER_SIDE_WALK_FLIP_DIRECTION)
     return true
   }
 
@@ -1667,7 +1700,7 @@ export class MapScene extends Phaser.Scene {
     }
     this.updateSequenceFrame(sprite, moving)
     if (direction === DIRECTION.LEFT || direction === DIRECTION.RIGHT) {
-      sprite.setFlipX(direction === DIRECTION.LEFT)
+      sprite.setFlipX(direction === CHARACTER_SIDE_WALK_FLIP_DIRECTION)
     }
   }
 
@@ -1786,11 +1819,13 @@ export class MapScene extends Phaser.Scene {
   }
 
   private startDialogue(dialogueId: string): void {
+    this.clearMapNameText()
     this.scene.launch('DialogueOverlay', { dialogueId })
     this.scene.pause()
   }
 
   private startBattle(encounterId: string, mapEventId?: string): void {
+    this.clearMapNameText()
     EventBus.emit(GameEvents.BATTLE_START, encounterId)
     this.scene.launch('BattleScene', { encounterId, mapId: this.mapData.id, mapEventId })
     this.scene.pause()
@@ -1819,14 +1854,17 @@ export class MapScene extends Phaser.Scene {
 
   private openMenu(): void {
     if (this.inEvent) return
+    this.clearMapNameText()
     AudioManager.getInstance().playSFX('open_menu')
     this.inEvent = true
+    this.promptText?.setVisible(false)
     this.scene.launch('MenuOverlay')
     this.scene.pause()
   }
 
   private openWorldMap(): void {
     if (this.inEvent) return
+    this.clearMapNameText()
     AudioManager.getInstance().playSFX('open_menu')
     this.inEvent = true
     this.scene.launch('WorldMapOverlay')
@@ -1982,6 +2020,7 @@ export class MapScene extends Phaser.Scene {
 
   private onMenuClose(): void {
     this.inputResumeBlockedUntilMs = this.time.now + MAP_INPUT_GUARD.RESUME_LOCK_MS
+    this.promptText?.setVisible(true)
     this.scene.resume()
     AudioManager.getInstance().setScene(this)
     const pending = this.pendingActions

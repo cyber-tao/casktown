@@ -74,7 +74,7 @@ assets/
 | environment | 80 | 自然瓦片 | 草、土、水、树等 |
 | holy_temple | 55 | 神殿瓦片 | 神殿专用装饰 |
 | dark_fantasy | 48 | 暗黑瓦片 | 魔宫/沼泽装饰 |
-| items | 34 | 物品图标 | 程序化生成 |
+| items | 2 | 物品图标 | 手工确认覆盖图标 |
 
 ## 生成流程
 
@@ -82,7 +82,7 @@ assets/
 
 1. 精灵：`img/sprites/` -> `scripts/repair` -> `scripts/refresh` -> `assets/sprites/`
 2. 语音：`src/data/dialogues.ts` -> `scripts/sync` -> `scripts/generate` -> `assets/audio/voice/`
-3. 图标：`src/data/items.ts` -> `scripts/generate-item-icons` -> `img/sprites/` -> `scripts/refresh` -> `assets/sprites/items/`
+3. 图标：`img/sprites/item_overrides/` -> `scripts/refresh` -> `assets/sprites/items/`
 
 ## 变更记录
 

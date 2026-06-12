@@ -8,11 +8,13 @@ import {
   DIALOGUE_FACE,
   DIALOGUE_NAME_POSITION,
   DIALOGUE_TEXT_POSITION,
+  DIALOGUE_UI,
   DIALOGUE_TEXT_WIDTH,
   DIALOGUE_TEXT_WRAP_CHARS,
   GAME_HEIGHT,
   GAME_WIDTH,
   LOADING_SCREEN,
+  RUNTIME_UI_ASSET_KEYS,
   TEXT_SPEED,
   scaleFont,
   scalePx,
@@ -74,7 +76,7 @@ function wrapDialogueText(text: string): string[] {
 
 export class DialogueOverlay extends Phaser.Scene {
   private bg!: Phaser.GameObjects.Rectangle
-  private faceRect!: Phaser.GameObjects.Rectangle
+  private faceRect!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
   private faceImage!: Phaser.GameObjects.Image
   private nameText!: Phaser.GameObjects.Text
   private textObj!: Phaser.GameObjects.Text
@@ -103,7 +105,7 @@ export class DialogueOverlay extends Phaser.Scene {
 
   preload(): void {
     showLoadingScreen(this, LOADING_SCREEN.DIALOGUE_LABEL)
-    queueImageAssets(this, this.collectDialogueFaceKeys(this.dialogueId))
+    queueImageAssets(this, [...this.collectDialogueFaceKeys(this.dialogueId), ...Object.values(RUNTIME_UI_ASSET_KEYS)])
   }
 
   private collectDialogueFaceKeys(dialogueId: string, visited: Set<string> = new Set()): Set<string> {
@@ -123,6 +125,23 @@ export class DialogueOverlay extends Phaser.Scene {
       }
     }
     return keys
+  }
+
+  private addRuntimePanel(x: number, y: number, width: number, height: number, textureKey: string, fallbackColor: number, fallbackAlpha: number, depth: number): Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image {
+    if (this.textures.exists(textureKey)) {
+      const panel = this.add.image(x, y, textureKey)
+      panel.setDisplaySize(width, height)
+      panel.setAlpha(fallbackAlpha)
+      panel.setDepth(depth)
+      panel.setScrollFactor(0)
+      return panel
+    }
+
+    const panel = this.add.rectangle(x, y, width, height, fallbackColor, fallbackAlpha)
+    panel.setStrokeStyle(DIALOGUE_UI.STROKE_WIDTH, DIALOGUE_UI.BORDER_COLOR)
+    panel.setDepth(depth)
+    panel.setScrollFactor(0)
+    return panel
   }
 
   create(data: { dialogueId: string }): void {
@@ -147,25 +166,19 @@ export class DialogueOverlay extends Phaser.Scene {
     this.currentScript = script
 
     // Darken background
-    this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.3)
+    this.bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, DIALOGUE_UI.BACKDROP_ALPHA)
     this.bg.setDepth(200)
     this.bg.setScrollFactor(0)
     this.bg.setInteractive()
     this.bg.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
     // Dialogue box
-    const box = this.add.rectangle(DIALOGUE_BOX.x, DIALOGUE_BOX.y, DIALOGUE_BOX.width, DIALOGUE_BOX.height, 0x2a2a3e, 0.95)
-    box.setStrokeStyle(scalePx(2), 0x5a5a7e)
-    box.setDepth(201)
-    box.setScrollFactor(0)
+    const box = this.addRuntimePanel(DIALOGUE_BOX.x, DIALOGUE_BOX.y, DIALOGUE_BOX.width, DIALOGUE_BOX.height, RUNTIME_UI_ASSET_KEYS.DIALOGUE_PANEL, DIALOGUE_UI.BOX_COLOR, DIALOGUE_UI.BOX_ALPHA, 201)
     box.setInteractive()
     box.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
     // Face placeholder
-    this.faceRect = this.add.rectangle(DIALOGUE_FACE.x, DIALOGUE_FACE.y, DIALOGUE_FACE.size, DIALOGUE_FACE.size, 0x3a3a4e)
-    this.faceRect.setStrokeStyle(scalePx(2), 0x5a5a7e)
-    this.faceRect.setDepth(201)
-    this.faceRect.setScrollFactor(0)
+    this.faceRect = this.addRuntimePanel(DIALOGUE_FACE.x, DIALOGUE_FACE.y, DIALOGUE_FACE.size, DIALOGUE_FACE.size, RUNTIME_UI_ASSET_KEYS.DIALOGUE_FACE, DIALOGUE_UI.FACE_COLOR, DIALOGUE_UI.BOX_ALPHA, 201)
 
     // Face image
     this.faceImage = this.add.image(DIALOGUE_FACE.x, DIALOGUE_FACE.y, '')
@@ -177,8 +190,8 @@ export class DialogueOverlay extends Phaser.Scene {
     // Name
     this.nameText = this.add.text(DIALOGUE_NAME_POSITION.x, DIALOGUE_NAME_POSITION.y, '', {
       fontSize: scaleFont(18),
-      color: '#f1c40f',
-      backgroundColor: '#2a2a3e',
+      color: DIALOGUE_UI.NAME_COLOR,
+      backgroundColor: DIALOGUE_UI.NAME_BACKGROUND_COLOR,
       padding: { x: scalePx(8), y: scalePx(4) },
     })
     this.nameText.setDepth(202)
@@ -187,7 +200,7 @@ export class DialogueOverlay extends Phaser.Scene {
     // Text
     this.textObj = this.add.text(DIALOGUE_TEXT_POSITION.x, DIALOGUE_TEXT_POSITION.y, '', {
       fontSize: scaleFont(18),
-      color: '#e8e8f0',
+      color: DIALOGUE_UI.TEXT_COLOR,
       wordWrap: { width: DIALOGUE_TEXT_WIDTH, useAdvancedWrap: true, callback: wrapDialogueText },
       lineSpacing: scalePx(6),
       fixedWidth: DIALOGUE_TEXT_WIDTH,
@@ -301,7 +314,7 @@ export class DialogueOverlay extends Phaser.Scene {
     for (let i = 0; i < choices.length; i++) {
       const text = this.add.text(DIALOGUE_CHOICE.x, minY, `  ${choices[i]!.text}`, {
         fontSize: `${DIALOGUE_CHOICE.fontSize}px`,
-        color: '#c0c0d0',
+        color: DIALOGUE_UI.CHOICE_COLOR,
         wordWrap: { width: DIALOGUE_CHOICE.width, useAdvancedWrap: true },
         fixedWidth: DIALOGUE_CHOICE.width,
       })
@@ -330,7 +343,7 @@ export class DialogueOverlay extends Phaser.Scene {
       currentY += text.height + gap
     }
 
-    this.cursor = this.add.rectangle(DIALOGUE_CHOICE.cursorX, this.getChoiceCursorY(), DIALOGUE_CHOICE.cursorSize, DIALOGUE_CHOICE.cursorSize, 0xf1c40f)
+    this.cursor = this.add.rectangle(DIALOGUE_CHOICE.cursorX, this.getChoiceCursorY(), DIALOGUE_CHOICE.cursorSize, DIALOGUE_CHOICE.cursorSize, DIALOGUE_CHOICE.cursorColor)
     this.cursor.setDepth(204)
     this.cursor.setScrollFactor(0)
   }

@@ -3,9 +3,11 @@ import { AudioManager } from '../core/AudioManager'
 import { GameData } from '../core/GameData'
 import { SaveManager } from '../core/SaveManager'
 import { InputManager } from '../core/InputManager'
-import { GAME_HEIGHT, GAME_OVER_PANEL, GAME_WIDTH, START_MAP_ID, scaleFont, scalePx } from '../utils/constants'
+import { queueImageAssets } from '../core/AssetLoader'
+import { COLORS, GAME_HEIGHT, GAME_OVER_MENU_INDEX, GAME_OVER_MENU_LABELS, GAME_OVER_PANEL, GAME_OVER_SUBTITLE, GAME_WIDTH, MENU_OVERLAY_UI, RUNTIME_UI_ASSET_KEYS, START_MAP_ID, UI_FONT_FAMILY, UI_TITLE_FONT_FAMILY, scaleFont } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { addRuntimePanel } from '../utils/runtimePanels'
 
 export class GameOverScene extends Phaser.Scene {
   private menuIndex = 0
@@ -16,39 +18,50 @@ export class GameOverScene extends Phaser.Scene {
     super({ key: 'GameOverScene' })
   }
 
+  preload(): void {
+    queueImageAssets(this, [RUNTIME_UI_ASSET_KEYS.MENU_PANEL])
+  }
+
   create(): void {
     this.menuIndex = 0
     this.menuItems = []
     AudioManager.getInstance().setScene(this)
     AudioManager.getInstance().playGameOverBGM()
 
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x080810, 1)
-    this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.titleY, 'GAME OVER', {
-      fontSize: scaleFont(56),
-      color: '#e74c3c',
-      fontFamily: 'serif',
-      stroke: '#000000',
-      strokeThickness: scalePx(6),
-    }).setOrigin(0.5)
-    this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.subtitleY, '队伍倒下了，但故事还没有结束。', {
-      fontSize: scaleFont(22),
-      color: '#e8e8f0',
-      fontFamily: 'sans-serif',
-    }).setOrigin(0.5)
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, GAME_OVER_PANEL.backgroundColor, GAME_OVER_PANEL.backgroundAlpha)
 
-    const labels = ['读取存档', '重新开始', '返回标题']
-    for (let i = 0; i < labels.length; i++) {
-      const text = this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.menuStartY + i * GAME_OVER_PANEL.menuGap, labels[i]!, {
-        fontSize: scaleFont(24),
-        color: '#c0c0d0',
-        fontFamily: 'sans-serif',
-      }).setOrigin(0.5)
+    addRuntimePanel(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_OVER_PANEL.panelWidth, GAME_OVER_PANEL.panelHeight, RUNTIME_UI_ASSET_KEYS.MENU_PANEL, GAME_OVER_PANEL.panelTint, GAME_OVER_PANEL.panelAlpha, GAME_OVER_PANEL.panelDepth)
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_OVER_PANEL.panelWidth, GAME_OVER_PANEL.panelHeight, COLORS.black, 0)
+      .setStrokeStyle(GAME_OVER_PANEL.borderWidth, GAME_OVER_PANEL.borderColor)
+      .setDepth(GAME_OVER_PANEL.borderDepth)
+      .setScrollFactor(0)
+
+    this.add.text(GAME_OVER_PANEL.titleX, GAME_OVER_PANEL.titleY, 'GAME OVER', {
+      fontSize: scaleFont(GAME_OVER_PANEL.titleFontSize),
+      color: GAME_OVER_PANEL.titleColor,
+      fontFamily: UI_TITLE_FONT_FAMILY,
+    }).setOrigin(0.5).setDepth(GAME_OVER_PANEL.contentDepth).setScrollFactor(0)
+    this.add.text(GAME_OVER_PANEL.subtitleX, GAME_OVER_PANEL.subtitleY, GAME_OVER_SUBTITLE, {
+      fontSize: scaleFont(GAME_OVER_PANEL.subtitleFontSize),
+      color: MENU_OVERLAY_UI.COLORS.text,
+      fontFamily: UI_FONT_FAMILY,
+      wordWrap: { width: GAME_OVER_PANEL.subtitleWrapWidth },
+    }).setDepth(GAME_OVER_PANEL.contentDepth).setScrollFactor(0)
+
+    for (let i = 0; i < GAME_OVER_MENU_LABELS.length; i++) {
+      const text = this.add.text(GAME_OVER_PANEL.menuX, GAME_OVER_PANEL.menuStartY + i * GAME_OVER_PANEL.menuGap, GAME_OVER_MENU_LABELS[i]!, {
+        fontSize: scaleFont(GAME_OVER_PANEL.menuFontSize),
+        color: MENU_OVERLAY_UI.COLORS.text,
+        fontFamily: UI_FONT_FAMILY,
+      }).setOrigin(0.5).setDepth(GAME_OVER_PANEL.contentDepth).setScrollFactor(0)
       bindTouchText(text, () => this.selectMenuItem(i))
       this.menuItems.push(text)
     }
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - GAME_OVER_PANEL.cursorOffsetX, GAME_OVER_PANEL.menuStartY, GAME_OVER_PANEL.cursorSize, GAME_OVER_PANEL.cursorSize, 0xf1c40f)
+    this.cursor = this.add.rectangle(GAME_OVER_PANEL.cursorX, GAME_OVER_PANEL.menuStartY, GAME_OVER_PANEL.cursorSize, GAME_OVER_PANEL.cursorSize, MENU_OVERLAY_UI.COLORS.highlight)
     this.cursor.setOrigin(0.5)
+    this.cursor.setDepth(GAME_OVER_PANEL.contentDepth)
+    this.cursor.setScrollFactor(0)
 
     cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.changeMenu(-1))
@@ -66,13 +79,13 @@ export class GameOverScene extends Phaser.Scene {
   private selectMenu(): void {
     AudioManager.getInstance().playSFX('confirm')
     switch (this.menuIndex) {
-      case 0:
+      case GAME_OVER_MENU_INDEX.LOAD:
         this.loadGame()
         break
-      case 1:
+      case GAME_OVER_MENU_INDEX.RESTART:
         this.startNewGame()
         break
-      case 2:
+      case GAME_OVER_MENU_INDEX.TITLE:
         this.scene.start('TitleScene')
         break
     }
@@ -104,10 +117,11 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   private showMessage(message: string): void {
-    const text = this.add.text(GAME_WIDTH / 2, GAME_OVER_PANEL.messageY, message, {
-      fontSize: scaleFont(20),
-      color: '#e74c3c',
-    }).setOrigin(0.5)
+    const text = this.add.text(GAME_OVER_PANEL.messageX, GAME_OVER_PANEL.messageY, message, {
+      fontSize: scaleFont(GAME_OVER_PANEL.messageFontSize),
+      color: GAME_OVER_PANEL.messageColor,
+      fontFamily: UI_FONT_FAMILY,
+    }).setOrigin(0.5).setDepth(GAME_OVER_PANEL.contentDepth).setScrollFactor(0)
     this.time.delayedCall(GAME_OVER_PANEL.messageDurationMs, () => text.destroy())
   }
 }

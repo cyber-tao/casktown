@@ -48,12 +48,16 @@ export class WorldMapOverlay extends Phaser.Scene {
     mapBackground.setDepth(WORLD_MAP_BACKGROUND_LAYOUT.MAP_DEPTH).setScrollFactor(0)
 
     const title = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.TITLE_Y, '世界地图', {
-      fontSize: `${WORLD_MAP_UI.TITLE_FONT_SIZE}px`, color: '#f1c40f',
+      fontSize: `${WORLD_MAP_UI.TITLE_FONT_SIZE}px`,
+      color: WORLD_MAP_UI.TITLE_COLOR,
+      fontFamily: WORLD_MAP_UI.TITLE_FONT_FAMILY,
     })
     title.setOrigin(0.5, 0).setScrollFactor(0).setDepth(201)
 
     const hint = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.HINT_Y, `M / ${InputManager.getInstance().getActionName('cancel')} 返回`, {
-      fontSize: `${WORLD_MAP_UI.HINT_FONT_SIZE}px`, color: '#7f8c8d',
+      fontSize: `${WORLD_MAP_UI.HINT_FONT_SIZE}px`,
+      color: WORLD_MAP_UI.HINT_COLOR,
+      fontFamily: WORLD_MAP_UI.HINT_FONT_FAMILY,
     })
     hint.setOrigin(0.5).setScrollFactor(0).setDepth(201)
     bindTouchText(hint, () => this.close())
@@ -74,6 +78,7 @@ export class WorldMapOverlay extends Phaser.Scene {
     const closeText = this.add.text(WORLD_MAP_UI.CLOSE_BUTTON_X, WORLD_MAP_UI.CLOSE_BUTTON_Y, WORLD_MAP_UI.CLOSE_BUTTON_TEXT, {
       fontSize: `${WORLD_MAP_UI.CLOSE_BUTTON_FONT_SIZE}px`,
       color: WORLD_MAP_UI.CLOSE_BUTTON_TEXT_COLOR,
+      fontFamily: WORLD_MAP_UI.HINT_FONT_FAMILY,
     })
     closeText.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.CLOSE_BUTTON_DEPTH + WORLD_MAP_UI.CLOSE_BUTTON_TEXT_DEPTH_OFFSET)
     bindTouchText(closeText, () => this.close())
@@ -92,7 +97,8 @@ export class WorldMapOverlay extends Phaser.Scene {
     const mapName = GAME_CONFIG_DATABASE.getTable('maps')[mapId]?.name ?? mapId
     const label = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.LOCATION_LABEL_Y, `当前位置：${mapName}`, {
       fontSize: `${WORLD_MAP_UI.LOCATION_LABEL_FONT_SIZE}px`,
-      color: '#f8c46b',
+      color: WORLD_MAP_UI.LOCATION_LABEL_COLOR,
+      fontFamily: WORLD_MAP_UI.LOCATION_LABEL_FONT_FAMILY,
     })
     label.setOrigin(0.5).setScrollFactor(0).setDepth(WORLD_MAP_UI.LOCATION_LABEL_DEPTH)
     const labelBg = this.add.rectangle(

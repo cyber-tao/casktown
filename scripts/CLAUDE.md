@@ -48,15 +48,6 @@ bun run scripts/<script>.ts
 **generate 依赖**：`mmx` CLI (MiniMax) + `ffmpeg`
 **generate 限制**：环境变量 `VOICE_GENERATION_LIMIT=N` 控制单次生成数量，最多重试 2 次
 
-### 图标生成
-
-| 脚本 | 说明 | 输入 | 输出 |
-|------|------|------|------|
-| `generate-item-icons.ts` | 程序化生成物品图标图集 | `src/data/items.ts` | `img/sprites/08_item_icons.png+json` |
-
-**生成方式**：SVG 模板 + 渐变背景 + 形状符号，30+ 种预设形状，按物品类型自动配色
-**输出规格**：8 列网格，每格 96x96，内图像 72x72
-
 ## 依赖关系
 
 ```
@@ -65,7 +56,6 @@ voice-config.ts <--+   |
                    |   |
 sync-voice-lines   |   |  repair-sprite-atlases -> refresh-sprites -> assets/sprites/
 generate_voices <--+   |
-                       |  generate-item-icons -> img/sprites/ -> refresh-sprites
                        |
                        +--- (所有脚本共享)
 ```
@@ -80,11 +70,6 @@ generate_voices <--+   |
 1. 修改 `src/data/dialogues.ts` 添加对话
 2. `sync-voice-lines.ts` -- 同步到 `voice_lines.json`
 3. `generate_voices.ts` -- 生成语音文件
-
-**物品图标**：
-1. 修改 `src/data/items.ts` 添加物品
-2. `generate-item-icons.ts` -- 生成图标图集
-3. `refresh-sprites.ts` -- 拆分单个图标到 assets
 
 ## 外部依赖
 
@@ -104,7 +89,6 @@ generate_voices <--+   |
 | `scripts/generate_voices.ts` | 语音文件生成 (195 行) |
 | `scripts/refresh-sprites.ts` | 精灵拆分 (256 行) |
 | `scripts/repair-sprite-atlases.ts` | 图集修复 (319 行) |
-| `scripts/generate-item-icons.ts` | 物品图标生成 (262 行) |
 
 ## 变更记录
 

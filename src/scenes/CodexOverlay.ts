@@ -4,25 +4,33 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { QuestSystem } from '../core/QuestSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { queueImageAssets } from '../core/AssetLoader'
 import {
+  CODEX_OVERLAY_UI,
   CODEX_STORY_BRANCH_COUNT,
+  CODEX_TAB_DEFS,
+  COLORS,
   GAME_HEIGHT,
   GAME_WIDTH,
+  MENU_OVERLAY_UI,
   PROPHECY_NUMERIC_CONDITION_MIN,
   QUEST_COMPLETED_CONDITION_PREFIX,
   QUEST_STARTED_CONDITION_PREFIX,
-  TOUCH_INPUT,
+  RUNTIME_UI_ASSET_KEYS,
+  UI_FONT_FAMILY,
+  UI_TITLE_FONT_FAMILY,
   scaleFont,
-  scalePx,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { addRuntimePanel } from '../utils/runtimePanels'
 
 type CodexTab = 'monsters' | 'items' | 'story'
 
 export class CodexOverlay extends Phaser.Scene {
   private tab: CodexTab = 'monsters'
   private cursorIndex = 0
+  private listTopIndex = 0
   private listItems: Phaser.GameObjects.Text[] = []
   private cursor!: Phaser.GameObjects.Rectangle
   private detailText!: Phaser.GameObjects.Text
@@ -34,50 +42,59 @@ export class CodexOverlay extends Phaser.Scene {
     super({ key: 'CodexOverlay', active: false })
   }
 
+  preload(): void {
+    queueImageAssets(this, Object.values(RUNTIME_UI_ASSET_KEYS))
+  }
+
   create(): void {
     AudioManager.getInstance().setScene(this)
     this.cursorIndex = 0
+    this.listTopIndex = 0
     this.listItems = []
     const gd = GameData.getInstance()
     const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
     const items = GAME_CONFIG_DATABASE.getTable('items')
 
-    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.8)
-    overlay.setDepth(200)
+    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, CODEX_OVERLAY_UI.OVERLAY_ALPHA)
+    overlay.setDepth(CODEX_OVERLAY_UI.OVERLAY_DEPTH)
     overlay.setScrollFactor(0)
 
-    // Title
-    const title = this.add.text(GAME_WIDTH / 2, scalePx(20), '预言之书 · 图鉴', {
-      fontSize: scaleFont(20), color: '#f1c40f',
-    })
-    title.setOrigin(0.5, 0)
-    title.setScrollFactor(0)
-    title.setDepth(201)
+    addRuntimePanel(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, CODEX_OVERLAY_UI.PANEL_WIDTH, CODEX_OVERLAY_UI.PANEL_HEIGHT, RUNTIME_UI_ASSET_KEYS.MENU_PANEL, COLORS.uiBg, CODEX_OVERLAY_UI.PANEL_ALPHA, CODEX_OVERLAY_UI.PANEL_DEPTH)
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, CODEX_OVERLAY_UI.PANEL_WIDTH, CODEX_OVERLAY_UI.PANEL_HEIGHT, COLORS.black, 0)
+      .setStrokeStyle(CODEX_OVERLAY_UI.BORDER_WIDTH, COLORS.uiBorder)
+      .setDepth(CODEX_OVERLAY_UI.BORDER_DEPTH)
+      .setScrollFactor(0)
 
-    // Tabs
-    const tabNames: { key: CodexTab; label: string }[] = [
-      { key: 'monsters', label: '怪物' },
-      { key: 'items', label: '物品' },
-      { key: 'story', label: '故事' },
-    ]
+    const title = this.add.text(CODEX_OVERLAY_UI.TITLE_X, CODEX_OVERLAY_UI.TITLE_Y, '预言之书 · 图鉴', {
+      fontSize: scaleFont(CODEX_OVERLAY_UI.TITLE_FONT_SIZE),
+      color: MENU_OVERLAY_UI.COLORS.title,
+      fontFamily: UI_TITLE_FONT_FAMILY,
+    })
+    title.setOrigin(0.5)
+    title.setScrollFactor(0)
+    title.setDepth(CODEX_OVERLAY_UI.CONTENT_DEPTH)
+
     this.tabs = []
-    for (let i = 0; i < tabNames.length; i++) {
-      const t = tabNames[i]!
-      const color = t.key === this.tab ? '#f1c40f' : '#95a5a6'
-      const tab = this.add.text(scalePx(160 + i * 200), scalePx(50), t.label, {
-        fontSize: scaleFont(16), color,
+    for (let i = 0; i < CODEX_TAB_DEFS.length; i++) {
+      const t = CODEX_TAB_DEFS[i]!
+      const color = t.key === this.tab ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.muted
+      const tab = this.add.text(CODEX_OVERLAY_UI.TAB_START_X + i * CODEX_OVERLAY_UI.TAB_GAP_X, CODEX_OVERLAY_UI.TAB_Y, t.label, {
+        fontSize: scaleFont(CODEX_OVERLAY_UI.TAB_FONT_SIZE),
+        color,
+        fontFamily: UI_FONT_FAMILY,
       })
       tab.setOrigin(0.5)
       tab.setScrollFactor(0)
-      tab.setDepth(201)
+      tab.setDepth(CODEX_OVERLAY_UI.CONTENT_DEPTH)
       bindTouchText(tab, () => this.selectTab(t.key))
       this.tabs.push(tab)
     }
 
-    bindTouchText(this.add.text(GAME_WIDTH / 2, TOUCH_INPUT.OVERLAY_BACK_Y, '返回', {
-      fontSize: `${TOUCH_INPUT.OVERLAY_BACK_FONT_SIZE}px`,
-      color: '#ecf0f1',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(201), () => this.close())
+    bindTouchText(this.add.text(CODEX_OVERLAY_UI.BACK_X, CODEX_OVERLAY_UI.BACK_Y, '返回', {
+      fontSize: scaleFont(CODEX_OVERLAY_UI.BACK_FONT_SIZE),
+      color: MENU_OVERLAY_UI.COLORS.text,
+      fontFamily: UI_FONT_FAMILY,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(CODEX_OVERLAY_UI.CONTENT_DEPTH), () => this.close())
 
     // Collect discovered content
     this.discoveredEnemies = Object.keys(enemies).filter(id => {
@@ -100,18 +117,19 @@ export class CodexOverlay extends Phaser.Scene {
       return count > 0 || gd.getFlag(`found_${id}`) === true
     })
 
-    // List area (left)
-    this.cursor = this.add.rectangle(scalePx(140), scalePx(85), scalePx(260), scalePx(22), 0x3498db, 0.3)
+    this.cursor = this.add.rectangle(CODEX_OVERLAY_UI.CURSOR_X, CODEX_OVERLAY_UI.LIST_START_Y, CODEX_OVERLAY_UI.CURSOR_WIDTH, CODEX_OVERLAY_UI.CURSOR_HEIGHT, COLORS.tpBar, CODEX_OVERLAY_UI.CURSOR_ALPHA)
     this.cursor.setOrigin(0, 0)
-    this.cursor.setDepth(201)
+    this.cursor.setDepth(CODEX_OVERLAY_UI.CONTENT_DEPTH)
     this.cursor.setScrollFactor(0)
 
-    // Detail area (right)
-    this.detailText = this.add.text(scalePx(430), scalePx(80), '', {
-      fontSize: scaleFont(13), color: '#ecf0f1', wordWrap: { width: scalePx(480) },
+    this.detailText = this.add.text(CODEX_OVERLAY_UI.DETAIL_X, CODEX_OVERLAY_UI.DETAIL_Y, '', {
+      fontSize: scaleFont(CODEX_OVERLAY_UI.DETAIL_FONT_SIZE),
+      color: MENU_OVERLAY_UI.COLORS.text,
+      fontFamily: UI_FONT_FAMILY,
+      wordWrap: { width: CODEX_OVERLAY_UI.DETAIL_WRAP_WIDTH },
     })
     this.detailText.setScrollFactor(0)
-    this.detailText.setDepth(201)
+    this.detailText.setDepth(CODEX_OVERLAY_UI.CONTENT_DEPTH)
 
     this.renderList()
 
@@ -127,14 +145,16 @@ export class CodexOverlay extends Phaser.Scene {
           this.updateCursor()
           break
         case 'ArrowLeft': case 'KeyA':
-          this.tab = tabNames[(tabNames.findIndex(t => t.key === this.tab) - 1 + tabNames.length) % tabNames.length]!.key
+          this.tab = CODEX_TAB_DEFS[(CODEX_TAB_DEFS.findIndex(t => t.key === this.tab) - 1 + CODEX_TAB_DEFS.length) % CODEX_TAB_DEFS.length]!.key
           this.cursorIndex = 0
+          this.listTopIndex = 0
           this.updateTabs()
           this.renderList()
           break
         case 'ArrowRight': case 'KeyD':
-          this.tab = tabNames[(tabNames.findIndex(t => t.key === this.tab) + 1) % tabNames.length]!.key
+          this.tab = CODEX_TAB_DEFS[(CODEX_TAB_DEFS.findIndex(t => t.key === this.tab) + 1) % CODEX_TAB_DEFS.length]!.key
           this.cursorIndex = 0
+          this.listTopIndex = 0
           this.updateTabs()
           this.renderList()
           break
@@ -151,10 +171,19 @@ export class CodexOverlay extends Phaser.Scene {
     return CODEX_STORY_BRANCH_COUNT + GAME_CONFIG_DATABASE.getTable('prophecies').length
   }
 
+  private syncListWindow(): void {
+    const maxTop = Math.max(0, this.getListCount() - CODEX_OVERLAY_UI.VISIBLE_ROWS)
+    this.listTopIndex = Phaser.Math.Clamp(this.listTopIndex, 0, maxTop)
+    if (this.cursorIndex < this.listTopIndex) {
+      this.listTopIndex = this.cursorIndex
+    } else if (this.cursorIndex >= this.listTopIndex + CODEX_OVERLAY_UI.VISIBLE_ROWS) {
+      this.listTopIndex = Math.min(maxTop, this.cursorIndex - CODEX_OVERLAY_UI.VISIBLE_ROWS + 1)
+    }
+  }
+
   private updateTabs(): void {
-    const tabKeys: CodexTab[] = ['monsters', 'items', 'story']
     for (let i = 0; i < this.tabs.length; i++) {
-      const color = tabKeys[i] === this.tab ? '#f1c40f' : '#95a5a6'
+      const color = CODEX_TAB_DEFS[i]?.key === this.tab ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.muted
       this.tabs[i]!.setColor(color)
     }
   }
@@ -162,6 +191,7 @@ export class CodexOverlay extends Phaser.Scene {
   private selectTab(tab: CodexTab): void {
     this.tab = tab
     this.cursorIndex = 0
+    this.listTopIndex = 0
     this.updateTabs()
     this.renderList()
   }
@@ -178,39 +208,39 @@ export class CodexOverlay extends Phaser.Scene {
     const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
     const items = GAME_CONFIG_DATABASE.getTable('items')
     const prophecies = GAME_CONFIG_DATABASE.getTable('prophecies')
+    this.syncListWindow()
+
+    const addListText = (index: number, label: string, color: string): void => {
+      const visibleIndex = index - this.listTopIndex
+      const text = this.add.text(CODEX_OVERLAY_UI.LIST_X, CODEX_OVERLAY_UI.LIST_START_Y + visibleIndex * CODEX_OVERLAY_UI.LIST_ROW_GAP_Y, label, {
+        fontSize: scaleFont(CODEX_OVERLAY_UI.LIST_FONT_SIZE),
+        color,
+        fontFamily: UI_FONT_FAMILY,
+        wordWrap: { width: CODEX_OVERLAY_UI.LIST_WRAP_WIDTH },
+      })
+      text.setScrollFactor(0).setDepth(CODEX_OVERLAY_UI.CONTENT_DEPTH)
+      bindTouchText(text, () => this.selectListItem(index))
+      this.listItems.push(text)
+    }
 
     if (this.tab === 'monsters') {
       if (this.discoveredEnemies.length === 0) {
-        const t = this.add.text(scalePx(150), scalePx(90), '尚未发现任何怪物', { fontSize: scaleFont(14), color: '#7f8c8d' })
-        t.setScrollFactor(0).setDepth(201)
-        this.listItems.push(t)
+        addListText(0, '尚未发现任何怪物', MENU_OVERLAY_UI.COLORS.dim)
       }
-      for (let i = 0; i < this.discoveredEnemies.length; i++) {
+      for (let i = this.listTopIndex; i < Math.min(this.discoveredEnemies.length, this.listTopIndex + CODEX_OVERLAY_UI.VISIBLE_ROWS); i++) {
         const ed = enemies[this.discoveredEnemies[i]!]
         if (!ed) continue
-        const t = this.add.text(scalePx(150), scalePx(90 + i * 26), `${ed.isBoss ? '★' : '·'} ${ed.name}`, {
-          fontSize: scaleFont(14), color: ed.isBoss ? '#e74c3c' : '#ecf0f1',
-        })
-        t.setScrollFactor(0).setDepth(201)
-        bindTouchText(t, () => this.selectListItem(i))
-        this.listItems.push(t)
+        addListText(i, `${ed.isBoss ? '[BOSS]' : '-'} ${ed.name}`, ed.isBoss ? MENU_OVERLAY_UI.COLORS.danger : MENU_OVERLAY_UI.COLORS.text)
       }
     } else if (this.tab === 'items') {
       if (this.discoveredItems.length === 0) {
-        const t = this.add.text(scalePx(150), scalePx(90), '尚未获得任何物品', { fontSize: scaleFont(14), color: '#7f8c8d' })
-        t.setScrollFactor(0).setDepth(201)
-        this.listItems.push(t)
+        addListText(0, '尚未获得任何物品', MENU_OVERLAY_UI.COLORS.dim)
       }
-      for (let i = 0; i < this.discoveredItems.length; i++) {
+      for (let i = this.listTopIndex; i < Math.min(this.discoveredItems.length, this.listTopIndex + CODEX_OVERLAY_UI.VISIBLE_ROWS); i++) {
         const item = items[this.discoveredItems[i]!]
         if (!item) continue
         const count = GameData.getInstance().getItemQuantity(item.id)
-        const t = this.add.text(scalePx(150), scalePx(90 + i * 26), `${item.name} x${count}`, {
-          fontSize: scaleFont(14), color: '#ecf0f1',
-        })
-        t.setScrollFactor(0).setDepth(201)
-        bindTouchText(t, () => this.selectListItem(i))
-        this.listItems.push(t)
+        addListText(i, `${item.name} x${count}`, MENU_OVERLAY_UI.COLORS.text)
       }
     } else {
       const gd = GameData.getInstance()
@@ -226,33 +256,32 @@ export class CodexOverlay extends Phaser.Scene {
         `四封印解放: ${gd.branches.released_four_seals ? '是' : '否'}`,
         `xiaoai净化: ${gd.branches.xiaoai_purified ? '是' : '否'}`,
       ]
-      for (let i = 0; i < storyEntries.length; i++) {
-        const t = this.add.text(scalePx(150), scalePx(90 + i * 26), storyEntries[i]!, {
-          fontSize: scaleFont(14), color: '#ecf0f1',
-        })
-        t.setScrollFactor(0).setDepth(201)
-        bindTouchText(t, () => this.selectListItem(i))
-        this.listItems.push(t)
-      }
-      for (let i = 0; i < prophecies.length; i++) {
-        const prophecy = prophecies[i]!
+      const total = storyEntries.length + prophecies.length
+      for (let i = this.listTopIndex; i < Math.min(total, this.listTopIndex + CODEX_OVERLAY_UI.VISIBLE_ROWS); i++) {
+        if (i < storyEntries.length) {
+          addListText(i, storyEntries[i]!, MENU_OVERLAY_UI.COLORS.text)
+          continue
+        }
+        const prophecy = prophecies[i - storyEntries.length]
+        if (!prophecy) continue
         const conditionMet = this.isStoryConditionMet(prophecy.condition)
-        const label = conditionMet ? `📖 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
-        const color = conditionMet ? '#f39c12' : '#5a5a5a'
-        const t = this.add.text(scalePx(150), scalePx(90 + (CODEX_STORY_BRANCH_COUNT + i) * 26), label, {
-          fontSize: scaleFont(14), color,
-        })
-        t.setScrollFactor(0).setDepth(201)
-        bindTouchText(t, () => this.selectListItem(CODEX_STORY_BRANCH_COUNT + i))
-        this.listItems.push(t)
+        const label = conditionMet ? `预言 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
+        addListText(i, label, conditionMet ? MENU_OVERLAY_UI.COLORS.accent : MENU_OVERLAY_UI.COLORS.dim)
       }
     }
 
-    this.updateCursor()
+    this.cursor.y = CODEX_OVERLAY_UI.LIST_START_Y + (this.cursorIndex - this.listTopIndex) * CODEX_OVERLAY_UI.LIST_ROW_GAP_Y
+    this.updateDetail()
   }
 
   private updateCursor(): void {
-    this.cursor.y = scalePx(85 + this.cursorIndex * 26)
+    const previousTopIndex = this.listTopIndex
+    this.syncListWindow()
+    if (previousTopIndex !== this.listTopIndex) {
+      this.renderList()
+      return
+    }
+    this.cursor.y = CODEX_OVERLAY_UI.LIST_START_Y + (this.cursorIndex - this.listTopIndex) * CODEX_OVERLAY_UI.LIST_ROW_GAP_Y
     this.updateDetail()
   }
 

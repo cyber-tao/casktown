@@ -1,0 +1,176 @@
+{
+  "note": "Final visual review package reflecting current workspace resources. This script does not apply runtime edits.",
+  "index": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/final-review/final-review-index.png",
+  "designSources": [
+    {
+      "title": "01 Town Direction",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/01-town-rebuild-direction.png"
+    },
+    {
+      "title": "02 Main Cast Direction",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/02-main-cast-direction.png"
+    },
+    {
+      "title": "03 Tileset Direction",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/03-town-tileset-direction.png"
+    },
+    {
+      "title": "04 UI Direction",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/04-ui-direction.png"
+    },
+    {
+      "title": "05 Environment Direction",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/05-environment-direction.png"
+    },
+    {
+      "title": "06 Production Town",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/06-production-town-tileset.png"
+    },
+    {
+      "title": "07 Production Characters",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/07-production-character-sprites.png"
+    },
+    {
+      "title": "08 Production UI",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/08-production-ui-kit.png"
+    },
+    {
+      "title": "09 Production NPCs",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/09-production-npcs-guardians.png"
+    },
+    {
+      "title": "10 Production Enemies",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/10-production-enemies-bosses.png"
+    }
+  ],
+  "sourceCandidates": [
+    {
+      "title": "Town Candidates",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/review/review-candidates-town.png"
+    },
+    {
+      "title": "Main Cast Candidates",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/review/review-candidates-main-cast.png"
+    },
+    {
+      "title": "UI Candidates",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/review/review-candidates-ui.png"
+    },
+    {
+      "title": "NPCs And Guardians Candidates",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/review/review-candidates-npcs-guardians.png"
+    },
+    {
+      "title": "Enemies And Bosses Candidates",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/review/review-candidates-enemies-bosses.png"
+    }
+  ],
+  "atlasPreviews": [
+    {
+      "title": "Characters",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-characters.png"
+    },
+    {
+      "title": "NPCs & Bosses",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-npcs-bosses.png"
+    },
+    {
+      "title": "Monsters",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-monsters.png"
+    },
+    {
+      "title": "World Objects",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-town-world-objects.png"
+    },
+    {
+      "title": "Nature Environment",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-nature-environment.png"
+    },
+    {
+      "title": "Holy Temple",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-holy-temple.png"
+    },
+    {
+      "title": "Dark Fantasy",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/atlas-preview/atlas-preview-dark-fantasy.png"
+    }
+  ],
+  "uiAndItemPreviews": [
+    {
+      "title": "UI Direction",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/04-ui-direction.png"
+    },
+    {
+      "title": "Production UI Kit",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/08-production-ui-kit.png"
+    },
+    {
+      "title": "UI Candidate Cuts",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/review/review-candidates-ui.png"
+    },
+    {
+      "title": "Title Background Runtime",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/title_bg_1080p.jpg"
+    },
+    {
+      "title": "Loading Background Runtime",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/loading_bg_1080p.jpg"
+    },
+    {
+      "title": "Custom Item Gap Source",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/item-gap-fill/14-gap-fill-item-icons-alpha.png"
+    },
+    {
+      "title": "Pineapple Rice Override",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/item-gap-fill/pineapple_rice-preview.png"
+    },
+    {
+      "title": "Pineapple Seed Override",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/item-gap-fill/pineapple_seed-preview.png"
+    }
+  ],
+  "gapPreviews": [
+    {
+      "title": "Normalized Gap Contact Sheet",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/gap-fill-normalized-contact-sheet.png"
+    },
+    {
+      "title": "Gap Monsters Target",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/gap-fill-normalized-target-monsters.png"
+    },
+    {
+      "title": "Gap World Objects Target",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/gap-fill-normalized-target-world-objects.png"
+    },
+    {
+      "title": "Gap Holy Temple Target",
+      "file": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/gap-fill-normalized-target-holy-temple.png"
+    }
+  ],
+  "runtimeFixPreviews": [
+    {
+      "title": "Holy Wind Small",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/holy_temple/misc/wind_effect_small.png"
+    },
+    {
+      "title": "Holy Wind Large",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/holy_temple/misc/wind_effect_large.png"
+    },
+    {
+      "title": "Holy Light Small",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/holy_temple/misc/holy_light_small.png"
+    },
+    {
+      "title": "Holy Light Large",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/holy_temple/misc/holy_light_large.png"
+    },
+    {
+      "title": "Pineapple Rice Runtime",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/items/misc/pineapple_rice.png"
+    },
+    {
+      "title": "Pineapple Seed Runtime",
+      "file": "/Users/claw/workdir/casktown/assets/sprites/items/misc/pineapple_seed.png"
+    }
+  ]
+}

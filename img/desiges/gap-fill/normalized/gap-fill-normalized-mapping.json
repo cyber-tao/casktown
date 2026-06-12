@@ -1,0 +1,275 @@
+{
+  "note": "Normalized transparent gap frames. Runtime atlases are unchanged.",
+  "records": [
+    {
+      "target": {
+        "category": "monsters",
+        "frameName": "mei_01",
+        "sourceId": "monsters",
+        "crop": {
+          "left": 0,
+          "top": 0,
+          "width": 512,
+          "height": 512
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/monsters/mei_01.png",
+      "width": 181,
+      "height": 217,
+      "alphaPixels": 7983,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "monsters",
+        "frameName": "mei_02",
+        "sourceId": "monsters",
+        "crop": {
+          "left": 512,
+          "top": 0,
+          "width": 512,
+          "height": 512
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/monsters/mei_02.png",
+      "width": 181,
+      "height": 217,
+      "alphaPixels": 9399,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "monsters",
+        "frameName": "wang_01",
+        "sourceId": "monsters",
+        "crop": {
+          "left": 0,
+          "top": 512,
+          "width": 512,
+          "height": 512
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/monsters/wang_01.png",
+      "width": 181,
+      "height": 217,
+      "alphaPixels": 8544,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "monsters",
+        "frameName": "wang_02",
+        "sourceId": "monsters",
+        "crop": {
+          "left": 512,
+          "top": 512,
+          "width": 512,
+          "height": 512
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/monsters/wang_02.png",
+      "width": 181,
+      "height": 217,
+      "alphaPixels": 10023,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "monsters",
+        "frameName": "liang_01",
+        "sourceId": "monsters",
+        "crop": {
+          "left": 0,
+          "top": 1024,
+          "width": 512,
+          "height": 512
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/monsters/liang_01.png",
+      "width": 181,
+      "height": 217,
+      "alphaPixels": 9337,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "monsters",
+        "frameName": "liang_02",
+        "sourceId": "monsters",
+        "crop": {
+          "left": 512,
+          "top": 1024,
+          "width": 512,
+          "height": 512
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/monsters/liang_02.png",
+      "width": 181,
+      "height": 217,
+      "alphaPixels": 10320,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "steamship",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 0,
+          "top": 45,
+          "width": 525,
+          "height": 430
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/steamship.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 20771,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "sailboat",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 470,
+          "top": 50,
+          "width": 390,
+          "height": 420
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/sailboat.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 24295,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "rowboat",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 760,
+          "top": 85,
+          "width": 410,
+          "height": 390
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/rowboat.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 20477,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "lighthouse",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 1145,
+          "top": 20,
+          "width": 330,
+          "height": 405
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/lighthouse.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 21089,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "dark_castle",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 95,
+          "top": 485,
+          "width": 545,
+          "height": 430
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/dark_castle.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 20204,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "dark_swamp_cave",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 625,
+          "top": 500,
+          "width": 455,
+          "height": 390
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/dark_swamp_cave.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 22470,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "world_objects",
+        "frameName": "buoy",
+        "sourceId": "world_objects",
+        "crop": {
+          "left": 1125,
+          "top": 545,
+          "width": 395,
+          "height": 340
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/world_objects/buoy.png",
+      "width": 241,
+      "height": 271,
+      "alphaPixels": 20832,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "holy_temple",
+        "frameName": "cloud_small",
+        "sourceId": "holy_clouds",
+        "crop": {
+          "left": 130,
+          "top": 235,
+          "width": 530,
+          "height": 350
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/holy_temple/cloud_small.png",
+      "width": 120,
+      "height": 181,
+      "alphaPixels": 851,
+      "transparentCorners": true
+    },
+    {
+      "target": {
+        "category": "holy_temple",
+        "frameName": "cloud_large",
+        "sourceId": "holy_clouds",
+        "crop": {
+          "left": 780,
+          "top": 125,
+          "width": 850,
+          "height": 430
+        }
+      },
+      "output": "/Users/claw/workdir/casktown/output/imagegen/casktown-visual-redesign/gap-fill/normalized/holy_temple/cloud_large.png",
+      "width": 120,
+      "height": 181,
+      "alphaPixels": 1315,
+      "transparentCorners": true
+    }
+  ]
+}
