@@ -39,6 +39,9 @@ import {
   ROAMING_ENCOUNTER_RESPAWN,
   scaleFont,
   scalePx,
+  TRUE_ENDING_SUPPORT_CHARACTER_ID,
+  TRUE_ENDING_SUPPORT_ENCOUNTER_IDS,
+  TRUE_ENDING_SUPPORT_FLAG,
   UI_TITLE_FONT_FAMILY,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
@@ -59,7 +62,7 @@ const COMBO_DEFS: ComboDef[] = [
   { skillId: 'yuexiahuixuan', char1: 'HUIHUI', char2: 'T', flag: 'has_sacred_water' },
   { skillId: 'shendunzhen', char1: 'A', char2: 'SUN', flag: 'has_millennium_seed' },
   { skillId: 'yuyanzhiren', char1: 'T', char2: 'SUN', flag: 'temple_visited' },
-  { skillId: 'fengyuezhixi', char1: 'T', char2: 'xiaoai', flag: 'xiaoai_purified' },
+  { skillId: 'fengyuezhixi', char1: 'T', char2: TRUE_ENDING_SUPPORT_CHARACTER_ID, flag: TRUE_ENDING_SUPPORT_FLAG },
 ]
 
 interface BattleUnit {
@@ -123,7 +126,7 @@ export class BattleScene extends Phaser.Scene {
 
   preload(): void {
     showLoadingScreen(this, LOADING_SCREEN.BATTLE_LABEL)
-    queueImageAssets(this, collectBattleImageKeys(this.encounterId, GameData.getInstance().party, this.mapId))
+    queueImageAssets(this, collectBattleImageKeys(this.encounterId, this.getBattlePartyIds(GameData.getInstance().party), this.mapId))
   }
 
   create(data: { encounterId: string; mapId?: string; mapEventId?: string }): void {
@@ -234,7 +237,7 @@ export class BattleScene extends Phaser.Scene {
 
   private setupEncounter(encounterId: string): void {
     const gd = GameData.getInstance()
-    const party = gd.party
+    const party = this.getBattlePartyIds(gd.party)
 
     // Spawn player units
     for (let i = 0; i < party.length; i++) {
@@ -312,6 +315,16 @@ export class BattleScene extends Phaser.Scene {
       this.enemyData.push(ed)
       this.createUnitUI(unit, x, y - BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
     }
+  }
+
+  private getBattlePartyIds(party: readonly string[]): string[] {
+    const ids = [...party]
+    const hasTrueEndingSupport = TRUE_ENDING_SUPPORT_ENCOUNTER_IDS.includes(this.encounterId as typeof TRUE_ENDING_SUPPORT_ENCOUNTER_IDS[number]) &&
+      GameData.getInstance().getFlag(TRUE_ENDING_SUPPORT_FLAG) === true
+    if (hasTrueEndingSupport && !ids.includes(TRUE_ENDING_SUPPORT_CHARACTER_ID)) {
+      ids.push(TRUE_ENDING_SUPPORT_CHARACTER_ID)
+    }
+    return ids
   }
 
   private getEnemiesForEncounter(encounterId: string): string[] {
@@ -1285,12 +1298,12 @@ export class BattleScene extends Phaser.Scene {
 
   private getAvailableCombos(): { skillId: string; name: string; char1: string; char2: string }[] {
     const gd = GameData.getInstance()
-    const party = gd.party
+    const playerIds = new Set(this.units.filter(unit => unit.isPlayer).map(unit => unit.id))
     const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     const results: { skillId: string; name: string; char1: string; char2: string }[] = []
 
     for (const def of COMBO_DEFS) {
-      if (!party.includes(def.char1) || !party.includes(def.char2)) continue
+      if (!playerIds.has(def.char1) || !playerIds.has(def.char2)) continue
       if (gd.getFlag(def.flag) !== true) continue
 
       const unit1 = this.units.find(u => u.isPlayer && u.id === def.char1)

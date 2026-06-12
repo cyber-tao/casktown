@@ -44,8 +44,8 @@ export const PROPHECIES: ProphecyVerse[] = [
     id: 'P005',
     chapter: '第五章·魔宫',
     verse: '影中身影似故人，花茶之下藏杀心。净化的光从何来？木桶精灵说分明。',
-    hint: '进入魔宫，面对假xiaoai，找到净化方法',
-    explicit: '目标：魔宫 → 击败假xiaoai → 找到净化xiaoai的方法',
+    hint: '进入魔宫，面对假 xiaoai，找到净化方法',
+    explicit: '目标：魔宫 → 击败假 xiaoai → 找到净化 xiaoai 的方法',
     condition: 'defeated_fake_xiaoai',
   },
   {
@@ -53,7 +53,7 @@ export const PROPHECIES: ProphecyVerse[] = [
     chapter: '终章·人心之渊',
     verse: '无相之影化万象，人心才是最暗处。预言指的不是路，而是你心中的选择。',
     hint: '进入人心之渊，面对真正的敌人——人心中的黑暗',
-    explicit: '真结局：净化xiaoai → 进入人心之渊 → 击败无相',
+    explicit: '真结局：净化 xiaoai → 进入人心之渊 → 击败无相',
     condition: 'xiaoai_purified',
   },
   {

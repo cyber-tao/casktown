@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { BLUE_MINT_SIDE_QUEST, STORY_PROGRESS_FLAGS } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, STORY_PROGRESS_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -1480,6 +1480,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
     ],
     onComplete: [
       { type: 'setFlag', flag: 'true_route_unlocked', value: true },
+      { type: 'addParty', characterId: TRUE_ENDING_SUPPORT_CHARACTER_ID },
       { type: 'questComplete', questId: 'QST_012' },
       { type: 'questStart', questId: 'QST_013' },
     ],

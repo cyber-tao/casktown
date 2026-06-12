@@ -4,7 +4,7 @@ export const ITEMS: Record<string, ItemData> = {
   // Key items
   ring: {
     id: 'ring', name: '无名戒指', type: 'key',
-    effect: 'plot', description: 'T被选中的证明；驱散黑暗；净化xiaoai；真结局钥匙',
+    effect: 'plot', description: 'T 被选中的证明；驱散黑暗；净化 xiaoai；真结局钥匙',
     usableInBattle: false, usableInField: false,
   },
   prophecy_book: {
@@ -112,7 +112,7 @@ export const ITEMS: Record<string, ItemData> = {
     usableInBattle: false, usableInField: false,
   },
   xiaoai_light: {
-    id: 'xiaoai_light', name: 'xiaoai的残光', type: 'key',
+    id: 'xiaoai_light', name: 'xiaoai 的残光', type: 'key',
     effect: 'plot', description: '真结局钥匙之一',
     usableInBattle: false, usableInField: false,
   },

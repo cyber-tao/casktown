@@ -491,6 +491,9 @@ export const REDESIGNED_TOWN_START_POSITION = { x: 22, y: 23 } as const
 export const START_PLAYER_POSITION = REDESIGNED_TOWN_START_POSITION
 export const START_PLAYER_DIRECTION = DIRECTION.DOWN
 export const START_PARTY = ['T'] as const
+export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
+export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
+export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
 export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
   T: 't',
   HUIHUI: 'huihui',
@@ -706,7 +709,7 @@ export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [
   'QST_013',
   BLUE_MINT_SIDE_QUEST.QUEST_ID,
 ] as const
-export const MAINLINE_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN'] as const
+export const MAINLINE_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN', TRUE_ENDING_SUPPORT_CHARACTER_ID] as const
 export const REBUILD_LEVEL_LIMITS = {
   MIN: 0,
   MAX: 5,
