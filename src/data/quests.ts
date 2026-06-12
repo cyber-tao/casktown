@@ -96,7 +96,7 @@ export const QUESTS: Record<string, QuestDef> = {
     id: 'QST_014',
     name: '蓝色薄荷',
     description: '帮助药草商采集森林深处的蓝色薄荷',
-    objectives: ['前往奇妙森林采集蓝色薄荷'],
+    objectives: ['前往奇妙森林采集蓝色薄荷', '把蓝色薄荷交给药草商'],
     rewards: [{ exp: 50, itemId: 'heal_grass', itemQty: 5 }],
   },
 }

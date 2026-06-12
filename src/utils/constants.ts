@@ -580,6 +580,35 @@ export const MAINLINE_QA = {
   STATUS_PASSED: 'passed',
   STATUS_FAILED: 'failed',
 } as const
+export const BLUE_MINT_SIDE_QUEST = {
+  QUEST_ID: 'QST_014',
+  ITEM_ID: 'blue_mint',
+  FLAGS: {
+    REQUESTED: 'blue_mint_requested',
+    GATHERED: 'blue_mint_gathered',
+    DELIVERED: 'blue_mint_delivered',
+  },
+  DIALOGUES: {
+    REQUEST: 'DIA_NPC_REBUILD1_HERB',
+    WAIT: 'DIA_NPC_REBUILD1_HERB_WAIT',
+    TURN_IN: 'DIA_NPC_REBUILD1_HERB_TURNIN',
+    DONE: 'DIA_NPC_REBUILD1_HERB_DONE',
+    GATHER: 'DIA_FOREST_HERB_GATHER',
+  },
+  EVENTS: {
+    REQUEST: 'NPC_HERB_REQUEST',
+    WAIT: 'NPC_HERB_WAIT',
+    TURN_IN: 'NPC_HERB_TURNIN',
+    DONE: 'NPC_HERB_DONE',
+    GATHER: 'EVT_BLUE_MINT',
+  },
+  SPRITES: {
+    MERCHANT: 'npc_barrel_spirit_leafcloak',
+    GATHER: 'env_flowers_patch_blue',
+  },
+  HERB_MERCHANT_BOUNDS: { x: 22, y: 18, width: 1, height: 1 },
+  GATHER_BOUNDS: { x: 15, y: 14, width: 1, height: 1 },
+} as const
 export const MAINLINE_QA_ROUTE = [
   { kind: 'dialogue', dialogueId: 'DIA_001_START' },
   { kind: 'event', mapId: 'MAP_001', eventId: 'NPC_PINEAPPLE_START' },
@@ -608,6 +637,9 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_042', eventId: 'NPC_SUN' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'EVT_LAUREL' },
   { kind: 'event', mapId: 'MAP_002', eventId: 'EVT_REBUILD_CEREMONY' },
+  { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.REQUEST },
+  { kind: 'event', mapId: 'MAP_012', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.GATHER },
+  { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN },
   { kind: 'event', mapId: 'MAP_050', eventId: 'EVT_SPRING_BARRIER' },
   { kind: 'event', mapId: 'MAP_051', eventId: 'EVT_DRAGON_SEAL' },
   { kind: 'event', mapId: 'MAP_052', eventId: 'EVT_MEI_BOSS' },
@@ -672,6 +704,7 @@ export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [
   'QST_011',
   'QST_012',
   'QST_013',
+  BLUE_MINT_SIDE_QUEST.QUEST_ID,
 ] as const
 export const MAINLINE_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN'] as const
 export const REBUILD_LEVEL_LIMITS = {

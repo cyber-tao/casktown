@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { STORY_PROGRESS_FLAGS } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, STORY_PROGRESS_FLAGS } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -2034,13 +2034,44 @@ export const DIALOGUES: Record<string, DialogueData> = {
   },
 
   DIA_NPC_REBUILD1_HERB: {
-    id: 'DIA_NPC_REBUILD1_HERB',
+    id: BLUE_MINT_SIDE_QUEST.DIALOGUES.REQUEST,
     lines: [
       { speaker: '药草商', text: '树苗长出来之后，野生的药草也开始恢复了。我的店终于可以重新开张。' },
       { speaker: '系统', text: '药草商商店开放。' },
       { speaker: '药草商', text: '你去奇妙森林的时候，帮我留意一下有没有稀有的蓝色薄荷。' },
     ],
-    onComplete: [{ type: 'questStart', questId: 'QST_014' }],
+    onComplete: [
+      { type: 'questStart', questId: BLUE_MINT_SIDE_QUEST.QUEST_ID },
+      { type: 'setFlag', flag: BLUE_MINT_SIDE_QUEST.FLAGS.REQUESTED, value: true },
+    ],
+  },
+
+  DIA_NPC_REBUILD1_HERB_WAIT: {
+    id: BLUE_MINT_SIDE_QUEST.DIALOGUES.WAIT,
+    lines: [
+      { speaker: '药草商', text: '蓝色薄荷通常长在千年树种祭台附近。叶片泛蓝，靠近时有清凉的味道。' },
+      { speaker: 'T', text: '找到之后我会带回来。' },
+    ],
+  },
+
+  DIA_NPC_REBUILD1_HERB_TURNIN: {
+    id: BLUE_MINT_SIDE_QUEST.DIALOGUES.TURN_IN,
+    lines: [
+      { speaker: '药草商', text: '这就是蓝色薄荷！有了它，镇上的解毒药就能稳定供应了。' },
+      { speaker: '系统', text: '交付【蓝色薄荷】。获得【回复草】x5。' },
+    ],
+    onComplete: [
+      { type: 'setFlag', flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: true },
+      { type: 'questComplete', questId: BLUE_MINT_SIDE_QUEST.QUEST_ID },
+    ],
+  },
+
+  DIA_NPC_REBUILD1_HERB_DONE: {
+    id: BLUE_MINT_SIDE_QUEST.DIALOGUES.DONE,
+    lines: [
+      { speaker: '药草商', text: '蓝色薄荷已经入药了。需要补给的话，随时来我这里。' },
+    ],
+    onComplete: [{ type: 'shop' }],
   },
 
   // ============================================================
@@ -2181,12 +2212,17 @@ export const DIALOGUES: Record<string, DialogueData> = {
   },
 
   DIA_FOREST_HERB_GATHER: {
-    id: 'DIA_FOREST_HERB_GATHER',
+    id: BLUE_MINT_SIDE_QUEST.DIALOGUES.GATHER,
     lines: [
       { speaker: '慧慧', text: 'T，你看这个草药。和药草商描述的蓝色薄荷一模一样！' },
       { speaker: 'T', text: '真的？' },
       { speaker: '慧慧', text: '嗯。带回去给他，说不定有奖励。' },
       { speaker: '系统', text: '获得【蓝色薄荷】x1。' },
+    ],
+    onComplete: [
+      { type: 'addItem', itemId: BLUE_MINT_SIDE_QUEST.ITEM_ID, quantity: 1 },
+      { type: 'setFlag', flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: true },
+      { type: 'questAdvance', questId: BLUE_MINT_SIDE_QUEST.QUEST_ID },
     ],
   },
 
