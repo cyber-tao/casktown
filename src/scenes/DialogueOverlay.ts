@@ -7,6 +7,8 @@ import {
   DIALOGUE_CHOICE,
   DIALOGUE_FACE,
   DIALOGUE_NAME_POSITION,
+  DIALOGUE_TEXT_FACELESS_POSITION,
+  DIALOGUE_TEXT_FACELESS_WIDTH,
   DIALOGUE_TEXT_POSITION,
   DIALOGUE_UI,
   DIALOGUE_TEXT_WIDTH,
@@ -52,8 +54,6 @@ const SPEAKER_FACE_MAP: Record<string, string> = {
   风赤: 'npc_fengchi',
   熙苑: 'npc_xiyuan',
   预言: 'npc_priestess_sun',
-  旁白: 'npc_barrel_spirit',
-  系统: 'npc_qilin',
 }
 
 function wrapDialogueText(text: string): string[] {
@@ -230,7 +230,13 @@ export class DialogueOverlay extends Phaser.Scene {
     this.nameText.setText(line.speaker)
 
     const faceKey = SPEAKER_FACE_MAP[line.speaker]
-    if (faceKey && this.textures.exists(faceKey)) {
+    const hasFace = Boolean(faceKey && this.textures.exists(faceKey))
+    this.faceRect.setVisible(hasFace)
+    this.textObj.setX(hasFace ? DIALOGUE_TEXT_POSITION.x : DIALOGUE_TEXT_FACELESS_POSITION.x)
+    this.textObj.setWordWrapWidth(hasFace ? DIALOGUE_TEXT_WIDTH : DIALOGUE_TEXT_FACELESS_WIDTH, true)
+    this.textObj.setFixedSize(hasFace ? DIALOGUE_TEXT_WIDTH : DIALOGUE_TEXT_FACELESS_WIDTH, 0)
+
+    if (hasFace && faceKey) {
       this.faceImage.setTexture(faceKey)
       this.faceImage.setVisible(true)
       this.faceImage.setDisplaySize(DIALOGUE_FACE.size, DIALOGUE_FACE.size)

@@ -950,6 +950,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     eventPositions: {
       EVT_START: { x: 22, y: 23, width: 1, height: 1 }, NPC_HUIHUI: { x: 26, y: 17, width: 1, height: 1 },
       NPC_A: { x: 20, y: 17, width: 1, height: 1 }, NPC_MAYOR: { x: 25, y: 10, width: 1, height: 1 },
+      NPC_MAYOR_STORY: { x: 25, y: 10, width: 1, height: 1 },
       NPC_MAYOR_AFTER: { x: 25, y: 10, width: 1, height: 1 },
       NPC_BARREL: { x: 21, y: 15, width: 1, height: 1 }, EVT_FESTIVAL: { x: 20, y: 13, width: 5, height: 4 },
       NPC_PINEAPPLE_START: { x: 17, y: 23, width: 1, height: 1 },
@@ -1501,6 +1502,11 @@ export const DIALOGUE_TEXT_POSITION = {
   x: scalePx(180),
   y: scalePx(380),
 } as const
+export const DIALOGUE_TEXT_FACELESS_POSITION = {
+  x: DIALOGUE_BOX.x - DIALOGUE_BOX.width / 2 + DIALOGUE_BOX.padding,
+  y: DIALOGUE_TEXT_POSITION.y,
+} as const
+export const DIALOGUE_TEXT_FACELESS_WIDTH = DIALOGUE_BOX.width - DIALOGUE_BOX.padding * 2
 export const DIALOGUE_CHOICE = {
   x: scalePx(200),
   cursorX: scalePx(190),

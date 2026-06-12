@@ -256,8 +256,8 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '木桶精灵', text: '命运类事件默认同意。' },
       { speaker: '慧慧', text: 'T……' },
       { speaker: '阿博', text: '看来你逃不掉了。' },
-      { speaker: '镇长', text: '今晚到我家来。我有东西交给你。' },
-      { speaker: '系统', text: '主线任务更新【镇长的嘱托】。' },
+      { speaker: '镇长', text: '今晚到会场北侧的镇长家门口来。我有东西交给你。' },
+      { speaker: '系统', text: '主线任务更新【镇长的嘱托】：前往会场北侧的镇长家门口。' },
     ],
     onComplete: [
       { type: 'questStart', questId: 'QST_001' },

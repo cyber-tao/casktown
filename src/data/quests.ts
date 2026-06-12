@@ -18,8 +18,8 @@ export const QUESTS: Record<string, QuestDef> = {
   QST_003: {
     id: 'QST_003',
     name: '镇长的嘱托',
-    description: '镇长将父亲的遗物和预言之书交给你，你将成为木桶镇的勇士。',
-    objectives: ['前往镇长家', '接受嘱托', '获得预言之书'],
+    description: '镇长在会场北侧的镇长家门口等你，将父亲的遗物和预言之书交给你。',
+    objectives: ['前往会场北侧的镇长家门口', '接受嘱托', '获得预言之书'],
     rewards: [{ exp: 50 }],
   },
   QST_004: {
