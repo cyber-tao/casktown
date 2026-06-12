@@ -549,10 +549,11 @@ export class MapScene extends Phaser.Scene {
     const sx = event.x * TILE_SIZE + event.width * TILE_SIZE / 2
     const sy = event.y * TILE_SIZE + event.height * TILE_SIZE / 2
     const encounterId = this.getBattleEncounterId(event)
-    const spriteKey = this.getEnemySpriteKey(encounterId)
+    const spriteKey = event.sprite ?? this.getEnemySpriteKey(encounterId)
     const textureKey = this.textures.exists(spriteKey) ? spriteKey : DEFAULT_ENEMY_SPRITE_KEY
     const enemySprite = this.add.sprite(sx, sy, textureKey)
-    enemySprite.setDisplaySize(TILE_SIZE, TILE_SIZE)
+    const displaySize = this.getBattleEnemyDisplaySize(event)
+    enemySprite.setDisplaySize(displaySize.width, displaySize.height)
     enemySprite.setDepth(10)
     this.battleEnemies.set(event.id, enemySprite)
     this.battleEnemyEvents.set(event.id, event)
@@ -663,6 +664,18 @@ export class MapScene extends Phaser.Scene {
     return { ...preset, ...event.fieldBehavior } as FieldEntityBehavior
   }
 
+  private getBattleEnemyDisplaySize(event: MapEvent): { width: number; height: number } {
+    if (!event.sprite) return { width: TILE_SIZE, height: TILE_SIZE }
+    const width = event.width * TILE_SIZE
+    const height = event.height * TILE_SIZE
+    const maxSize = FIELD_ENTITY_BEHAVIOR.BATTLE_SPRITE_MAX_SIZE_TILES * TILE_SIZE
+    const scale = Math.min(1, maxSize / Math.max(width, height))
+    return {
+      width: Math.round(width * scale),
+      height: Math.round(height * scale),
+    }
+  }
+
   private scheduleFieldPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior, timers: Phaser.Time.TimerEvent[]): void {
     if (behavior.patrolRangeTiles <= 0 || behavior.idleMaxMs <= 0) return
     const timer = this.time.addEvent({
@@ -758,7 +771,7 @@ export class MapScene extends Phaser.Scene {
       }
       if (event.trigger !== 'touch') continue
       const behavior = this.fieldEntityBehaviors.get(id) ?? this.getBattleFieldBehavior(event)
-      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
+      const dist = this.getSpriteBoundsDistance(sprite, this.player.x, this.player.y)
       if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) {
         this.triggerEvent(event)
         return true
@@ -1748,11 +1761,27 @@ export class MapScene extends Phaser.Scene {
     if (sprite) {
       const behavior = this.fieldEntityBehaviors.get(event.id)
       const distanceTiles = behavior?.interactionDistanceTiles ?? FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_DISTANCE_TILES
-      const playerDist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
-      const facingDist = Phaser.Math.Distance.Between(fx * TILE_SIZE + TILE_SIZE / 2, fy * TILE_SIZE + TILE_SIZE / 2, sprite.x, sprite.y)
+      const facingX = fx * TILE_SIZE + TILE_SIZE / 2
+      const facingY = fy * TILE_SIZE + TILE_SIZE / 2
+      const playerDist = event.type === 'battle'
+        ? this.getSpriteBoundsDistance(sprite, this.player.x, this.player.y)
+        : Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
+      const facingDist = event.type === 'battle'
+        ? this.getSpriteBoundsDistance(sprite, facingX, facingY)
+        : Phaser.Math.Distance.Between(facingX, facingY, sprite.x, sprite.y)
       return playerDist <= distanceTiles * TILE_SIZE || facingDist <= distanceTiles * TILE_SIZE
     }
     return this.checkEventCollision(event, fx, fy) || this.checkEventCollision(event, px, py)
+  }
+
+  private getSpriteBoundsDistance(sprite: Phaser.GameObjects.Sprite, x: number, y: number): number {
+    const left = sprite.x - sprite.displayWidth * sprite.originX
+    const top = sprite.y - sprite.displayHeight * sprite.originY
+    const right = left + sprite.displayWidth
+    const bottom = top + sprite.displayHeight
+    const closestX = Math.max(left, Math.min(x, right))
+    const closestY = Math.max(top, Math.min(y, bottom))
+    return Phaser.Math.Distance.Between(x, y, closestX, closestY)
   }
 
   private checkEventCollision(event: MapEvent, x: number, y: number): boolean {

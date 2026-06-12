@@ -1051,7 +1051,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     ],
     objectRects: [{ x: 6, y: 5, width: 7, height: 5, tile: MAP_TILE_KEYS.BUSH }, { x: 30, y: 20, width: 7, height: 4, tile: MAP_TILE_KEYS.GRASS_CLUMP }],
     objectClearRects: [{ x: 0, y: 13, width: 2, height: 6 }, { x: 40, y: 13, width: 2, height: 6 }],
-    objects: [{ x: 17, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 24, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 24, y: 18, tile: MAP_TILE_KEYS.ROCK }, { x: 29, y: 14, tile: MAP_TILE_KEYS.SIGN }],
+    objects: [{ x: 17, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 24, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 33, y: 18, tile: MAP_TILE_KEYS.ROCK }, { x: 29, y: 14, tile: MAP_TILE_KEYS.SIGN }],
     eventPositions: { EVT_TIGER: { x: 24, y: 15, width: 5, height: 5 } },
     transfers: [
       { id: 'EXIT_WEST_11', x: 0, y: 13, width: 1, height: 6, targetMap: 'MAP_010', targetX: 43, targetY: 13, direction: DIRECTION.LEFT },
@@ -2002,6 +2002,7 @@ export const SETTINGS_PANEL = {
 
 export const FIELD_ENTITY_BEHAVIOR = {
   BATTLE_TOUCH_DISTANCE_TILES: 0.8,
+  BATTLE_SPRITE_MAX_SIZE_TILES: 3,
   NPC_INTERACTION_DISTANCE_TILES: 1.25,
   CHASE_SPEED_TILES_PER_SECOND: 3.2,
   FAST_ENEMY_SPEED_MIN: 12,
