@@ -3,6 +3,7 @@ import { queueImageAssets } from '../core/AssetLoader'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
+import { isProphecyConditionMet } from '../core/ProphecyConditions'
 import { SaveManager } from '../core/SaveManager'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
@@ -1077,8 +1078,7 @@ export class MenuOverlay extends Phaser.Scene {
     const prophecy = prophecies[this.codexIndex - CODEX_STORY_BRANCH_COUNT]
     if (!prophecy) return
     const gd = GameData.getInstance()
-    const conditionValue = prophecy.condition ? gd.getFlag(prophecy.condition) : true
-    const conditionMet = !prophecy.condition || conditionValue === true || (typeof conditionValue === 'number' && conditionValue > 0)
+    const conditionMet = isProphecyConditionMet(prophecy.condition)
     this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.CARD_GAP, prophecy.chapter, MENU_OVERLAY_UI.BODY_FONT_SIZE, conditionMet ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
     if (!conditionMet) {
       this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, '尚未满足揭示条件。', MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.muted, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)

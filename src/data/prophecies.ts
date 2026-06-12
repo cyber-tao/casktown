@@ -46,7 +46,7 @@ export const PROPHECIES: ProphecyVerse[] = [
     verse: '影中身影似故人，花茶之下藏杀心。净化的光从何来？木桶精灵说分明。',
     hint: '进入魔宫，面对假 xiaoai，找到净化方法',
     explicit: '目标：魔宫 → 击败假 xiaoai → 找到净化 xiaoai 的方法',
-    condition: 'defeated_fake_xiaoai',
+    condition: 'fake_xiaoai_defeated',
   },
   {
     id: 'P006',

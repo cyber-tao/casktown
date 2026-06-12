@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
-import { QuestSystem } from '../core/QuestSystem'
+import { isProphecyConditionMet } from '../core/ProphecyConditions'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import {
@@ -13,9 +13,6 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   MENU_OVERLAY_UI,
-  PROPHECY_NUMERIC_CONDITION_MIN,
-  QUEST_COMPLETED_CONDITION_PREFIX,
-  QUEST_STARTED_CONDITION_PREFIX,
   RUNTIME_UI_ASSET_KEYS,
   UI_FONT_FAMILY,
   UI_TITLE_FONT_FAMILY,
@@ -264,7 +261,7 @@ export class CodexOverlay extends Phaser.Scene {
         }
         const prophecy = prophecies[i - storyEntries.length]
         if (!prophecy) continue
-        const conditionMet = this.isStoryConditionMet(prophecy.condition)
+        const conditionMet = isProphecyConditionMet(prophecy.condition)
         const label = conditionMet ? `预言 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
         addListText(i, label, conditionMet ? MENU_OVERLAY_UI.COLORS.accent : MENU_OVERLAY_UI.COLORS.dim)
       }
@@ -334,7 +331,7 @@ export class CodexOverlay extends Phaser.Scene {
           return
         }
         const gd = GameData.getInstance()
-        const conditionMet = this.isStoryConditionMet(prophecy.condition)
+        const conditionMet = isProphecyConditionMet(prophecy.condition)
         if (!conditionMet) {
           this.detailText.setText([
             prophecy.chapter,
@@ -365,20 +362,6 @@ export class CodexOverlay extends Phaser.Scene {
     } else {
       this.detailText.setText('')
     }
-  }
-
-  private isStoryConditionMet(condition?: string): boolean {
-    if (!condition) return true
-    const questSystem = QuestSystem.getInstance()
-    if (condition.startsWith(QUEST_STARTED_CONDITION_PREFIX)) {
-      const questId = condition.slice(QUEST_STARTED_CONDITION_PREFIX.length)
-      return questSystem.isQuestActive(questId) || questSystem.isQuestCompleted(questId)
-    }
-    if (condition.startsWith(QUEST_COMPLETED_CONDITION_PREFIX)) {
-      return questSystem.isQuestCompleted(condition.slice(QUEST_COMPLETED_CONDITION_PREFIX.length))
-    }
-    const conditionValue = GameData.getInstance().getFlag(condition)
-    return conditionValue === true || (typeof conditionValue === 'number' && conditionValue > PROPHECY_NUMERIC_CONDITION_MIN)
   }
 
   private close(): void {
