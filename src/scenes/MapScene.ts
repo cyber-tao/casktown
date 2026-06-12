@@ -29,6 +29,8 @@ import {
   FIELD_ENTITY_BEHAVIOR,
   FIELD_ENTITY_BEHAVIOR_PRESETS,
   FIELD_SPRITE_ANIMATION,
+  FOLLOWER_DEPTH,
+  FOLLOWER_MAX_COUNT,
   FOLLOWER_MIN_DISTANCE_FACTOR,
   FOLLOWER_TRAIL_OFFSETS,
   MAP_GAMEPAD_INPUT,
@@ -486,7 +488,7 @@ export class MapScene extends Phaser.Scene {
     const gd = GameData.getInstance()
     const px = Math.floor(this.player.x / TILE_SIZE)
     const py = Math.floor(this.player.y / TILE_SIZE)
-    for (let i = 1; i < gd.party.length && i <= 3; i++) {
+    for (let i = 1; i < gd.party.length && i <= FOLLOWER_MAX_COUNT; i++) {
       const memberId = gd.party[i]!
       const memberBase = this.getCharacterSpriteBase(memberId)
       const key = this.resolveTextureKey(`${memberBase}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
@@ -495,7 +497,7 @@ export class MapScene extends Phaser.Scene {
       const fy = (py - offset.y) * TILE_SIZE + TILE_SIZE / 2
       const follower = this.add.sprite(fx, fy, key)
       follower.setDisplaySize(TILE_SIZE, TILE_SIZE)
-      follower.setDepth(9)
+      follower.setDepth(FOLLOWER_DEPTH)
       this.followers.push(follower)
       this.followerMemberIds.push(memberBase)
       this.followerPositions.push({ x: fx, y: fy })

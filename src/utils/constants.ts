@@ -874,6 +874,8 @@ export const FOLLOWER_TRAIL_OFFSETS = [
   { x: 0, y: 2 },
   { x: 0, y: 3 },
 ] as const
+export const FOLLOWER_MAX_COUNT = FOLLOWER_TRAIL_OFFSETS.length
+export const FOLLOWER_DEPTH = 9
 export const FIELD_SPRITE_ANIMATION = {
   FRAME_DURATION_MS: 180,
   IDLE_FRAME_INDEX: 1,
