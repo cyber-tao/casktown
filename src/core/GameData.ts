@@ -336,6 +336,8 @@ export class GameData {
     for (const [charId, char] of this.characters) {
       this.baseStats.set(charId, { ...char.stats })
       this.applyEquipment(charId)
+      char.stats.hp = char.stats.maxHp
+      char.stats.mp = char.stats.maxMp
     }
   }
 
