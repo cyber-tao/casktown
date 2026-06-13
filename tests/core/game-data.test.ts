@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
+import { GAME_CONFIG_DATABASE, cloneConfigData } from '../../src/data/configDatabase.ts'
 import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
 import {
   REBUILD_VISUAL_MAP_THRESHOLD,
@@ -132,6 +133,28 @@ describe('GameData', () => {
     const gd = GameData.getInstance()
     const hero = gd.characters.get('T')!
     expect(hero.equipment.weapon).toBe('fathers_sword')
+  })
+
+  test('reset fills hp and mp when configured maxima exceed current values', () => {
+    const originalHero = cloneConfigData(GAME_CONFIG_DATABASE.getTable('characters').T!)
+    const overriddenHero = cloneConfigData(originalHero)
+    overriddenHero.stats.hp = 1
+    overriddenHero.stats.maxHp = originalHero.stats.maxHp + 100
+    overriddenHero.stats.mp = 2
+    overriddenHero.stats.maxMp = originalHero.stats.maxMp + 25
+
+    try {
+      GAME_CONFIG_DATABASE.setRecord('characters', 'T', overriddenHero)
+      const gd = GameData.getInstance()
+      gd.reset()
+      const hero = gd.characters.get('T')!
+
+      expect(hero.stats.hp).toBe(hero.stats.maxHp)
+      expect(hero.stats.mp).toBe(hero.stats.maxMp)
+    } finally {
+      GAME_CONFIG_DATABASE.setRecord('characters', 'T', originalHero)
+      GameData.getInstance().reset()
+    }
   })
 })
 
