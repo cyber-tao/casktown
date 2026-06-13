@@ -157,6 +157,27 @@ describe('game content data', () => {
     expect(errors).toEqual([])
   })
 
+  test('story maps use matching visual tilesets', () => {
+    const expectedTilesets: Record<string, string> = {
+      MAP_030: 'holy',
+      MAP_031: 'holy',
+      MAP_041: 'holy',
+      MAP_042: 'holy',
+      MAP_054: 'holy',
+      MAP_060: 'dark',
+      MAP_061: 'dark',
+      MAP_062: 'dark',
+      MAP_063: 'dark',
+      MAP_070: 'dark',
+    }
+
+    const mismatches = Object.entries(expectedTilesets)
+      .filter(([mapId, tileset]) => MAPS[mapId]?.tileset !== tileset)
+      .map(([mapId, tileset]) => `${mapId}: expected ${tileset}, got ${MAPS[mapId]?.tileset ?? 'missing'}`)
+
+    expect(mismatches).toEqual([])
+  })
+
   test('dialogue choices and completion actions resolve', () => {
     const errors: string[] = []
 

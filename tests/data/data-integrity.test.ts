@@ -11,6 +11,7 @@ import { QUESTS } from '../../src/data/quests.ts'
 import { PROPHECIES } from '../../src/data/prophecies.ts'
 import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
 import { IMAGE_ASSETS } from '../../src/data/assets.ts'
+import { TILE_SPRITES, TILESET_TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
 
 describe('data type integrity', () => {
@@ -129,6 +130,22 @@ describe('data type integrity', () => {
       .map(([key, assetPath]) => `${key}: ${assetPath}`)
 
     expect(missing).toEqual([])
+  })
+
+  test('map tile sprite assets resolve for each tileset', () => {
+    const missingOverrides = Object.entries(TILESET_TILE_SPRITES)
+      .flatMap(([tileset, overrides]) => Object.entries(overrides)
+        .filter(([, spriteKey]) => !IMAGE_ASSETS[spriteKey])
+        .map(([tileId, spriteKey]) => `${tileset}/${tileId}: ${spriteKey}`))
+
+    const missingMapTiles = Object.values(MAPS)
+      .flatMap(map => map.layers.flatMap(layer => layer.data.map(tileId => ({ map, tileId }))))
+      .filter(({ tileId }) => tileId > 0)
+      .map(({ map, tileId }) => ({ map, tileId, spriteKey: resolveTileSpriteKey(TILE_SPRITES, map.tileset, tileId) }))
+      .filter(({ spriteKey }) => !spriteKey || !IMAGE_ASSETS[spriteKey])
+      .map(({ map, tileId, spriteKey }) => `${map.id}/${map.tileset}/${tileId}: ${spriteKey ?? 'missing'}`)
+
+    expect([...missingOverrides, ...missingMapTiles]).toEqual([])
   })
 
   test('runtime audio asset files exist', () => {

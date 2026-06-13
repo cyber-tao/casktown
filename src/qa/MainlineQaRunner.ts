@@ -1,4 +1,5 @@
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { resolveTileSpriteKey } from '../data/tileSprites'
 import type { DialogueChoice, EncounterData, EventAction, MapData, MapEvent } from '../data/types'
 import { areEventConditionsMet } from '../core/EventConditions'
 import { GameData } from '../core/GameData'
@@ -350,7 +351,7 @@ class MainlineQaRunner {
       for (const tileId of layer.data) {
         if (!tileId || checkedTiles.has(tileId)) continue
         checkedTiles.add(tileId)
-        const spriteKey = tileSprites[tileId]
+        const spriteKey = resolveTileSpriteKey(tileSprites, map.tileset, tileId)
         if (!spriteKey) {
           this.addError(`config:${mapId}: Tile ${tileId} has no sprite mapping`)
         } else if (!imageAssets[spriteKey]) {

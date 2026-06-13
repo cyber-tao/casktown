@@ -973,7 +973,7 @@ function buildMap030(): MapData {
 
   const map: MapData = {
     id: 'MAP_030', name: '圣水殿外路', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'holy', layers: [ground, objs],
     collisions: [], events: [], encounters: ['ENC_HOLY_1', 'ENC_HOLY_2'],
     encounterRate: 0.07, bgm: 'holy_water', connections: [],
   }
@@ -1053,7 +1053,7 @@ function buildMap031(): MapData {
 
   const map: MapData = {
     id: 'MAP_031', name: '圣水殿大厅', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'holy', layers: [ground, objs],
     collisions: [], events: [], encounters: [], encounterRate: 0,
     bgm: 'holy_temple', connections: [],
   }
@@ -1215,7 +1215,7 @@ function buildMap041(): MapData {
 
   const map: MapData = {
     id: 'MAP_041', name: '七色路', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'holy', layers: [ground, objs],
     collisions: [], events: [], encounters: ['ENC_MAZE_1'],
     encounterRate: 0.09, bgm: 'mystery', connections: [],
   }
@@ -1301,7 +1301,7 @@ function buildMap042(): MapData {
 
   const map: MapData = {
     id: 'MAP_042', name: '神殿', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'holy', layers: [ground, objs],
     collisions: [], events: [], encounters: [], encounterRate: 0,
     bgm: 'temple', connections: [],
   }
@@ -1468,7 +1468,7 @@ function buildMap060(): MapData {
 
   const map: MapData = {
     id: 'MAP_060', name: '魔宫入口', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'dark', layers: [ground, objs],
     collisions: [], events: [], encounters: ['ENC_MAZE_1'],
     encounterRate: 0.08, bgm: 'dark_palace', connections: [],
   }
@@ -1532,7 +1532,7 @@ function buildMap062(): MapData {
 
   const map: MapData = {
     id: 'MAP_062', name: '魔宫大厅', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'dark', layers: [ground, objs],
     collisions: [], events: [], encounters: [],
     encounterRate: 0, bgm: 'dark_palace', connections: [],
   }
@@ -1607,7 +1607,7 @@ function buildMap070(): MapData {
 
   const map: MapData = {
     id: 'MAP_070', name: '人心之渊', width: W, height: H,
-    tileset: 'environment', layers: [ground, objs],
+    tileset: 'dark', layers: [ground, objs],
     collisions: [], events: [], encounters: [],
     encounterRate: 0, bgm: 'wuxiang_battle', connections: [],
   }

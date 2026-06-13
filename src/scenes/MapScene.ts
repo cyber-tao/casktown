@@ -10,6 +10,7 @@ import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { areEventConditionsMet as areConditionsMet } from '../core/EventConditions'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { resolveTileSpriteKey } from '../data/tileSprites'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
@@ -426,7 +427,7 @@ export class MapScene extends Phaser.Scene {
       this.tileSprites[y] = []
       for (let x = 0; x < this.mapData.width; x++) {
         const idx = resolveTile(ground.data[y * this.mapData.width + x] ?? 0)
-        const spriteKey = tileSprites[idx] || 'env_dirt_plain'
+        const spriteKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, idx) || 'env_dirt_plain'
         const img = this.add.image(x * TILE_SIZE, y * TILE_SIZE, spriteKey)
         img.setOrigin(0, 0)
         img.setDisplaySize(TILE_SIZE, TILE_SIZE)
@@ -442,7 +443,7 @@ export class MapScene extends Phaser.Scene {
         const raw = objects.data[y * this.mapData.width + x]
         if (raw && raw > 0) {
           const idx = resolveTile(raw)
-          const spriteKey = tileSprites[idx]
+          const spriteKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, idx)
           if (spriteKey) {
             const footprint = TILE_SPRITE_FOOTPRINTS[spriteKey]
             const widthTiles = footprint?.width ?? 1

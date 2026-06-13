@@ -465,10 +465,14 @@ export const TILE_TEXTURE_PROCESSING = {
 
 export const TILE_TEXTURE_INSET_OVERRIDES: Record<string, { readonly x: number; readonly y: number }> = {
   env_river_vertical: { x: 0.38, y: 0.12 },
+  dark_swamp_water_01: { x: 0.38, y: 0.12 },
+  holy_spring_edge_01: { x: 0.36, y: 0.16 },
 }
 
 export const TILE_TEXTURE_DETAIL_ALPHA_OVERRIDES: Record<string, number> = {
   env_river_vertical: 1,
+  dark_swamp_water_01: 1,
+  holy_spring_edge_01: 1,
 }
 
 export const CONTINUOUS_TERRAIN_TEXTURE_KEYS = [
@@ -477,9 +481,22 @@ export const CONTINUOUS_TERRAIN_TEXTURE_KEYS = [
   'env_river_vertical',
   'env_dirt_pebbles',
   'env_farmland_plain',
+  'holy_floor_tile_01',
+  'holy_floor_tile_02',
+  'holy_spring_edge_01',
+  'holy_path_blue',
+  'holy_path_green',
+  'holy_path_orange',
+  'holy_path_yellow',
+  'dark_floor_purple_cracks',
+  'dark_cave_floor',
+  'dark_swamp_water_01',
+  'dark_floor_brick',
+  'dark_earth_floor',
+  'dark_floor_skull_panel',
 ] as const
 
-export const STRETCHED_TILE_TEXTURE_KEYS = ['env_fence_long', 'env_wood_bridge'] as const
+export const STRETCHED_TILE_TEXTURE_KEYS = ['env_fence_long', 'env_wood_bridge', 'holy_barrier_gold', 'holy_stairs_small', 'dark_chain_hook', 'dark_swamp_bridge'] as const
 
 export const DIRECTION = {
   UP: 0,

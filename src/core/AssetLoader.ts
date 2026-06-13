@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { resolveTileSpriteKey } from '../data/tileSprites'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
   CONTINUOUS_TERRAIN_TEXTURE_KEYS,
@@ -252,13 +253,13 @@ export function collectMapTileTextureKeys(mapData: MapData): Set<string> {
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
   for (const layer of mapData.layers) {
     for (const tileId of layer.data) {
-      const key = tileSprites[tileId]
+      const key = resolveTileSpriteKey(tileSprites, mapData.tileset, tileId)
       if (key) addConfiguredKey(keys, key)
     }
   }
   if (shouldApplyRebuildTiles) {
     for (const replacement of REBUILD_TILE_REPLACEMENTS) {
-      addConfiguredKey(keys, tileSprites[replacement.targetTileId] ?? '')
+      addConfiguredKey(keys, resolveTileSpriteKey(tileSprites, mapData.tileset, replacement.targetTileId) ?? '')
     }
   }
   return keys
