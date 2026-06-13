@@ -25,6 +25,7 @@ import {
   DIRECTION_VECTORS,
   TOUCH_INPUT,
   UI_FONT_FAMILY,
+  BATTLE_RESULT_PANEL,
 } from '../../src/utils/constants.ts'
 
 describe('constants consistency', () => {
@@ -67,6 +68,18 @@ describe('constants consistency', () => {
     expect(BATTLE_RULES.MAX_TP).toBeGreaterThan(0)
     expect(BATTLE_RULES.DEFEND_DAMAGE_MULTIPLIER).toBeGreaterThan(0)
     expect(BATTLE_RULES.DEFEND_DAMAGE_MULTIPLIER).toBeLessThan(1)
+  })
+
+  test('battle result panel keeps content centered and readable', () => {
+    const panelLeft = BATTLE_RESULT_PANEL.x - BATTLE_RESULT_PANEL.width / 2
+    const panelRight = BATTLE_RESULT_PANEL.x + BATTLE_RESULT_PANEL.width / 2
+    const contentRight = BATTLE_RESULT_PANEL.contentX + BATTLE_RESULT_PANEL.contentWrapWidth
+
+    expect(BATTLE_RESULT_PANEL.titleX).toBe(BATTLE_RESULT_PANEL.x)
+    expect(BATTLE_RESULT_PANEL.confirmX).toBe(BATTLE_RESULT_PANEL.x)
+    expect(BATTLE_RESULT_PANEL.contentX).toBeGreaterThan(panelLeft)
+    expect(contentRight).toBeLessThan(panelRight)
+    expect(BATTLE_RESULT_PANEL.contentWrapWidth).toBeGreaterThan(BATTLE_RESULT_PANEL.width * 0.75)
   })
 
   test('elements enum has no duplicates', () => {
