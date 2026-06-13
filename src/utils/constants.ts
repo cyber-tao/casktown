@@ -13,6 +13,8 @@ export const PROJECT_GITHUB_URL = 'https://github.com/cyber-tao/casktown'
 export const UI_FONT_FAMILY = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif'
 export const UI_TITLE_FONT_FAMILY = '"Songti SC", "STSong", "Noto Serif CJK SC", serif'
 export const GAME_CANVAS_BACKGROUND_COLOR = '#24170e'
+export const DEFAULT_EVENT_ACTION_AMOUNT = 1
+export const DEFAULT_ITEM_QUANTITY = 1
 
 export const STARTUP_LOADING = {
   ELEMENT_ID: 'startup-loading',
@@ -491,6 +493,9 @@ export const REDESIGNED_TOWN_START_POSITION = { x: 22, y: 23 } as const
 export const START_PLAYER_POSITION = REDESIGNED_TOWN_START_POSITION
 export const START_PLAYER_DIRECTION = DIRECTION.DOWN
 export const START_PARTY = ['T'] as const
+export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
+export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
+export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
 export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
   T: 't',
   HUIHUI: 'huihui',
@@ -580,6 +585,35 @@ export const MAINLINE_QA = {
   STATUS_PASSED: 'passed',
   STATUS_FAILED: 'failed',
 } as const
+export const BLUE_MINT_SIDE_QUEST = {
+  QUEST_ID: 'QST_014',
+  ITEM_ID: 'blue_mint',
+  FLAGS: {
+    REQUESTED: 'blue_mint_requested',
+    GATHERED: 'blue_mint_gathered',
+    DELIVERED: 'blue_mint_delivered',
+  },
+  DIALOGUES: {
+    REQUEST: 'DIA_NPC_REBUILD1_HERB',
+    WAIT: 'DIA_NPC_REBUILD1_HERB_WAIT',
+    TURN_IN: 'DIA_NPC_REBUILD1_HERB_TURNIN',
+    DONE: 'DIA_NPC_REBUILD1_HERB_DONE',
+    GATHER: 'DIA_FOREST_HERB_GATHER',
+  },
+  EVENTS: {
+    REQUEST: 'NPC_HERB_REQUEST',
+    WAIT: 'NPC_HERB_WAIT',
+    TURN_IN: 'NPC_HERB_TURNIN',
+    DONE: 'NPC_HERB_DONE',
+    GATHER: 'EVT_BLUE_MINT',
+  },
+  SPRITES: {
+    MERCHANT: 'npc_barrel_spirit_leafcloak',
+    GATHER: 'env_flowers_patch_blue',
+  },
+  HERB_MERCHANT_BOUNDS: { x: 22, y: 18, width: 1, height: 1 },
+  GATHER_BOUNDS: { x: 15, y: 14, width: 1, height: 1 },
+} as const
 export const MAINLINE_QA_ROUTE = [
   { kind: 'dialogue', dialogueId: 'DIA_001_START' },
   { kind: 'event', mapId: 'MAP_001', eventId: 'NPC_PINEAPPLE_START' },
@@ -608,6 +642,9 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_042', eventId: 'NPC_SUN' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'EVT_LAUREL' },
   { kind: 'event', mapId: 'MAP_002', eventId: 'EVT_REBUILD_CEREMONY' },
+  { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.REQUEST },
+  { kind: 'event', mapId: 'MAP_012', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.GATHER },
+  { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN },
   { kind: 'event', mapId: 'MAP_050', eventId: 'EVT_SPRING_BARRIER' },
   { kind: 'event', mapId: 'MAP_051', eventId: 'EVT_DRAGON_SEAL' },
   { kind: 'event', mapId: 'MAP_052', eventId: 'EVT_MEI_BOSS' },
@@ -672,8 +709,9 @@ export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [
   'QST_011',
   'QST_012',
   'QST_013',
+  BLUE_MINT_SIDE_QUEST.QUEST_ID,
 ] as const
-export const MAINLINE_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN'] as const
+export const MAINLINE_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN', TRUE_ENDING_SUPPORT_CHARACTER_ID] as const
 export const REBUILD_LEVEL_LIMITS = {
   MIN: 0,
   MAX: 5,
@@ -836,6 +874,8 @@ export const FOLLOWER_TRAIL_OFFSETS = [
   { x: 0, y: 2 },
   { x: 0, y: 3 },
 ] as const
+export const FOLLOWER_MAX_COUNT = FOLLOWER_TRAIL_OFFSETS.length
+export const FOLLOWER_DEPTH = 9
 export const FIELD_SPRITE_ANIMATION = {
   FRAME_DURATION_MS: 180,
   IDLE_FRAME_INDEX: 1,
@@ -1051,7 +1091,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     ],
     objectRects: [{ x: 6, y: 5, width: 7, height: 5, tile: MAP_TILE_KEYS.BUSH }, { x: 30, y: 20, width: 7, height: 4, tile: MAP_TILE_KEYS.GRASS_CLUMP }],
     objectClearRects: [{ x: 0, y: 13, width: 2, height: 6 }, { x: 40, y: 13, width: 2, height: 6 }],
-    objects: [{ x: 17, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 24, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 24, y: 18, tile: MAP_TILE_KEYS.ROCK }, { x: 29, y: 14, tile: MAP_TILE_KEYS.SIGN }],
+    objects: [{ x: 17, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 24, y: 14, tile: MAP_TILE_KEYS.BRIDGE }, { x: 33, y: 18, tile: MAP_TILE_KEYS.ROCK }, { x: 29, y: 14, tile: MAP_TILE_KEYS.SIGN }],
     eventPositions: { EVT_TIGER: { x: 24, y: 15, width: 5, height: 5 } },
     transfers: [
       { id: 'EXIT_WEST_11', x: 0, y: 13, width: 1, height: 6, targetMap: 'MAP_010', targetX: 43, targetY: 13, direction: DIRECTION.LEFT },
@@ -1457,8 +1497,9 @@ export const BATTLE_LAYOUT = {
   COMMAND_ITEM_X: scalePx(680),
   COMMAND_ITEM_START_Y: scalePx(354),
   COMMAND_ITEM_GAP_Y: scalePx(24),
-  COMMAND_ITEM_FONT_SIZE: scalePx(18),
+  COMMAND_ITEM_FONT_SIZE: scalePx(20),
   COMMAND_ITEM_COLOR: '#2c190c',
+  COMMAND_ITEM_FONT_FAMILY: UI_FONT_FAMILY,
   COMMAND_CURSOR_X: scalePx(670),
   COMMAND_CURSOR_Y_OFFSET: scalePx(6),
   COMMAND_CURSOR_SIZE: scalePx(8),
@@ -1472,8 +1513,9 @@ export const BATTLE_LAYOUT = {
   DAMAGE_FLASH_ALPHA: 0.5,
   LOG_X: scalePx(20),
   LOG_Y: scalePx(20),
-  LOG_FONT_SIZE: scalePx(14),
+  LOG_FONT_SIZE: scalePx(16),
   LOG_TEXT_COLOR: '#fff0d2',
+  LOG_FONT_FAMILY: UI_FONT_FAMILY,
   LOG_BACKGROUND_COLOR: '#00000060',
   LOG_PADDING_X: scalePx(8),
   LOG_PADDING_Y: scalePx(4),
@@ -1813,6 +1855,43 @@ export const BATTLE_RULES = {
   BAIHU_TRIAL_HP_RATIO: 0.6,
   BAIHU_TRIAL_RECOVERY_HP_RATIO: 0.25,
   DUAL_BOSS_ENRAGE_SPEED_MULTIPLIER: 1.3,
+  BASIC_AI_SKILL_CHANCE: 0.4,
+  DEFENSIVE_AI_COUNTER_CHANCE: 0.2,
+  DEFENSIVE_AI_SHIELD_BASH_CHANCE: 0.5,
+  MAGE_AI_MAGIC_ATTACK_CHANCE: 0.3,
+  MAGE_AI_SPECIAL_SKILL_CHANCE: 0.6,
+  BAIHU_LOW_HP_RATIO: 0.3,
+  BAIHU_HEAVENLY_STRIKE_CHANCE: 0.4,
+  BAIHU_ROAR_CHANCE: 0.3,
+  SHUIYAO_WOUNDED_ALLY_HP_RATIO: 0.4,
+  SHUIYAO_HEAL_CHANCE: 0.5,
+  SHUIYAO_WATER_CURTAIN_CHANCE: 0.3,
+  FENGCHI_WIND_WALL_CHANCE: 0.25,
+  FENGCHI_GALE_SLASH_CHANCE: 0.55,
+  PHOENIX_FIRE_BREATH_CHANCE: 0.4,
+  PHOENIX_WIND_PRESSURE_CHANCE: 0.8,
+  QILIN_ARMOR_UP_CHANCE: 0.25,
+  QILIN_EARTHQUAKE_CHANCE: 0.6,
+  CHI_POISON_MIST_CHANCE: 0.35,
+  CHI_VENOM_FANG_CHANCE: 0.65,
+  MEI_CHARM_CHANCE: 0.3,
+  MEI_ILLUSION_STRIKE_CHANCE: 0.6,
+  WANG_WIND_POISON_CHANCE: 0.35,
+  WANG_FEATHER_DART_CHANCE: 0.65,
+  LIANG_LOW_HP_RATIO: 0.4,
+  LIANG_FLAME_STOMP_CHANCE: 0.5,
+  LIANG_ROCK_SMASH_CHANCE: 0.4,
+  FAKE_XIAOAI_DARK_MIRROR_CHANCE: 0.3,
+  FAKE_XIAOAI_SHADOW_BLADE_CHANCE: 0.6,
+  XIAOAI_TRUE_LOW_HP_RATIO: 0.3,
+  XIAOAI_TRUE_FALLEN_ANGEL_CHANCE: 0.5,
+  XIAOAI_TRUE_DARK_PURGE_CHANCE: 0.3,
+  XIAOAI_TRUE_SOUL_DRAIN_CHANCE: 0.6,
+  WUXIANG_LOW_HP_RATIO: 0.2,
+  WUXIANG_DARK_NOVA_CHANCE: 0.6,
+  WUXIANG_COPY_PARTY_CHANCE: 0.25,
+  WUXIANG_DEVOUR_PROPHECY_CHANCE: 0.5,
+  WUXIANG_HEART_VOID_CHANCE: 0.75,
   REVIVE_EFFECT_PREFIX: 'revive:',
   HEAL_HP_EFFECT_PREFIX: 'heal_hp:',
   HEAL_MP_EFFECT_PREFIX: 'heal_mp:',
@@ -2002,6 +2081,7 @@ export const SETTINGS_PANEL = {
 
 export const FIELD_ENTITY_BEHAVIOR = {
   BATTLE_TOUCH_DISTANCE_TILES: 0.8,
+  BATTLE_SPRITE_MAX_SIZE_TILES: 3,
   NPC_INTERACTION_DISTANCE_TILES: 1.25,
   CHASE_SPEED_TILES_PER_SECOND: 3.2,
   FAST_ENEMY_SPEED_MIN: 12,

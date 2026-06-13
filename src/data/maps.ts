@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { DIRECTION, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, DIRECTION, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -581,6 +581,44 @@ function buildMap002(): MapData {
       type: 'npc', trigger: 'action', sprite: 'env_campfire', direction: 2,
       actions: [{ type: 'dialogue', dialogueId: 'DIA_206_TRAIN' }],
     },
+    {
+      id: BLUE_MINT_SIDE_QUEST.EVENTS.REQUEST,
+      ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
+      type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
+      conditions: [
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.REQUESTED, value: false },
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: false },
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: false },
+      ],
+      actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.REQUEST }],
+    },
+    {
+      id: BLUE_MINT_SIDE_QUEST.EVENTS.WAIT,
+      ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
+      type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
+      conditions: [
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.REQUESTED, value: true },
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: false },
+      ],
+      actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.WAIT }],
+    },
+    {
+      id: BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN,
+      ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
+      type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
+      conditions: [
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: true },
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: false },
+      ],
+      actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.TURN_IN }],
+    },
+    {
+      id: BLUE_MINT_SIDE_QUEST.EVENTS.DONE,
+      ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
+      type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
+      conditions: [{ flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: true }],
+      actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.DONE }],
+    },
     createStaticTriggerEvent('SIDE_HUIHUI_START', 'huihui_front_idle_01', 'DIA_SIDE_HH_01', [
       { flag: 'huihui_joined', value: true },
       { flag: 'side_huihui_done', value: false },
@@ -698,7 +736,7 @@ function buildMap011(): MapData {
     },
     {
       id: 'EVT_TIGER', x: 16, y: 12, width: 4, height: 4,
-      type: 'battle', trigger: 'touch',
+      type: 'battle', trigger: 'touch', sprite: 'mon_baihu_01',
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_103_TIGER' },
         { type: 'dialogue', dialogueId: 'DIA_103_TIGER_RING' },
@@ -808,6 +846,16 @@ function buildMap012(): MapData {
         { type: 'battle', encounterId: 'BTL_113' },
         { type: 'dialogue', dialogueId: 'DIA_104_SEED' },
       ],
+    },
+    {
+      id: BLUE_MINT_SIDE_QUEST.EVENTS.GATHER,
+      ...BLUE_MINT_SIDE_QUEST.GATHER_BOUNDS,
+      type: 'trigger', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.GATHER, direction: DIRECTION.DOWN,
+      conditions: [
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.REQUESTED, value: true },
+        { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: false },
+      ],
+      actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.GATHER }],
     },
   ]
 

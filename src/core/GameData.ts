@@ -594,8 +594,8 @@ export class GameData {
     this.characters = characters && Object.keys(characters).length > 0
       ? new Map(Object.entries(characters).map(([id, char]) => [id, this.cloneCharacter(char)]))
       : new Map(Object.keys(GAME_CONFIG_DATABASE.getTable('characters')).map(id => [id, createConfiguredCharacter(id)]))
-    for (const id of [...this.party, ...this.reserve]) {
-      if (!this.characters.has(id) && GAME_CONFIG_DATABASE.getTable('characters')[id]) {
+    for (const id of Object.keys(GAME_CONFIG_DATABASE.getTable('characters'))) {
+      if (!this.characters.has(id)) {
         this.characters.set(id, createConfiguredCharacter(id))
       }
     }

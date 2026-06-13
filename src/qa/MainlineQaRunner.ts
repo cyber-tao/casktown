@@ -1,5 +1,5 @@
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
-import type { DialogueChoice, EventAction, MapEvent } from '../data/types'
+import type { DialogueChoice, EncounterData, EventAction, MapData, MapEvent } from '../data/types'
 import { areEventConditionsMet } from '../core/EventConditions'
 import { GameData } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
@@ -7,6 +7,8 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import {
+  DEFAULT_EVENT_ACTION_AMOUNT,
+  DEFAULT_ITEM_QUANTITY,
   FIELD_EVENT_FLAGS,
   MAINLINE_QA,
   MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
@@ -212,7 +214,7 @@ class MainlineQaRunner {
         qs.startQuest(action.questId)
         break
       case 'questAdvance':
-        qs.advanceQuest(action.questId, action.amount ?? 1)
+        qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
         break
       case 'questComplete':
         qs.completeQuest(action.questId)
@@ -227,13 +229,13 @@ class MainlineQaRunner {
         SkillGrowth.getInstance().checkAllUnlocks()
         break
       case 'adjustTrust':
-        gd.adjustTrust(action.characterId, action.amount ?? 1)
+        gd.adjustTrust(action.characterId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
         break
       case 'adjustMercy':
-        gd.adjustMercy(action.amount ?? 1)
+        gd.adjustMercy(action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
         break
       case 'addItem':
-        gd.addItem(action.itemId, action.quantity ?? 1)
+        gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
         break
       case 'addParty':
         gd.addPartyMember(action.characterId)
@@ -294,7 +296,7 @@ class MainlineQaRunner {
     }
 
     for (const reward of encounter.rewards ?? []) {
-      if (reward.itemId) gd.addItem(reward.itemId, reward.itemQty ?? 1)
+      if (reward.itemId) gd.addItem(reward.itemId, reward.itemQty ?? DEFAULT_ITEM_QUANTITY)
       if (reward.flag) gd.setFlag(reward.flag, reward.value ?? true)
       if (reward.branch) gd.updateBranch(reward.branch, reward.branchValue ?? true)
     }
@@ -326,10 +328,59 @@ class MainlineQaRunner {
     gd.playerPosition = { x, y }
   }
 
+  private hasConfiguredImageAsset(key: string, imageAssets: Record<string, string>): boolean {
+    return Boolean(imageAssets[key]) || Object.keys(imageAssets).some(assetKey => assetKey.startsWith(`${key}_`))
+  }
+
+  private validateMapPresentation(mapId: string, map: MapData): void {
+    const tables = GAME_CONFIG_DATABASE
+    const tileSprites = tables.getTable('tileSprites')
+    const imageAssets = tables.getTable('imageAssets')
+    const bgmTracks = tables.getTable('bgmTracks')
+    const mapBgm = tables.getTable('mapBgm')
+    if (!bgmTracks[map.bgm]) this.addError(`config:${mapId}: BGM ${map.bgm} not found`)
+    const fallbackBgm = mapBgm[mapId]
+    if (fallbackBgm && !bgmTracks[fallbackBgm]) this.addError(`config:${mapId}: fallback BGM ${fallbackBgm} not found`)
+    if (map.battleBackground && !imageAssets[map.battleBackground]) {
+      this.addError(`config:${mapId}: Battle background ${map.battleBackground} has no image asset`)
+    }
+
+    const checkedTiles = new Set<number>()
+    for (const layer of map.layers) {
+      for (const tileId of layer.data) {
+        if (!tileId || checkedTiles.has(tileId)) continue
+        checkedTiles.add(tileId)
+        const spriteKey = tileSprites[tileId]
+        if (!spriteKey) {
+          this.addError(`config:${mapId}: Tile ${tileId} has no sprite mapping`)
+        } else if (!imageAssets[spriteKey]) {
+          this.addError(`config:${mapId}: Tile ${tileId} sprite ${spriteKey} has no image asset`)
+        }
+      }
+    }
+
+    for (const event of map.events) {
+      if (event.sprite && !this.hasConfiguredImageAsset(event.sprite, imageAssets)) {
+        this.addError(`config:${mapId}:${event.id}: Sprite ${event.sprite} has no image asset`)
+      }
+    }
+  }
+
+  private validateEncounterPresentation(encounterId: string, encounter: EncounterData): void {
+    const tables = GAME_CONFIG_DATABASE
+    const bgmTracks = tables.getTable('bgmTracks')
+    const imageAssets = tables.getTable('imageAssets')
+    if (!bgmTracks[encounter.bgm]) this.addError(`config:${encounterId}: BGM ${encounter.bgm} not found`)
+    if (encounter.background && !imageAssets[encounter.background]) {
+      this.addError(`config:${encounterId}: Battle background ${encounter.background} has no image asset`)
+    }
+  }
+
   private validateConfig(): void {
     const tables = GAME_CONFIG_DATABASE
     for (const [mapId, map] of Object.entries(tables.getTable('maps'))) {
       const expectedTileCount = map.width * map.height
+      this.validateMapPresentation(mapId, map)
       for (const layer of map.layers) {
         if (layer.data.length !== expectedTileCount) {
           this.addError(`config:${mapId}: Layer ${layer.name} has ${layer.data.length} tiles, expected ${expectedTileCount}`)
@@ -361,6 +412,7 @@ class MainlineQaRunner {
     }
 
     for (const [encounterId, encounter] of Object.entries(tables.getTable('encounters'))) {
+      this.validateEncounterPresentation(encounterId, encounter)
       for (const enemyId of encounter.enemies) {
         if (!tables.getTable('enemies')[enemyId]) this.addError(`config:${encounterId}: Enemy ${enemyId} not found`)
       }
@@ -368,7 +420,7 @@ class MainlineQaRunner {
         this.addError(`config:${encounterId}: Quest ${encounter.questId} not found`)
       }
       this.validateActions(encounter.rewards?.map(reward => reward.itemId
-        ? { type: 'addItem', itemId: reward.itemId, quantity: reward.itemQty ?? 1 }
+        ? { type: 'addItem', itemId: reward.itemId, quantity: reward.itemQty ?? DEFAULT_ITEM_QUANTITY }
         : reward.flag
           ? { type: 'setFlag', flag: reward.flag, value: reward.value ?? true }
           : { type: 'setBranch', branch: reward.branch!, value: reward.branchValue ?? true }) as EventAction[] ?? [], `config:${encounterId}:rewards`)

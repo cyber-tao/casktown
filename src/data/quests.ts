@@ -60,7 +60,7 @@ export const QUESTS: Record<string, QuestDef> = {
   QST_009: {
     id: 'QST_009',
     name: '生命之泉',
-    description: '前往生命之泉寻找xiaoai的真相。',
+    description: '前往生命之泉寻找 xiaoai 的真相。',
     objectives: ['抵达生命之泉入口', '突破气壁', '释放祀神四体'],
     rewards: [{ exp: 400 }],
   },
@@ -74,15 +74,15 @@ export const QUESTS: Record<string, QuestDef> = {
   QST_011: {
     id: 'QST_011',
     name: '轮回道',
-    description: '通过轮回道，了解xiaoai的过去。',
+    description: '通过轮回道，了解 xiaoai 的过去。',
     objectives: ['集齐四碑牌', '进入轮回道', '完成关键对白'],
     rewards: [{ exp: 300 }],
   },
   QST_012: {
     id: 'QST_012',
     name: '魔宫决战',
-    description: '前往魔宫救出A，面对xiaoai。',
-    objectives: ['前往魔宫', '通过黑暗沼泽', '击败xiaoai'],
+    description: '前往魔宫救出 A，面对 xiaoai。',
+    objectives: ['前往魔宫', '通过黑暗沼泽', '击败 xiaoai'],
     rewards: [{ exp: 600 }],
   },
   QST_013: {
@@ -96,7 +96,7 @@ export const QUESTS: Record<string, QuestDef> = {
     id: 'QST_014',
     name: '蓝色薄荷',
     description: '帮助药草商采集森林深处的蓝色薄荷',
-    objectives: ['前往奇妙森林采集蓝色薄荷'],
+    objectives: ['前往奇妙森林采集蓝色薄荷', '把蓝色薄荷交给药草商'],
     rewards: [{ exp: 50, itemId: 'heal_grass', itemQty: 5 }],
   },
 }

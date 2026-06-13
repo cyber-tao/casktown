@@ -473,7 +473,7 @@ export const SKILLS: Record<string, SkillData> = {
   fengyuezhixi: {
     id: 'fengyuezhixi', name: '风月止息', type: 'special', target: 'single',
     element: 'light', power: 200, costMp: 50, costTp: 100,
-    description: 'T与xiaoai的连携奥义',
+    description: 'T 与 xiaoai 的连携奥义',
   },
   yuexiahuixuan: {
     id: 'yuexiahuixuan', name: '月下回旋', type: 'attack', target: 'all',

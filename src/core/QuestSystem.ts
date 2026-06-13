@@ -4,6 +4,7 @@ import { RebuildSystem } from './RebuildSystem'
 import { SkillGrowth } from './SkillGrowth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import type { QuestState } from '../data/types'
+import { DEFAULT_ITEM_QUANTITY } from '../utils/constants'
 
 export class QuestSystem {
   private static instance: QuestSystem
@@ -65,7 +66,7 @@ export class QuestSystem {
           SkillGrowth.getInstance().checkAllUnlocks()
         }
         if (reward.itemId) {
-          gd.addItem(reward.itemId, reward.itemQty || 1)
+          gd.addItem(reward.itemId, reward.itemQty ?? DEFAULT_ITEM_QUANTITY)
         }
         if (reward.flag) {
           gd.setFlag(reward.flag, reward.value ?? true)

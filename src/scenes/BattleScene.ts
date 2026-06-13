@@ -30,6 +30,7 @@ import {
   COMBO_TP_COST,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
+  DEFAULT_ITEM_QUANTITY,
   ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -39,6 +40,9 @@ import {
   ROAMING_ENCOUNTER_RESPAWN,
   scaleFont,
   scalePx,
+  TRUE_ENDING_SUPPORT_CHARACTER_ID,
+  TRUE_ENDING_SUPPORT_ENCOUNTER_IDS,
+  TRUE_ENDING_SUPPORT_FLAG,
   UI_TITLE_FONT_FAMILY,
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
@@ -59,7 +63,7 @@ const COMBO_DEFS: ComboDef[] = [
   { skillId: 'yuexiahuixuan', char1: 'HUIHUI', char2: 'T', flag: 'has_sacred_water' },
   { skillId: 'shendunzhen', char1: 'A', char2: 'SUN', flag: 'has_millennium_seed' },
   { skillId: 'yuyanzhiren', char1: 'T', char2: 'SUN', flag: 'temple_visited' },
-  { skillId: 'fengyuezhixi', char1: 'T', char2: 'xiaoai', flag: 'xiaoai_purified' },
+  { skillId: 'fengyuezhixi', char1: 'T', char2: TRUE_ENDING_SUPPORT_CHARACTER_ID, flag: TRUE_ENDING_SUPPORT_FLAG },
 ]
 
 interface BattleUnit {
@@ -123,7 +127,7 @@ export class BattleScene extends Phaser.Scene {
 
   preload(): void {
     showLoadingScreen(this, LOADING_SCREEN.BATTLE_LABEL)
-    queueImageAssets(this, collectBattleImageKeys(this.encounterId, GameData.getInstance().party, this.mapId))
+    queueImageAssets(this, collectBattleImageKeys(this.encounterId, this.getBattlePartyIds(GameData.getInstance().party), this.mapId))
   }
 
   create(data: { encounterId: string; mapId?: string; mapEventId?: string }): void {
@@ -234,7 +238,7 @@ export class BattleScene extends Phaser.Scene {
 
   private setupEncounter(encounterId: string): void {
     const gd = GameData.getInstance()
-    const party = gd.party
+    const party = this.getBattlePartyIds(gd.party)
 
     // Spawn player units
     for (let i = 0; i < party.length; i++) {
@@ -312,6 +316,16 @@ export class BattleScene extends Phaser.Scene {
       this.enemyData.push(ed)
       this.createUnitUI(unit, x, y - BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
     }
+  }
+
+  private getBattlePartyIds(party: readonly string[]): string[] {
+    const ids = [...party]
+    const hasTrueEndingSupport = TRUE_ENDING_SUPPORT_ENCOUNTER_IDS.includes(this.encounterId as typeof TRUE_ENDING_SUPPORT_ENCOUNTER_IDS[number]) &&
+      GameData.getInstance().getFlag(TRUE_ENDING_SUPPORT_FLAG) === true
+    if (hasTrueEndingSupport && !ids.includes(TRUE_ENDING_SUPPORT_CHARACTER_ID)) {
+      ids.push(TRUE_ENDING_SUPPORT_CHARACTER_ID)
+    }
+    return ids
   }
 
   private getEnemiesForEncounter(encounterId: string): string[] {
@@ -734,6 +748,7 @@ export class BattleScene extends Phaser.Scene {
       const text = this.add.text(BATTLE_LAYOUT.COMMAND_ITEM_X, BATTLE_LAYOUT.COMMAND_ITEM_START_Y + i * BATTLE_LAYOUT.COMMAND_ITEM_GAP_Y, BATTLE_COMMAND_LABELS[i]!, {
         fontSize: `${BATTLE_LAYOUT.COMMAND_ITEM_FONT_SIZE}px`,
         color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
+        fontFamily: BATTLE_LAYOUT.COMMAND_ITEM_FONT_FAMILY,
       })
       text.setDepth(311)
       text.setScrollFactor(0)
@@ -751,6 +766,7 @@ export class BattleScene extends Phaser.Scene {
     this.logText = this.add.text(BATTLE_LAYOUT.LOG_X, BATTLE_LAYOUT.LOG_Y, '', {
       fontSize: `${BATTLE_LAYOUT.LOG_FONT_SIZE}px`,
       color: BATTLE_LAYOUT.LOG_TEXT_COLOR,
+      fontFamily: BATTLE_LAYOUT.LOG_FONT_FAMILY,
       backgroundColor: BATTLE_LAYOUT.LOG_BACKGROUND_COLOR,
       padding: { x: BATTLE_LAYOUT.LOG_PADDING_X, y: BATTLE_LAYOUT.LOG_PADDING_Y },
       wordWrap: { width: BATTLE_LAYOUT.LOG_WRAP_WIDTH },
@@ -1285,12 +1301,12 @@ export class BattleScene extends Phaser.Scene {
 
   private getAvailableCombos(): { skillId: string; name: string; char1: string; char2: string }[] {
     const gd = GameData.getInstance()
-    const party = gd.party
+    const playerIds = new Set(this.units.filter(unit => unit.isPlayer).map(unit => unit.id))
     const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     const results: { skillId: string; name: string; char1: string; char2: string }[] = []
 
     for (const def of COMBO_DEFS) {
-      if (!party.includes(def.char1) || !party.includes(def.char2)) continue
+      if (!playerIds.has(def.char1) || !playerIds.has(def.char2)) continue
       if (gd.getFlag(def.flag) !== true) continue
 
       const unit1 = this.units.find(u => u.isPlayer && u.id === def.char1)
@@ -2018,7 +2034,7 @@ export class BattleScene extends Phaser.Scene {
     if (targets.length === 0) return
     const target = this.pickRandomTarget(targets)!
     const enemy = unit.data as EnemyData
-    if (enemy.skills.length > 1 && Math.random() < 0.4) {
+    if (enemy.skills.length > 1 && Math.random() < BATTLE_RULES.BASIC_AI_SKILL_CHANCE) {
       const skillId = enemy.skills[Math.floor(Math.random() * enemy.skills.length)]!
       if (skillId !== 'normal_attack') {
         this.performSkill(unit, target, skillId)
@@ -2035,9 +2051,9 @@ export class BattleScene extends Phaser.Scene {
     if (targets.length === 0) return
     const target = this.pickRandomTarget(targets)!
     const roll = Math.random()
-    if (roll < 0.2 && !this.hasStatus(unit, BATTLE_STATUS.COUNTER)) {
+    if (roll < BATTLE_RULES.DEFENSIVE_AI_COUNTER_CHANCE && !this.hasStatus(unit, BATTLE_STATUS.COUNTER)) {
       this.performSkill(unit, unit, 'counter')
-    } else if (roll < 0.5) {
+    } else if (roll < BATTLE_RULES.DEFENSIVE_AI_SHIELD_BASH_CHANCE) {
       this.performSkill(unit, target, 'shield_bash')
     } else {
       this.performAttack(unit, target)
@@ -2050,9 +2066,9 @@ export class BattleScene extends Phaser.Scene {
     if (targets.length === 0) return
     const target = this.pickRandomTarget(targets)!
     const roll = Math.random()
-    if (roll < 0.3) {
+    if (roll < BATTLE_RULES.MAGE_AI_MAGIC_ATTACK_CHANCE) {
       this.performSkill(unit, target, 'magic_attack')
-    } else if (roll < 0.6) {
+    } else if (roll < BATTLE_RULES.MAGE_AI_SPECIAL_SKILL_CHANCE) {
       const skillId = (unit.data as EnemyData).skills.find(s => s !== 'magic_attack' && s !== 'normal_attack') || 'magic_attack'
       this.performSkill(unit, target, skillId)
     } else {
@@ -2068,9 +2084,9 @@ export class BattleScene extends Phaser.Scene {
     const target = this.pickRandomTarget(targets)!
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
-    if (hpRatio < 0.3 && roll < 0.4) {
+    if (hpRatio < BATTLE_RULES.BAIHU_LOW_HP_RATIO && roll < BATTLE_RULES.BAIHU_HEAVENLY_STRIKE_CHANCE) {
       this.performSkill(unit, target, 'heavenly_strike')
-    } else if (!this.hasStatus(unit, BATTLE_STATUS.ROAR) && roll < 0.3) {
+    } else if (!this.hasStatus(unit, BATTLE_STATUS.ROAR) && roll < BATTLE_RULES.BAIHU_ROAR_CHANCE) {
       this.performSkill(unit, unit, 'roar')
     } else {
       this.performSkill(unit, target, 'tiger_claw')
@@ -2082,11 +2098,11 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const allies = this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
-    const woundedAlly = allies.find(u => u.stats.hp / u.stats.maxHp < 0.4)
+    const woundedAlly = allies.find(u => u.stats.hp / u.stats.maxHp < BATTLE_RULES.SHUIYAO_WOUNDED_ALLY_HP_RATIO)
     const roll = Math.random()
-    if (woundedAlly && roll < 0.5) {
+    if (woundedAlly && roll < BATTLE_RULES.SHUIYAO_HEAL_CHANCE) {
       this.performSkill(unit, woundedAlly, 'heal')
-    } else if (roll < 0.3 && !this.hasStatus(unit, BATTLE_STATUS.WATER_CURTAIN)) {
+    } else if (roll < BATTLE_RULES.SHUIYAO_WATER_CURTAIN_CHANCE && !this.hasStatus(unit, BATTLE_STATUS.WATER_CURTAIN)) {
       this.performSkill(unit, unit, 'water_curtain')
     } else {
       const target = this.pickRandomTarget(targets)!
@@ -2099,9 +2115,9 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (!this.hasStatus(unit, BATTLE_STATUS.WIND_WALL) && roll < 0.25) {
+    if (!this.hasStatus(unit, BATTLE_STATUS.WIND_WALL) && roll < BATTLE_RULES.FENGCHI_WIND_WALL_CHANCE) {
       this.performSkill(unit, unit, 'wind_wall')
-    } else if (roll < 0.55) {
+    } else if (roll < BATTLE_RULES.FENGCHI_GALE_SLASH_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'gale_slash')
     } else {
@@ -2114,9 +2130,9 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (roll < 0.4) {
+    if (roll < BATTLE_RULES.PHOENIX_FIRE_BREATH_CHANCE) {
       this.performSkill(unit, targets[0]!, 'fire_breath')
-    } else if (roll < 0.8) {
+    } else if (roll < BATTLE_RULES.PHOENIX_WIND_PRESSURE_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'wind_pressure')
     } else {
@@ -2130,9 +2146,9 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (!this.hasStatus(unit, BATTLE_STATUS.ARMOR_UP) && roll < 0.25) {
+    if (!this.hasStatus(unit, BATTLE_STATUS.ARMOR_UP) && roll < BATTLE_RULES.QILIN_ARMOR_UP_CHANCE) {
       this.performSkill(unit, unit, 'armor_up')
-    } else if (roll < 0.6) {
+    } else if (roll < BATTLE_RULES.QILIN_EARTHQUAKE_CHANCE) {
       this.performSkill(unit, targets[0]!, 'earthquake')
     } else {
       const target = this.pickRandomTarget(targets)!
@@ -2145,9 +2161,9 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (roll < 0.35) {
+    if (roll < BATTLE_RULES.CHI_POISON_MIST_CHANCE) {
       this.performSkill(unit, targets[0]!, 'poison_mist')
-    } else if (roll < 0.65) {
+    } else if (roll < BATTLE_RULES.CHI_VENOM_FANG_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'venom_fang')
     } else {
@@ -2160,10 +2176,10 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (roll < 0.3) {
+    if (roll < BATTLE_RULES.MEI_CHARM_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'charm')
-    } else if (roll < 0.6) {
+    } else if (roll < BATTLE_RULES.MEI_ILLUSION_STRIKE_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'illusion_strike')
     } else {
@@ -2176,9 +2192,9 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (roll < 0.35) {
+    if (roll < BATTLE_RULES.WANG_WIND_POISON_CHANCE) {
       this.performSkill(unit, targets[0]!, 'wind_poison')
-    } else if (roll < 0.65) {
+    } else if (roll < BATTLE_RULES.WANG_FEATHER_DART_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'feather_dart')
     } else {
@@ -2193,9 +2209,9 @@ export class BattleScene extends Phaser.Scene {
     if (targets.length === 0) return
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
-    if (hpRatio < 0.4 && roll < 0.5) {
+    if (hpRatio < BATTLE_RULES.LIANG_LOW_HP_RATIO && roll < BATTLE_RULES.LIANG_FLAME_STOMP_CHANCE) {
       this.performSkill(unit, targets[0]!, 'flame_stomp')
-    } else if (roll < 0.4) {
+    } else if (roll < BATTLE_RULES.LIANG_ROCK_SMASH_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'rock_smash')
     } else {
@@ -2209,9 +2225,9 @@ export class BattleScene extends Phaser.Scene {
     const targets = this.getLivePlayers()
     if (targets.length === 0) return
     const roll = Math.random()
-    if (roll < 0.3 && !this.hasStatus(unit, BATTLE_STATUS.DARK_MIRROR)) {
+    if (roll < BATTLE_RULES.FAKE_XIAOAI_DARK_MIRROR_CHANCE && !this.hasStatus(unit, BATTLE_STATUS.DARK_MIRROR)) {
       this.performSkill(unit, unit, 'dark_mirror')
-    } else if (roll < 0.6) {
+    } else if (roll < BATTLE_RULES.FAKE_XIAOAI_SHADOW_BLADE_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'shadow_blade')
     } else {
@@ -2225,11 +2241,11 @@ export class BattleScene extends Phaser.Scene {
     if (targets.length === 0) return
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
-    if (hpRatio < 0.3 && roll < 0.5) {
+    if (hpRatio < BATTLE_RULES.XIAOAI_TRUE_LOW_HP_RATIO && roll < BATTLE_RULES.XIAOAI_TRUE_FALLEN_ANGEL_CHANCE) {
       this.performSkill(unit, targets[0]!, 'fallen_angel')
-    } else if (roll < 0.3) {
+    } else if (roll < BATTLE_RULES.XIAOAI_TRUE_DARK_PURGE_CHANCE) {
       this.performSkill(unit, targets[0]!, 'dark_purge')
-    } else if (roll < 0.6) {
+    } else if (roll < BATTLE_RULES.XIAOAI_TRUE_SOUL_DRAIN_CHANCE) {
       const target = this.pickRandomTarget(targets)!
       this.performSkill(unit, target, 'soul_drain')
     } else {
@@ -2244,13 +2260,13 @@ export class BattleScene extends Phaser.Scene {
     if (targets.length === 0) return
     const hpRatio = unit.stats.hp / unit.stats.maxHp
     const roll = Math.random()
-    if (hpRatio < 0.2 && roll < 0.6) {
+    if (hpRatio < BATTLE_RULES.WUXIANG_LOW_HP_RATIO && roll < BATTLE_RULES.WUXIANG_DARK_NOVA_CHANCE) {
       this.performSkill(unit, targets[0]!, 'dark_nova')
-    } else if (roll < 0.25) {
+    } else if (roll < BATTLE_RULES.WUXIANG_COPY_PARTY_CHANCE) {
       this.performSkill(unit, unit, 'copy_party')
-    } else if (roll < 0.5) {
+    } else if (roll < BATTLE_RULES.WUXIANG_DEVOUR_PROPHECY_CHANCE) {
       this.performSkill(unit, targets[0]!, 'devour_prophecy')
-    } else if (roll < 0.75) {
+    } else if (roll < BATTLE_RULES.WUXIANG_HEART_VOID_CHANCE) {
       this.performSkill(unit, targets[0]!, 'heart_void')
     } else {
       const target = this.pickRandomTarget(targets)!
@@ -2394,8 +2410,9 @@ export class BattleScene extends Phaser.Scene {
     if (encounter?.rewards) {
       for (const reward of encounter.rewards) {
         if (reward.itemId) {
-          gd.addItem(reward.itemId, reward.itemQty ?? 1)
-          rewardLines.push(`${this.getItemName(reward.itemId)} x${reward.itemQty ?? 1}`)
+          const itemQty = reward.itemQty ?? DEFAULT_ITEM_QUANTITY
+          gd.addItem(reward.itemId, itemQty)
+          rewardLines.push(`${this.getItemName(reward.itemId)} x${itemQty}`)
         }
         if (reward.flag) {
           gd.setFlag(reward.flag, reward.value ?? true)

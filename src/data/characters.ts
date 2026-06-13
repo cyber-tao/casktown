@@ -76,6 +76,21 @@ export const INITIAL_CHARACTERS: Record<string, CharacterData> = {
     equipment: { weapon: 'shenyu_juanzhou', armor: null, accessory: null },
     tp: 0,
   },
+  xiaoai: {
+    id: 'xiaoai',
+    name: 'xiaoai',
+    stats: {
+      hp: 150, maxHp: 150,
+      mp: 120, maxMp: 120,
+      atk: 24, def: 18,
+      matk: 30, mdef: 26,
+      speed: 22,
+      level: 28, exp: 0, expToNext: 0,
+    },
+    skills: ['wind_moon_slash', 'dark_purge', 'soul_drain'],
+    equipment: { weapon: null, armor: null, accessory: null },
+    tp: 100,
+  },
 }
 
 export function createCharacter(id: string): CharacterData {
