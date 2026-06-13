@@ -2303,14 +2303,28 @@ function buildMap063(): MapData {
       ],
     },
     {
-      id: 'EVT_PURIFICATION', x: 11, y: 8, width: 2, height: 2,
+      id: 'EVT_PURIFICATION_TRUE', x: 11, y: 8, width: 2, height: 2,
       type: 'trigger', trigger: 'autorun',
       conditions: [
         { flag: 'xiaoai_purified', value: true },
+        { flag: 'true_route_unlocked', value: true },
         { flag: 'purification_scene_shown', value: false },
       ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_632_PURIFICATION' },
+        { type: 'setFlag', flag: 'purification_scene_shown', value: true },
+      ],
+    },
+    {
+      id: 'EVT_PURIFICATION_NORMAL', x: 11, y: 8, width: 2, height: 2,
+      type: 'trigger', trigger: 'autorun',
+      conditions: [
+        { flag: 'xiaoai_purified', value: true },
+        { flag: 'true_route_unlocked', value: false },
+        { flag: 'purification_scene_shown', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_632_PURIFICATION_NORMAL' },
         { type: 'setFlag', flag: 'purification_scene_shown', value: true },
       ],
     },

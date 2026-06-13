@@ -663,7 +663,7 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_060', eventId: 'EVT_MASK_1' },
   { kind: 'event', mapId: 'MAP_062', eventId: 'EVT_FAKE_XIAOAI' },
   { kind: 'event', mapId: 'MAP_063', eventId: 'EVT_XIAOAI_FINAL' },
-  { kind: 'event', mapId: 'MAP_063', eventId: 'EVT_PURIFICATION' },
+  { kind: 'event', mapId: 'MAP_063', eventId: 'EVT_PURIFICATION_TRUE' },
   { kind: 'event', mapId: 'MAP_070', eventId: 'EVT_WUXIANG' },
 ] as const
 export const MAINLINE_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number[]> = {
@@ -858,7 +858,7 @@ export const MAP_ACCESS_REQUIREMENTS: Record<
   MAP_060: { flag: 'swamp_chains_resolved', value: true, blockedDialogueId: 'DIA_LOCKED_PALACE' },
   MAP_062: { flag: 'swamp_chains_resolved', value: true, blockedDialogueId: 'DIA_LOCKED_UNDERGROUND' },
   MAP_063: { flag: 'fake_xiaoai_defeated', value: true, blockedDialogueId: 'DIA_LOCKED_DEEP_UNDERGROUND' },
-  MAP_070: { flag: 'xiaoai_purified', value: true, blockedDialogueId: 'DIA_LOCKED_ABYSS' },
+  MAP_070: { flag: 'true_route_unlocked', value: true, blockedDialogueId: 'DIA_LOCKED_ABYSS' },
 } as const
 export const REBUILD_VISUAL_MAP_THRESHOLD = 1
 export const START_INVENTORY_ITEMS = [

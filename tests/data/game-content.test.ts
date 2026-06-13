@@ -9,7 +9,7 @@ import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
-import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -290,7 +290,7 @@ describe('game content data', () => {
       { flag: 'dream_completed', value: true, maps: ['MAP_061'] },
       { flag: 'swamp_chains_resolved', value: true, maps: ['MAP_060', 'MAP_062'] },
       { flag: 'fake_xiaoai_defeated', value: true, maps: ['MAP_063'] },
-      { flag: 'xiaoai_purified', value: true, maps: ['MAP_070'] },
+      { flag: 'true_route_unlocked', value: true, maps: ['MAP_070'] },
     ]
 
     for (const step of steps) {
@@ -302,6 +302,26 @@ describe('game content data', () => {
         expect(getBlockedMapDialogueId(mapId, readFlag)).toBeNull()
       }
     }
+  })
+
+  test('xiaoai purification branches into normal and true ending outcomes', () => {
+    const trueEvent = findEvent('MAP_063', 'EVT_PURIFICATION_TRUE')
+    const normalEvent = findEvent('MAP_063', 'EVT_PURIFICATION_NORMAL')
+    const normalDialogue = DIALOGUES['DIA_632_PURIFICATION_NORMAL']
+
+    expectCondition(trueEvent, 'xiaoai_purified', true)
+    expectCondition(trueEvent, 'true_route_unlocked', true)
+    expectCondition(trueEvent, 'purification_scene_shown', false)
+    expect(trueEvent.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_632_PURIFICATION' })
+
+    expectCondition(normalEvent, 'xiaoai_purified', true)
+    expectCondition(normalEvent, 'true_route_unlocked', false)
+    expectCondition(normalEvent, 'purification_scene_shown', false)
+    expect(normalEvent.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_632_PURIFICATION_NORMAL' })
+
+    expect(normalDialogue?.onComplete).toContainEqual({ type: 'setFlag', flag: 'normal_ending_seen', value: true })
+    expect(normalDialogue?.onComplete).toContainEqual({ type: 'questComplete', questId: 'QST_012' })
+    expect(normalDialogue?.onComplete).toContainEqual({ type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 })
   })
 
   test('critical story npcs switch to follow-up dialogue after completion flags', () => {

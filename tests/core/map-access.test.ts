@@ -40,6 +40,17 @@ describe('MapAccess', () => {
     expect(getBlockedMapDialogueId(mapId, readFlagAbove)).toBeNull()
   })
 
+  test('requires true route unlock for the abyss', () => {
+    const requirement = MAP_ACCESS_REQUIREMENTS['MAP_070']
+    expect(requirement?.flag).toBe('true_route_unlocked')
+
+    const purifiedOnly = (flag: string) => flag === 'xiaoai_purified' ? true : false
+    expect(getBlockedMapDialogueId('MAP_070', purifiedOnly)).toBe(requirement?.blockedDialogueId)
+
+    const trueRouteUnlocked = (flag: string) => flag === 'true_route_unlocked' ? true : false
+    expect(getBlockedMapDialogueId('MAP_070', trueRouteUnlocked)).toBeNull()
+  })
+
   test('all map access requirements reference valid dialogue ids', () => {
     for (const [mapId, req] of Object.entries(MAP_ACCESS_REQUIREMENTS)) {
       expect(req.blockedDialogueId).toBeTruthy()

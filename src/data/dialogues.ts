@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { BLUE_MINT_SIDE_QUEST, STORY_PROGRESS_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, REBUILT_TOWN_MAP_ID, STORY_PROGRESS_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -18,6 +18,13 @@ const FOREST_PARTY_JOIN_BATTLE_ACTIONS: NonNullable<DialogueData['onComplete']> 
 
 const CONGCONG_JOIN_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: 'congcong_joined', value: true },
+]
+
+const NORMAL_ENDING_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
+  { type: 'setFlag', flag: 'normal_ending_seen', value: true },
+  { type: 'setFlag', flag: 'purification_scene_shown', value: true },
+  { type: 'questComplete', questId: 'QST_012' },
+  { type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 },
 ]
 
 const XIYUAN_SACRED_WATER_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
@@ -1504,6 +1511,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '旁白', text: '木桶镇重新亮起灯火。人们记住了勇士的名字，却不知道那缕白烟最后想提醒什么。' },
       { speaker: '系统', text: '达成结局【重建的家园】。保存通关记录后可继续探索并开启真结局补完。' },
     ],
+    onComplete: NORMAL_ENDING_COMPLETION_ACTIONS,
   },
 
   // ============================================================
@@ -2950,7 +2958,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
   },
   DIA_LOCKED_ABYSS: {
     id: 'DIA_LOCKED_ABYSS',
-    lines: [{ speaker: '木桶精灵', text: '人心之渊还没有出现。等xiaoai被净化后，再回到这里。' }],
+    lines: [{ speaker: '木桶精灵', text: '人心之渊还没有出现。净化xiaoai后，还需要把散落的真相与善意带回来。' }],
   },
 }
 
@@ -2989,6 +2997,7 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_503_FAKE_XIAOAI: { target: 'DIA_520_PALACE', includeOnComplete: true },
   DIA_631_XIAOAI_CONFRONT: { target: 'DIA_530_CHOICE' },
   DIA_632_PURIFICATION: { target: 'DIA_530_PURIFY_SUCCESS', includeOnComplete: true },
+  DIA_632_PURIFICATION_NORMAL: { target: 'DIA_601_NORMAL', includeOnComplete: true },
   DIA_601_WUXIANG: { target: 'DIA_710_ENTER' },
 }
 
