@@ -23,6 +23,7 @@ import {
   WORLD_MAP_LOCATION_POINTS,
   DIRECTION,
   DIRECTION_VECTORS,
+  TOUCH_INPUT,
   UI_FONT_FAMILY,
 } from '../../src/utils/constants.ts'
 
@@ -130,5 +131,9 @@ describe('constants consistency', () => {
     expect(MAP_HUD.PROMPT_COLOR).toBeTruthy()
     expect(MAP_HUD.PROMPT_FONT_SIZE).toBeGreaterThan(0)
     expect(MAP_HUD.PROMPT_DEPTH).toBeGreaterThan(0)
+  })
+
+  test('touch controls cover common landscape phone widths', () => {
+    expect(TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH).toBeGreaterThanOrEqual(844)
   })
 })
