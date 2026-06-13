@@ -556,8 +556,10 @@ export function prepareBattleVisualQa(): void {
 
 export function runMainlineQa(): MainlineQaReport {
   const report = new MainlineQaRunner().run()
-  ;(window as unknown as Record<string, unknown>)[MAINLINE_QA.REPORT_GLOBAL_KEY] = report
-  window.dispatchEvent(new CustomEvent(MAINLINE_QA.REPORT_EVENT, { detail: report }))
+  ;(globalThis as unknown as Record<string, unknown>)[MAINLINE_QA.REPORT_GLOBAL_KEY] = report
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(MAINLINE_QA.REPORT_EVENT, { detail: report }))
+  }
   if (report.status === MAINLINE_QA.STATUS_FAILED) {
     console.error('CaskTown mainline QA failed', report)
   } else {
