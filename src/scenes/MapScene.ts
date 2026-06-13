@@ -1039,12 +1039,18 @@ export class MapScene extends Phaser.Scene {
     this.createPartyHud()
     this.createQuestHud()
 
-    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - MAP_HUD.PROMPT_Y_OFFSET, MAP_HUD.PROMPT_TEXT, {
-      fontSize: `${MAP_HUD.PROMPT_FONT_SIZE}px`,
+    const touchControls = this.shouldShowTouchControls()
+    const promptYOffset = touchControls ? MAP_HUD.TOUCH_PROMPT_Y_OFFSET : MAP_HUD.PROMPT_Y_OFFSET
+    const promptFontSize = touchControls ? MAP_HUD.TOUCH_PROMPT_FONT_SIZE : MAP_HUD.PROMPT_FONT_SIZE
+    const promptPaddingX = touchControls ? MAP_HUD.TOUCH_PROMPT_PADDING_X : MAP_HUD.PROMPT_PADDING_X
+    const promptPaddingY = touchControls ? MAP_HUD.TOUCH_PROMPT_PADDING_Y : MAP_HUD.PROMPT_PADDING_Y
+    const promptText = touchControls ? MAP_HUD.TOUCH_PROMPT_TEXT : MAP_HUD.PROMPT_TEXT
+    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - promptYOffset, promptText, {
+      fontSize: `${promptFontSize}px`,
       color: MAP_HUD.PROMPT_COLOR,
       fontFamily: UI_FONT_FAMILY,
       backgroundColor: MAP_HUD.PROMPT_BACKGROUND_COLOR,
-      padding: { x: MAP_HUD.PROMPT_PADDING_X, y: MAP_HUD.PROMPT_PADDING_Y },
+      padding: { x: promptPaddingX, y: promptPaddingY },
     })
     prompt.setOrigin(0.5)
     prompt.setScrollFactor(0)
@@ -1081,10 +1087,18 @@ export class MapScene extends Phaser.Scene {
 
   private formatActionPrompt(event: MapEvent): string {
     const label = this.getPromptActionLabel(event)
+    if (this.shouldShowTouchControls()) {
+      return [
+        `${MAP_HUD.TOUCH_PROMPT_ACTION_PREFIX}${label}`,
+        MAP_HUD.TOUCH_OPEN_HINT,
+        MAP_HUD.TOUCH_PROMPT_MENU_TEXT,
+      ].join(MAP_HUD.PROMPT_COMMAND_SEPARATOR)
+    }
     return `${this.getPromptConfirmPrefix()}${label}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
   }
 
   private formatDefaultPrompt(): string {
+    if (this.shouldShowTouchControls()) return MAP_HUD.TOUCH_PROMPT_TEXT
     return `${this.getPromptConfirmPrefix()}调查/对话${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
   }
 

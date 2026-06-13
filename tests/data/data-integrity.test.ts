@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { existsSync } from 'node:fs'
 import { ITEMS } from '../../src/data/items.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import { ENEMIES } from '../../src/data/enemies.ts'
@@ -9,6 +10,8 @@ import { DIALOGUES } from '../../src/data/dialogues.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { PROPHECIES } from '../../src/data/prophecies.ts'
 import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
+import { IMAGE_ASSETS } from '../../src/data/assets.ts'
+import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
 
 describe('data type integrity', () => {
   test('all items have required fields', () => {
@@ -118,5 +121,22 @@ describe('data type integrity', () => {
         }
       }
     }
+  })
+
+  test('runtime image asset files exist', () => {
+    const missing = Object.entries(IMAGE_ASSETS)
+      .filter(([, assetPath]) => !existsSync(`assets/sprites/${assetPath}`))
+      .map(([key, assetPath]) => `${key}: ${assetPath}`)
+
+    expect(missing).toEqual([])
+  })
+
+  test('runtime audio asset files exist', () => {
+    const audioAssets = [...Object.values(BGM_TRACKS), ...Object.values(SFX_TRACKS)]
+    const missing = audioAssets
+      .filter(asset => !existsSync(`assets/${asset.path}`))
+      .map(asset => `${asset.key}: ${asset.path}`)
+
+    expect(missing).toEqual([])
   })
 })

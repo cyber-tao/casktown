@@ -131,6 +131,11 @@ describe('constants consistency', () => {
     expect(MAP_HUD.PROMPT_COLOR).toBeTruthy()
     expect(MAP_HUD.PROMPT_FONT_SIZE).toBeGreaterThan(0)
     expect(MAP_HUD.PROMPT_DEPTH).toBeGreaterThan(0)
+    expect(MAP_HUD.TOUCH_PROMPT_TEXT).toContain(MAP_HUD.TOUCH_OPEN_HINT)
+    expect(MAP_HUD.TOUCH_PROMPT_TEXT).toContain(MAP_HUD.TOUCH_PROMPT_MENU_TEXT)
+    expect(MAP_HUD.TOUCH_PROMPT_ACTION_PREFIX).toBeTruthy()
+    expect(MAP_HUD.TOUCH_PROMPT_FONT_SIZE).toBeGreaterThan(MAP_HUD.PROMPT_FONT_SIZE)
+    expect(MAP_HUD.TOUCH_PROMPT_PADDING_X).toBeGreaterThan(MAP_HUD.PROMPT_PADDING_X)
   })
 
   test('touch controls cover common landscape phone widths', () => {
