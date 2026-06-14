@@ -2,6 +2,7 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
 import type { DialogueChoice, EncounterData, EventAction, MapData, MapEvent } from '../data/types'
 import { areEventConditionsMet } from '../core/EventConditions'
+import { getUniqueEventActions } from '../core/DialogueCompletionQueue'
 import { GameData } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
 import { RebuildSystem } from '../core/RebuildSystem'
@@ -131,7 +132,7 @@ class MainlineQaRunner {
 
   private runDialogue(dialogueId: string, source: string): void {
     const completionActions = this.collectDialogueCompletionActions(dialogueId, source)
-    this.executeActions(this.getUniqueActions(completionActions), `${source}:onComplete`)
+    this.executeActions(getUniqueEventActions(completionActions), `${source}:onComplete`)
   }
 
   private collectDialogueCompletionActions(dialogueId: string, source: string): EventAction[] {
@@ -489,18 +490,6 @@ class MainlineQaRunner {
       flags: { ...gd.flags },
       branches: { ...gd.branches },
     }
-  }
-
-  private getUniqueActions(actions: readonly EventAction[]): EventAction[] {
-    const uniqueActions: EventAction[] = []
-    const seen = new Set<string>()
-    for (const action of actions) {
-      const key = JSON.stringify(action)
-      if (seen.has(key)) continue
-      seen.add(key)
-      uniqueActions.push(action)
-    }
-    return uniqueActions
   }
 
   private addError(message: string): void {

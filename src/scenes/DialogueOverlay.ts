@@ -27,6 +27,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
+import { DialogueCompletionQueue } from '../core/DialogueCompletionQueue'
 import { QuestSystem } from '../core/QuestSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { areEventConditionsMet } from '../core/EventConditions'
@@ -95,7 +96,7 @@ export class DialogueOverlay extends Phaser.Scene {
   private inChoice = false
   private dialogueId = ''
   private continuations: DialogueContinuation[] = []
-  private completionActions: EventAction[] = []
+  private completionQueue = new DialogueCompletionQueue()
 
   constructor() {
     super({ key: 'DialogueOverlay', active: false })
@@ -156,7 +157,7 @@ export class DialogueOverlay extends Phaser.Scene {
     this.choices = []
     this.visibleChoices = []
     this.continuations = []
-    this.completionActions = []
+    this.completionQueue = new DialogueCompletionQueue()
 
     const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
     const script = dialogues[data.dialogueId]
@@ -412,6 +413,8 @@ export class DialogueOverlay extends Phaser.Scene {
         if (nextScript) {
           if (this.lineIndex < this.currentScript.lines.length - 1) {
             this.continuations.push({ script: this.currentScript, lineIndex: this.lineIndex + 1 })
+          } else {
+            this.completionQueue.deferTerminalParent(this.currentScript)
           }
           this.currentScript = nextScript
           this.lineIndex = 0
@@ -476,9 +479,7 @@ export class DialogueOverlay extends Phaser.Scene {
 
   private closeDialogue(): void {
     this.typeTimer?.remove()
-    if (this.currentScript?.onComplete?.length) {
-      this.completionActions.push(...this.currentScript.onComplete)
-    }
+    this.completionQueue.completeScript(this.currentScript)
     const continuation = this.continuations.pop()
     if (continuation) {
       this.currentScript = continuation.script
@@ -486,24 +487,12 @@ export class DialogueOverlay extends Phaser.Scene {
       this.showLine()
       return
     }
-    const actions = this.getUniqueCompletionActions()
+    const actions = this.completionQueue.finalize()
     this.scene.stop()
     if (actions && actions.length > 0) {
       EventBus.emit(GameEvents.DIALOGUE_END, { actions })
     } else {
       EventBus.emit(GameEvents.DIALOGUE_END)
     }
-  }
-
-  private getUniqueCompletionActions(): EventAction[] {
-    const uniqueActions: EventAction[] = []
-    const seen = new Set<string>()
-    for (const action of this.completionActions) {
-      const key = JSON.stringify(action)
-      if (seen.has(key)) continue
-      seen.add(key)
-      uniqueActions.push(action)
-    }
-    return uniqueActions
   }
 }
