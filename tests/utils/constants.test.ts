@@ -96,6 +96,12 @@ describe('constants consistency', () => {
     expect(panelArea).toBeLessThan(GAME_WIDTH * GAME_HEIGHT * 0.09)
   })
 
+  test('battle unit names stay readable over detailed backgrounds', () => {
+    expect(BATTLE_LAYOUT.UNIT_NAME_STROKE_THICKNESS).toBeGreaterThan(0)
+    expect(BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH).toBeGreaterThanOrEqual(BATTLE_LAYOUT.UNIT_BAR_WIDTH)
+    expect(BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH).toBeLessThan(BATTLE_LAYOUT.ENEMY_GAP_X)
+  })
+
   test('elements enum has no duplicates', () => {
     const vals = Object.values(ELEMENTS)
     expect(new Set(vals).size).toBe(vals.length)

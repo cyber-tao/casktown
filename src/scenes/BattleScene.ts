@@ -651,7 +651,12 @@ export class BattleScene extends Phaser.Scene {
       fontSize: `${BATTLE_LAYOUT.UNIT_NAME_FONT_SIZE}px`,
       color: BATTLE_LAYOUT.UNIT_NAME_COLOR,
       fontFamily: BATTLE_LAYOUT.UNIT_NAME_FONT_FAMILY,
+      stroke: BATTLE_LAYOUT.UNIT_NAME_STROKE_COLOR,
+      strokeThickness: BATTLE_LAYOUT.UNIT_NAME_STROKE_THICKNESS,
     })
+    if (nameText.width > BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH) {
+      nameText.setScale(BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH / nameText.width)
+    }
     nameText.setOrigin(0.5)
     nameText.setDepth(307)
     nameText.setScrollFactor(0)
