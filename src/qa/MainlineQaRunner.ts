@@ -7,6 +7,7 @@ import { QuestSystem } from '../core/QuestSystem'
 import { RebuildSystem } from '../core/RebuildSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
+import { applyEncounterVictoryRewards } from '../core/BattleRewards'
 import {
   DEFAULT_EVENT_ACTION_AMOUNT,
   DEFAULT_ITEM_QUANTITY,
@@ -17,7 +18,6 @@ import {
   MAINLINE_QA_REQUIRED_FINAL_FLAGS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
-  ROAMING_ENCOUNTER_RESPAWN,
 } from '../utils/constants'
 
 type MainlineQaRouteStep = typeof MAINLINE_QA_ROUTE[number]
@@ -257,56 +257,19 @@ class MainlineQaRunner {
   }
 
   private applyEncounterVictory(encounterId: string, source: string, mapEventId = ''): void {
-    const encounter = GAME_CONFIG_DATABASE.getTable('encounters')[encounterId]
-    if (!encounter) {
+    const rewardResult = applyEncounterVictoryRewards({ encounterId, mapEventId, defeatedAtMs: Date.now() })
+    if (!rewardResult.encounter) {
       this.addError(`${source}: Encounter ${encounterId} not found`)
       return
     }
 
-    const gd = GameData.getInstance()
-    let totalExp = 0
-    let totalGold = 0
-    for (const enemyId of encounter.enemies) {
-      const enemy = GAME_CONFIG_DATABASE.getTable('enemies')[enemyId]
-      if (!enemy) {
-        this.addError(`${source}: Enemy ${enemyId} not found`)
-        continue
-      }
-      gd.setFlag(`defeated_${enemy.id}`, true)
-      totalExp += enemy.exp
-      totalGold += enemy.gold
-    }
-    gd.gainPartyExperience(totalExp)
-    gd.addGold(totalGold)
-
-    if (encounter.victoryFlag) {
-      gd.setFlag(encounter.victoryFlag, true)
+    for (const enemyId of rewardResult.missingEnemyIds) {
+      this.addError(`${source}: Enemy ${enemyId} not found`)
     }
 
-    if (encounter.questId && encounter.questProgress) {
-      const qs = QuestSystem.getInstance()
-      if (!qs.isQuestActive(encounter.questId) && !qs.isQuestCompleted(encounter.questId)) {
-        this.addWarning(`${source}: Encounter ${encounterId} auto-started quest ${encounter.questId}`)
-        qs.startQuest(encounter.questId)
-      }
-      if (encounter.questProgress === 'complete') {
-        qs.completeQuest(encounter.questId)
-      } else {
-        qs.advanceQuest(encounter.questId)
-      }
+    if (rewardResult.questAutoStarted && rewardResult.encounter.questId) {
+      this.addWarning(`${source}: Encounter ${encounterId} auto-started quest ${rewardResult.encounter.questId}`)
     }
-
-    for (const reward of encounter.rewards ?? []) {
-      if (reward.itemId) gd.addItem(reward.itemId, reward.itemQty ?? DEFAULT_ITEM_QUANTITY)
-      if (reward.flag) gd.setFlag(reward.flag, reward.value ?? true)
-      if (reward.branch) gd.updateBranch(reward.branch, reward.branchValue ?? true)
-    }
-
-    if (mapEventId) {
-      gd.setFlag(`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}${mapEventId}`, true)
-    }
-
-    SkillGrowth.getInstance().checkAllUnlocks()
   }
 
   private transferMap(mapId: string, x: number, y: number, source: string): void {

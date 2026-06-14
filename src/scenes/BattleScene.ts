@@ -1,11 +1,10 @@
 import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
-import { QuestSystem } from '../core/QuestSystem'
 import { AudioManager } from '../core/AudioManager'
 import { BarrelSystem } from '../core/BarrelSystem'
-import { SkillGrowth } from '../core/SkillGrowth'
 import { InputManager } from '../core/InputManager'
+import { applyEncounterVictoryRewards } from '../core/BattleRewards'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
@@ -30,14 +29,12 @@ import {
   COMBO_TP_COST,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
-  DEFAULT_ITEM_QUANTITY,
   ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
   LOADING_SCREEN,
   MENU_OVERLAY_UI,
   RUNTIME_UI_ASSET_KEYS,
-  ROAMING_ENCOUNTER_RESPAWN,
   scaleFont,
   scalePx,
   TRUE_ENDING_SUPPORT_CHARACTER_ID,
@@ -2373,81 +2370,46 @@ export class BattleScene extends Phaser.Scene {
   private applyVictoryResult(): BattleResultSummary {
     AudioManager.getInstance().playVictoryBGM()
     const gd = GameData.getInstance()
-    let totalExp = 0
-    let totalGold = 0
     const levelUps: string[] = []
     const rewardLines: string[] = []
     const dropLines: string[] = []
 
-    for (const ed of this.enemyData) {
-      gd.setFlag(`defeated_${ed.id}`, true)
-      totalExp += ed.exp
-      totalGold += ed.gold
-    }
-    totalExp = Math.floor(totalExp * this.difficultyMult.exp)
-    gd.addGold(totalGold)
+    const rewardResult = applyEncounterVictoryRewards({
+      encounterId: this.encounterId,
+      enemies: this.enemyData,
+      expMultiplier: this.difficultyMult.exp,
+      mapEventId: this.mapEventId,
+      defeatedAtMs: Date.now(),
+      rollDrop: rate => Math.random() < rate,
+    })
 
-    levelUps.push(...gd.gainPartyExperience(totalExp).map(result => `${result.name} Lv.${result.level}`))
+    levelUps.push(...rewardResult.levelUps.map(result => `${result.name} Lv.${result.level}`))
 
-    const qs = QuestSystem.getInstance()
-    const encounter = GAME_CONFIG_DATABASE.getTable('encounters')[this.encounterId]
-    if (encounter?.victoryFlag) {
-      gd.setFlag(encounter.victoryFlag, true)
+    if (rewardResult.victoryFlag) {
       rewardLines.push('关键战斗标记已更新')
     }
-    if (encounter?.questId && encounter.questProgress) {
-      if (!qs.isQuestActive(encounter.questId) && !qs.isQuestCompleted(encounter.questId)) {
-        qs.startQuest(encounter.questId)
-      }
-      if (encounter.questProgress === 'complete') {
-        qs.completeQuest(encounter.questId)
-        rewardLines.push('任务已完成')
-      } else {
-        qs.advanceQuest(encounter.questId)
-        rewardLines.push('任务已推进')
-      }
-    }
-    if (encounter?.rewards) {
-      for (const reward of encounter.rewards) {
-        if (reward.itemId) {
-          const itemQty = reward.itemQty ?? DEFAULT_ITEM_QUANTITY
-          gd.addItem(reward.itemId, itemQty)
-          rewardLines.push(`${this.getItemName(reward.itemId)} x${itemQty}`)
-        }
-        if (reward.flag) {
-          gd.setFlag(reward.flag, reward.value ?? true)
-          rewardLines.push('剧情进度已更新')
-        }
-        if (reward.branch) {
-          gd.updateBranch(reward.branch, reward.branchValue ?? true)
-          rewardLines.push('分支状态已更新')
-        }
-      }
-    }
-    const unlockedSkills = SkillGrowth.getInstance().checkAllUnlocks()
 
-    if (this.mapEventId) {
-      gd.setFlag(`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}${this.mapEventId}`, true)
-      if (this.mapEventId.startsWith(ROAMING_ENCOUNTER_RESPAWN.EVENT_ID_PREFIX)) {
-        gd.setFlag(`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_AT_FLAG_PREFIX}${this.mapEventId}`, Date.now())
-      }
+    if (rewardResult.questProgress === 'completed') {
+      rewardLines.push('任务已完成')
+    } else if (rewardResult.questProgress === 'advanced') {
+      rewardLines.push('任务已推进')
     }
 
-    for (const ed of this.enemyData) {
-      for (const drop of ed.drops) {
-        if (Math.random() < drop.rate) {
-          gd.addItem(drop.itemId, 1)
-          dropLines.push(`${this.getItemName(drop.itemId)} x1`)
-        }
-      }
+    for (const reward of rewardResult.itemRewards) {
+      rewardLines.push(`${this.getItemName(reward.itemId)} x${reward.quantity}`)
+    }
+    rewardLines.push(...rewardResult.flagRewards.map(() => '剧情进度已更新'))
+    rewardLines.push(...rewardResult.branchRewards.map(() => '分支状态已更新'))
+    for (const drop of rewardResult.dropRewards) {
+      dropLines.push(`${this.getItemName(drop.itemId)} x${drop.quantity}`)
     }
 
-    const lines = [`EXP +${totalExp}`, `金币 +${totalGold}`]
+    const lines = [`EXP +${rewardResult.totalExp}`, `金币 +${rewardResult.totalGold}`]
     if (dropLines.length > 0) lines.push(`掉落：${dropLines.join('、')}`)
     if (levelUps.length > 0) lines.push(`升级：${levelUps.join('、')}`)
-    if (unlockedSkills.size > 0) {
+    if (rewardResult.unlockedSkills.size > 0) {
       const skillNames = GAME_CONFIG_DATABASE.getTable('skills')
-      const unlockLines = Array.from(unlockedSkills.entries()).map(([charId, skillIds]) => {
+      const unlockLines = Array.from(rewardResult.unlockedSkills.entries()).map(([charId, skillIds]) => {
         const charName = gd.characters.get(charId)?.name ?? charId
         return `${charName}: ${skillIds.map(skillId => skillNames[skillId]?.name ?? skillId).join('、')}`
       })

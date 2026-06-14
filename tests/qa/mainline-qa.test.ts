@@ -20,6 +20,7 @@ describe('MainlineQaRunner', () => {
 
     expect(report.status).toBe(MAINLINE_QA.STATUS_PASSED)
     expect(report.errors).toEqual([])
+    expect(report.warnings).toEqual([])
     for (const flag of MAINLINE_QA_REQUIRED_FINAL_FLAGS) {
       expect(report.finalState.flags[flag]).toBe(true)
     }
