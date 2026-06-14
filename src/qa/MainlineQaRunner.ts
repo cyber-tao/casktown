@@ -8,14 +8,18 @@ import { RebuildSystem } from '../core/RebuildSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { applyEncounterVictoryRewards } from '../core/BattleRewards'
+import { getChestOpenedFlag, getFieldEventDoneFlag } from '../core/MapEventState'
 import {
   DEFAULT_EVENT_ACTION_AMOUNT,
   DEFAULT_ITEM_QUANTITY,
-  FIELD_EVENT_FLAGS,
   MAINLINE_QA,
   MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
+  MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS,
   MAINLINE_QA_REQUIRED_COMPLETED_QUESTS,
+  MAINLINE_QA_REQUIRED_FINAL_MAP,
   MAINLINE_QA_REQUIRED_FINAL_FLAGS,
+  MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL,
+  MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
 } from '../utils/constants'
@@ -115,13 +119,13 @@ class MainlineQaRunner {
     }
 
     if (event.type === 'chest') {
-      gd.setFlag(`${FIELD_EVENT_FLAGS.CHEST_OPENED_PREFIX}${event.id}`, true)
+      gd.setFlag(getChestOpenedFlag(event.id), true)
     }
 
     this.executeActions(event.actions, source, event.id)
 
     if (event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer') {
-      gd.setFlag(`${FIELD_EVENT_FLAGS.DONE_PREFIX}${event.id}`, true)
+      gd.setFlag(getFieldEventDoneFlag(event.id), true)
     }
   }
 
@@ -442,11 +446,27 @@ class MainlineQaRunner {
 
   private assertFinalState(): void {
     const gd = GameData.getInstance()
+    const questSystem = QuestSystem.getInstance()
+    if (gd.currentMap !== MAINLINE_QA_REQUIRED_FINAL_MAP) {
+      this.addError(`final: Current map ${gd.currentMap} does not match ${MAINLINE_QA_REQUIRED_FINAL_MAP}`)
+    }
+    if (gd.rebuildLevel < MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL) {
+      this.addError(`final: Rebuild level ${gd.rebuildLevel} is below ${MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL}`)
+    }
+    if (MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS && questSystem.getActiveQuests().length > 0) {
+      this.addError('final: Active quests remain after mainline route')
+    }
+    for (const { branch, min } of MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS) {
+      const value = gd.branches[branch]
+      if (typeof value !== 'number' || value < min) {
+        this.addError(`final: Branch ${branch} is below required threshold ${min}`)
+      }
+    }
     for (const flag of MAINLINE_QA_REQUIRED_FINAL_FLAGS) {
       if (gd.getFlag(flag) !== true) this.addError(`final: Required flag ${flag} is not true`)
     }
     for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
-      if (!QuestSystem.getInstance().isQuestCompleted(questId)) this.addError(`final: Quest ${questId} is not completed`)
+      if (!questSystem.isQuestCompleted(questId)) this.addError(`final: Quest ${questId} is not completed`)
     }
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       if (!gd.party.includes(characterId) && !gd.reserve.includes(characterId)) {

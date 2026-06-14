@@ -1,12 +1,16 @@
 import Phaser from 'phaser'
 import { TOUCH_INPUT } from './constants'
 
-function getCssToGameScale(scene: Phaser.Scene): number {
+export function getCssToGameScale(scene: Phaser.Scene): number {
   const gameWidth = scene.scale.gameSize.width || scene.scale.width
   const gameHeight = scene.scale.gameSize.height || scene.scale.height
   const scaleX = scene.scale.displaySize.width / gameWidth
   const scaleY = scene.scale.displaySize.height / gameHeight
   return 1 / Math.max(Math.min(scaleX, scaleY), TOUCH_INPUT.MIN_DISPLAY_SCALE)
+}
+
+export function cssToGamePx(scene: Phaser.Scene, value: number): number {
+  return Math.round(value * getCssToGameScale(scene))
 }
 
 function updateTouchTextHitArea(text: Phaser.GameObjects.Text): void {

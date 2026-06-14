@@ -9,6 +9,7 @@ import { SaveManager } from '../core/SaveManager'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { areEventConditionsMet as areConditionsMet } from '../core/EventConditions'
+import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent, isMapEventCompleted } from '../core/MapEventState'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
@@ -26,7 +27,6 @@ import {
   COLORS,
   FIELD_ENCOUNTER_RATE_THRESHOLDS,
   FIELD_ENCOUNTER_SPAWN_COUNTS,
-  FIELD_EVENT_FLAGS,
   FIELD_ENTITY_BEHAVIOR,
   FIELD_ENTITY_BEHAVIOR_PRESETS,
   FIELD_SPRITE_ANIMATION,
@@ -66,6 +66,7 @@ import {
 import type { MapData, MapEvent, EventAction, FieldEntityBehavior, QuestState } from '../data/types'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
+import { cssToGamePx } from '../utils/touch'
 
 type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
 
@@ -261,21 +262,19 @@ export class MapScene extends Phaser.Scene {
   }
 
   private isCompletableFieldEvent(event: MapEvent): boolean {
-    return event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer'
+    return isCompletableMapEvent(event)
   }
 
   private isFieldEventCompleted(event: MapEvent): boolean {
-    const gd = GameData.getInstance()
-    if (event.type === 'chest') return gd.getFlag(this.getChestOpenedFlag(event.id)) === true
-    return this.isCompletableFieldEvent(event) && gd.getFlag(this.getFieldEventDoneFlag(event.id)) === true
+    return isMapEventCompleted(event, flag => GameData.getInstance().getFlag(flag))
   }
 
   private getFieldEventDoneFlag(eventId: string): string {
-    return `${FIELD_EVENT_FLAGS.DONE_PREFIX}${eventId}`
+    return getFieldEventDoneFlag(eventId)
   }
 
   private getChestOpenedFlag(eventId: string): string {
-    return `${FIELD_EVENT_FLAGS.CHEST_OPENED_PREFIX}${eventId}`
+    return getChestOpenedFlag(eventId)
   }
 
   private markFieldEventCompleted(eventId?: string): void {
@@ -509,6 +508,7 @@ export class MapScene extends Phaser.Scene {
   private spawnNPCs(): void {
     for (const event of this.mapData.events) {
       if ((event.type === 'npc' || event.type === 'trigger') && event.sprite) {
+        if (this.isFieldEventCompleted(event)) continue
         if (this.isSuppressedFieldEvent(event) || !this.areEventConditionsMet(event)) continue
         const sx = event.x * TILE_SIZE + TILE_SIZE / 2
         const sy = event.y * TILE_SIZE + TILE_SIZE / 2
@@ -626,6 +626,7 @@ export class MapScene extends Phaser.Scene {
 
   private isTileReservedByEvent(x: number, y: number): boolean {
     for (const event of this.mapData.events) {
+      if (this.isFieldEventCompleted(event)) continue
       if (this.isSuppressedFieldEvent(event)) continue
       if (!this.areEventConditionsMet(event)) continue
       if (this.checkEventCollision(event, x, y)) return true
@@ -819,16 +820,14 @@ export class MapScene extends Phaser.Scene {
   private createEvents(): void {
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event) || !this.areEventConditionsMet(event)) continue
+      if (this.isFieldEventCompleted(event)) continue
       if (event.type === 'chest') {
-        const opened = GameData.getInstance().getFlag(this.getChestOpenedFlag(event.id)) === true
-        if (!opened) {
-          const img = this.add.image(
-            event.x * TILE_SIZE, event.y * TILE_SIZE, 'env_barrel'
-          )
-          img.setOrigin(0, 0)
-          img.setDisplaySize(TILE_SIZE, TILE_SIZE)
-          img.setDepth(8)
-        }
+        const img = this.add.image(
+          event.x * TILE_SIZE, event.y * TILE_SIZE, 'env_barrel'
+        )
+        img.setOrigin(0, 0)
+        img.setDisplaySize(TILE_SIZE, TILE_SIZE)
+        img.setDepth(8)
       }
 
       const rect = this.add.rectangle(
@@ -905,6 +904,7 @@ export class MapScene extends Phaser.Scene {
 
   private syncTouchControls(): void {
     if (this.shouldShowTouchControls()) {
+      if (this.touchControls.length > 0) this.destroyTouchControls()
       this.createTouchControls()
       return
     }
@@ -912,15 +912,21 @@ export class MapScene extends Phaser.Scene {
     this.destroyTouchControls()
   }
 
+  private getTouchSize(baseGamePx: number, minCssPx: number): number {
+    return Math.max(baseGamePx, cssToGamePx(this, minCssPx))
+  }
+
   private createTouchDirectionButton(x: number, y: number, label: string, dx: number, dy: number, dir: number): void {
-    const button = this.add.rectangle(x, y, TOUCH_INPUT.DPAD_BUTTON_SIZE, TOUCH_INPUT.DPAD_BUTTON_SIZE, COLORS.black, TOUCH_INPUT.POINTER_ALPHA)
+    const buttonSize = this.getTouchSize(TOUCH_INPUT.DPAD_BUTTON_SIZE, TOUCH_INPUT.CONTROL_MIN_CSS_SIZE)
+    const labelFontSize = this.getTouchSize(TOUCH_INPUT.DPAD_LABEL_FONT_SIZE, TOUCH_INPUT.DPAD_LABEL_MIN_CSS_FONT_SIZE)
+    const button = this.add.rectangle(x, y, buttonSize, buttonSize, COLORS.black, TOUCH_INPUT.POINTER_ALPHA)
     button.setStrokeStyle(TOUCH_INPUT.POINTER_STROKE_WIDTH, COLORS.white, TOUCH_INPUT.POINTER_ALPHA)
     button.setDepth(TOUCH_INPUT.CONTROLS_DEPTH)
     button.setScrollFactor(0)
     button.setInteractive({ useHandCursor: true })
 
     const text = this.add.text(x, y, label, {
-      fontSize: `${TOUCH_INPUT.DPAD_LABEL_FONT_SIZE}px`,
+      fontSize: `${labelFontSize}px`,
       color: TOUCH_INPUT.LABEL_COLOR,
       fontFamily: TOUCH_INPUT.LABEL_FONT_FAMILY,
     }).setOrigin(0.5)
@@ -947,14 +953,16 @@ export class MapScene extends Phaser.Scene {
   }
 
   private createTouchActionButton(x: number, y: number, label: string, onPress: () => void): void {
-    const button = this.add.rectangle(x, y, TOUCH_INPUT.ACTION_BUTTON_SIZE, TOUCH_INPUT.ACTION_BUTTON_SIZE, COLORS.black, TOUCH_INPUT.POINTER_ALPHA)
+    const buttonSize = this.getTouchSize(TOUCH_INPUT.ACTION_BUTTON_SIZE, TOUCH_INPUT.CONTROL_MIN_CSS_SIZE)
+    const labelFontSize = this.getTouchSize(TOUCH_INPUT.ACTION_LABEL_FONT_SIZE, TOUCH_INPUT.ACTION_LABEL_MIN_CSS_FONT_SIZE)
+    const button = this.add.rectangle(x, y, buttonSize, buttonSize, COLORS.black, TOUCH_INPUT.POINTER_ALPHA)
     button.setStrokeStyle(TOUCH_INPUT.POINTER_STROKE_WIDTH, COLORS.white, TOUCH_INPUT.POINTER_ALPHA)
     button.setDepth(TOUCH_INPUT.CONTROLS_DEPTH)
     button.setScrollFactor(0)
     button.setInteractive({ useHandCursor: true })
 
     const text = this.add.text(x, y, label, {
-      fontSize: `${TOUCH_INPUT.ACTION_LABEL_FONT_SIZE}px`,
+      fontSize: `${labelFontSize}px`,
       color: TOUCH_INPUT.LABEL_COLOR,
       fontFamily: TOUCH_INPUT.LABEL_FONT_FAMILY,
     }).setOrigin(0.5)
@@ -1042,7 +1050,9 @@ export class MapScene extends Phaser.Scene {
 
     const touchControls = this.shouldShowTouchControls()
     const promptYOffset = touchControls ? MAP_HUD.TOUCH_PROMPT_Y_OFFSET : MAP_HUD.PROMPT_Y_OFFSET
-    const promptFontSize = touchControls ? MAP_HUD.TOUCH_PROMPT_FONT_SIZE : MAP_HUD.PROMPT_FONT_SIZE
+    const promptFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.TOUCH_PROMPT_FONT_SIZE, TOUCH_INPUT.PROMPT_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.PROMPT_FONT_SIZE
     const promptPaddingX = touchControls ? MAP_HUD.TOUCH_PROMPT_PADDING_X : MAP_HUD.PROMPT_PADDING_X
     const promptPaddingY = touchControls ? MAP_HUD.TOUCH_PROMPT_PADDING_Y : MAP_HUD.PROMPT_PADDING_Y
     const promptText = touchControls ? MAP_HUD.TOUCH_PROMPT_TEXT : MAP_HUD.PROMPT_TEXT
@@ -1079,6 +1089,7 @@ export class MapScene extends Phaser.Scene {
 
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event)) continue
+      if (this.isFieldEventCompleted(event)) continue
       if (event.trigger !== 'action') continue
       if (!this.areEventConditionsMet(event)) continue
       if (this.canInteractWithEvent(event, px, py, fx, fy)) return event
@@ -1758,6 +1769,7 @@ export class MapScene extends Phaser.Scene {
 
     for (const event of this.mapData.events) {
       if (this.isSuppressedFieldEvent(event)) continue
+      if (this.isFieldEventCompleted(event)) continue
       if (event.type === 'battle') continue
       if (event.trigger !== 'touch' && event.trigger !== 'autorun') continue
       if (!this.areEventConditionsMet(event)) continue

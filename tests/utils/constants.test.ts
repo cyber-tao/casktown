@@ -159,5 +159,9 @@ describe('constants consistency', () => {
 
   test('touch controls cover common landscape phone widths', () => {
     expect(TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH).toBeGreaterThanOrEqual(844)
+    expect(TOUCH_INPUT.CONTROL_MIN_CSS_SIZE).toBeGreaterThanOrEqual(48)
+    expect(TOUCH_INPUT.DPAD_LABEL_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(16)
+    expect(TOUCH_INPUT.ACTION_LABEL_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(13)
+    expect(TOUCH_INPUT.PROMPT_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(13)
   })
 })
