@@ -26,6 +26,7 @@ import {
   TOUCH_INPUT,
   UI_FONT_FAMILY,
   BATTLE_RESULT_PANEL,
+  STARTUP_LOADING,
 } from '../../src/utils/constants.ts'
 
 describe('constants consistency', () => {
@@ -126,6 +127,11 @@ describe('constants consistency', () => {
     expect(MINUTES_PER_HOUR).toBe(60)
     expect(SECONDS_PER_HOUR).toBe(SECONDS_PER_MINUTE * MINUTES_PER_HOUR)
     expect(SECONDS_PER_HOUR).toBe(3600)
+  })
+
+  test('startup loading fallback is bounded', () => {
+    expect(STARTUP_LOADING.FALLBACK_HIDE_DELAY_MS).toBeGreaterThan(0)
+    expect(STARTUP_LOADING.FALLBACK_HIDE_DELAY_MS).toBeLessThan(10_000)
   })
 
   test('MAP_HUD party layout constants are defined', () => {

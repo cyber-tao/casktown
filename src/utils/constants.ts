@@ -19,6 +19,7 @@ export const DEFAULT_ITEM_QUANTITY = 1
 export const STARTUP_LOADING = {
   ELEMENT_ID: 'startup-loading',
   READY_EVENT: 'casktown-ready',
+  FALLBACK_HIDE_DELAY_MS: 2500,
 } as const
 
 export const TOUCH_INPUT = {

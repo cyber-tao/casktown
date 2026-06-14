@@ -39,6 +39,7 @@ export class BootScene extends Phaser.Scene {
       return
     }
 
+    window.dispatchEvent(new CustomEvent(STARTUP_LOADING.READY_EVENT))
     this.scene.start('TitleScene')
   }
 }
