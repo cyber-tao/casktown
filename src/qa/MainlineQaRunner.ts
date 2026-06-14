@@ -526,6 +526,8 @@ export function prepareBattleVisualQa(): void {
   const gd = GameData.getInstance()
   gd.reset()
   gd.currentMap = MAINLINE_QA.BATTLE_VISUAL_MAP_ID
+  gd.party = []
+  gd.reserve = []
   gd.settings.encounterRate = 'none'
   gd.settings.difficulty = MAINLINE_QA.BATTLE_VISUAL_DIFFICULTY
   gd.settings.battleSpeed = MAINLINE_QA.BATTLE_VISUAL_SPEED
@@ -538,9 +540,26 @@ export function prepareBattleVisualQa(): void {
   SkillGrowth.getInstance().checkAllUnlocks()
 }
 
+function publishMainlineQaReport(report: MainlineQaReport): void {
+  ;(globalThis as unknown as Record<string, unknown>)[MAINLINE_QA.REPORT_GLOBAL_KEY] = report
+
+  if (typeof document === 'undefined') return
+
+  document.documentElement.setAttribute(MAINLINE_QA.REPORT_STATUS_ATTRIBUTE, report.status)
+
+  let reportElement = document.getElementById(MAINLINE_QA.REPORT_ELEMENT_ID)
+  if (!reportElement) {
+    reportElement = document.createElement('script')
+    reportElement.id = MAINLINE_QA.REPORT_ELEMENT_ID
+    reportElement.setAttribute('type', 'application/json')
+    document.body?.appendChild(reportElement)
+  }
+  reportElement.textContent = JSON.stringify(report)
+}
+
 export function runMainlineQa(): MainlineQaReport {
   const report = new MainlineQaRunner().run()
-  ;(globalThis as unknown as Record<string, unknown>)[MAINLINE_QA.REPORT_GLOBAL_KEY] = report
+  publishMainlineQaReport(report)
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(MAINLINE_QA.REPORT_EVENT, { detail: report }))
   }

@@ -603,6 +603,8 @@ export const MAINLINE_QA = {
   BATTLE_VISUAL_SPEED: 'normal',
   REPORT_GLOBAL_KEY: '__casktownMainlineQaReport',
   REPORT_EVENT: 'casktown-mainline-qa-report',
+  REPORT_ELEMENT_ID: 'casktown-mainline-qa-report',
+  REPORT_STATUS_ATTRIBUTE: 'data-casktown-mainline-qa-status',
   MAX_DIALOGUE_VISITS: 8,
   STATUS_PASSED: 'passed',
   STATUS_FAILED: 'failed',

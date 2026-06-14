@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { GameData } from '../../src/core/GameData.ts'
 import {
   MAINLINE_QA,
   MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS,
@@ -11,21 +12,22 @@ import {
   MAINLINE_QA_REQUIRED_PARTY,
 } from '../../src/utils/constants.ts'
 
+function runMainlineQaSilently(): ReturnType<typeof runMainlineQa> {
+  const originalInfo = console.info
+  const originalError = console.error
+  console.info = () => {}
+  console.error = () => {}
+  try {
+    return runMainlineQa()
+  } finally {
+    console.info = originalInfo
+    console.error = originalError
+  }
+}
+
 describe('MainlineQaRunner', () => {
   test('completes the configured main story route', () => {
-    const originalInfo = console.info
-    const originalError = console.error
-    console.info = () => {}
-    console.error = () => {}
-    const runSilently = (): ReturnType<typeof runMainlineQa> => {
-      try {
-        return runMainlineQa()
-      } finally {
-        console.info = originalInfo
-        console.error = originalError
-      }
-    }
-    const report = runSilently()
+    const report = runMainlineQaSilently()
 
     expect(report.status).toBe(MAINLINE_QA.STATUS_PASSED)
     expect(report.errors).toEqual([])
@@ -46,6 +48,53 @@ describe('MainlineQaRunner', () => {
     }
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
+    }
+  })
+
+  test('publishes a browser-readable report for visual QA automation', () => {
+    const originalDocument = (globalThis as unknown as { document?: unknown }).document
+    const elements = new Map<string, { id: string; textContent: string; type?: string; setAttribute: (key: string, value: string) => void }>()
+    const attributes = new Map<string, string>()
+    const documentStub = {
+      documentElement: {
+        setAttribute: (key: string, value: string) => attributes.set(key, value),
+      },
+      body: {
+        appendChild: (element: { id: string; textContent: string; type?: string; setAttribute: (key: string, value: string) => void }) => {
+          elements.set(element.id, element)
+          return element
+        },
+      },
+      getElementById: (id: string) => elements.get(id) ?? null,
+      createElement: () => ({
+        id: '',
+        textContent: '',
+        setAttribute(key: string, value: string) {
+          if (key === 'type') this.type = value
+        },
+      }),
+    }
+    ;(globalThis as unknown as { document?: unknown }).document = documentStub
+
+    try {
+      const report = runMainlineQaSilently()
+      const reportElement = elements.get(MAINLINE_QA.REPORT_ELEMENT_ID)
+
+      expect(attributes.get(MAINLINE_QA.REPORT_STATUS_ATTRIBUTE)).toBe(MAINLINE_QA.STATUS_PASSED)
+      expect(reportElement?.type).toBe('application/json')
+      expect(JSON.parse(reportElement?.textContent ?? '{}').status).toBe(report.status)
+    } finally {
+      ;(globalThis as unknown as { document?: unknown }).document = originalDocument
+    }
+  })
+
+  test('prepares the configured active party for battle visual QA', () => {
+    prepareBattleVisualQa()
+
+    const gd = GameData.getInstance()
+    expect(gd.party).toEqual([...MAINLINE_QA.BATTLE_VISUAL_PARTY])
+    for (const characterId of MAINLINE_QA.BATTLE_VISUAL_PARTY) {
+      expect(gd.getFlag(`${characterId.toLowerCase()}_joined`)).toBe(true)
     }
   })
 })
