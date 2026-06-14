@@ -25,6 +25,7 @@ import {
   DIRECTION_VECTORS,
   TOUCH_INPUT,
   UI_FONT_FAMILY,
+  BATTLE_LAYOUT,
   BATTLE_RESULT_PANEL,
   STARTUP_LOADING,
 } from '../../src/utils/constants.ts'
@@ -81,6 +82,18 @@ describe('constants consistency', () => {
     expect(BATTLE_RESULT_PANEL.contentX).toBeGreaterThan(panelLeft)
     expect(contentRight).toBeLessThan(panelRight)
     expect(BATTLE_RESULT_PANEL.contentWrapWidth).toBeGreaterThan(BATTLE_RESULT_PANEL.width * 0.75)
+  })
+
+  test('battle command panel keeps the playfield visible', () => {
+    const panelLeft = BATTLE_LAYOUT.COMMAND_PANEL_X - BATTLE_LAYOUT.COMMAND_PANEL_WIDTH / 2
+    const panelRight = BATTLE_LAYOUT.COMMAND_PANEL_X + BATTLE_LAYOUT.COMMAND_PANEL_WIDTH / 2
+    const panelBottom = BATTLE_LAYOUT.COMMAND_PANEL_Y + BATTLE_LAYOUT.COMMAND_PANEL_HEIGHT / 2
+    const panelArea = BATTLE_LAYOUT.COMMAND_PANEL_WIDTH * BATTLE_LAYOUT.COMMAND_PANEL_HEIGHT
+
+    expect(panelLeft).toBeGreaterThan(GAME_WIDTH * 0.65)
+    expect(panelRight).toBeLessThanOrEqual(GAME_WIDTH)
+    expect(panelBottom).toBeLessThanOrEqual(GAME_HEIGHT)
+    expect(panelArea).toBeLessThan(GAME_WIDTH * GAME_HEIGHT * 0.09)
   })
 
   test('elements enum has no duplicates', () => {

@@ -136,6 +136,20 @@ export class GameData {
     return Math.max(REBUILD_LEVEL_LIMITS.MIN, Math.min(REBUILD_LEVEL_LIMITS.MAX, level))
   }
 
+  private syncFlagFromBranch(key: keyof BranchState): unknown {
+    const value = this.branches[key]
+    this.flags[key] = value
+    return value
+  }
+
+  private syncPresentBranchFlags(): void {
+    for (const key of BRANCH_KEYS) {
+      if (key in this.flags) {
+        this.syncFlagFromBranch(key)
+      }
+    }
+  }
+
   reset(): void {
     this.playTime = 0
     this.playTimeSyncedAtMs = Date.now()
@@ -163,22 +177,26 @@ export class GameData {
 
   setFlag(key: string, value: unknown): void {
     const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
-    this.flags[key] = normalizedValue
+    if (!BRANCH_KEYS.has(key as keyof BranchState)) {
+      this.flags[key] = normalizedValue
+    }
     if (normalizedValue === true && JOIN_FLAG_TO_CHARACTER[key]) {
       this.addPartyMember(JOIN_FLAG_TO_CHARACTER[key])
     }
     if (BRANCH_KEYS.has(key as keyof BranchState)) {
       this.applyBranchValue(key as keyof BranchState, normalizedValue)
+      this.syncFlagFromBranch(key as keyof BranchState)
     }
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
       this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
       this.branches.rebuild_level = this.rebuildLevel
+      this.syncFlagFromBranch('rebuild_level')
       if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
         this.currentMap = REBUILT_TOWN_MAP_ID
       }
     }
     this.syncProgressionFlags()
-    EventBus.emit(GameEvents.FLAG_SET, key, normalizedValue)
+    EventBus.emit(GameEvents.FLAG_SET, key, this.getFlag(key))
   }
 
   getFlag(key: string): unknown {
@@ -197,8 +215,8 @@ export class GameData {
     ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
       this.rebuildLevel = normalizedValue
-      this.flags.rebuild_level = normalizedValue
     }
+    this.syncFlagFromBranch(key)
     this.syncTrueRouteState()
     this.syncProgressionFlags()
   }
@@ -250,16 +268,23 @@ export class GameData {
     if (this.flags.seal_qinglong_released && this.flags.seal_baihu_released && this.flags.seal_zhuque_released && this.flags.seal_xuanwu_released) {
       this.flags.defeated_chi_mei_wang = true
       this.flags.released_four_seals = true
+      this.branches.released_four_seals = true
     }
     if (this.flags.fake_xiaoai_defeated) {
       this.flags.defeated_fake_xiaoai = true
     }
     if (this.branches.xiaoai_purified || this.flags.xiaoai_purified) {
+      this.branches.xiaoai_purified = true
       this.flags.defeated_xiaoai_true = true
+    }
+    if (this.flags.normal_ending_seen) {
+      this.branches.normal_ending_seen = true
     }
     if (this.flags.game_cleared) {
       this.flags.defeated_wuxiang = true
     }
+    this.syncPresentBranchFlags()
+    this.syncTrueRouteState()
   }
 
   addItem(itemId: string, quantity: number = 1): void {
@@ -541,6 +566,7 @@ export class GameData {
 
   adjustMercy(amount: number): void {
     this.branches.mercy_score = Math.max(0, Math.min(100, this.branches.mercy_score + amount))
+    this.syncFlagFromBranch('mercy_score')
     this.syncTrueRouteState()
   }
 

@@ -81,6 +81,42 @@ describe('GameData', () => {
     expect(gd.getFlag('true_route_unlocked')).toBe(true)
   })
 
+  test('numeric branch flags mirror cumulative branch values', () => {
+    const gd = GameData.getInstance()
+
+    gd.setFlag('xiaoai_memory_fragments', 1)
+    gd.setFlag('xiaoai_memory_fragments', 1)
+    gd.setFlag('xiaoai_memory_fragments', 1)
+    gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
+
+    const snapshot = gd.serialize() as { flags: Record<string, unknown>; branches: Record<string, unknown> }
+
+    expect(gd.getFlag('xiaoai_memory_fragments')).toBe(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+    expect(gd.flags.xiaoai_memory_fragments).toBe(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+    expect(gd.flags.mercy_score).toBe(TRUE_ROUTE_MIN_MERCY)
+    expect(snapshot.flags.xiaoai_memory_fragments).toBe(snapshot.branches.xiaoai_memory_fragments)
+    expect(snapshot.flags.mercy_score).toBe(snapshot.branches.mercy_score)
+  })
+
+  test('deserialize realigns stale branch flag mirrors', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { flags: Record<string, unknown>; branches: Record<string, unknown> }
+
+    gd.deserialize({
+      ...snapshot,
+      flags: { ...snapshot.flags, xiaoai_memory_fragments: 1, mercy_score: 1 },
+      branches: {
+        ...snapshot.branches,
+        xiaoai_memory_fragments: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
+        mercy_score: TRUE_ROUTE_MIN_MERCY,
+      },
+    })
+
+    expect(gd.flags.xiaoai_memory_fragments).toBe(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+    expect(gd.flags.mercy_score).toBe(TRUE_ROUTE_MIN_MERCY)
+    expect(gd.getFlag('xiaoai_memory_fragments')).toBe(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+  })
+
   test('syncPlayTime accumulates elapsed seconds', () => {
     const gd = GameData.getInstance()
     gd.reset()
