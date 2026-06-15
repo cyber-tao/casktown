@@ -17,6 +17,8 @@ export class AudioManager {
   private currentVoice: Phaser.Sound.BaseSound | null = null
   private requestedVoiceKey = ''
   private requestedBgmId = ''
+  private pendingBgmRequest: { bgmId: string; fadeDuration: number } | null = null
+  private pendingBgmUnlockScene: Phaser.Scene | null = null
   private sfxSynth: SFXSynth | null = null
 
   private constructor() {
@@ -53,6 +55,8 @@ export class AudioManager {
     }
 
     if (this.currentBgmKey === bgmId && this.currentBgm?.isPlaying) return
+
+    if (this.queueBgmUntilSoundUnlock(bgmId, fadeDuration)) return
 
     const gd = GameData.getInstance()
     const masterVol = gd.settings.masterVolume
@@ -97,6 +101,7 @@ export class AudioManager {
   }
 
   stopBGM(fadeDuration: number = BGM_FADE_DURATIONS.DEFAULT_MS): void {
+    this.clearPendingBgmUnlock()
     if (this.bgmSounds.size === 0 && !this.currentBgm) return
     const sounds = new Set(this.bgmSounds)
     if (this.currentBgm) sounds.add(this.currentBgm)
@@ -116,6 +121,30 @@ export class AudioManager {
     }
     this.currentBgm = null
     this.currentBgmKey = ''
+  }
+
+  private queueBgmUntilSoundUnlock(bgmId: string, fadeDuration: number): boolean {
+    if (!this.scene?.sound.locked) return false
+    this.pendingBgmRequest = { bgmId, fadeDuration }
+    if (this.pendingBgmUnlockScene !== this.scene) {
+      this.pendingBgmUnlockScene?.sound.off(Phaser.Sound.Events.UNLOCKED, this.handleSoundUnlocked)
+      this.pendingBgmUnlockScene = this.scene
+      this.scene.sound.once(Phaser.Sound.Events.UNLOCKED, this.handleSoundUnlocked)
+    }
+    return true
+  }
+
+  private clearPendingBgmUnlock(): void {
+    this.pendingBgmRequest = null
+    this.pendingBgmUnlockScene?.sound.off(Phaser.Sound.Events.UNLOCKED, this.handleSoundUnlocked)
+    this.pendingBgmUnlockScene = null
+  }
+
+  private handleSoundUnlocked = (): void => {
+    const pending = this.pendingBgmRequest
+    this.pendingBgmRequest = null
+    this.pendingBgmUnlockScene = null
+    if (pending) this.playBGM(pending.bgmId, pending.fadeDuration)
   }
 
   private destroyBGM(bgm: Phaser.Sound.BaseSound): void {
