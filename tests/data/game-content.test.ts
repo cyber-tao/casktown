@@ -9,7 +9,7 @@ import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
-import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -136,6 +136,97 @@ function validateMapGeometry(map: MapData, errors: string[]): void {
   }
 }
 
+type TilePoint = [x: number, y: number]
+
+function getTileIndex(map: MapData, x: number, y: number): number {
+  return y * map.width + x
+}
+
+function isInMapBounds(map: MapData, x: number, y: number): boolean {
+  return x >= 0 && y >= 0 && x < map.width && y < map.height
+}
+
+function isWalkableTile(map: MapData, collisionIndexes: Set<number>, x: number, y: number): boolean {
+  return isInMapBounds(map, x, y) && !collisionIndexes.has(getTileIndex(map, x, y))
+}
+
+function getEventTiles(event: MapEvent): TilePoint[] {
+  const points: TilePoint[] = []
+  for (let y = event.y; y < event.y + event.height; y++) {
+    for (let x = event.x; x < event.x + event.width; x++) {
+      points.push([x, y])
+    }
+  }
+  return points
+}
+
+function getAdjacentTiles(event: MapEvent): TilePoint[] {
+  const points = new Map<string, TilePoint>()
+  const directions: TilePoint[] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+  for (const [x, y] of getEventTiles(event)) {
+    for (const [dx, dy] of directions) {
+      points.set(`${x + dx},${y + dy}`, [x + dx, y + dy])
+    }
+  }
+  return [...points.values()]
+}
+
+function collectReachableTiles(map: MapData, starts: TilePoint[]): Set<string> {
+  const collisionIndexes = new Set(map.collisions)
+  const reached = new Set<string>()
+  const queue: TilePoint[] = []
+
+  for (const [x, y] of starts) {
+    if (!isWalkableTile(map, collisionIndexes, x, y)) continue
+    const key = `${x},${y}`
+    reached.add(key)
+    queue.push([x, y])
+  }
+
+  const directions: TilePoint[] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+  for (let index = 0; index < queue.length; index++) {
+    const [x, y] = queue[index]!
+    for (const [dx, dy] of directions) {
+      const nextX = x + dx
+      const nextY = y + dy
+      const key = `${nextX},${nextY}`
+      if (reached.has(key) || !isWalkableTile(map, collisionIndexes, nextX, nextY)) continue
+      reached.add(key)
+      queue.push([nextX, nextY])
+    }
+  }
+
+  return reached
+}
+
+function collectMapEntryPoints(): Map<string, TilePoint[]> {
+  const startsByMap = new Map<string, TilePoint[]>()
+  const addStart = (mapId: string, x: number, y: number): void => {
+    const starts = startsByMap.get(mapId) ?? []
+    starts.push([x, y])
+    startsByMap.set(mapId, starts)
+  }
+
+  addStart(START_MAP_ID, START_PLAYER_POSITION.x, START_PLAYER_POSITION.y)
+
+  for (const map of Object.values(MAPS)) {
+    for (const event of map.events) {
+      for (const action of event.actions) {
+        if (action.type === 'transfer') addStart(action.targetMap, action.targetX, action.targetY)
+      }
+    }
+    for (const connection of map.connections) {
+      addStart(connection.targetMap, connection.targetX, connection.targetY)
+    }
+  }
+
+  for (const [x, y] of startsByMap.get(RUINED_TOWN_MAP_ID) ?? []) {
+    addStart(REBUILT_TOWN_MAP_ID, x, y)
+  }
+
+  return startsByMap
+}
+
 describe('game content data', () => {
   test('maps have valid geometry and connected actions', () => {
     const errors: string[] = []
@@ -152,6 +243,24 @@ describe('game content data', () => {
       }
       for (const connection of map.connections) {
         if (!MAPS[connection.targetMap]) pushMissing(errors, `${mapId}/connection`, 'map', connection.targetMap)
+      }
+    }
+
+    expect(errors).toEqual([])
+  })
+
+  test('field events are reachable from map entry points', () => {
+    const errors: string[] = []
+    const startsByMap = collectMapEntryPoints()
+
+    for (const [mapId, map] of Object.entries(MAPS)) {
+      const reachableTiles = collectReachableTiles(map, startsByMap.get(mapId) ?? [])
+      for (const event of map.events) {
+        const triggerTiles = event.trigger === 'touch' || event.trigger === 'autorun'
+          ? getEventTiles(event)
+          : [...getEventTiles(event), ...getAdjacentTiles(event)]
+        const reachable = triggerTiles.some(([x, y]) => reachableTiles.has(`${x},${y}`))
+        if (!reachable) errors.push(`${mapId}/${event.id} cannot be reached from any map entry point`)
       }
     }
 

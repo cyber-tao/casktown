@@ -1077,7 +1077,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 3, y: 16, tile: MAP_TILE_KEYS.SIGN }, { x: 40, y: 16, tile: MAP_TILE_KEYS.SIGN }, { x: 40, y: 23, tile: MAP_TILE_KEYS.SIGN },
     ],
     eventPositions: {
-      NPC_PINE: { x: 14, y: 23, width: 1, height: 1 }, NPC_MAYOR_2: { x: 25, y: 10, width: 1, height: 1 },
+      NPC_PINE: { x: 17, y: 23, width: 1, height: 1 }, NPC_MAYOR_2: { x: 25, y: 10, width: 1, height: 1 },
       NPC_BARREL_2: { x: 21, y: 19, width: 1, height: 1 }, SHOP_ITEM: { x: 34, y: 24, width: 1, height: 1 },
       TRAIN_GROUND: { x: 12, y: 28, width: 2, height: 1 }, EVT_REBUILD_CEREMONY: { x: 19, y: 13, width: 7, height: 6 },
       SIDE_HUIHUI_START: { x: 26, y: 17, width: 1, height: 1 }, SIDE_HUIHUI_AFTER: { x: 26, y: 17, width: 1, height: 1 },
