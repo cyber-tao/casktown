@@ -45,6 +45,7 @@ describe('MainlineQaRunner', () => {
     }
     for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
       expect(report.finalState.completedQuests).toContain(questId)
+      expect(report.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
     }
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
@@ -82,7 +83,11 @@ describe('MainlineQaRunner', () => {
 
       expect(attributes.get(MAINLINE_QA.REPORT_STATUS_ATTRIBUTE)).toBe(MAINLINE_QA.STATUS_PASSED)
       expect(reportElement?.type).toBe('application/json')
-      expect(JSON.parse(reportElement?.textContent ?? '{}').status).toBe(report.status)
+      const publishedReport = JSON.parse(reportElement?.textContent ?? '{}')
+      expect(publishedReport.status).toBe(report.status)
+      for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
+        expect(publishedReport.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
+      }
     } finally {
       ;(globalThis as unknown as { document?: unknown }).document = originalDocument
     }

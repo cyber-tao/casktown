@@ -39,6 +39,9 @@ export interface MainlineQaReport {
   errors: string[]
   warnings: string[]
   steps: MainlineQaStepReport[]
+  coverage: {
+    completedQuestSources: Record<string, string[]>
+  }
   finalState: {
     currentMap: string
     party: string[]
@@ -58,6 +61,7 @@ export class MainlineQaRunner {
   private readonly steps: MainlineQaStepReport[] = []
   private readonly choiceUseCounts = new Map<string, number>()
   private readonly dialogueVisitCounts = new Map<string, number>()
+  private readonly completedQuestSources = new Map<string, string[]>()
 
   constructor(private readonly route: readonly MainlineQaRouteStep[] = MAINLINE_QA_ROUTE) {}
 
@@ -79,6 +83,7 @@ export class MainlineQaRunner {
       errors: [...this.errors],
       warnings: [...this.warnings],
       steps: [...this.steps],
+      coverage: this.getCoverage(),
       finalState: this.getFinalState(),
     }
   }
@@ -228,10 +233,22 @@ export class MainlineQaRunner {
         qs.startQuest(action.questId)
         break
       case 'questAdvance':
-        qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
+        {
+          const wasCompleted = qs.isQuestCompleted(action.questId)
+          qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
+          if (!wasCompleted && qs.isQuestCompleted(action.questId)) {
+            this.recordCompletedQuestSource(action.questId, source)
+          }
+        }
         break
       case 'questComplete':
-        qs.completeQuest(action.questId)
+        {
+          const wasCompleted = qs.isQuestCompleted(action.questId)
+          qs.completeQuest(action.questId)
+          if (!wasCompleted && qs.isQuestCompleted(action.questId)) {
+            this.recordCompletedQuestSource(action.questId, source)
+          }
+        }
         SkillGrowth.getInstance().checkAllUnlocks()
         break
       case 'setFlag':
@@ -282,6 +299,13 @@ export class MainlineQaRunner {
 
     if (rewardResult.questAutoStarted && rewardResult.encounter.questId) {
       this.addWarning(`${source}: Encounter ${encounterId} auto-started quest ${rewardResult.encounter.questId}`)
+    }
+    if (
+      rewardResult.questProgress === 'completed' &&
+      rewardResult.encounter.questId &&
+      QuestSystem.getInstance().isQuestCompleted(rewardResult.encounter.questId)
+    ) {
+      this.recordCompletedQuestSource(rewardResult.encounter.questId, source)
     }
   }
 
@@ -475,12 +499,30 @@ export class MainlineQaRunner {
       if (gd.getFlag(flag) !== true) this.addError(`final: Required flag ${flag} is not true`)
     }
     for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
-      if (!questSystem.isQuestCompleted(questId)) this.addError(`final: Quest ${questId} is not completed`)
+      if (!questSystem.isQuestCompleted(questId)) {
+        this.addError(`final: Quest ${questId} is not completed`)
+      } else if (!this.completedQuestSources.has(questId)) {
+        this.addError(`final: Quest ${questId} completed without a QA route completion source`)
+      }
     }
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       if (!gd.party.includes(characterId) && !gd.reserve.includes(characterId)) {
         this.addError(`final: Party member ${characterId} is missing`)
       }
+    }
+  }
+
+  private recordCompletedQuestSource(questId: string, source: string): void {
+    const sources = this.completedQuestSources.get(questId) ?? []
+    sources.push(source)
+    this.completedQuestSources.set(questId, sources)
+  }
+
+  private getCoverage(): MainlineQaReport['coverage'] {
+    return {
+      completedQuestSources: Object.fromEntries(
+        [...this.completedQuestSources.entries()].map(([questId, sources]) => [questId, [...sources]]),
+      ),
     }
   }
 
