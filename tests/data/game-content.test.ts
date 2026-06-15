@@ -63,6 +63,7 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
       break
     case 'adjustTrust':
     case 'addParty':
+    case 'removeParty':
       if (!INITIAL_CHARACTERS[action.characterId]) pushMissing(errors, source, 'character', action.characterId)
       break
     case 'adjustMercy':

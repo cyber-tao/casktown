@@ -452,6 +452,9 @@ export class DialogueOverlay extends Phaser.Scene {
         gd.addPartyMember(act.characterId)
         SkillGrowth.getInstance().checkAllUnlocks()
       }
+      if (act.type === 'removeParty') {
+        gd.removePartyMember(act.characterId)
+      }
       if (act.type === 'questStart') {
         qs.startQuest(act.questId)
       }

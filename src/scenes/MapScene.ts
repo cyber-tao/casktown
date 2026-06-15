@@ -2002,6 +2002,11 @@ export class MapScene extends Phaser.Scene {
           this.refreshFollowers()
           this.createPartyHud()
           break
+        case 'removeParty':
+          gd.removePartyMember(action.characterId)
+          this.refreshFollowers()
+          this.createPartyHud()
+          break
         case 'rebuild':
           RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level || 0))
           SkillGrowth.getInstance().checkAllUnlocks()

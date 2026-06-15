@@ -139,6 +139,7 @@ export type EventAction =
   | { type: 'adjustMercy'; amount?: number }
   | { type: 'addItem'; itemId: string; quantity?: number }
   | { type: 'addParty'; characterId: string }
+  | { type: 'removeParty'; characterId: string }
   | { type: 'rebuild'; level: number }
   | { type: 'shop' }
   | { type: 'training' }

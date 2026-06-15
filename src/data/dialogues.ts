@@ -77,6 +77,7 @@ const SIDE_CONGCONG_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> 
 
 const DARK_PALACE_CAPTURED_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'questStart', questId: 'QST_012' },
+  { type: 'removeParty', characterId: 'A' },
 ]
 
 export const DIALOGUES: Record<string, DialogueData> = {
@@ -1398,6 +1399,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '阿博', text: 'T！' },
       { speaker: '旁白', text: 'T落入地下魔宫，缺口关闭。' },
     ],
+    onComplete: [{ type: 'addParty', characterId: 'A' }],
   },
 
   // SCN_530 地下魔宫 xiaoai 真身

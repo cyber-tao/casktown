@@ -272,6 +272,9 @@ export class MainlineQaRunner {
         gd.addPartyMember(action.characterId)
         SkillGrowth.getInstance().checkAllUnlocks()
         break
+      case 'removeParty':
+        gd.removePartyMember(action.characterId)
+        break
       case 'rebuild':
         RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level))
         SkillGrowth.getInstance().checkAllUnlocks()
@@ -468,6 +471,7 @@ export class MainlineQaRunner {
           if (!tables.getTable('items')[action.itemId]) this.addError(`${source}: Item ${action.itemId} not found`)
           break
         case 'addParty':
+        case 'removeParty':
         case 'adjustTrust':
           if (!tables.getTable('characters')[action.characterId]) this.addError(`${source}: Character ${action.characterId} not found`)
           break

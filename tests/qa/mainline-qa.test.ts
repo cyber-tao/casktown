@@ -107,8 +107,10 @@ describe('MainlineQaRunner', () => {
 
     const gd = GameData.getInstance()
     expect(gd.party).toEqual([...MAINLINE_QA.BATTLE_VISUAL_PARTY])
-    for (const characterId of MAINLINE_QA.BATTLE_VISUAL_PARTY) {
+    for (const characterId of MAINLINE_QA.BATTLE_VISUAL_PARTY.filter(characterId => characterId !== 'T')) {
       expect(gd.getFlag(`${characterId.toLowerCase()}_joined`)).toBe(true)
     }
+    expect(gd.party).not.toContain('A')
+    expect(gd.reserve).not.toContain('A')
   })
 })

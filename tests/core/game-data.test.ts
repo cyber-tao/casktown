@@ -48,6 +48,20 @@ describe('GameData', () => {
     expect(gd.characters.get('SUN')?.name).toBe('sun')
   })
 
+  test('removePartyMember removes active members and promotes reserve members', () => {
+    const gd = GameData.getInstance()
+
+    gd.setFlag('huihui_joined', true)
+    gd.setFlag('a_joined', true)
+    gd.setFlag('congcong_joined', true)
+    gd.setFlag('sun_joined', true)
+
+    expect(gd.removePartyMember('A')).toBe(true)
+    expect(gd.party).toEqual(['T', 'HUIHUI', 'CONGCONG', 'SUN'])
+    expect(gd.reserve).toEqual([])
+    expect(gd.removePartyMember('A')).toBe(false)
+  })
+
   test('serialize returns an isolated snapshot and deserialize restores maps', () => {
     const gd = GameData.getInstance()
     const originalHp = gd.characters.get('T')!.stats.hp

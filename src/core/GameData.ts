@@ -341,6 +341,26 @@ export class GameData {
     }
   }
 
+  removePartyMember(charId: string): boolean {
+    const partyIndex = this.party.indexOf(charId)
+    if (partyIndex >= 0) {
+      this.party.splice(partyIndex, 1)
+      const promoted = this.reserve.shift()
+      if (promoted && !this.party.includes(promoted)) {
+        this.party.push(promoted)
+      }
+      return true
+    }
+
+    const reserveIndex = this.reserve.indexOf(charId)
+    if (reserveIndex >= 0) {
+      this.reserve.splice(reserveIndex, 1)
+      return true
+    }
+
+    return false
+  }
+
   getEquipStats(charId: string): EquipStats {
     const bonus = createEmptyEquipStats()
     const equipped = this.getEquippedItemIds(charId)
