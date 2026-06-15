@@ -437,12 +437,14 @@ export const TITLE_MENU_LAYOUT = {
   TITLE_FONT_SIZE: 64,
   SUBTITLE_Y: scalePx(190),
   SUBTITLE_FONT_SIZE: 28,
+  MENU_X: scalePx(176),
   MENU_FONT_SIZE: 24,
   START_Y: scalePx(284),
   GAP_Y: scalePx(44),
   CURSOR_OFFSET_X: scalePx(80),
   CURSOR_SIZE: scalePx(12),
   CURSOR_COLOR: 0xf2c45a,
+  MESSAGE_X: scalePx(176),
   MESSAGE_Y: scalePx(480),
   MESSAGE_FONT_SIZE: 20,
   MESSAGE_COLOR: '#862016',
@@ -454,6 +456,7 @@ export const TITLE_MENU_LAYOUT = {
   STROKE_COLOR: '#24170e',
   TITLE_STROKE_THICKNESS: scalePx(6),
   SUBTITLE_STROKE_THICKNESS: scalePx(4),
+  MENU_STROKE_THICKNESS: scalePx(3),
   LINK_STROKE_THICKNESS: scalePx(3),
 } as const
 export const EDITOR_PAGE_LINK = {

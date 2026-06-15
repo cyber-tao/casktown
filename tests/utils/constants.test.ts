@@ -28,6 +28,7 @@ import {
   BATTLE_LAYOUT,
   BATTLE_RESULT_PANEL,
   STARTUP_LOADING,
+  TITLE_MENU_LAYOUT,
 } from '../../src/utils/constants.ts'
 
 describe('constants consistency', () => {
@@ -151,6 +152,17 @@ describe('constants consistency', () => {
   test('startup loading fallback is bounded', () => {
     expect(STARTUP_LOADING.FALLBACK_HIDE_DELAY_MS).toBeGreaterThan(0)
     expect(STARTUP_LOADING.FALLBACK_HIDE_DELAY_MS).toBeLessThan(10_000)
+  })
+
+  test('title menu leaves the central party art visible', () => {
+    const centralPartyArtLeft = GAME_WIDTH * 0.28
+    const finalMenuItemY = TITLE_MENU_LAYOUT.START_Y + TITLE_MENU_LAYOUT.GAP_Y * 4
+
+    expect(TITLE_MENU_LAYOUT.MENU_X).toBeLessThan(centralPartyArtLeft)
+    expect(TITLE_MENU_LAYOUT.MENU_X + TITLE_MENU_LAYOUT.CURSOR_OFFSET_X).toBeLessThan(centralPartyArtLeft)
+    expect(TITLE_MENU_LAYOUT.MESSAGE_X).toBe(TITLE_MENU_LAYOUT.MENU_X)
+    expect(finalMenuItemY).toBeLessThan(GAME_HEIGHT - 80)
+    expect(TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS).toBeGreaterThan(0)
   })
 
   test('MAP_HUD party layout constants are defined', () => {

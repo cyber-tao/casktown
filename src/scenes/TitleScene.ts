@@ -69,16 +69,18 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5)
 
     for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
-      const text = this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
+      const text = this.add.text(TITLE_MENU_LAYOUT.MENU_X, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
         fontSize: scaleFont(TITLE_MENU_LAYOUT.MENU_FONT_SIZE),
         color: TITLE_MENU_LAYOUT.MENU_COLOR,
         fontFamily: UI_FONT_FAMILY,
+        stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
+        strokeThickness: TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS,
       }).setOrigin(0.5)
       bindTouchText(text, () => this.selectMenuItem(i))
       this.menuItems.push(text)
     }
 
-    this.cursor = this.add.rectangle(GAME_WIDTH / 2 - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_COLOR)
+    this.cursor = this.add.rectangle(TITLE_MENU_LAYOUT.MENU_X - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_COLOR)
     this.cursor.setOrigin(0.5)
 
     cleanupKeyboardOnShutdown(this)
@@ -228,10 +230,12 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private showMessage(msg: string): void {
-    const text = this.add.text(GAME_WIDTH / 2, TITLE_MENU_LAYOUT.MESSAGE_Y, msg, {
+    const text = this.add.text(TITLE_MENU_LAYOUT.MESSAGE_X, TITLE_MENU_LAYOUT.MESSAGE_Y, msg, {
       fontSize: scaleFont(TITLE_MENU_LAYOUT.MESSAGE_FONT_SIZE),
       color: TITLE_MENU_LAYOUT.MESSAGE_COLOR,
       fontFamily: UI_FONT_FAMILY,
+      stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
+      strokeThickness: TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS,
     }).setOrigin(0.5)
     this.time.delayedCall(TITLE_MENU_LAYOUT.MESSAGE_DURATION_MS, () => text.destroy())
   }
