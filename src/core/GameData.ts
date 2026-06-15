@@ -3,6 +3,7 @@ import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, B
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
+import { REBUILD_FACILITIES } from '../data/rebuild'
 import {
   BARREL_UNLOCK_PROGRESS_FLAGS,
   INITIAL_GOLD,
@@ -150,6 +151,14 @@ export class GameData {
     }
   }
 
+  private syncRebuildFacilityFlags(): void {
+    for (const facility of REBUILD_FACILITIES) {
+      if (this.rebuildLevel >= facility.requiredLevel && this.flags[facility.flag] !== true) {
+        this.setFlag(facility.flag, true)
+      }
+    }
+  }
+
   reset(): void {
     this.playTime = 0
     this.playTimeSyncedAtMs = Date.now()
@@ -195,6 +204,7 @@ export class GameData {
     }
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
       this.syncFlagFromBranch('rebuild_level')
+      this.syncRebuildFacilityFlags()
       if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
         this.currentMap = REBUILT_TOWN_MAP_ID
       }
@@ -219,6 +229,7 @@ export class GameData {
     ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
       this.rebuildLevel = normalizedValue
+      this.syncRebuildFacilityFlags()
     }
     this.syncFlagFromBranch(key)
     this.syncTrueRouteState()
@@ -676,6 +687,7 @@ export class GameData {
     }
     this.syncTrueRouteState()
     this.syncProgressionFlags()
+    this.syncRebuildFacilityFlags()
   }
 
   syncPlayTime(nowMs = Date.now()): void {

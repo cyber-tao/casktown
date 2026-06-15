@@ -225,6 +225,34 @@ describe('RebuildSystem', () => {
     expect(RebuildSystem.getInstance().getUnlockedFacilities().length).toBeGreaterThan(0)
   })
 
+  test('direct rebuild level flags unlock matching facilities', () => {
+    const gd = GameData.getInstance()
+    const rebuildSystem = RebuildSystem.getInstance()
+
+    gd.setFlag('rebuild_level', 5)
+
+    expect(rebuildSystem.getUnlockedFacilities()).toEqual(rebuildSystem.getAllFacilities())
+    for (const facility of rebuildSystem.getAllFacilities()) {
+      expect(gd.getFlag(facility.flag)).toBe(true)
+    }
+  })
+
+  test('deserialize backfills facility flags from saved rebuild level', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { flags: Record<string, unknown>; rebuildLevel: number; branches: Record<string, unknown> }
+
+    gd.deserialize({
+      ...snapshot,
+      flags: { rebuild_level: 5 },
+      branches: { ...snapshot.branches, rebuild_level: 5 },
+      rebuildLevel: 5,
+    })
+
+    for (const facility of RebuildSystem.getInstance().getAllFacilities()) {
+      expect(gd.getFlag(facility.flag)).toBe(true)
+    }
+  })
+
   test('setLevel does not downgrade rebuild progress', () => {
     const gd = GameData.getInstance()
     const higherLevel = REBUILD_VISUAL_MAP_THRESHOLD + 2

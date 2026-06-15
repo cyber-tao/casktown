@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { MainlineQaRunner, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
 import { GameData } from '../../src/core/GameData.ts'
+import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import {
   MAINLINE_QA,
   MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS,
@@ -42,6 +43,9 @@ describe('MainlineQaRunner', () => {
     }
     for (const flag of MAINLINE_QA_REQUIRED_FINAL_FLAGS) {
       expect(report.finalState.flags[flag]).toBe(true)
+    }
+    for (const facility of RebuildSystem.getInstance().getAllFacilities()) {
+      expect(report.finalState.flags[facility.flag]).toBe(true)
     }
     for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
       expect(report.finalState.completedQuests).toContain(questId)
