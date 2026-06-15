@@ -184,12 +184,16 @@ export class GameData {
       this.addPartyMember(JOIN_FLAG_TO_CHARACTER[key])
     }
     if (BRANCH_KEYS.has(key as keyof BranchState)) {
-      this.applyBranchValue(key as keyof BranchState, normalizedValue)
-      this.syncFlagFromBranch(key as keyof BranchState)
+      if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
+        this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
+        this.branches.rebuild_level = this.rebuildLevel
+        this.flags.rebuild_level = this.rebuildLevel
+      } else {
+        this.applyBranchValue(key as keyof BranchState, normalizedValue)
+        this.syncFlagFromBranch(key as keyof BranchState)
+      }
     }
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
-      this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
-      this.branches.rebuild_level = this.rebuildLevel
       this.syncFlagFromBranch('rebuild_level')
       if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
         this.currentMap = REBUILT_TOWN_MAP_ID

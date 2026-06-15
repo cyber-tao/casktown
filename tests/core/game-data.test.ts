@@ -210,4 +210,16 @@ describe('RebuildSystem', () => {
     expect(gd.currentMap).toBe(REBUILT_TOWN_MAP_ID)
     expect(RebuildSystem.getInstance().getUnlockedFacilities().length).toBeGreaterThan(0)
   })
+
+  test('setLevel does not downgrade rebuild progress', () => {
+    const gd = GameData.getInstance()
+    const higherLevel = REBUILD_VISUAL_MAP_THRESHOLD + 2
+
+    RebuildSystem.getInstance().setLevel(higherLevel)
+    RebuildSystem.getInstance().setLevel(REBUILD_VISUAL_MAP_THRESHOLD)
+
+    expect(gd.rebuildLevel).toBe(higherLevel)
+    expect(gd.branches.rebuild_level).toBe(higherLevel)
+    expect(gd.flags.rebuild_level).toBe(higherLevel)
+  })
 })
