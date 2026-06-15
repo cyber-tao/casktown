@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { MainlineQaRunner, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import {
   MAINLINE_QA,
@@ -86,6 +86,15 @@ describe('MainlineQaRunner', () => {
     } finally {
       ;(globalThis as unknown as { document?: unknown }).document = originalDocument
     }
+  })
+
+  test('fails when a route step targets a locked map', () => {
+    const report = new MainlineQaRunner([
+      { kind: 'event', mapId: 'MAP_010', eventId: 'FOREST_TUTORIAL' },
+    ]).run()
+
+    expect(report.status).toBe(MAINLINE_QA.STATUS_FAILED)
+    expect(report.errors).toContain('event:MAP_010:FOREST_TUTORIAL: Map MAP_010 is blocked by DIA_LOCKED_FOREST')
   })
 
   test('prepares the configured active party for battle visual QA', () => {

@@ -52,12 +52,14 @@ export interface MainlineQaReport {
   }
 }
 
-class MainlineQaRunner {
+export class MainlineQaRunner {
   private readonly errors: string[] = []
   private readonly warnings: string[] = []
   private readonly steps: MainlineQaStepReport[] = []
   private readonly choiceUseCounts = new Map<string, number>()
   private readonly dialogueVisitCounts = new Map<string, number>()
+
+  constructor(private readonly route: readonly MainlineQaRouteStep[] = MAINLINE_QA_ROUTE) {}
 
   run(): MainlineQaReport {
     const gd = GameData.getInstance()
@@ -66,7 +68,7 @@ class MainlineQaRunner {
 
     this.validateConfig()
 
-    for (const step of MAINLINE_QA_ROUTE) {
+    for (const step of this.route) {
       this.runStep(step)
     }
 
@@ -104,13 +106,19 @@ class MainlineQaRunner {
       return
     }
 
+    const gd = GameData.getInstance()
+    const blockedDialogueId = getBlockedMapDialogueId(mapId, flag => gd.getFlag(flag))
+    if (blockedDialogueId) {
+      this.addError(`${source}: Map ${mapId} is blocked by ${blockedDialogueId}`)
+      return
+    }
+
     const event = map.events.find(candidate => candidate.id === eventId)
     if (!event) {
       this.addError(`${source}: Event ${eventId} not found on ${mapId}`)
       return
     }
 
-    const gd = GameData.getInstance()
     gd.currentMap = mapId
     gd.playerPosition = { x: event.x, y: event.y }
 
