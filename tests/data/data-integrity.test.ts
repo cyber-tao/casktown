@@ -141,6 +141,26 @@ describe('data type integrity', () => {
     expect(missing).toEqual([])
   })
 
+  test('story npc image keys use distinct runtime portraits', () => {
+    const distinctNpcKeys = [
+      'npc_mayor',
+      'npc_uncle_boluo',
+      'npc_sailor',
+      'npc_barrel_spirit',
+      'npc_white_tiger',
+      'npc_shuiyao',
+      'npc_fengchi',
+      'npc_xiyuan',
+      'npc_phoenix',
+      'npc_qilin',
+      'npc_priestess_sun',
+    ]
+    const npcPaths = distinctNpcKeys.map(key => IMAGE_ASSETS[key])
+
+    expect(npcPaths).not.toContain(undefined)
+    expect(new Set(npcPaths).size).toBe(npcPaths.length)
+  })
+
   test('map tile sprite assets resolve for each tileset', () => {
     const missingOverrides = Object.entries(TILESET_TILE_SPRITES)
       .flatMap(([tileset, overrides]) => Object.entries(overrides)

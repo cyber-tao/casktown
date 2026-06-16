@@ -18,7 +18,7 @@
       "image": "02_npcs_bosses_creatures.png",
       "json": "02_npcs_bosses_creatures.json",
       "category": "npcs_bosses",
-      "sprite_count": 29,
+      "sprite_count": 30,
       "grid": {
         "cols": 8,
         "rows": 4,

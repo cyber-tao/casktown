@@ -74,7 +74,7 @@ const BOSS_MONSTER_FILES: Record<string, string> = {
 const NPC_IMAGES: Record<string, string> = {
   npc_mayor: 'npcs_bosses/misc/mayor.png',
   npc_uncle_boluo: 'npcs_bosses/misc/uncle_boluo.png',
-  npc_sailor: 'npcs_bosses/misc/uncle_boluo.png',
+  npc_sailor: 'npcs_bosses/misc/sailor.png',
   npc_barrel_spirit: 'npcs_bosses/misc/barrel_spirit.png',
   npc_barrel_spirit_idle: 'npcs_bosses/misc/barrel_spirit_idle.png',
   npc_barrel_spirit_guard: 'npcs_bosses/misc/barrel_spirit_guard.png',

@@ -695,6 +695,30 @@
         "x": 0.5,
         "y": 0.5
       }
+    },
+    "sailor": {
+      "frame": {
+        "x": 905,
+        "y": 815,
+        "w": 181,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 181,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 181,
+        "h": 271
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
     }
   },
   "meta": {
