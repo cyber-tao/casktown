@@ -30,6 +30,9 @@ type MainlineQaRouteStep =
   | { readonly kind: 'dialogue'; readonly dialogueId: string }
   | { readonly kind: 'event'; readonly mapId: string; readonly eventId: string }
 type MainlineQaStatus = typeof MAINLINE_QA.STATUS_PASSED | typeof MAINLINE_QA.STATUS_FAILED
+type MainlineQaSummaryElement = Pick<HTMLElement, 'setAttribute'>
+
+let removeMainlineQaSummaryViewportListeners: (() => void) | null = null
 
 interface MainlineQaStepReport {
   id: string
@@ -637,11 +640,35 @@ function publishMainlineQaReport(report: MainlineQaReport): void {
     `Quests ${Object.keys(report.coverage.completedQuestSources).length}`,
     `Errors ${report.errors.length}`,
   ].join(' | ')
-  summaryElement.setAttribute('style', getMainlineQaSummaryStyle(isCompactMainlineQaViewport()))
+  updateMainlineQaSummaryStyle(summaryElement)
+  bindMainlineQaSummaryViewportListeners(summaryElement)
 }
 
 function isCompactMainlineQaViewport(): boolean {
-  return typeof window !== 'undefined' && window.innerWidth <= TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH
+  if (typeof window === 'undefined') return false
+  const coarsePointer = window.matchMedia?.(TOUCH_INPUT.DEVICE_MEDIA_QUERY).matches ?? false
+  const touchDevice = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0
+  return coarsePointer
+    || touchDevice
+    || window.innerWidth <= TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH
+    || window.innerHeight <= MAINLINE_QA.COMPACT_VIEWPORT_MAX_HEIGHT
+}
+
+function updateMainlineQaSummaryStyle(summaryElement: MainlineQaSummaryElement): void {
+  summaryElement.setAttribute('style', getMainlineQaSummaryStyle(isCompactMainlineQaViewport()))
+}
+
+function bindMainlineQaSummaryViewportListeners(summaryElement: MainlineQaSummaryElement): void {
+  if (typeof window === 'undefined') return
+  removeMainlineQaSummaryViewportListeners?.()
+
+  const update = (): void => updateMainlineQaSummaryStyle(summaryElement)
+  window.addEventListener('resize', update)
+  window.addEventListener('orientationchange', update)
+  removeMainlineQaSummaryViewportListeners = () => {
+    window.removeEventListener('resize', update)
+    window.removeEventListener('orientationchange', update)
+  }
 }
 
 export function getMainlineQaSummaryStyle(compactViewport: boolean): string {

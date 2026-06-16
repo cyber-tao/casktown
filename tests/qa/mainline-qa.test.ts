@@ -140,6 +140,82 @@ describe('MainlineQaRunner', () => {
     expect(compactStyle).not.toContain('bottom:max(12px')
   })
 
+  test('repositions browser QA summary after compact viewport resize', () => {
+    const originalDocument = (globalThis as unknown as { document?: unknown }).document
+    const originalWindow = (globalThis as unknown as { window?: unknown }).window
+    type TestElement = {
+      id: string
+      textContent: string
+      type?: string
+      attributes: Map<string, string>
+      setAttribute: (key: string, value: string) => void
+    }
+    const elements = new Map<string, TestElement>()
+    const attributes = new Map<string, string>()
+    const listeners = new Map<string, Array<() => void>>()
+    const createElement = (): TestElement => ({
+      id: '',
+      textContent: '',
+      attributes: new Map<string, string>(),
+      setAttribute(key: string, value: string) {
+        this.attributes.set(key, value)
+        if (key === 'type') this.type = value
+      },
+    })
+    const documentStub = {
+      documentElement: {
+        setAttribute: (key: string, value: string) => attributes.set(key, value),
+      },
+      body: {
+        appendChild: (element: TestElement) => {
+          elements.set(element.id, element)
+          return element
+        },
+      },
+      getElementById: (id: string) => elements.get(id) ?? null,
+      createElement,
+    }
+    const viewport = { width: 1280, height: 720 }
+    const windowStub = {
+      get innerWidth() {
+        return viewport.width
+      },
+      get innerHeight() {
+        return viewport.height
+      },
+      matchMedia: () => ({ matches: false }),
+      addEventListener: (type: string, listener: () => void) => {
+        const handlers = listeners.get(type) ?? []
+        handlers.push(listener)
+        listeners.set(type, handlers)
+      },
+      removeEventListener: (type: string, listener: () => void) => {
+        listeners.set(type, (listeners.get(type) ?? []).filter(handler => handler !== listener))
+      },
+      dispatchEvent: () => true,
+    }
+
+    ;(globalThis as unknown as { document?: unknown }).document = documentStub
+    ;(globalThis as unknown as { window?: unknown }).window = windowStub
+
+    try {
+      runMainlineQaSilently()
+      const summaryElement = elements.get(MAINLINE_QA.REPORT_SUMMARY_ELEMENT_ID)
+
+      expect(summaryElement?.attributes.get('style')).toContain('bottom:max(12px')
+      viewport.width = 844
+      viewport.height = 390
+      for (const listener of listeners.get('resize') ?? []) listener()
+
+      expect(summaryElement?.attributes.get('style')).toContain('top:max(54px')
+      expect(summaryElement?.attributes.get('style')).toContain('left:50%')
+      expect(summaryElement?.attributes.get('style')).not.toContain('bottom:max(12px')
+    } finally {
+      ;(globalThis as unknown as { document?: unknown }).document = originalDocument
+      ;(globalThis as unknown as { window?: unknown }).window = originalWindow
+    }
+  })
+
   test('fails when a route step targets a locked map', () => {
     const report = new MainlineQaRunner([
       { kind: 'event', mapId: 'MAP_010', eventId: 'FOREST_TUTORIAL' },
