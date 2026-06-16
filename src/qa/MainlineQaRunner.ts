@@ -41,6 +41,10 @@ export interface MainlineQaReport {
   steps: MainlineQaStepReport[]
   coverage: {
     completedQuestSources: Record<string, string[]>
+    mapIds: string[]
+    mapEvents: string[]
+    dialogueIds: string[]
+    encounterIds: string[]
   }
   finalState: {
     currentMap: string
@@ -62,6 +66,10 @@ export class MainlineQaRunner {
   private readonly choiceUseCounts = new Map<string, number>()
   private readonly dialogueVisitCounts = new Map<string, number>()
   private readonly completedQuestSources = new Map<string, string[]>()
+  private readonly visitedMapIds = new Set<string>()
+  private readonly triggeredMapEvents = new Set<string>()
+  private readonly completedDialogueIds = new Set<string>()
+  private readonly completedEncounterIds = new Set<string>()
 
   constructor(private readonly route: readonly MainlineQaRouteStep[] = MAINLINE_QA_ROUTE) {}
 
@@ -69,6 +77,7 @@ export class MainlineQaRunner {
     const gd = GameData.getInstance()
     gd.reset()
     gd.settings.encounterRate = 'none'
+    this.visitedMapIds.add(gd.currentMap)
 
     this.validateConfig()
 
@@ -126,6 +135,8 @@ export class MainlineQaRunner {
 
     gd.currentMap = mapId
     gd.playerPosition = { x: event.x, y: event.y }
+    this.visitedMapIds.add(mapId)
+    this.triggeredMapEvents.add(`${mapId}:${event.id}`)
 
     if (!areEventConditionsMet(event.conditions, flag => gd.getFlag(flag))) {
       this.addError(`${source}: Event conditions are not met`)
@@ -172,6 +183,7 @@ export class MainlineQaRunner {
       }
     }
     if (dialogue.onComplete) actions.push(...dialogue.onComplete)
+    this.completedDialogueIds.add(dialogueId)
     return actions
   }
 
@@ -295,6 +307,7 @@ export class MainlineQaRunner {
       this.addError(`${source}: Encounter ${encounterId} not found`)
       return
     }
+    this.completedEncounterIds.add(encounterId)
 
     for (const enemyId of rewardResult.missingEnemyIds) {
       this.addError(`${source}: Enemy ${enemyId} not found`)
@@ -330,6 +343,7 @@ export class MainlineQaRunner {
     }
     gd.currentMap = mapId
     gd.playerPosition = { x, y }
+    this.visitedMapIds.add(mapId)
   }
 
   private hasConfiguredImageAsset(key: string, imageAssets: Record<string, string>): boolean {
@@ -527,6 +541,10 @@ export class MainlineQaRunner {
       completedQuestSources: Object.fromEntries(
         [...this.completedQuestSources.entries()].map(([questId, sources]) => [questId, [...sources]]),
       ),
+      mapIds: [...this.visitedMapIds],
+      mapEvents: [...this.triggeredMapEvents],
+      dialogueIds: [...this.completedDialogueIds],
+      encounterIds: [...this.completedEncounterIds],
     }
   }
 

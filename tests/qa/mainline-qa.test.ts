@@ -12,6 +12,7 @@ import {
   MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL,
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
+  MAINLINE_QA_ROUTE,
 } from '../../src/utils/constants.ts'
 
 function runMainlineQaSilently(): ReturnType<typeof runMainlineQa> {
@@ -52,6 +53,15 @@ describe('MainlineQaRunner', () => {
       expect(report.finalState.completedQuests).toContain(questId)
       expect(report.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
     }
+    for (const step of MAINLINE_QA_ROUTE) {
+      if (step.kind === 'event') {
+        expect(report.coverage.mapEvents).toContain(`${step.mapId}:${step.eventId}`)
+      } else {
+        expect(report.coverage.dialogueIds).toContain(step.dialogueId)
+      }
+    }
+    expect(report.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
+    expect(report.coverage.encounterIds).toContain(MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID)
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
     }
@@ -90,6 +100,8 @@ describe('MainlineQaRunner', () => {
       expect(reportElement?.type).toBe('application/json')
       const publishedReport = JSON.parse(reportElement?.textContent ?? '{}')
       expect(publishedReport.status).toBe(report.status)
+      expect(publishedReport.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
+      expect(publishedReport.coverage.encounterIds).toContain(MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID)
       for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
         expect(publishedReport.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
       }
