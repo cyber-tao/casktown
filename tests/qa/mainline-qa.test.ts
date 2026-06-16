@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { MainlineQaRunner, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { GAME_CONFIG_DATABASE } from '../../src/data/configDatabase.ts'
+import { MainlineQaRunner, getMainlineQaSummaryStyle, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
 import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
@@ -13,6 +14,8 @@ import {
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
+  START_MAP_ID,
+  START_PLAYER_POSITION,
 } from '../../src/utils/constants.ts'
 
 function runMainlineQaSilently(): ReturnType<typeof runMainlineQa> {
@@ -111,6 +114,30 @@ describe('MainlineQaRunner', () => {
     } finally {
       ;(globalThis as unknown as { document?: unknown }).document = originalDocument
     }
+  })
+
+  test('starts from the actual new-game autorun event', () => {
+    expect(MAINLINE_QA_ROUTE[0]).toEqual({ kind: 'event', mapId: START_MAP_ID, eventId: 'EVT_START' })
+    const startEvent = GAME_CONFIG_DATABASE.getTable('maps')[START_MAP_ID]?.events.find(event => event.id === 'EVT_START')
+
+    expect(startEvent).toMatchObject({
+      x: START_PLAYER_POSITION.x,
+      y: START_PLAYER_POSITION.y,
+      width: 1,
+      height: 1,
+      trigger: 'autorun',
+    })
+  })
+
+  test('keeps browser QA summary away from mobile touch controls', () => {
+    const desktopStyle = getMainlineQaSummaryStyle(false)
+    const compactStyle = getMainlineQaSummaryStyle(true)
+
+    expect(desktopStyle).toContain('bottom:max(12px')
+    expect(desktopStyle).not.toContain('transform:translateX(-50%)')
+    expect(compactStyle).toContain('top:max(54px')
+    expect(compactStyle).toContain('left:50%')
+    expect(compactStyle).not.toContain('bottom:max(12px')
   })
 
   test('fails when a route step targets a locked map', () => {

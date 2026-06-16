@@ -23,9 +23,12 @@ import {
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
+  TOUCH_INPUT,
 } from '../utils/constants'
 
-type MainlineQaRouteStep = typeof MAINLINE_QA_ROUTE[number]
+type MainlineQaRouteStep =
+  | { readonly kind: 'dialogue'; readonly dialogueId: string }
+  | { readonly kind: 'event'; readonly mapId: string; readonly eventId: string }
 type MainlineQaStatus = typeof MAINLINE_QA.STATUS_PASSED | typeof MAINLINE_QA.STATUS_FAILED
 
 interface MainlineQaStepReport {
@@ -634,23 +637,44 @@ function publishMainlineQaReport(report: MainlineQaReport): void {
     `Quests ${Object.keys(report.coverage.completedQuestSources).length}`,
     `Errors ${report.errors.length}`,
   ].join(' | ')
-  summaryElement.setAttribute('style', [
+  summaryElement.setAttribute('style', getMainlineQaSummaryStyle(isCompactMainlineQaViewport()))
+}
+
+function isCompactMainlineQaViewport(): boolean {
+  return typeof window !== 'undefined' && window.innerWidth <= TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH
+}
+
+export function getMainlineQaSummaryStyle(compactViewport: boolean): string {
+  const position = compactViewport
+    ? [
+        'left:50%',
+        'top:max(54px, calc(env(safe-area-inset-top) + 8px))',
+        'transform:translateX(-50%)',
+        'max-width:min(300px, calc(100vw - 16px))',
+        'padding:6px 8px',
+        'font:600 10px/1.35 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+      ]
+    : [
+        'left:max(12px, env(safe-area-inset-left))',
+        'bottom:max(12px, env(safe-area-inset-bottom))',
+        'max-width:min(440px, calc(100vw - 24px))',
+        'padding:8px 10px',
+        'font:600 12px/1.45 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+      ]
+
+  return [
     'position:fixed',
-    'left:max(12px, env(safe-area-inset-left))',
-    'bottom:max(12px, env(safe-area-inset-bottom))',
+    ...position,
     'z-index:20',
-    'max-width:min(440px, calc(100vw - 24px))',
     'box-sizing:border-box',
-    'padding:8px 10px',
     'border:1px solid rgba(241,196,106,0.72)',
     'border-radius:6px',
     'background:rgba(7,16,26,0.86)',
     'color:#eef6f3',
-    'font:600 12px/1.45 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
     'letter-spacing:0',
     'text-shadow:0 1px 3px rgba(0,0,0,0.72)',
     'pointer-events:none',
-  ].join(';'))
+  ].join(';')
 }
 
 export function runMainlineQa(): MainlineQaReport {

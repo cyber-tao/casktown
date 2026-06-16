@@ -644,7 +644,7 @@ export const BLUE_MINT_SIDE_QUEST = {
   GATHER_BOUNDS: { x: 15, y: 14, width: 1, height: 1 },
 } as const
 export const MAINLINE_QA_ROUTE = [
-  { kind: 'dialogue', dialogueId: 'DIA_001_START' },
+  { kind: 'event', mapId: 'MAP_001', eventId: 'EVT_START' },
   { kind: 'event', mapId: 'MAP_001', eventId: 'NPC_PINEAPPLE_START' },
   { kind: 'event', mapId: 'MAP_001', eventId: 'NPC_GARDEN_BARREL' },
   { kind: 'event', mapId: 'MAP_001', eventId: 'NPC_PINEAPPLE_REPORT' },
