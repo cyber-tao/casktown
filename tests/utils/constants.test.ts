@@ -28,6 +28,7 @@ import {
   BATTLE_LAYOUT,
   BATTLE_RESULT_PANEL,
   STARTUP_LOADING,
+  TITLE_GITHUB_LINK,
   TITLE_MENU_LAYOUT,
 } from '../../src/utils/constants.ts'
 
@@ -183,6 +184,24 @@ describe('constants consistency', () => {
     expect(TITLE_MENU_LAYOUT.MESSAGE_X).toBe(TITLE_MENU_LAYOUT.MENU_X)
     expect(finalMenuItemY).toBeLessThan(GAME_HEIGHT - 80)
     expect(TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS).toBeGreaterThan(0)
+  })
+
+  test('title menu remains readable on common landscape phone viewports', () => {
+    const landscapePhoneViewport = { width: 667, height: 375 }
+    const displayScale = Math.min(
+      landscapePhoneViewport.width / GAME_WIDTH,
+      landscapePhoneViewport.height / GAME_HEIGHT,
+    )
+    const menuCssFontSize = TITLE_MENU_LAYOUT.MENU_FONT_SIZE * GAME_SCALE * displayScale
+    const githubCssFontSize = TITLE_GITHUB_LINK.fontSize * displayScale
+    const menuCenterX = TITLE_MENU_LAYOUT.MENU_X * displayScale
+    const finalMenuItemY = (TITLE_MENU_LAYOUT.START_Y + TITLE_MENU_LAYOUT.GAP_Y * 4) * displayScale
+
+    expect(menuCssFontSize).toBeGreaterThanOrEqual(16)
+    expect(githubCssFontSize).toBeGreaterThanOrEqual(10)
+    expect(menuCenterX).toBeGreaterThan(landscapePhoneViewport.width * 0.16)
+    expect(menuCenterX).toBeLessThan(landscapePhoneViewport.width * 0.25)
+    expect(finalMenuItemY).toBeLessThan(landscapePhoneViewport.height - 24)
   })
 
   test('MAP_HUD party layout constants are defined', () => {

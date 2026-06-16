@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test'
+import { existsSync } from 'node:fs'
 import { resolveDialogueVoiceKey, getDialogueVoicePath } from '../../src/utils/voiceLines.ts'
 import { VOICE_AUDIO_PATH } from '../../src/utils/constants.ts'
 import type { DialogueLine } from '../../src/data/types.ts'
+import voiceLines from '../../voice_lines.json'
 
 describe('resolveDialogueVoiceKey', () => {
   test('returns null for out-of-range line index', () => {
@@ -47,5 +49,16 @@ describe('getDialogueVoicePath', () => {
   test('handles empty string key', () => {
     const path = getDialogueVoicePath('')
     expect(path).toBe(`${VOICE_AUDIO_PATH.DIRECTORY}/${VOICE_AUDIO_PATH.EXTENSION}`)
+  })
+})
+
+describe('voice line assets', () => {
+  test('all configured voice assets exist at runtime', () => {
+    const missing = (voiceLines as Array<{ assetKey?: string }>)
+      .map(line => line.assetKey)
+      .filter((assetKey): assetKey is string => Boolean(assetKey))
+      .filter(assetKey => !existsSync(`assets/${getDialogueVoicePath(assetKey)}`))
+
+    expect(missing).toEqual([])
   })
 })
