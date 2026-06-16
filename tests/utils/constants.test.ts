@@ -176,14 +176,26 @@ describe('constants consistency', () => {
   })
 
   test('title menu leaves the central party art visible', () => {
-    const centralPartyArtLeft = GAME_WIDTH * 0.28
+    const partyArtRight = GAME_WIDTH * 0.58
+    const panelLeft = TITLE_MENU_LAYOUT.PANEL_X - TITLE_MENU_LAYOUT.PANEL_WIDTH / 2
+    const panelRight = TITLE_MENU_LAYOUT.PANEL_X + TITLE_MENU_LAYOUT.PANEL_WIDTH / 2
+    const panelBottom = TITLE_MENU_LAYOUT.PANEL_Y + TITLE_MENU_LAYOUT.PANEL_HEIGHT / 2
+    const menuLeft = TITLE_MENU_LAYOUT.MENU_X - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X
+    const menuRight = TITLE_MENU_LAYOUT.MENU_X + TITLE_MENU_LAYOUT.MENU_TEXT_HALF_WIDTH
     const finalMenuItemY = TITLE_MENU_LAYOUT.START_Y + TITLE_MENU_LAYOUT.GAP_Y * 4
 
-    expect(TITLE_MENU_LAYOUT.MENU_X).toBeLessThan(centralPartyArtLeft)
-    expect(TITLE_MENU_LAYOUT.MENU_X + TITLE_MENU_LAYOUT.CURSOR_OFFSET_X).toBeLessThan(centralPartyArtLeft)
+    expect(panelLeft).toBeGreaterThan(partyArtRight)
+    expect(panelRight).toBeLessThanOrEqual(GAME_WIDTH - 32)
+    expect(panelBottom).toBeLessThan(TITLE_GITHUB_LINK.y)
+    expect(menuLeft).toBeGreaterThan(partyArtRight)
+    expect(menuRight).toBeLessThan(GAME_WIDTH - 80)
+    expect(menuLeft).toBeGreaterThan(panelLeft)
+    expect(menuRight).toBeLessThan(panelRight)
     expect(TITLE_MENU_LAYOUT.MESSAGE_X).toBe(TITLE_MENU_LAYOUT.MENU_X)
     expect(finalMenuItemY).toBeLessThan(GAME_HEIGHT - 80)
     expect(TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS).toBeGreaterThan(0)
+    expect(TITLE_MENU_LAYOUT.PANEL_ALPHA).toBeGreaterThan(0)
+    expect(TITLE_MENU_LAYOUT.PANEL_ALPHA).toBeLessThan(0.7)
   })
 
   test('title menu remains readable on common landscape phone viewports', () => {
@@ -195,12 +207,14 @@ describe('constants consistency', () => {
     const menuCssFontSize = TITLE_MENU_LAYOUT.MENU_FONT_SIZE * GAME_SCALE * displayScale
     const githubCssFontSize = TITLE_GITHUB_LINK.fontSize * displayScale
     const menuCenterX = TITLE_MENU_LAYOUT.MENU_X * displayScale
+    const panelRight = (TITLE_MENU_LAYOUT.PANEL_X + TITLE_MENU_LAYOUT.PANEL_WIDTH / 2) * displayScale
     const finalMenuItemY = (TITLE_MENU_LAYOUT.START_Y + TITLE_MENU_LAYOUT.GAP_Y * 4) * displayScale
 
     expect(menuCssFontSize).toBeGreaterThanOrEqual(16)
     expect(githubCssFontSize).toBeGreaterThanOrEqual(10)
-    expect(menuCenterX).toBeGreaterThan(landscapePhoneViewport.width * 0.16)
-    expect(menuCenterX).toBeLessThan(landscapePhoneViewport.width * 0.25)
+    expect(menuCenterX).toBeGreaterThan(landscapePhoneViewport.width * 0.72)
+    expect(menuCenterX).toBeLessThan(landscapePhoneViewport.width * 0.86)
+    expect(panelRight).toBeLessThanOrEqual(landscapePhoneViewport.width - 8)
     expect(finalMenuItemY).toBeLessThan(landscapePhoneViewport.height - 24)
   })
 

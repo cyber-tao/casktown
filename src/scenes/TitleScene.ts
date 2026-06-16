@@ -68,6 +68,19 @@ export class TitleScene extends Phaser.Scene {
       strokeThickness: TITLE_MENU_LAYOUT.SUBTITLE_STROKE_THICKNESS,
     }).setOrigin(0.5)
 
+    this.add.rectangle(
+      TITLE_MENU_LAYOUT.PANEL_X,
+      TITLE_MENU_LAYOUT.PANEL_Y,
+      TITLE_MENU_LAYOUT.PANEL_WIDTH,
+      TITLE_MENU_LAYOUT.PANEL_HEIGHT,
+      TITLE_MENU_LAYOUT.PANEL_FILL_COLOR,
+      TITLE_MENU_LAYOUT.PANEL_ALPHA,
+    ).setStrokeStyle(
+      TITLE_MENU_LAYOUT.PANEL_BORDER_WIDTH,
+      TITLE_MENU_LAYOUT.PANEL_BORDER_COLOR,
+      TITLE_MENU_LAYOUT.PANEL_BORDER_ALPHA,
+    )
+
     for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
       const text = this.add.text(TITLE_MENU_LAYOUT.MENU_X, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
         fontSize: scaleFont(TITLE_MENU_LAYOUT.MENU_FONT_SIZE),
