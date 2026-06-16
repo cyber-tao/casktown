@@ -97,6 +97,26 @@ describe('constants consistency', () => {
     expect(panelArea).toBeLessThan(GAME_WIDTH * GAME_HEIGHT * 0.09)
   })
 
+  test('battle submenus fit late-game barrel and item lists', () => {
+    const lateGameRows = 9
+    const contentHeight = BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING * 2 +
+      BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE +
+      (lateGameRows - 1) * BATTLE_LAYOUT.SUBMENU_ITEM_GAP_Y
+    const panelHeight = Math.max(BATTLE_LAYOUT.SUBMENU_PANEL_MIN_HEIGHT, contentHeight)
+    const maxTop = GAME_HEIGHT - BATTLE_LAYOUT.SUBMENU_MARGIN_BOTTOM - panelHeight
+    const panelTop = Math.min(BATTLE_LAYOUT.SUBMENU_PREFERRED_TOP, maxTop)
+    const firstItemTop = panelTop + BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING
+    const lastItemBottom = firstItemTop +
+      (lateGameRows - 1) * BATTLE_LAYOUT.SUBMENU_ITEM_GAP_Y +
+      BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE
+
+    expect(panelTop).toBeGreaterThanOrEqual(BATTLE_LAYOUT.SUBMENU_MIN_TOP)
+    expect(panelTop + panelHeight).toBeLessThanOrEqual(GAME_HEIGHT - BATTLE_LAYOUT.SUBMENU_MARGIN_BOTTOM)
+    expect(lastItemBottom).toBeLessThanOrEqual(panelTop + panelHeight - BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING)
+    expect(BATTLE_LAYOUT.SUBMENU_TEXT_WIDTH).toBeLessThan(BATTLE_LAYOUT.SUBMENU_PANEL_WIDTH)
+    expect(BATTLE_LAYOUT.SUBMENU_ITEM_MIN_FONT_SIZE).toBeLessThan(BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE)
+  })
+
   test('battle unit names stay readable over detailed backgrounds', () => {
     expect(BATTLE_LAYOUT.UNIT_NAME_STROKE_THICKNESS).toBeGreaterThan(0)
     expect(BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH).toBeGreaterThanOrEqual(BATTLE_LAYOUT.UNIT_BAR_WIDTH)

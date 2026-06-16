@@ -86,6 +86,14 @@ interface BattleResultSummary {
   lines: string[]
 }
 
+interface BattleSubmenuLayout {
+  panelX: number
+  panelY: number
+  panelWidth: number
+  panelHeight: number
+  itemStartY: number
+}
+
 export class BattleScene extends Phaser.Scene {
   private units: BattleUnit[] = []
   private turnOrder: number[] = []
@@ -1031,6 +1039,71 @@ export class BattleScene extends Phaser.Scene {
     this.nextTurn()
   }
 
+  private getBattleSubmenuLayout(rowCount: number): BattleSubmenuLayout {
+    const rows = Math.max(1, rowCount)
+    const contentHeight = BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING * 2 +
+      BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE +
+      (rows - 1) * BATTLE_LAYOUT.SUBMENU_ITEM_GAP_Y
+    const panelHeight = Math.max(BATTLE_LAYOUT.SUBMENU_PANEL_MIN_HEIGHT, contentHeight)
+    const maxTop = GAME_HEIGHT - BATTLE_LAYOUT.SUBMENU_MARGIN_BOTTOM - panelHeight
+    const top = maxTop < BATTLE_LAYOUT.SUBMENU_MIN_TOP
+      ? Math.max(0, maxTop)
+      : Phaser.Math.Clamp(BATTLE_LAYOUT.SUBMENU_PREFERRED_TOP, BATTLE_LAYOUT.SUBMENU_MIN_TOP, maxTop)
+
+    return {
+      panelX: BATTLE_LAYOUT.SUBMENU_PANEL_X,
+      panelY: top + panelHeight / 2,
+      panelWidth: BATTLE_LAYOUT.SUBMENU_PANEL_WIDTH,
+      panelHeight,
+      itemStartY: top + BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING,
+    }
+  }
+
+  private addBattleSubmenuPanel(rowCount: number): { layout: BattleSubmenuLayout; panel: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image } {
+    const layout = this.getBattleSubmenuLayout(rowCount)
+    const panel = this.addRuntimePanel(layout.panelX, layout.panelY, layout.panelWidth, layout.panelHeight, RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
+    return { layout, panel }
+  }
+
+  private addBattleSubmenuText(layout: BattleSubmenuLayout, index: number, label: string, color: string, onPress: () => void): Phaser.GameObjects.Text {
+    const text = this.add.text(
+      BATTLE_LAYOUT.SUBMENU_ITEM_X,
+      layout.itemStartY + index * BATTLE_LAYOUT.SUBMENU_ITEM_GAP_Y,
+      label,
+      {
+        fontSize: `${BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE}px`,
+        color,
+        fontFamily: BATTLE_LAYOUT.COMMAND_ITEM_FONT_FAMILY,
+      },
+    )
+    this.fitBattleSubmenuText(text)
+    text.setDepth(321)
+    text.setScrollFactor(0)
+    bindTouchText(text, onPress)
+    return text
+  }
+
+  private addBattleSubmenuCursor(layout: BattleSubmenuLayout): Phaser.GameObjects.Rectangle {
+    const cursor = this.add.rectangle(
+      BATTLE_LAYOUT.SUBMENU_CURSOR_X,
+      layout.itemStartY + BATTLE_LAYOUT.SUBMENU_CURSOR_Y_OFFSET,
+      BATTLE_LAYOUT.SUBMENU_CURSOR_SIZE,
+      BATTLE_LAYOUT.SUBMENU_CURSOR_SIZE,
+      BATTLE_LAYOUT.COMMAND_CURSOR_COLOR,
+    )
+    cursor.setDepth(322)
+    cursor.setScrollFactor(0)
+    return cursor
+  }
+
+  private fitBattleSubmenuText(text: Phaser.GameObjects.Text): void {
+    let fontSize = BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE
+    while (text.width > BATTLE_LAYOUT.SUBMENU_TEXT_WIDTH && fontSize > BATTLE_LAYOUT.SUBMENU_ITEM_MIN_FONT_SIZE) {
+      fontSize -= 1
+      text.setFontSize(fontSize)
+    }
+  }
+
   private skillMenuItems: Phaser.GameObjects.Text[] = []
   private skillMenuCursor!: Phaser.GameObjects.Rectangle
   private skillMenuIndex = 0
@@ -1055,24 +1128,16 @@ export class BattleScene extends Phaser.Scene {
     this.skillMenuIndex = 0
     this.skillMenuItems = []
 
-    // Skill menu panel
-    this.skillMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
+    const submenu = this.addBattleSubmenuPanel(skills.length)
+    this.skillMenuBg = submenu.panel
 
     for (let i = 0; i < skills.length; i++) {
       const sk = skillDefs[skills[i]!]!
       const cost = sk.costTp > 0 ? `TP${sk.costTp}` : `MP${sk.costMp}`
-      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${sk.name} [${cost}]`, {
-        fontSize: scaleFont(14),
-        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
-      })
-      text.setDepth(321)
-      text.setScrollFactor(0)
-      bindTouchText(text, () => this.selectSkillMenuItem(i))
+      const text = this.addBattleSubmenuText(submenu.layout, i, `${sk.name} [${cost}]`, BATTLE_LAYOUT.COMMAND_ITEM_COLOR, () => this.selectSkillMenuItem(i))
       this.skillMenuItems.push(text)
     }
-    this.skillMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
-    this.skillMenuCursor.setDepth(322)
-    this.skillMenuCursor.setScrollFactor(0)
+    this.skillMenuCursor = this.addBattleSubmenuCursor(submenu.layout)
   }
 
   private moveSkillMenu(dir: number): void {
@@ -1146,24 +1211,17 @@ export class BattleScene extends Phaser.Scene {
     this.itemMenuIndex = 0
     this.itemMenuItems = []
 
-    this.itemMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
+    const submenu = this.addBattleSubmenuPanel(items.length)
+    this.itemMenuBg = submenu.panel
 
     for (let i = 0; i < items.length; i++) {
       const [itemId, qty] = items[i]!
       const item = this.getItemData(itemId)
       if (!item) continue
-      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${item.name} x${qty}`, {
-        fontSize: scaleFont(14),
-        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
-      })
-      text.setDepth(321)
-      text.setScrollFactor(0)
-      bindTouchText(text, () => this.selectItemMenuItem(i))
+      const text = this.addBattleSubmenuText(submenu.layout, i, `${item.name} x${qty}`, BATTLE_LAYOUT.COMMAND_ITEM_COLOR, () => this.selectItemMenuItem(i))
       this.itemMenuItems.push(text)
     }
-    this.itemMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
-    this.itemMenuCursor.setDepth(322)
-    this.itemMenuCursor.setScrollFactor(0)
+    this.itemMenuCursor = this.addBattleSubmenuCursor(submenu.layout)
   }
 
   private moveItemMenu(dir: number): void {
@@ -1246,22 +1304,15 @@ export class BattleScene extends Phaser.Scene {
     this.barrelMenuItems = []
     this.barrelMenuColors = unlocked
 
-    this.barrelMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
+    const submenu = this.addBattleSubmenuPanel(unlocked.length)
+    this.barrelMenuBg = submenu.panel
 
     for (let i = 0; i < unlocked.length; i++) {
       const ability = bs.getAbility(unlocked[i]!)
-      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), `${ability!.name} - ${ability!.battleDescription}`, {
-        fontSize: scaleFont(14),
-        color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
-      })
-      text.setDepth(321)
-      text.setScrollFactor(0)
-      bindTouchText(text, () => this.selectBarrelMenuItem(i))
+      const text = this.addBattleSubmenuText(submenu.layout, i, `${ability!.name} - ${ability!.battleDescription}`, BATTLE_LAYOUT.COMMAND_ITEM_COLOR, () => this.selectBarrelMenuItem(i))
       this.barrelMenuItems.push(text)
     }
-    this.barrelMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
-    this.barrelMenuCursor.setDepth(322)
-    this.barrelMenuCursor.setScrollFactor(0)
+    this.barrelMenuCursor = this.addBattleSubmenuCursor(submenu.layout)
   }
 
   private moveBarrelMenu(dir: number): void {
@@ -1336,25 +1387,18 @@ export class BattleScene extends Phaser.Scene {
     this.comboMenuItems = []
     this.availableCombos = combos
 
-    this.comboMenuBg = this.addRuntimePanel(scalePx(560), scalePx(440), scalePx(280), scalePx(140), RUNTIME_UI_ASSET_KEYS.BATTLE_COMMAND, BATTLE_LAYOUT.COMMAND_PANEL_COLOR, BATTLE_LAYOUT.COMMAND_PANEL_ALPHA, 320)
+    const submenu = this.addBattleSubmenuPanel(combos.length)
+    this.comboMenuBg = submenu.panel
 
     for (let i = 0; i < combos.length; i++) {
       const combo = combos[i]!
       const char1Unit = this.units.find(u => u.isPlayer && u.id === combo.char1)
       const char2Unit = this.units.find(u => u.isPlayer && u.id === combo.char2)
       const label = `${combo.name} [${char1Unit?.name}+${char2Unit?.name}]`
-      const text = this.add.text(scalePx(430), scalePx(390 + i * 22), label, {
-        fontSize: scaleFont(14),
-        color: BATTLE_LAYOUT.COMBO_ITEM_COLOR,
-      })
-      text.setDepth(321)
-      text.setScrollFactor(0)
-      bindTouchText(text, () => this.selectComboMenuItem(i))
+      const text = this.addBattleSubmenuText(submenu.layout, i, label, BATTLE_LAYOUT.COMBO_ITEM_COLOR, () => this.selectComboMenuItem(i))
       this.comboMenuItems.push(text)
     }
-    this.comboMenuCursor = this.add.rectangle(scalePx(420), scalePx(390 + 6), scalePx(8), scalePx(8), BATTLE_LAYOUT.COMMAND_CURSOR_COLOR)
-    this.comboMenuCursor.setDepth(322)
-    this.comboMenuCursor.setScrollFactor(0)
+    this.comboMenuCursor = this.addBattleSubmenuCursor(submenu.layout)
   }
 
   private moveComboMenu(dir: number): void {

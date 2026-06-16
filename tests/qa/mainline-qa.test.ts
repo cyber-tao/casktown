@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { MainlineQaRunner, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import {
@@ -114,6 +115,7 @@ describe('MainlineQaRunner', () => {
     for (const characterId of MAINLINE_QA.BATTLE_VISUAL_PARTY.filter(characterId => characterId !== 'T')) {
       expect(gd.getFlag(`${characterId.toLowerCase()}_joined`)).toBe(true)
     }
+    expect(BarrelSystem.getInstance().getUnlockedColors()).toHaveLength(8)
     expect(gd.party).not.toContain('A')
     expect(gd.reserve).not.toContain('A')
   })
