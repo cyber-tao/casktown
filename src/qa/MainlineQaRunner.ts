@@ -616,6 +616,41 @@ function publishMainlineQaReport(report: MainlineQaReport): void {
     document.body?.appendChild(reportElement)
   }
   reportElement.textContent = JSON.stringify(report)
+
+  let summaryElement = document.getElementById(MAINLINE_QA.REPORT_SUMMARY_ELEMENT_ID)
+  if (!summaryElement) {
+    summaryElement = document.createElement('aside')
+    summaryElement.id = MAINLINE_QA.REPORT_SUMMARY_ELEMENT_ID
+    summaryElement.setAttribute('role', 'status')
+    summaryElement.setAttribute('aria-live', 'polite')
+    document.body?.appendChild(summaryElement)
+  }
+  summaryElement.setAttribute('data-status', report.status)
+  summaryElement.textContent = [
+    `Mainline QA ${report.status.toUpperCase()}`,
+    `Steps ${report.steps.length}`,
+    `Maps ${report.coverage.mapIds.length}`,
+    `Battles ${report.coverage.encounterIds.length}`,
+    `Quests ${Object.keys(report.coverage.completedQuestSources).length}`,
+    `Errors ${report.errors.length}`,
+  ].join(' | ')
+  summaryElement.setAttribute('style', [
+    'position:fixed',
+    'left:max(12px, env(safe-area-inset-left))',
+    'bottom:max(12px, env(safe-area-inset-bottom))',
+    'z-index:20',
+    'max-width:min(440px, calc(100vw - 24px))',
+    'box-sizing:border-box',
+    'padding:8px 10px',
+    'border:1px solid rgba(241,196,106,0.72)',
+    'border-radius:6px',
+    'background:rgba(7,16,26,0.86)',
+    'color:#eef6f3',
+    'font:600 12px/1.45 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+    'letter-spacing:0',
+    'text-shadow:0 1px 3px rgba(0,0,0,0.72)',
+    'pointer-events:none',
+  ].join(';'))
 }
 
 export function runMainlineQa(): MainlineQaReport {

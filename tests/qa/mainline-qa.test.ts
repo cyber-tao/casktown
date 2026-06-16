@@ -95,9 +95,12 @@ describe('MainlineQaRunner', () => {
     try {
       const report = runMainlineQaSilently()
       const reportElement = elements.get(MAINLINE_QA.REPORT_ELEMENT_ID)
+      const summaryElement = elements.get(MAINLINE_QA.REPORT_SUMMARY_ELEMENT_ID)
 
       expect(attributes.get(MAINLINE_QA.REPORT_STATUS_ATTRIBUTE)).toBe(MAINLINE_QA.STATUS_PASSED)
       expect(reportElement?.type).toBe('application/json')
+      expect(summaryElement?.textContent).toContain('Mainline QA PASSED')
+      expect(summaryElement?.textContent).toContain(`Steps ${report.steps.length}`)
       const publishedReport = JSON.parse(reportElement?.textContent ?? '{}')
       expect(publishedReport.status).toBe(report.status)
       expect(publishedReport.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
