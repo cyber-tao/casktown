@@ -2096,6 +2096,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '系统', text: '交付【蓝色薄荷】。获得【回复草】x5。' },
     ],
     onComplete: [
+      { type: 'removeItem', itemId: BLUE_MINT_SIDE_QUEST.ITEM_ID, quantity: 1 },
       { type: 'setFlag', flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: true },
       { type: 'questComplete', questId: BLUE_MINT_SIDE_QUEST.QUEST_ID },
     ],

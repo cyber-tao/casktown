@@ -286,6 +286,9 @@ export class MainlineQaRunner {
       case 'addItem':
         gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
         break
+      case 'removeItem':
+        gd.removeItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
+        break
       case 'addParty':
         gd.addPartyMember(action.characterId)
         SkillGrowth.getInstance().checkAllUnlocks()
@@ -488,6 +491,9 @@ export class MainlineQaRunner {
           if (!tables.getTable('quests')[action.questId]) this.addError(`${source}: Quest ${action.questId} not found`)
           break
         case 'addItem':
+          if (!tables.getTable('items')[action.itemId]) this.addError(`${source}: Item ${action.itemId} not found`)
+          break
+        case 'removeItem':
           if (!tables.getTable('items')[action.itemId]) this.addError(`${source}: Item ${action.itemId} not found`)
           break
         case 'addParty':

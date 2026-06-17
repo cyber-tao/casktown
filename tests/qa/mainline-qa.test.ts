@@ -5,6 +5,7 @@ import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import {
+  BLUE_MINT_SIDE_QUEST,
   MAINLINE_QA,
   MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS,
   MAINLINE_QA_REQUIRED_COMPLETED_QUESTS,
@@ -68,6 +69,7 @@ describe('MainlineQaRunner', () => {
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
     }
+    expect(GameData.getInstance().hasItem(BLUE_MINT_SIDE_QUEST.ITEM_ID)).toBe(false)
   })
 
   test('publishes a browser-readable report for visual QA automation', () => {

@@ -448,6 +448,9 @@ export class DialogueOverlay extends Phaser.Scene {
       if (act.type === 'addItem') {
         gd.addItem(act.itemId, act.quantity ?? DEFAULT_ITEM_QUANTITY)
       }
+      if (act.type === 'removeItem') {
+        gd.removeItem(act.itemId, act.quantity ?? DEFAULT_ITEM_QUANTITY)
+      }
       if (act.type === 'addParty') {
         gd.addPartyMember(act.characterId)
         SkillGrowth.getInstance().checkAllUnlocks()

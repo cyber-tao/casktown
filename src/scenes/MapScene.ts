@@ -2009,6 +2009,9 @@ export class MapScene extends Phaser.Scene {
         case 'addItem':
           gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
           break
+        case 'removeItem':
+          gd.removeItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
+          break
         case 'addParty':
           gd.addPartyMember(action.characterId)
           SkillGrowth.getInstance().checkAllUnlocks()

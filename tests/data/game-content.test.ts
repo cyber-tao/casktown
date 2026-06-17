@@ -71,6 +71,9 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
     case 'addItem':
       if (!ITEMS[action.itemId]) pushMissing(errors, source, 'item', action.itemId)
       break
+    case 'removeItem':
+      if (!ITEMS[action.itemId]) pushMissing(errors, source, 'item', action.itemId)
+      break
     case 'rebuild':
     case 'shop':
     case 'training':
@@ -512,5 +515,14 @@ describe('game content data', () => {
       expect(DIALOGUES[id]).toBeDefined()
       expect(DIALOGUES[id]!.lines.length).toBeGreaterThan(0)
     }
+  })
+
+  test('blue mint side quest consumes the gathered material on turn-in', () => {
+    const gatherDialogue = DIALOGUES['DIA_FOREST_HERB_GATHER']
+    const turnInDialogue = DIALOGUES['DIA_NPC_REBUILD1_HERB_TURNIN']
+
+    expect(gatherDialogue?.onComplete).toContainEqual({ type: 'addItem', itemId: 'blue_mint', quantity: 1 })
+    expect(turnInDialogue?.onComplete).toContainEqual({ type: 'removeItem', itemId: 'blue_mint', quantity: 1 })
+    expect(turnInDialogue?.onComplete).toContainEqual({ type: 'questComplete', questId: 'QST_014' })
   })
 })
