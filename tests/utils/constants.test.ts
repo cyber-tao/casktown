@@ -264,4 +264,21 @@ describe('constants consistency', () => {
     expect(TOUCH_INPUT.ACTION_LABEL_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(13)
     expect(TOUCH_INPUT.PROMPT_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(13)
   })
+
+  test('touch controls keep edge padding on compact landscape phones', () => {
+    const landscapePhoneViewport = { width: 812, height: 375 }
+    const displayScale = Math.min(
+      landscapePhoneViewport.width / GAME_WIDTH,
+      landscapePhoneViewport.height / GAME_HEIGHT,
+    )
+    const minButtonGameSize = TOUCH_INPUT.CONTROL_MIN_CSS_SIZE / displayScale
+    const dpadButtonSize = Math.max(TOUCH_INPUT.DPAD_BUTTON_SIZE, minButtonGameSize)
+    const actionButtonSize = Math.max(TOUCH_INPUT.ACTION_BUTTON_SIZE, minButtonGameSize)
+    const dpadBottom = TOUCH_INPUT.DPAD_CENTER_Y + TOUCH_INPUT.DPAD_BUTTON_OFFSET + dpadButtonSize / 2
+    const actionBottom = TOUCH_INPUT.ACTION_BUTTON_Y + actionButtonSize / 2
+    const minimumCssEdgePadding = 6
+
+    expect((GAME_HEIGHT - dpadBottom) * displayScale).toBeGreaterThanOrEqual(minimumCssEdgePadding)
+    expect((GAME_HEIGHT - actionBottom) * displayScale).toBeGreaterThanOrEqual(minimumCssEdgePadding)
+  })
 })
