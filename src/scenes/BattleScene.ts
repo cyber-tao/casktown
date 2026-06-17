@@ -8,6 +8,7 @@ import { applyEncounterVictoryRewards } from '../core/BattleRewards'
 import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
+import { getTriggeredMidBattleDialogue, getMidBattleDialoguePreview } from '../data/battleDialogues'
 import {
   BATTLE_COMMAND_LABELS,
   BATTLE_DIFFICULTY_MULTIPLIERS,
@@ -2368,9 +2369,12 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // Mid-battle dialogue triggers
-    this.checkMidBattleDialogue(liveEnemies)
+    if (this.checkMidBattleDialogue(liveEnemies)) return
 
+    this.advanceTurn()
+  }
+
+  private advanceTurn(): void {
     this.currentTurn++
     if (this.currentTurn >= this.turnOrder.length) {
       this.currentTurn = 0
@@ -2379,29 +2383,19 @@ export class BattleScene extends Phaser.Scene {
     this.startTurn()
   }
 
-  private checkMidBattleDialogue(liveEnemies: BattleUnit[]): void {
+  private checkMidBattleDialogue(liveEnemies: BattleUnit[]): boolean {
     const gd = GameData.getInstance()
-    const midBattleMap: Record<string, { hpThreshold: number; flag: string; dialogueId: string }[]> = {
-      baihu: [{ hpThreshold: 0.5, flag: 'mid_baihu_50', dialogueId: 'DIA_102_TIGER' }],
-      xiaoai_true: [{ hpThreshold: 0.3, flag: 'mid_xiaoai_true_30', dialogueId: 'DIA_503_FAKE_XIAOAI' }],
-      wuxiang: [
-        { hpThreshold: 0.7, flag: 'mid_wuxiang_70', dialogueId: 'DIA_601_WUXIANG' },
-        { hpThreshold: 0.3, flag: 'mid_wuxiang_30', dialogueId: 'DIA_601_WUXIANG' },
-      ],
-    }
     for (const enemy of liveEnemies) {
       const ed = enemy.data as EnemyData
-      const triggers = midBattleMap[ed.id]
-      if (!triggers) continue
-      const hpRatio = enemy.stats.hp / enemy.stats.maxHp
-      for (const t of triggers) {
-        if (hpRatio <= t.hpThreshold && gd.getFlag(t.flag) !== true) {
-          gd.setFlag(t.flag, true)
-          this.log(ed.name + '似乎有什么话要说……')
-          return
-        }
-      }
+      const trigger = getTriggeredMidBattleDialogue(ed.id, enemy.stats.hp, enemy.stats.maxHp, flag => gd.getFlag(flag))
+      if (!trigger) continue
+      gd.setFlag(trigger.flag, true)
+      this.phase = 'intro'
+      this.log(getMidBattleDialoguePreview(trigger.dialogueId, ed.name))
+      this.time.delayedCall(Math.floor(BATTLE_LAYOUT.MID_BATTLE_DIALOGUE_HOLD_MS / this.speedMult), () => this.advanceTurn())
+      return true
     }
+    return false
   }
 
   private getCurrentUnit(): BattleUnit | null {

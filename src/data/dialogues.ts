@@ -429,6 +429,12 @@ export const DIALOGUES: Record<string, DialogueData> = {
     ],
     onComplete: [{ type: 'questStart', questId: 'QST_005' }, { type: 'battle', encounterId: 'BTL_110' }],
   },
+  DIA_BATTLE_BAIHU_70: {
+    id: 'DIA_BATTLE_BAIHU_70',
+    lines: [
+      { speaker: '白虎', text: '那枚戒指的光……不是魔气。你们到底是什么人？' },
+    ],
+  },
   DIA_103_TIGER_RING: {
     id: 'DIA_103_TIGER_RING',
     lines: [
@@ -1436,6 +1442,12 @@ export const DIALOGUES: Record<string, DialogueData> = {
       },
     ],
   },
+  DIA_BATTLE_XIAOAI_TRUE_30: {
+    id: 'DIA_BATTLE_XIAOAI_TRUE_30',
+    lines: [
+      { speaker: 'xiaoai', text: '净化？你们连自己的黑暗都看不清，还想碰我？' },
+    ],
+  },
   DIA_530_KILL: {
     id: 'DIA_530_KILL',
     lines: [
@@ -1547,6 +1559,18 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '慧慧', text: '很明显。' },
       { speaker: '阿博', text: '别被激怒。' },
       { speaker: '无相', text: '我不需要制造黑暗。我只负责让你们承认，它本来就在。' },
+    ],
+  },
+  DIA_BATTLE_WUXIANG_70: {
+    id: 'DIA_BATTLE_WUXIANG_70',
+    lines: [
+      { speaker: '无相', text: '看看你们身后的影子，它们比刀更诚实。' },
+    ],
+  },
+  DIA_BATTLE_WUXIANG_30: {
+    id: 'DIA_BATTLE_WUXIANG_30',
+    lines: [
+      { speaker: '无相', text: '还不承认吗？所谓守护，不过是害怕失去的另一种名字。' },
     ],
   },
 

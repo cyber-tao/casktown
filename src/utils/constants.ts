@@ -1581,6 +1581,7 @@ export const BATTLE_LAYOUT = {
   LOG_PADDING_X: scalePx(8),
   LOG_PADDING_Y: scalePx(4),
   LOG_WRAP_WIDTH: scalePx(400),
+  MID_BATTLE_DIALOGUE_HOLD_MS: 1200,
 } as const
 
 export const DIALOGUE_TEXT_WIDTH = scalePx(720)
