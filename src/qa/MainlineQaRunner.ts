@@ -675,11 +675,11 @@ export function getMainlineQaSummaryStyle(compactViewport: boolean): string {
   const position = compactViewport
     ? [
         'left:50%',
-        'top:max(54px, calc(env(safe-area-inset-top) + 8px))',
+        'top:max(8px, calc(env(safe-area-inset-top) + 8px))',
         'transform:translateX(-50%)',
-        'max-width:min(300px, calc(100vw - 16px))',
-        'padding:6px 8px',
-        'font:600 10px/1.35 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+        'max-width:min(260px, calc(100vw - 16px))',
+        'padding:5px 7px',
+        'font:600 9px/1.3 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
       ]
     : [
         'left:max(12px, env(safe-area-inset-left))',
