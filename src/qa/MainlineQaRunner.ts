@@ -5,13 +5,12 @@ import { areEventConditionsMet } from '../core/EventConditions'
 import { getUniqueEventActions } from '../core/DialogueCompletionQueue'
 import { GameData } from '../core/GameData'
 import { QuestSystem } from '../core/QuestSystem'
-import { RebuildSystem } from '../core/RebuildSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { applyEncounterVictoryRewards } from '../core/BattleRewards'
 import { getChestOpenedFlag, getFieldEventDoneFlag } from '../core/MapEventState'
+import { applyStateEventAction } from '../core/EventActionExecutor'
 import {
-  DEFAULT_EVENT_ACTION_AMOUNT,
   DEFAULT_ITEM_QUANTITY,
   MAINLINE_QA,
   MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
@@ -243,70 +242,11 @@ export class MainlineQaRunner {
   }
 
   private applyStateAction(action: EventAction, source: string): void {
-    const gd = GameData.getInstance()
-    const qs = QuestSystem.getInstance()
-
-    switch (action.type) {
-      case 'questStart':
-        qs.startQuest(action.questId)
-        break
-      case 'questAdvance':
-        {
-          const wasCompleted = qs.isQuestCompleted(action.questId)
-          qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-          if (!wasCompleted && qs.isQuestCompleted(action.questId)) {
-            this.recordCompletedQuestSource(action.questId, source)
-          }
-        }
-        break
-      case 'questComplete':
-        {
-          const wasCompleted = qs.isQuestCompleted(action.questId)
-          qs.completeQuest(action.questId)
-          if (!wasCompleted && qs.isQuestCompleted(action.questId)) {
-            this.recordCompletedQuestSource(action.questId, source)
-          }
-        }
-        SkillGrowth.getInstance().checkAllUnlocks()
-        break
-      case 'setFlag':
-        gd.setFlag(action.flag, action.value)
-        SkillGrowth.getInstance().checkAllUnlocks()
-        break
-      case 'setBranch':
-        gd.updateBranch(action.branch, action.value)
-        SkillGrowth.getInstance().checkAllUnlocks()
-        break
-      case 'adjustTrust':
-        gd.adjustTrust(action.characterId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-        break
-      case 'adjustMercy':
-        gd.adjustMercy(action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-        break
-      case 'addItem':
-        gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
-        break
-      case 'removeItem':
-        gd.removeItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
-        break
-      case 'addParty':
-        gd.addPartyMember(action.characterId)
-        SkillGrowth.getInstance().checkAllUnlocks()
-        break
-      case 'removeParty':
-        gd.removePartyMember(action.characterId)
-        break
-      case 'rebuild':
-        RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level))
-        SkillGrowth.getInstance().checkAllUnlocks()
-        break
-      case 'shop':
-      case 'training':
-      case 'rebuildMenu':
-        this.addWarning(`${source}: Interactive action ${action.type} was skipped`)
-        break
-      default:
-        break
+    const result = applyStateEventAction(action)
+    if (result.completedQuestId) {
+      this.recordCompletedQuestSource(result.completedQuestId, source)
+    } else if (!result.handled && (action.type === 'shop' || action.type === 'training' || action.type === 'rebuildMenu')) {
+      this.addWarning(`${source}: Interactive action ${action.type} was skipped`)
     }
   }
 

@@ -2,14 +2,13 @@ import Phaser from 'phaser'
 import { GameData } from '../core/GameData'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { QuestSystem } from '../core/QuestSystem'
-import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
-import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { areEventConditionsMet as areConditionsMet } from '../core/EventConditions'
 import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent, isMapEventCompleted } from '../core/MapEventState'
+import { applyStateEventAction } from '../core/EventActionExecutor'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
@@ -21,8 +20,6 @@ import {
   DEFAULT_CHARACTER_SPRITE_BASE_KEY,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
-  DEFAULT_EVENT_ACTION_AMOUNT,
-  DEFAULT_ITEM_QUANTITY,
   DIRECTION,
   COLORS,
   FIELD_ENCOUNTER_RATE_THRESHOLDS,
@@ -1962,8 +1959,6 @@ export class MapScene extends Phaser.Scene {
   }
 
   private executeActions(actions: EventAction[], mapEventId = ''): void {
-    const gd = GameData.getInstance()
-    const qs = QuestSystem.getInstance()
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i]!
       switch (action.type) {
@@ -1982,52 +1977,6 @@ export class MapScene extends Phaser.Scene {
           this.pendingMapEventId = ''
           this.transferMap(action.targetMap, action.targetX, action.targetY)
           return
-        case 'questStart':
-          qs.startQuest(action.questId)
-          break
-        case 'questAdvance':
-          qs.advanceQuest(action.questId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-          break
-        case 'questComplete':
-          qs.completeQuest(action.questId)
-          SkillGrowth.getInstance().checkAllUnlocks()
-          break
-        case 'setFlag':
-          gd.setFlag(action.flag, action.value)
-          SkillGrowth.getInstance().checkAllUnlocks()
-          break
-        case 'setBranch':
-          gd.updateBranch(action.branch, action.value)
-          SkillGrowth.getInstance().checkAllUnlocks()
-          break
-        case 'adjustTrust':
-          gd.adjustTrust(action.characterId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-          break
-        case 'adjustMercy':
-          gd.adjustMercy(action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-          break
-        case 'addItem':
-          gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
-          break
-        case 'removeItem':
-          gd.removeItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
-          break
-        case 'addParty':
-          gd.addPartyMember(action.characterId)
-          SkillGrowth.getInstance().checkAllUnlocks()
-          this.removeSuppressedFieldEventSprites()
-          this.refreshFollowers()
-          this.createPartyHud()
-          break
-        case 'removeParty':
-          gd.removePartyMember(action.characterId)
-          this.refreshFollowers()
-          this.createPartyHud()
-          break
-        case 'rebuild':
-          RebuildSystem.getInstance().setLevel(Math.max(gd.rebuildLevel, action.level || 0))
-          SkillGrowth.getInstance().checkAllUnlocks()
-          break
         case 'shop':
           this.pendingActions = actions.slice(i + 1)
           this.pendingMapEventId = mapEventId
@@ -2046,6 +1995,15 @@ export class MapScene extends Phaser.Scene {
           this.scene.launch('RebuildOverlay')
           this.scene.pause()
           return
+        default: {
+          const result = applyStateEventAction(action)
+          if (!result.handled) break
+          if (!result.partyChanged) break
+          this.removeSuppressedFieldEventSprites()
+          this.refreshFollowers()
+          this.createPartyHud()
+          break
+        }
       }
     }
     this.pendingActions = []

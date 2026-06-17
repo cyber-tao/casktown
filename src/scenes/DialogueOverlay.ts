@@ -13,8 +13,6 @@ import {
   DIALOGUE_UI,
   DIALOGUE_TEXT_WIDTH,
   DIALOGUE_TEXT_WRAP_CHARS,
-  DEFAULT_EVENT_ACTION_AMOUNT,
-  DEFAULT_ITEM_QUANTITY,
   GAME_HEIGHT,
   GAME_WIDTH,
   LOADING_SCREEN,
@@ -28,9 +26,8 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { DialogueCompletionQueue } from '../core/DialogueCompletionQueue'
-import { QuestSystem } from '../core/QuestSystem'
-import { SkillGrowth } from '../core/SkillGrowth'
 import { areEventConditionsMet } from '../core/EventConditions'
+import { applyStateEventAction } from '../core/EventActionExecutor'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import type { DialogueChoice, DialogueData, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
@@ -434,46 +431,8 @@ export class DialogueOverlay extends Phaser.Scene {
 
   private applyChoiceActions(actions?: EventAction[]): void {
     if (!actions) return
-    const gd = GameData.getInstance()
-    const qs = QuestSystem.getInstance()
     for (const act of actions) {
-      if (act.type === 'setFlag') {
-        gd.setFlag(act.flag, act.value)
-        SkillGrowth.getInstance().checkAllUnlocks()
-      }
-      if (act.type === 'setBranch') {
-        gd.updateBranch(act.branch, act.value)
-        SkillGrowth.getInstance().checkAllUnlocks()
-      }
-      if (act.type === 'addItem') {
-        gd.addItem(act.itemId, act.quantity ?? DEFAULT_ITEM_QUANTITY)
-      }
-      if (act.type === 'removeItem') {
-        gd.removeItem(act.itemId, act.quantity ?? DEFAULT_ITEM_QUANTITY)
-      }
-      if (act.type === 'addParty') {
-        gd.addPartyMember(act.characterId)
-        SkillGrowth.getInstance().checkAllUnlocks()
-      }
-      if (act.type === 'removeParty') {
-        gd.removePartyMember(act.characterId)
-      }
-      if (act.type === 'questStart') {
-        qs.startQuest(act.questId)
-      }
-      if (act.type === 'questAdvance') {
-        qs.advanceQuest(act.questId, act.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-      }
-      if (act.type === 'questComplete') {
-        qs.completeQuest(act.questId)
-        SkillGrowth.getInstance().checkAllUnlocks()
-      }
-      if (act.type === 'adjustTrust') {
-        gd.adjustTrust(act.characterId, act.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-      }
-      if (act.type === 'adjustMercy') {
-        gd.adjustMercy(act.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
-      }
+      applyStateEventAction(act)
     }
   }
 
