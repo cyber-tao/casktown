@@ -241,6 +241,22 @@ describe('constants consistency', () => {
     expect(MAP_HUD.TOUCH_PROMPT_PADDING_X).toBeGreaterThan(MAP_HUD.PROMPT_PADDING_X)
   })
 
+  test('MAP_HUD touch quest text stays readable on landscape phones', () => {
+    const { MAP_HUD } = require('../../src/utils/constants.ts')
+    const landscapePhoneViewport = { width: 844, height: 390 }
+    const displayScale = Math.min(
+      landscapePhoneViewport.width / GAME_WIDTH,
+      landscapePhoneViewport.height / GAME_HEIGHT,
+    )
+    const unprotectedBodyCssFontSize = MAP_HUD.QUEST_BODY_FONT_SIZE * displayScale
+
+    expect(MAP_HUD.TOUCH_QUEST_TITLE_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(10)
+    expect(MAP_HUD.TOUCH_QUEST_NAME_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(12)
+    expect(MAP_HUD.TOUCH_QUEST_BODY_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(11)
+    expect(MAP_HUD.TOUCH_QUEST_PROGRESS_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(10)
+    expect(unprotectedBodyCssFontSize).toBeLessThan(MAP_HUD.TOUCH_QUEST_BODY_MIN_CSS_FONT_SIZE)
+  })
+
   test('touch controls cover common landscape phone widths', () => {
     expect(TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH).toBeGreaterThanOrEqual(844)
     expect(TOUCH_INPUT.CONTROL_MIN_CSS_SIZE).toBeGreaterThanOrEqual(48)

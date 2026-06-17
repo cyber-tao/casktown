@@ -1321,8 +1321,22 @@ export class MapScene extends Phaser.Scene {
     panelBorder.setStrokeStyle(MAP_HUD.BORDER_WIDTH, MAP_HUD.BORDER_COLOR, MAP_HUD.QUEST_BORDER_ALPHA)
     this.addQuestHudObject(panelBorder)
 
+    const touchControls = this.shouldShowTouchControls()
+    const titleFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.QUEST_TITLE_FONT_SIZE, MAP_HUD.TOUCH_QUEST_TITLE_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.QUEST_TITLE_FONT_SIZE
+    const nameFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.QUEST_NAME_FONT_SIZE, MAP_HUD.TOUCH_QUEST_NAME_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.QUEST_NAME_FONT_SIZE
+    const bodyFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.QUEST_BODY_FONT_SIZE, MAP_HUD.TOUCH_QUEST_BODY_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.QUEST_BODY_FONT_SIZE
+    const progressFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.QUEST_PROGRESS_FONT_SIZE, MAP_HUD.TOUCH_QUEST_PROGRESS_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.QUEST_PROGRESS_FONT_SIZE
+
     const title = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_TITLE_Y, MAP_HUD.QUEST_TITLE_TEXT, {
-      fontSize: `${MAP_HUD.QUEST_TITLE_FONT_SIZE}px`,
+      fontSize: `${titleFontSize}px`,
       color: MAP_HUD.QUEST_TITLE_COLOR,
       fontFamily: UI_FONT_FAMILY,
     })
@@ -1333,7 +1347,7 @@ export class MapScene extends Phaser.Scene {
     const objective = quest?.objectives[state.progress] ?? quest?.objectives[MAP_HUD.QUEST_FALLBACK_OBJECTIVE_INDEX] ?? quest?.description ?? state.id
 
     const name = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_NAME_Y, quest?.name ?? state.id, {
-      fontSize: `${MAP_HUD.QUEST_NAME_FONT_SIZE}px`,
+      fontSize: `${nameFontSize}px`,
       color: MAP_HUD.QUEST_NAME_COLOR,
       fontFamily: UI_FONT_FAMILY,
       fixedWidth: MAP_HUD.QUEST_TEXT_WIDTH,
@@ -1342,7 +1356,7 @@ export class MapScene extends Phaser.Scene {
     this.addQuestHudObject(name)
 
     const body = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_OBJECTIVE_Y, objective, {
-      fontSize: `${MAP_HUD.QUEST_BODY_FONT_SIZE}px`,
+      fontSize: `${bodyFontSize}px`,
       color: MAP_HUD.QUEST_TEXT_COLOR,
       fontFamily: UI_FONT_FAMILY,
       fixedWidth: MAP_HUD.QUEST_TEXT_WIDTH,
@@ -1352,7 +1366,7 @@ export class MapScene extends Phaser.Scene {
     this.addQuestHudObject(body)
 
     const progress = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_PROGRESS_Y, `${MAP_HUD.QUEST_PROGRESS_PREFIX} ${state.progress}/${state.maxProgress}`, {
-      fontSize: `${MAP_HUD.QUEST_PROGRESS_FONT_SIZE}px`,
+      fontSize: `${progressFontSize}px`,
       color: MAP_HUD.QUEST_PROGRESS_COLOR,
       fontFamily: UI_FONT_FAMILY,
     })
