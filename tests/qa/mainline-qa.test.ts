@@ -133,7 +133,9 @@ describe('MainlineQaRunner', () => {
     const desktopStyle = getMainlineQaSummaryStyle(false)
     const compactStyle = getMainlineQaSummaryStyle(true)
 
+    expect(desktopStyle).toContain('right:max(12px')
     expect(desktopStyle).toContain('bottom:max(12px')
+    expect(desktopStyle).not.toContain('left:max(12px')
     expect(desktopStyle).not.toContain('transform:translateX(-50%)')
     expect(compactStyle).toContain('top:max(8px')
     expect(compactStyle).toContain('left:50%')
@@ -202,6 +204,7 @@ describe('MainlineQaRunner', () => {
       runMainlineQaSilently()
       const summaryElement = elements.get(MAINLINE_QA.REPORT_SUMMARY_ELEMENT_ID)
 
+      expect(summaryElement?.attributes.get('style')).toContain('right:max(12px')
       expect(summaryElement?.attributes.get('style')).toContain('bottom:max(12px')
       viewport.width = 844
       viewport.height = 390

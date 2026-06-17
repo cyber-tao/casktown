@@ -682,7 +682,7 @@ export function getMainlineQaSummaryStyle(compactViewport: boolean): string {
         'font:600 9px/1.3 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
       ]
     : [
-        'left:max(12px, env(safe-area-inset-left))',
+        'right:max(12px, env(safe-area-inset-right))',
         'bottom:max(12px, env(safe-area-inset-bottom))',
         'max-width:min(440px, calc(100vw - 24px))',
         'padding:8px 10px',
