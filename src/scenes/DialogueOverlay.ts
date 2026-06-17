@@ -163,7 +163,7 @@ export class DialogueOverlay extends Phaser.Scene {
     const script = dialogues[data.dialogueId]
     if (!script) {
       console.warn(`Dialogue ${data.dialogueId} not found`)
-      this.closeDialogue()
+      this.closeMissingDialogue()
       return
     }
     this.currentScript = script
@@ -268,7 +268,7 @@ export class DialogueOverlay extends Phaser.Scene {
 
     const speed = this.getTextSpeed()
 
-    if (speed <= 0) {
+    if (line.text.length === 0 || speed <= 0) {
       this.textObj.setText(line.text)
       this.finishTyping()
     } else {
@@ -497,5 +497,11 @@ export class DialogueOverlay extends Phaser.Scene {
     } else {
       EventBus.emit(GameEvents.DIALOGUE_END)
     }
+  }
+
+  private closeMissingDialogue(): void {
+    this.typeTimer?.remove()
+    this.scene.stop()
+    EventBus.emit(GameEvents.DIALOGUE_END)
   }
 }

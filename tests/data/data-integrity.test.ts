@@ -99,6 +99,9 @@ describe('data type integrity', () => {
     for (const [id, dia] of Object.entries(DIALOGUES)) {
       expect(dia.id).toBe(id)
       expect(dia.lines.length).toBeGreaterThan(0)
+      for (const line of dia.lines) {
+        expect(line.text.trim().length).toBeGreaterThan(0)
+      }
     }
   })
 
