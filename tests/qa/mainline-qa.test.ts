@@ -246,6 +246,25 @@ describe('MainlineQaRunner', () => {
     }
   })
 
+  test('validates every field in quest rewards', () => {
+    const quests = GAME_CONFIG_DATABASE.getTable('quests')
+    const originalQuest = quests.QST_001!
+    quests.QST_001 = {
+      ...originalQuest,
+      rewards: [{ exp: -1, itemId: 'missing_item', itemQty: 0, rebuild: -1 }],
+    }
+
+    try {
+      const report = new MainlineQaRunner([]).run()
+      expect(report.errors).toContain('config:QST_001:rewards: Item missing_item not found')
+      expect(report.errors).toContain('config:QST_001:rewards: Exp reward -1 is negative')
+      expect(report.errors).toContain('config:QST_001:rewards: Item quantity 0 must be positive')
+      expect(report.errors).toContain('config:QST_001:rewards: Rebuild reward -1 is negative')
+    } finally {
+      quests.QST_001 = originalQuest
+    }
+  })
+
   test('prepares the configured active party for battle visual QA', () => {
     prepareBattleVisualQa()
 

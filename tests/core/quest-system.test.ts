@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { QuestSystem } from '../../src/core/QuestSystem.ts'
+import { SkillGrowth } from '../../src/core/SkillGrowth.ts'
 import { EventBus, GameEvents } from '../../src/core/EventBus.ts'
+import { GAME_CONFIG_DATABASE } from '../../src/data/configDatabase.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 
 describe('QuestSystem', () => {
@@ -96,6 +98,30 @@ describe('QuestSystem', () => {
 
     expect(gd.rebuildLevel).toBeGreaterThanOrEqual(3)
     expect(gd.characters.get('T')?.skills).toContain('shouxiangshi')
+  })
+
+  test('completeQuest checks skill unlocks even when a quest has no rewards', () => {
+    const quests = GAME_CONFIG_DATABASE.getTable('quests')
+    const originalQuest = quests.QST_001!
+    const skillGrowth = SkillGrowth.getInstance()
+    const originalCheckAllUnlocks = skillGrowth.checkAllUnlocks
+    let checkCount = 0
+    quests.QST_001 = { ...originalQuest, rewards: undefined }
+    skillGrowth.checkAllUnlocks = () => {
+      checkCount += 1
+      return new Map()
+    }
+
+    try {
+      const qs = QuestSystem.getInstance()
+      qs.startQuest('QST_001')
+      qs.completeQuest('QST_001')
+
+      expect(checkCount).toBe(1)
+    } finally {
+      quests.QST_001 = originalQuest
+      skillGrowth.checkAllUnlocks = originalCheckAllUnlocks
+    }
   })
 
   test('failQuest sets status to failed', () => {

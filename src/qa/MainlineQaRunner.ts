@@ -1,6 +1,6 @@
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
-import type { DialogueChoice, EncounterData, EventAction, MapData, MapEvent } from '../data/types'
+import type { DialogueChoice, EncounterData, EventAction, MapData, MapEvent, QuestDef } from '../data/types'
 import { areEventConditionsMet } from '../core/EventConditions'
 import { getUniqueEventActions } from '../core/DialogueCompletionQueue'
 import { GameData } from '../core/GameData'
@@ -389,6 +389,12 @@ export class MainlineQaRunner {
         this.validateEncounterReward(reward, `config:${encounterId}:rewards`)
       }
     }
+
+    for (const [questId, quest] of Object.entries(tables.getTable('quests'))) {
+      for (const reward of quest.rewards ?? []) {
+        this.validateQuestReward(reward, `config:${questId}:rewards`)
+      }
+    }
   }
 
   private validateEncounterReward(reward: NonNullable<EncounterData['rewards']>[number], source: string): void {
@@ -398,6 +404,22 @@ export class MainlineQaRunner {
     }
     if (reward.branch && !(reward.branch in GameData.getInstance().branches)) {
       this.addError(`${source}: Branch ${reward.branch} not found`)
+    }
+  }
+
+  private validateQuestReward(reward: NonNullable<QuestDef['rewards']>[number], source: string): void {
+    const tables = GAME_CONFIG_DATABASE
+    if (reward.itemId && !tables.getTable('items')[reward.itemId]) {
+      this.addError(`${source}: Item ${reward.itemId} not found`)
+    }
+    if (reward.exp !== undefined && reward.exp < 0) {
+      this.addError(`${source}: Exp reward ${reward.exp} is negative`)
+    }
+    if (reward.itemQty !== undefined && reward.itemQty <= 0) {
+      this.addError(`${source}: Item quantity ${reward.itemQty} must be positive`)
+    }
+    if (reward.rebuild !== undefined && reward.rebuild < 0) {
+      this.addError(`${source}: Rebuild reward ${reward.rebuild} is negative`)
     }
   }
 

@@ -60,27 +60,22 @@ export class QuestSystem {
 
     const def = GAME_CONFIG_DATABASE.getTable('quests')[questId]
     if (def?.rewards) {
-      let appliedReward = false
       for (const reward of def.rewards) {
         if (reward.exp) {
           gd.gainPartyExperience(reward.exp)
-          appliedReward = true
         }
         if (reward.itemId) {
           gd.addItem(reward.itemId, reward.itemQty ?? DEFAULT_ITEM_QUANTITY)
-          appliedReward = true
         }
         if (reward.flag) {
           gd.setFlag(reward.flag, reward.value ?? true)
-          appliedReward = true
         }
         if (reward.rebuild) {
           RebuildSystem.getInstance().addProgress(reward.rebuild)
-          appliedReward = true
         }
       }
-      if (appliedReward) SkillGrowth.getInstance().checkAllUnlocks()
     }
+    SkillGrowth.getInstance().checkAllUnlocks()
   }
 
   failQuest(questId: string): void {
