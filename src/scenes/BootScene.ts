@@ -2,9 +2,9 @@ import Phaser from 'phaser'
 import { GameData } from '../core/GameData'
 import { queueImageAsset } from '../core/AssetLoader'
 import { AudioManager } from '../core/AudioManager'
-import { LOADING_SCREEN, MAINLINE_QA, STARTUP_LOADING, TITLE_BACKGROUND } from '../utils/constants'
+import { LOADING_SCREEN, STARTUP_LOADING, TITLE_BACKGROUND } from '../utils/constants'
 import { showLoadingScreen } from '../utils/loadingScreen'
-import { isBattleVisualQaRequested, isMainlineQaRequested, prepareBattleVisualQa, runMainlineQa } from '../qa/MainlineQaRunner'
+import { getRequestedBattleVisualQaConfig, isMainlineQaRequested, prepareBattleVisualQa, runMainlineQa } from '../qa/MainlineQaRunner'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -32,10 +32,11 @@ export class BootScene extends Phaser.Scene {
       return
     }
 
-    if (isBattleVisualQaRequested()) {
-      prepareBattleVisualQa()
+    const battleVisualQaConfig = getRequestedBattleVisualQaConfig()
+    if (battleVisualQaConfig) {
+      prepareBattleVisualQa(battleVisualQaConfig)
       window.dispatchEvent(new CustomEvent(STARTUP_LOADING.READY_EVENT))
-      this.scene.start('BattleScene', { encounterId: MAINLINE_QA.BATTLE_VISUAL_ENCOUNTER_ID, mapId: MAINLINE_QA.BATTLE_VISUAL_MAP_ID })
+      this.scene.start('BattleScene', { encounterId: battleVisualQaConfig.encounterId, mapId: battleVisualQaConfig.mapId })
       return
     }
 

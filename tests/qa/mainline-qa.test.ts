@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { GAME_CONFIG_DATABASE } from '../../src/data/configDatabase.ts'
-import { MainlineQaRunner, getMainlineQaSummaryStyle, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { MainlineQaRunner, getBattleVisualQaConfig, getMainlineQaSummaryStyle, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
 import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
@@ -276,5 +276,24 @@ describe('MainlineQaRunner', () => {
     expect(BarrelSystem.getInstance().getUnlockedColors()).toHaveLength(8)
     expect(gd.party).not.toContain('A')
     expect(gd.reserve).not.toContain('A')
+  })
+
+  test('prepares final battle visual QA against the true ending encounter', () => {
+    const config = getBattleVisualQaConfig(MAINLINE_QA.BATTLE_FINAL_QUERY_VALUE)
+    expect(config).toEqual({
+      encounterId: MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID,
+      mapId: MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID,
+      flags: MAINLINE_QA.BATTLE_FINAL_VISUAL_FLAGS,
+    })
+
+    prepareBattleVisualQa(config!)
+
+    const gd = GameData.getInstance()
+    expect(gd.currentMap).toBe(MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID)
+    expect(gd.getFlag('released_four_seals')).toBe(true)
+    expect(gd.getFlag('xiaoai_purified')).toBe(true)
+    expect(gd.getFlag('a_joined')).toBe(true)
+    expect([...gd.party, ...gd.reserve]).toContain('A')
+    expect(BarrelSystem.getInstance().getUnlockedColors()).toHaveLength(8)
   })
 })

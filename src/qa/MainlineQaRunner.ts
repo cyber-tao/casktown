@@ -63,6 +63,12 @@ export interface MainlineQaReport {
   }
 }
 
+export interface BattleVisualQaConfig {
+  encounterId: string
+  mapId: string
+  flags: readonly string[]
+}
+
 export class MainlineQaRunner {
   private readonly errors: string[] = []
   private readonly warnings: string[] = []
@@ -560,14 +566,38 @@ export function isMainlineQaRequested(): boolean {
 }
 
 export function isBattleVisualQaRequested(): boolean {
-  if (typeof window === 'undefined') return false
-  return new URLSearchParams(window.location.search).get(MAINLINE_QA.QUERY_PARAM) === MAINLINE_QA.BATTLE_QUERY_VALUE
+  return getRequestedBattleVisualQaConfig() !== null
 }
 
-export function prepareBattleVisualQa(): void {
+export function getBattleVisualQaConfig(queryValue: string | null): BattleVisualQaConfig | null {
+  switch (queryValue) {
+    case MAINLINE_QA.BATTLE_QUERY_VALUE:
+      return {
+        encounterId: MAINLINE_QA.BATTLE_VISUAL_ENCOUNTER_ID,
+        mapId: MAINLINE_QA.BATTLE_VISUAL_MAP_ID,
+        flags: MAINLINE_QA.BATTLE_VISUAL_FLAGS,
+      }
+    case MAINLINE_QA.BATTLE_FINAL_QUERY_VALUE:
+      return {
+        encounterId: MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID,
+        mapId: MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID,
+        flags: MAINLINE_QA.BATTLE_FINAL_VISUAL_FLAGS,
+      }
+    default:
+      return null
+  }
+}
+
+export function getRequestedBattleVisualQaConfig(): BattleVisualQaConfig | null {
+  if (typeof window === 'undefined') return null
+  const queryValue = new URLSearchParams(window.location.search).get(MAINLINE_QA.QUERY_PARAM)
+  return getBattleVisualQaConfig(queryValue)
+}
+
+export function prepareBattleVisualQa(config: BattleVisualQaConfig = getBattleVisualQaConfig(MAINLINE_QA.BATTLE_QUERY_VALUE)!): void {
   const gd = GameData.getInstance()
   gd.reset()
-  gd.currentMap = MAINLINE_QA.BATTLE_VISUAL_MAP_ID
+  gd.currentMap = config.mapId
   gd.party = []
   gd.reserve = []
   gd.settings.encounterRate = 'none'
@@ -576,7 +606,7 @@ export function prepareBattleVisualQa(): void {
   for (const characterId of MAINLINE_QA.BATTLE_VISUAL_PARTY) {
     gd.addPartyMember(characterId)
   }
-  for (const flag of MAINLINE_QA.BATTLE_VISUAL_FLAGS) {
+  for (const flag of config.flags) {
     gd.setFlag(flag, true)
   }
   SkillGrowth.getInstance().checkAllUnlocks()
