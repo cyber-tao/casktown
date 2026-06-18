@@ -46,6 +46,7 @@ import {
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
+import { getBattleResultFallbackScene } from '../utils/battleResult'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -2519,8 +2520,20 @@ export class BattleScene extends Phaser.Scene {
     this.resultPanel?.destroy()
     this.resultPanel = null
     this.resultSummary = null
-    this.scene.stop()
-    EventBus.emit(GameEvents.BATTLE_END, summary.victory, { escaped: summary.escaped })
+    const handled = EventBus.emit(GameEvents.BATTLE_END, summary.victory, { escaped: summary.escaped })
+    if (handled) {
+      this.scene.stop()
+      return
+    }
+
+    const fallbackScene = getBattleResultFallbackScene(summary.victory, summary.escaped)
+    if (fallbackScene === 'GameOverScene') {
+      EventBus.emit(GameEvents.GAME_OVER)
+      this.scene.start(fallbackScene)
+      return
+    }
+
+    this.scene.start(fallbackScene, { mapId: this.mapId || GameData.getInstance().currentMap })
   }
 
   private getItemName(itemId: string): string {
