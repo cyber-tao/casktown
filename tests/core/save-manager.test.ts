@@ -97,6 +97,18 @@ describe('SaveManager', () => {
     expect(gd.gold).toBe(savedGold)
   })
 
+  test('getLatestSaveSlot returns the most recently saved slot including quick save', () => {
+    sm.save(1)
+    const slotOneTimestamp = sm.getMeta(1)!.timestamp
+    sm.quickSave()
+
+    const quickMeta = sm.getMeta(QUICK_SAVE_SLOT)!
+    quickMeta.timestamp = slotOneTimestamp + 1
+    mockStorage.setItem(`${SAVE_KEY}_meta_${QUICK_SAVE_SLOT}`, JSON.stringify(quickMeta))
+
+    expect(sm.getLatestSaveSlot()).toBe(QUICK_SAVE_SLOT)
+  })
+
   test('exportSave returns serialized data string', () => {
     sm.save(1)
     const exported = sm.exportSave(1)

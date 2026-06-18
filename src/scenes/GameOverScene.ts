@@ -99,11 +99,12 @@ export class GameOverScene extends Phaser.Scene {
 
   private loadGame(): void {
     const saveManager = SaveManager.getInstance()
-    if (!saveManager.hasSave(1)) {
+    const slot = saveManager.getLatestSaveSlot()
+    if (!slot) {
       this.showMessage('无存档')
       return
     }
-    if (!saveManager.load(1)) {
+    if (!saveManager.load(slot)) {
       this.showMessage('读取失败')
       return
     }
