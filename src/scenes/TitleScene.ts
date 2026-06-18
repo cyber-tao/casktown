@@ -10,7 +10,6 @@ import {
   GAME_HEIGHT,
   PROJECT_GITHUB_URL,
   START_MAP_ID,
-  STARTUP_LOADING,
   TITLE_BACKGROUND,
   TITLE_GITHUB_LINK,
   TITLE_MENU_ACTION_INDEX,
@@ -22,6 +21,7 @@ import {
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
+import { markStartupReady } from '../utils/startup'
 
 type ViteImportMeta = ImportMeta & {
   readonly env: {
@@ -111,7 +111,7 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5), () => this.openGithub())
 
     this.cameras.main.fadeIn(TITLE_BACKGROUND.FADE_MS)
-    window.dispatchEvent(new CustomEvent(STARTUP_LOADING.READY_EVENT))
+    markStartupReady()
   }
 
   private createBackground(): void {

@@ -19,6 +19,8 @@ export const DEFAULT_ITEM_QUANTITY = 1
 export const STARTUP_LOADING = {
   ELEMENT_ID: 'startup-loading',
   READY_EVENT: 'casktown-ready',
+  READY_ATTRIBUTE: 'data-casktown-ready',
+  READY_VALUE: 'true',
   FALLBACK_HIDE_DELAY_MS: 2500,
 } as const
 
