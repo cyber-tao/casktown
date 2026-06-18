@@ -11,7 +11,6 @@ import { applyEncounterVictoryRewards } from '../core/BattleRewards'
 import { getChestOpenedFlag, getFieldEventDoneFlag } from '../core/MapEventState'
 import { applyStateEventAction } from '../core/EventActionExecutor'
 import {
-  DEFAULT_ITEM_QUANTITY,
   MAINLINE_QA,
   MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
   MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS,
@@ -386,11 +385,19 @@ export class MainlineQaRunner {
       if (encounter.questId && !tables.getTable('quests')[encounter.questId]) {
         this.addError(`config:${encounterId}: Quest ${encounter.questId} not found`)
       }
-      this.validateActions(encounter.rewards?.map(reward => reward.itemId
-        ? { type: 'addItem', itemId: reward.itemId, quantity: reward.itemQty ?? DEFAULT_ITEM_QUANTITY }
-        : reward.flag
-          ? { type: 'setFlag', flag: reward.flag, value: reward.value ?? true }
-          : { type: 'setBranch', branch: reward.branch!, value: reward.branchValue ?? true }) as EventAction[] ?? [], `config:${encounterId}:rewards`)
+      for (const reward of encounter.rewards ?? []) {
+        this.validateEncounterReward(reward, `config:${encounterId}:rewards`)
+      }
+    }
+  }
+
+  private validateEncounterReward(reward: NonNullable<EncounterData['rewards']>[number], source: string): void {
+    const tables = GAME_CONFIG_DATABASE
+    if (reward.itemId && !tables.getTable('items')[reward.itemId]) {
+      this.addError(`${source}: Item ${reward.itemId} not found`)
+    }
+    if (reward.branch && !(reward.branch in GameData.getInstance().branches)) {
+      this.addError(`${source}: Branch ${reward.branch} not found`)
     }
   }
 

@@ -230,6 +230,22 @@ describe('MainlineQaRunner', () => {
     expect(report.errors).toContain('event:MAP_010:FOREST_TUTORIAL: Map MAP_010 is blocked by DIA_LOCKED_FOREST')
   })
 
+  test('validates every field in encounter rewards', () => {
+    const encounters = GAME_CONFIG_DATABASE.getTable('encounters')
+    const originalEncounter = encounters.BTL_001!
+    encounters.BTL_001 = {
+      ...originalEncounter,
+      rewards: [{ itemId: 'heal_grass', branch: 'missing_branch' as never, branchValue: true }],
+    }
+
+    try {
+      const report = new MainlineQaRunner([]).run()
+      expect(report.errors).toContain('config:BTL_001:rewards: Branch missing_branch not found')
+    } finally {
+      encounters.BTL_001 = originalEncounter
+    }
+  })
+
   test('prepares the configured active party for battle visual QA', () => {
     prepareBattleVisualQa()
 
