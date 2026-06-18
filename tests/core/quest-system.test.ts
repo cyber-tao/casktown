@@ -88,6 +88,16 @@ describe('QuestSystem', () => {
     expect(qs.getCompletedQuests().filter(q => q.id === questId)).toHaveLength(1)
   })
 
+  test('completeQuest unlocks skills after non-exp rewards settle', () => {
+    const gd = GameData.getInstance()
+    const qs = QuestSystem.getInstance()
+    qs.startQuest('QST_008')
+    qs.completeQuest('QST_008')
+
+    expect(gd.rebuildLevel).toBeGreaterThanOrEqual(3)
+    expect(gd.characters.get('T')?.skills).toContain('shouxiangshi')
+  })
+
   test('failQuest sets status to failed', () => {
     const qs = QuestSystem.getInstance()
     const questId = Object.keys(QUESTS)[0]
