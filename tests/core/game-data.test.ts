@@ -6,6 +6,7 @@ import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
 import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
+  PARTY_RULES,
   START_INVENTORY_ITEMS,
   START_MAP_ID,
   START_PARTY,
@@ -129,6 +130,21 @@ describe('GameData', () => {
     expect(gd.flags.xiaoai_memory_fragments).toBe(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
     expect(gd.flags.mercy_score).toBe(TRUE_ROUTE_MIN_MERCY)
     expect(gd.getFlag('xiaoai_memory_fragments')).toBe(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+  })
+
+  test('deserialize normalizes stale party rosters', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize()
+
+    gd.deserialize({
+      ...snapshot,
+      party: ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN', 'MISSING_CHARACTER'],
+      reserve: ['A', 'xiaoai', 'SUN'],
+    })
+
+    expect(gd.party).toHaveLength(PARTY_RULES.ACTIVE_MEMBER_LIMIT)
+    expect(gd.party).toEqual(['T', 'HUIHUI', 'A', 'CONGCONG'])
+    expect(gd.reserve).toEqual(['SUN', 'xiaoai'])
   })
 
   test('syncPlayTime accumulates elapsed seconds', () => {

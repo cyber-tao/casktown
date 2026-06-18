@@ -618,6 +618,31 @@ export class GameData {
     return Object.fromEntries(Object.entries(equipment).map(([charId, itemIds]) => [charId, [...itemIds]]))
   }
 
+  private normalizePartyRoster(): void {
+    const nextParty: string[] = []
+    const nextReserve: string[] = []
+    const seen = new Set<string>()
+    const addMember = (charId: string): void => {
+      if (seen.has(charId) || !this.characters.has(charId)) return
+      seen.add(charId)
+      if (nextParty.length < PARTY_RULES.ACTIVE_MEMBER_LIMIT) {
+        nextParty.push(charId)
+      } else {
+        nextReserve.push(charId)
+      }
+    }
+
+    for (const charId of [...this.party, ...this.reserve]) {
+      addMember(charId)
+    }
+    if (nextParty.length === 0) {
+      for (const charId of START_PARTY) addMember(charId)
+    }
+
+    this.party = nextParty
+    this.reserve = nextReserve
+  }
+
   serialize(): object {
     this.syncPlayTime()
     return {
@@ -662,6 +687,7 @@ export class GameData {
         this.characters.set(id, createConfiguredCharacter(id))
       }
     }
+    this.normalizePartyRoster()
     const inventory = (d.inventory as Partial<Inventory>) ?? {}
     this.inventory = {
       items: { ...(inventory.items ?? {}) },
