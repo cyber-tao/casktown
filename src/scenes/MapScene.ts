@@ -64,6 +64,7 @@ import type { MapData, MapEvent, EventAction, FieldEntityBehavior, QuestState } 
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { cssToGamePx } from '../utils/touch'
+import { isTileInsideSpriteBounds } from '../utils/fieldGeometry'
 
 type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
 
@@ -141,6 +142,7 @@ export class MapScene extends Phaser.Scene {
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
   private touchControls: Phaser.GameObjects.GameObject[] = []
   private minimapGraphics?: Phaser.GameObjects.Graphics
+  private minimapDynamicGraphics?: Phaser.GameObjects.Graphics
   private minimapPlayerMarker?: Phaser.GameObjects.Rectangle
 
   constructor() {
@@ -326,6 +328,7 @@ export class MapScene extends Phaser.Scene {
     this.promptText = undefined
     this.weatherEmitter = null
     this.minimapGraphics = undefined
+    this.minimapDynamicGraphics = undefined
     this.minimapPlayerMarker = undefined
 
     this.cameras.main.setBackgroundColor('#2d4a22')
@@ -388,6 +391,7 @@ export class MapScene extends Phaser.Scene {
       this.handleInput()
       this.updatePrompt()
     }
+    this.updateMinimapDynamicMarkers()
     this.updateMinimapPlayerMarker()
   }
 
@@ -1398,6 +1402,12 @@ export class MapScene extends Phaser.Scene {
     this.minimapGraphics = graphics
     this.drawMinimapStatic(graphics)
 
+    const dynamicGraphics = this.add.graphics()
+    dynamicGraphics.setScrollFactor(0)
+    dynamicGraphics.setDepth(MAP_HUD.DEPTH + MAP_HUD.MARKER_DEPTH_OFFSET)
+    this.minimapDynamicGraphics = dynamicGraphics
+    this.updateMinimapDynamicMarkers()
+
     const geometry = this.getMinimapGeometry()
     this.minimapPlayerMarker = this.add.rectangle(geometry.offsetX, geometry.offsetY, MAP_HUD.PLAYER_MARKER_SIZE, MAP_HUD.PLAYER_MARKER_SIZE, MAP_HUD.PLAYER_COLOR)
     this.minimapPlayerMarker.setScrollFactor(0)
@@ -1436,6 +1446,7 @@ export class MapScene extends Phaser.Scene {
     }
     for (const event of this.mapData.events) {
       if (!this.isMinimapEventVisible(event)) continue
+      if (this.isDynamicMinimapEvent(event)) continue
       const color = MAP_HUD.EVENT_COLORS[event.type] ?? MAP_HUD.EVENT_COLORS.trigger
       const width = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, event.width * geometry.scale)
       const height = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, event.height * geometry.scale)
@@ -1457,6 +1468,50 @@ export class MapScene extends Phaser.Scene {
     if (!this.areEventConditionsMet(event)) return false
     if (event.type === 'battle') return this.battleEnemies.has(event.id)
     return !this.isFieldEventCompleted(event)
+  }
+
+  private isDynamicMinimapEvent(event: MapEvent): boolean {
+    return (event.type === 'npc' && this.npcs.has(event.id)) ||
+      (event.type === 'battle' && this.battleEnemies.has(event.id))
+  }
+
+  private updateMinimapDynamicMarkers(): void {
+    if (!this.minimapDynamicGraphics) return
+    const graphics = this.minimapDynamicGraphics
+    const geometry = this.getMinimapGeometry()
+    graphics.clear()
+
+    for (const event of this.mapData.events) {
+      if (!this.isMinimapEventVisible(event)) continue
+      if (!this.isDynamicMinimapEvent(event)) continue
+      const sprite = event.type === 'battle' ? this.battleEnemies.get(event.id) : this.npcs.get(event.id)
+      if (!sprite || !this.isSpriteUsable(sprite)) continue
+      const color = MAP_HUD.EVENT_COLORS[event.type] ?? MAP_HUD.EVENT_COLORS.trigger
+      this.drawDynamicMinimapMarker(graphics, geometry, sprite, color)
+    }
+
+    for (const [eventId, sprite] of this.battleEnemies) {
+      if (this.mapData.events.some(event => event.id === eventId)) continue
+      if (!this.isSpriteUsable(sprite)) continue
+      this.drawDynamicMinimapMarker(graphics, geometry, sprite, MAP_HUD.EVENT_COLORS.battle)
+    }
+  }
+
+  private drawDynamicMinimapMarker(
+    graphics: Phaser.GameObjects.Graphics,
+    geometry: ReturnType<MapScene['getMinimapGeometry']>,
+    sprite: Phaser.GameObjects.Sprite,
+    color: number,
+  ): void {
+    const width = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, (sprite.displayWidth / TILE_SIZE) * geometry.scale)
+    const height = Math.max(MAP_HUD.EVENT_MARKER_MIN_SIZE, (sprite.displayHeight / TILE_SIZE) * geometry.scale)
+    graphics.fillStyle(color, MAP_HUD.EVENT_ALPHA)
+    graphics.fillRect(
+      geometry.offsetX + (sprite.x / TILE_SIZE) * geometry.scale - width / 2,
+      geometry.offsetY + (sprite.y / TILE_SIZE) * geometry.scale - height / 2,
+      width,
+      height,
+    )
   }
 
   private getMinimapGeometry(): { scale: number; offsetX: number; offsetY: number; width: number; height: number } {
@@ -1811,9 +1866,16 @@ export class MapScene extends Phaser.Scene {
       const facingDist = event.type === 'battle'
         ? this.getSpriteBoundsDistance(sprite, facingX, facingY)
         : Phaser.Math.Distance.Between(facingX, facingY, sprite.x, sprite.y)
-      return playerDist <= distanceTiles * TILE_SIZE || facingDist <= distanceTiles * TILE_SIZE
+      if (playerDist <= distanceTiles * TILE_SIZE || facingDist <= distanceTiles * TILE_SIZE) return true
+      if (event.type === 'npc') return this.isNpcReachableByTile(sprite, px, py, fx, fy)
+      return false
     }
     return this.checkEventCollision(event, fx, fy) || this.checkEventCollision(event, px, py)
+  }
+
+  private isNpcReachableByTile(sprite: Phaser.GameObjects.Sprite, px: number, py: number, fx: number, fy: number): boolean {
+    return isTileInsideSpriteBounds(sprite, fx, fy, TILE_SIZE, FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_BOUNDS_EPSILON_PX) ||
+      isTileInsideSpriteBounds(sprite, px, py, TILE_SIZE, FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_BOUNDS_EPSILON_PX)
   }
 
   private getSpriteBoundsDistance(sprite: Phaser.GameObjects.Sprite, x: number, y: number): number {
