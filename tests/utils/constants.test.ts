@@ -229,6 +229,32 @@ describe('constants consistency', () => {
     expect(MAP_HUD.PARTY_LEVEL_PREFIX).toBeTruthy()
   })
 
+  test('MAP_HUD touch party text stays readable on landscape phones', () => {
+    const { MAP_HUD } = require('../../src/utils/constants.ts')
+    const landscapePhoneViewport = { width: 844, height: 390 }
+    const displayScale = Math.min(
+      landscapePhoneViewport.width / GAME_WIDTH,
+      landscapePhoneViewport.height / GAME_HEIGHT,
+    )
+    const unprotectedNameCssFontSize = MAP_HUD.PARTY_NAME_FONT_SIZE * displayScale
+    const unprotectedStatusCssFontSize = MAP_HUD.PARTY_STATUS_FONT_SIZE * displayScale
+    const valueColumnCssWidth = (
+      MAP_HUD.PARTY_ROW_WIDTH -
+      MAP_HUD.PARTY_TEXT_OFFSET_X -
+      MAP_HUD.PARTY_BAR_LABEL_WIDTH -
+      MAP_HUD.PARTY_BAR_WIDTH -
+      MAP_HUD.PARTY_BAR_VALUE_GAP
+    ) * displayScale
+
+    expect(MAP_HUD.TOUCH_PARTY_NAME_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(10)
+    expect(MAP_HUD.TOUCH_PARTY_LEVEL_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(8)
+    expect(MAP_HUD.TOUCH_PARTY_STATUS_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(8)
+    expect(unprotectedNameCssFontSize).toBeLessThan(MAP_HUD.TOUCH_PARTY_NAME_MIN_CSS_FONT_SIZE)
+    expect(unprotectedStatusCssFontSize).toBeLessThan(MAP_HUD.TOUCH_PARTY_STATUS_MIN_CSS_FONT_SIZE)
+    expect(valueColumnCssWidth).toBeLessThan(32)
+    expect(MAP_HUD.TOUCH_PARTY_SHOW_NUMERIC_VALUES).toBe(false)
+  })
+
   test('MAP_HUD prompt constants are defined', () => {
     const { MAP_HUD } = require('../../src/utils/constants.ts')
     expect(MAP_HUD.PROMPT_COLOR).toBeTruthy()

@@ -1150,6 +1150,17 @@ export class MapScene extends Phaser.Scene {
     const gd = GameData.getInstance()
     const members = this.getPartyHudMembers()
     this.partyHudPartyKey = this.getPartyHudKey(members)
+    const touchControls = this.shouldShowTouchControls()
+    const nameFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.PARTY_NAME_FONT_SIZE, MAP_HUD.TOUCH_PARTY_NAME_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.PARTY_NAME_FONT_SIZE
+    const levelFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.PARTY_LEVEL_FONT_SIZE, MAP_HUD.TOUCH_PARTY_LEVEL_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.PARTY_LEVEL_FONT_SIZE
+    const statusFontSize = touchControls
+      ? this.getTouchSize(MAP_HUD.PARTY_STATUS_FONT_SIZE, MAP_HUD.TOUCH_PARTY_STATUS_MIN_CSS_FONT_SIZE)
+      : MAP_HUD.PARTY_STATUS_FONT_SIZE
+    const showNumericValues = !touchControls || MAP_HUD.TOUCH_PARTY_SHOW_NUMERIC_VALUES
 
     for (const [index, charId] of members.entries()) {
       const char = gd.characters.get(charId)
@@ -1186,7 +1197,7 @@ export class MapScene extends Phaser.Scene {
       const textX = rowX + MAP_HUD.PARTY_TEXT_OFFSET_X
       const levelX = rowX + MAP_HUD.PARTY_ROW_WIDTH - MAP_HUD.PARTY_LEVEL_RIGHT
       const nameText = this.add.text(textX, rowY + MAP_HUD.PARTY_NAME_Y, char.name, {
-        fontSize: `${MAP_HUD.PARTY_NAME_FONT_SIZE}px`,
+        fontSize: `${nameFontSize}px`,
         color: MAP_HUD.PARTY_NAME_COLOR,
         fontFamily: UI_FONT_FAMILY,
         fixedWidth: MAP_HUD.PARTY_NAME_WIDTH,
@@ -1195,27 +1206,27 @@ export class MapScene extends Phaser.Scene {
       this.addPartyHudObject(nameText)
 
       const levelText = this.add.text(levelX, rowY + MAP_HUD.PARTY_NAME_Y, '', {
-        fontSize: `${MAP_HUD.PARTY_LEVEL_FONT_SIZE}px`,
+        fontSize: `${levelFontSize}px`,
         color: MAP_HUD.PARTY_LEVEL_COLOR,
         fontFamily: UI_FONT_FAMILY,
       })
       levelText.setOrigin(1, 0)
       this.addPartyHudObject(levelText)
 
-      const hpRow = this.createPartyHudBar(rowX, rowY + MAP_HUD.PARTY_HP_BAR_Y, MAP_HUD.PARTY_HP_LABEL, COLORS.hpBar)
-      const mpRow = this.createPartyHudBar(rowX, rowY + MAP_HUD.PARTY_MP_BAR_Y, MAP_HUD.PARTY_MP_LABEL, COLORS.mpBar)
+      const hpRow = this.createPartyHudBar(rowX, rowY + MAP_HUD.PARTY_HP_BAR_Y, MAP_HUD.PARTY_HP_LABEL, COLORS.hpBar, statusFontSize, showNumericValues)
+      const mpRow = this.createPartyHudBar(rowX, rowY + MAP_HUD.PARTY_MP_BAR_Y, MAP_HUD.PARTY_MP_LABEL, COLORS.mpBar, statusFontSize, showNumericValues)
       this.partyHudRows.push({ charId, hpBar: hpRow.bar, mpBar: mpRow.bar, hpText: hpRow.text, mpText: mpRow.text, levelText })
     }
 
     this.updatePartyHud()
   }
 
-  private createPartyHudBar(rowX: number, barY: number, label: string, color: number): { bar: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text } {
+  private createPartyHudBar(rowX: number, barY: number, label: string, color: number, fontSize: number, showNumericValue: boolean): { bar: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text } {
     const labelX = rowX + MAP_HUD.PARTY_TEXT_OFFSET_X
     const barX = labelX + MAP_HUD.PARTY_BAR_LABEL_WIDTH
     const valueX = barX + MAP_HUD.PARTY_BAR_WIDTH + MAP_HUD.PARTY_BAR_VALUE_GAP
     const labelText = this.add.text(labelX, barY, label, {
-      fontSize: `${MAP_HUD.PARTY_STATUS_FONT_SIZE}px`,
+      fontSize: `${fontSize}px`,
       color: MAP_HUD.PARTY_STATUS_COLOR,
       fontFamily: UI_FONT_FAMILY,
     })
@@ -1231,11 +1242,12 @@ export class MapScene extends Phaser.Scene {
     this.addPartyHudObject(bar)
 
     const valueText = this.add.text(valueX, barY, '', {
-      fontSize: `${MAP_HUD.PARTY_STATUS_FONT_SIZE}px`,
+      fontSize: `${fontSize}px`,
       color: MAP_HUD.PARTY_STATUS_COLOR,
       fontFamily: UI_FONT_FAMILY,
     })
     valueText.setOrigin(0, 0.5)
+    valueText.setVisible(showNumericValue)
     this.addPartyHudObject(valueText)
     return { bar, text: valueText }
   }
