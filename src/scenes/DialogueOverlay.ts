@@ -24,6 +24,7 @@ import {
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { DIALOGUE_SPEAKER_FACE_MAP } from '../data/dialoguePortraits'
 import { queueImageAssets } from '../core/AssetLoader'
 import { DialogueCompletionQueue } from '../core/DialogueCompletionQueue'
 import { areEventConditionsMet } from '../core/EventConditions'
@@ -35,25 +36,6 @@ import { resolveDialogueVoiceKey } from '../utils/voiceLines'
 interface DialogueContinuation {
   script: DialogueData
   lineIndex: number
-}
-
-const SPEAKER_FACE_MAP: Record<string, string> = {
-  T: 't_front_idle_01',
-  慧慧: 'huihui_front_idle_01',
-  阿博: 'abo_front_idle_01',
-  葱葱: 'congcong_front_idle_01',
-  sun: 'sun_front_idle_01',
-  xiaoai: 'xiaoai_front_idle_01',
-  镇长: 'npc_mayor',
-  木桶精灵: 'npc_barrel_spirit',
-  菠萝大叔: 'npc_uncle_boluo',
-  船夫: 'npc_sailor',
-  白虎: 'npc_white_tiger',
-  凤凰: 'npc_phoenix',
-  水瑶: 'npc_shuiyao',
-  风赤: 'npc_fengchi',
-  熙苑: 'npc_xiyuan',
-  预言: 'npc_priestess_sun',
 }
 
 function wrapDialogueText(text: string): string[] {
@@ -115,7 +97,7 @@ export class DialogueOverlay extends Phaser.Scene {
     const script = GAME_CONFIG_DATABASE.getTable('dialogues')[dialogueId]
     if (!script) return keys
     for (const line of script.lines) {
-      const faceKey = SPEAKER_FACE_MAP[line.speaker]
+      const faceKey = DIALOGUE_SPEAKER_FACE_MAP[line.speaker]
       if (faceKey) keys.add(faceKey)
       for (const choice of line.choices ?? []) {
         if (!choice.next) continue
@@ -229,7 +211,7 @@ export class DialogueOverlay extends Phaser.Scene {
     const line = this.currentScript.lines[this.lineIndex]!
     this.nameText.setText(line.speaker)
 
-    const faceKey = SPEAKER_FACE_MAP[line.speaker]
+    const faceKey = DIALOGUE_SPEAKER_FACE_MAP[line.speaker]
     const hasFace = Boolean(faceKey && this.textures.exists(faceKey))
     this.faceRect.setVisible(hasFace)
     this.textObj.setX(hasFace ? DIALOGUE_TEXT_POSITION.x : DIALOGUE_TEXT_FACELESS_POSITION.x)

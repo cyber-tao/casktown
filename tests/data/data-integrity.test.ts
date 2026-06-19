@@ -13,6 +13,7 @@ import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
 import { IMAGE_ASSETS } from '../../src/data/assets.ts'
 import { TILE_SPRITES, TILESET_TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
+import { DIALOGUE_SPEAKER_FACE_MAP } from '../../src/data/dialoguePortraits.ts'
 
 describe('data type integrity', () => {
   test('all items have required fields', () => {
@@ -162,6 +163,18 @@ describe('data type integrity', () => {
 
     expect(npcPaths).not.toContain(undefined)
     expect(new Set(npcPaths).size).toBe(npcPaths.length)
+  })
+
+  test('dialogue speaker portraits resolve to runtime image assets', () => {
+    const criticalSpeakers = ['祀神', '麒麟', '无相', '风之防御人']
+    const missing = Object.entries(DIALOGUE_SPEAKER_FACE_MAP)
+      .filter(([, assetKey]) => !IMAGE_ASSETS[assetKey])
+      .map(([speaker, assetKey]) => `${speaker}: ${assetKey}`)
+
+    expect(missing).toEqual([])
+    for (const speaker of criticalSpeakers) {
+      expect(DIALOGUE_SPEAKER_FACE_MAP[speaker]).toBeTruthy()
+    }
   })
 
   test('map tile sprite assets resolve for each tileset', () => {
