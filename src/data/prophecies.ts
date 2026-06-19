@@ -62,6 +62,6 @@ export const PROPHECIES: ProphecyVerse[] = [
     verse: '木桶不再空，笑语满镇中。若有缘再会，花下说英雄。',
     hint: '完成真结局后，回到木桶镇与所有人对话',
     explicit: '回到木桶镇，与所有伙伴和居民对话，观看后日谈',
-    condition: 'normal_ending_seen',
+    condition: 'game_cleared',
   },
 ]
