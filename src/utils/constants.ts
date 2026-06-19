@@ -533,6 +533,8 @@ export const START_PARTY = ['T'] as const
 export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
 export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
 export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
+export const TRUE_ROUTE_MIN_MERCY = 3
+export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3
 export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
   T: 't',
   HUIHUI: 'huihui',
@@ -619,6 +621,12 @@ export const MAINLINE_QA = {
   BATTLE_VISUAL_PARTY: ['T', 'HUIHUI', 'CONGCONG', 'SUN'],
   BATTLE_VISUAL_FLAGS: ['huihui_joined', 'congcong_joined', 'sun_joined', 'has_sacred_water', 'temple_visited', 'barrel_green', 'barrel_blue', 'barrel_gold', 'barrel_cyan', 'barrel_white', 'barrel_vermillion', 'barrel_black', 'barrel_rainbow'],
   BATTLE_FINAL_VISUAL_FLAGS: ['huihui_joined', 'a_joined', 'congcong_joined', 'sun_joined', 'has_millennium_seed', 'has_sacred_water', 'has_divine_laurel', 'released_four_seals', 'xiaoai_purified', 'barrel_green', 'barrel_blue', 'barrel_gold', 'barrel_cyan', 'barrel_white', 'barrel_vermillion', 'barrel_black', 'barrel_rainbow'],
+  BATTLE_FINAL_VISUAL_BRANCHES: {
+    mercy_score: TRUE_ROUTE_MIN_MERCY,
+    xiaoai_memory_fragments: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
+    white_tiger_respected: true,
+    answered_xiyuan_kindly: true,
+  },
   BATTLE_VISUAL_DIFFICULTY: 'story',
   BATTLE_VISUAL_SPEED: 'normal',
   REPORT_GLOBAL_KEY: '__casktownMainlineQaReport',
@@ -1646,8 +1654,6 @@ export const SAVE_SLOTS = 3
 export const QUICK_SAVE_SLOT = SAVE_SLOTS + 1
 export const SAVE_STORAGE_KEY = 'casktown_save'
 export const SAVE_LOAD_FEEDBACK_DELAY_MS = 1000
-export const TRUE_ROUTE_MIN_MERCY = 3
-export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3
 export const MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS = [
   { branch: 'mercy_score', min: TRUE_ROUTE_MIN_MERCY },
   { branch: 'xiaoai_memory_fragments', min: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS },

@@ -1,6 +1,6 @@
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
-import type { DialogueChoice, EncounterData, EventAction, MapData, MapEvent, QuestDef } from '../data/types'
+import type { BranchState, DialogueChoice, EncounterData, EventAction, MapData, MapEvent, QuestDef } from '../data/types'
 import { areEventConditionsMet } from '../core/EventConditions'
 import { getUniqueEventActions } from '../core/DialogueCompletionQueue'
 import { GameData } from '../core/GameData'
@@ -67,6 +67,7 @@ export interface BattleVisualQaConfig {
   encounterId: string
   mapId: string
   flags: readonly string[]
+  branches?: Partial<BranchState>
 }
 
 export class MainlineQaRunner {
@@ -582,6 +583,7 @@ export function getBattleVisualQaConfig(queryValue: string | null): BattleVisual
         encounterId: MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID,
         mapId: MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID,
         flags: MAINLINE_QA.BATTLE_FINAL_VISUAL_FLAGS,
+        branches: MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES,
       }
     default:
       return null
@@ -608,6 +610,9 @@ export function prepareBattleVisualQa(config: BattleVisualQaConfig = getBattleVi
   }
   for (const flag of config.flags) {
     gd.setFlag(flag, true)
+  }
+  for (const [branch, value] of Object.entries(config.branches ?? {}) as Array<[keyof BranchState, BranchState[keyof BranchState]]>) {
+    gd.updateBranch(branch, value)
   }
   SkillGrowth.getInstance().checkAllUnlocks()
 }

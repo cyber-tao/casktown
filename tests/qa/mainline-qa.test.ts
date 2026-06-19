@@ -3,6 +3,7 @@ import { GAME_CONFIG_DATABASE } from '../../src/data/configDatabase.ts'
 import { MainlineQaRunner, getBattleVisualQaConfig, getMainlineQaSummaryStyle, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
 import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
+import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import {
   BLUE_MINT_SIDE_QUEST,
@@ -284,6 +285,7 @@ describe('MainlineQaRunner', () => {
       encounterId: MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID,
       mapId: MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID,
       flags: MAINLINE_QA.BATTLE_FINAL_VISUAL_FLAGS,
+      branches: MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES,
     })
 
     prepareBattleVisualQa(config!)
@@ -292,6 +294,12 @@ describe('MainlineQaRunner', () => {
     expect(gd.currentMap).toBe(MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID)
     expect(gd.getFlag('released_four_seals')).toBe(true)
     expect(gd.getFlag('xiaoai_purified')).toBe(true)
+    expect(gd.getFlag('true_route_unlocked')).toBe(true)
+    expect(gd.branches.mercy_score).toBeGreaterThanOrEqual(MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES.mercy_score)
+    expect(gd.branches.xiaoai_memory_fragments).toBeGreaterThanOrEqual(MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES.xiaoai_memory_fragments)
+    expect(gd.branches.white_tiger_respected).toBe(true)
+    expect(gd.branches.answered_xiyuan_kindly).toBe(true)
+    expect(getBlockedMapDialogueId(MAINLINE_QA.BATTLE_FINAL_VISUAL_MAP_ID, flag => gd.getFlag(flag))).toBeNull()
     expect(gd.getFlag('a_joined')).toBe(true)
     expect([...gd.party, ...gd.reserve]).toContain('A')
     expect(BarrelSystem.getInstance().getUnlockedColors()).toHaveLength(8)
