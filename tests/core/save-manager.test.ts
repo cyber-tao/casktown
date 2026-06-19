@@ -120,6 +120,12 @@ describe('SaveManager', () => {
     expect(sm.exportSave(1)).toBeNull()
   })
 
+  test('export and metadata helpers reject invalid slots', () => {
+    expect(sm.hasSave(-1)).toBe(false)
+    expect(sm.getMeta(-1)).toBeNull()
+    expect(sm.exportSave(-1)).toBeNull()
+  })
+
   test('importSave restores data from string', () => {
     const gd = GameData.getInstance()
     gd.addGold(999)
@@ -135,6 +141,20 @@ describe('SaveManager', () => {
 
   test('importSave rejects invalid JSON', () => {
     expect(sm.importSave(1, 'not-json')).toBe(false)
+  })
+
+  test('importSave rejects invalid slots without changing current state', () => {
+    const gd = GameData.getInstance()
+    gd.addGold(999)
+    sm.save(1)
+    const exported = sm.exportSave(1)!
+    const savedGold = gd.gold
+
+    gd.reset()
+
+    expect(sm.importSave(-1, exported)).toBe(false)
+    expect(gd.gold).toBe(INITIAL_GOLD)
+    expect(gd.gold).not.toBe(savedGold)
   })
 
   test('multiple saves to different slots are independent', () => {

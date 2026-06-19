@@ -78,6 +78,7 @@ export class SaveManager {
   }
 
   getMeta(slot: number): SaveMeta | null {
+    if (!this.isValidSlot(slot)) return null
     const storage = this.getStorage()
     if (!storage) return null
     try {
@@ -89,6 +90,7 @@ export class SaveManager {
   }
 
   hasSave(slot: number): boolean {
+    if (!this.isValidSlot(slot)) return false
     const storage = this.getStorage()
     if (!storage) return false
     try {
@@ -135,6 +137,7 @@ export class SaveManager {
   }
 
   exportSave(slot: number): string | null {
+    if (!this.isValidSlot(slot)) return null
     const storage = this.getStorage()
     if (!storage) return null
     try {
@@ -146,6 +149,8 @@ export class SaveManager {
   }
 
   importSave(slot: number, dataStr: string): boolean {
+    if (!this.isValidSlot(slot)) return false
+    if (!this.getStorage()) return false
     try {
       const data = JSON.parse(dataStr)
       this.gameData.deserialize(data)

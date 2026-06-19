@@ -222,6 +222,22 @@ describe('GameData', () => {
       GameData.getInstance().reset()
     }
   })
+
+  test('resource mutations reject non-positive amounts', () => {
+    const gd = GameData.getInstance()
+    const startingGold = gd.gold
+    const startingGrass = gd.getItemQuantity('heal_grass')
+
+    gd.addGold(-100)
+    gd.addItem('heal_grass', -2)
+
+    expect(gd.gold).toBe(startingGold)
+    expect(gd.getItemQuantity('heal_grass')).toBe(startingGrass)
+    expect(gd.spendGold(-100)).toBe(false)
+    expect(gd.removeItem('heal_grass', -2)).toBe(false)
+    expect(gd.gold).toBe(startingGold)
+    expect(gd.getItemQuantity('heal_grass')).toBe(startingGrass)
+  })
 })
 
 describe('RebuildSystem', () => {

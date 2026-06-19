@@ -303,6 +303,7 @@ export class GameData {
   }
 
   addItem(itemId: string, quantity: number = 1): void {
+    if (!Number.isFinite(quantity) || quantity <= 0) return
     const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
     const bag = item?.type === 'equipment' ? this.inventory.equipment : this.inventory.items
     const current = bag[itemId] || 0
@@ -317,6 +318,7 @@ export class GameData {
   }
 
   removeItem(itemId: string, quantity: number = 1): boolean {
+    if (!Number.isFinite(quantity) || quantity <= 0) return false
     const item = GAME_CONFIG_DATABASE.getTable('items')[itemId]
     const bag = item?.type === 'equipment' ? this.inventory.equipment : this.inventory.items
     const current = bag[itemId] || 0
@@ -333,10 +335,12 @@ export class GameData {
   }
 
   addGold(amount: number): void {
+    if (!Number.isFinite(amount) || amount <= 0) return
     this.gold += amount
   }
 
   spendGold(amount: number): boolean {
+    if (!Number.isFinite(amount) || amount <= 0) return false
     if (this.gold < amount) return false
     this.gold -= amount
     return true
