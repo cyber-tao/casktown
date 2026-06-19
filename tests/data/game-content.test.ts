@@ -52,9 +52,14 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
       break
     }
     case 'questStart':
-    case 'questAdvance':
     case 'questComplete':
       if (!QUESTS[action.questId]) pushMissing(errors, source, 'quest', action.questId)
+      break
+    case 'questAdvance':
+      if (!QUESTS[action.questId]) pushMissing(errors, source, 'quest', action.questId)
+      if (action.amount !== undefined && (!Number.isFinite(action.amount) || action.amount <= 0)) {
+        errors.push(`${source} advances ${action.questId} by invalid amount: ${action.amount}`)
+      }
       break
     case 'setFlag':
       break
@@ -70,11 +75,21 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
       break
     case 'addItem':
       if (!ITEMS[action.itemId]) pushMissing(errors, source, 'item', action.itemId)
+      if (action.quantity !== undefined && (!Number.isFinite(action.quantity) || action.quantity <= 0)) {
+        errors.push(`${source} adds ${action.itemId} with invalid quantity: ${action.quantity}`)
+      }
       break
     case 'removeItem':
       if (!ITEMS[action.itemId]) pushMissing(errors, source, 'item', action.itemId)
+      if (action.quantity !== undefined && (!Number.isFinite(action.quantity) || action.quantity <= 0)) {
+        errors.push(`${source} removes ${action.itemId} with invalid quantity: ${action.quantity}`)
+      }
       break
     case 'rebuild':
+      if (!Number.isFinite(action.level) || action.level < 0) {
+        errors.push(`${source} sets invalid rebuild level: ${action.level}`)
+      }
+      break
     case 'shop':
     case 'training':
     case 'rebuildMenu':

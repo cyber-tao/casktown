@@ -38,6 +38,7 @@ export class QuestSystem {
   }
 
   advanceQuest(questId: string, amount = 1): void {
+    if (!Number.isFinite(amount) || amount <= 0) return
     const gd = GameData.getInstance()
     const state = gd.quests.get(questId)
     if (!state || state.status !== 'active') return

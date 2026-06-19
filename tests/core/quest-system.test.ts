@@ -58,6 +58,19 @@ describe('QuestSystem', () => {
     }
   })
 
+  test('advanceQuest ignores non-positive amounts', () => {
+    const qs = QuestSystem.getInstance()
+    const questId = Object.keys(QUESTS)[0]
+    qs.startQuest(questId)
+
+    qs.advanceQuest(questId, -1)
+    qs.advanceQuest(questId, 0)
+
+    const state = qs.getQuestState(questId)
+    expect(state!.progress).toBe(0)
+    expect(state!.status).toBe('active')
+  })
+
   test('advanceQuest auto-completes when progress reaches max', () => {
     const qs = QuestSystem.getInstance()
     const questId = Object.keys(QUESTS)[0]
