@@ -2182,6 +2182,24 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  private createWeatherEmitZone(x: number, y: number, width: number, height: number): Phaser.Types.GameObjects.Particles.ParticleEmitterRandomZoneConfig {
+    return {
+      type: 'random',
+      source: {
+        getRandomPoint: point => {
+          point.x = Phaser.Math.FloatBetween(x, x + width)
+          point.y = Phaser.Math.FloatBetween(y, y + height)
+        },
+      },
+    }
+  }
+
+  private setWeatherEmitter(particles: Phaser.GameObjects.Particles.ParticleEmitter): void {
+    particles.setDepth(90)
+    particles.setScrollFactor(0)
+    this.weatherEmitter = particles
+  }
+
   private startRain(): void {
     const particles = this.add.particles(0, 0, 'env_dirt_pebbles', {
       speed: { min: 200, max: 400 },
@@ -2191,11 +2209,9 @@ export class MapScene extends Phaser.Scene {
       quantity: 3,
       scale: { start: 0.1, end: 0 },
       alpha: { start: 0.3, end: 0 },
-      emitZone: { source: new Phaser.Geom.Rectangle(scalePx(-200), scalePx(-50), GAME_WIDTH + scalePx(400), scalePx(10)) as any, type: 'random' as const },
+      emitZone: this.createWeatherEmitZone(scalePx(-200), scalePx(-50), GAME_WIDTH + scalePx(400), scalePx(10)),
     })
-    particles.setDepth(90)
-    particles.setScrollFactor(0)
-    this.weatherEmitter = particles
+    this.setWeatherEmitter(particles)
   }
 
   private startSnow(): void {
@@ -2207,11 +2223,9 @@ export class MapScene extends Phaser.Scene {
       quantity: 1,
       scale: { start: 0.05, end: 0 },
       alpha: { start: 0.5, end: 0 },
-      emitZone: { source: new Phaser.Geom.Rectangle(scalePx(-100), scalePx(-50), GAME_WIDTH + scalePx(200), scalePx(10)) as any, type: 'random' as const },
+      emitZone: this.createWeatherEmitZone(scalePx(-100), scalePx(-50), GAME_WIDTH + scalePx(200), scalePx(10)),
     })
-    particles.setDepth(90)
-    particles.setScrollFactor(0)
-    this.weatherEmitter = particles
+    this.setWeatherEmitter(particles)
   }
 
   shutdown(): void {
