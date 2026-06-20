@@ -29,6 +29,7 @@ type MainlineQaRouteStep =
   | { readonly kind: 'event'; readonly mapId: string; readonly eventId: string }
 type MainlineQaStatus = typeof MAINLINE_QA.STATUS_PASSED | typeof MAINLINE_QA.STATUS_FAILED
 type MainlineQaSummaryElement = Pick<HTMLElement, 'setAttribute'>
+type BranchValueType = 'boolean' | 'number' | 'string'
 
 let removeMainlineQaSummaryViewportListeners: (() => void) | null = null
 
@@ -409,8 +410,12 @@ export class MainlineQaRunner {
     if (reward.itemId && !tables.getTable('items')[reward.itemId]) {
       this.addError(`${source}: Item ${reward.itemId} not found`)
     }
-    if (reward.branch && !(reward.branch in GameData.getInstance().branches)) {
-      this.addError(`${source}: Branch ${reward.branch} not found`)
+    this.validatePositiveNumber(reward.itemQty, `${source}: Item quantity`, 'must be positive')
+    if (reward.flag) {
+      this.validateBranchBackedFlagValue(reward.flag, reward.value ?? true, `${source}:flag:${reward.flag}`)
+    }
+    if (reward.branch) {
+      this.validateBranchValue(reward.branch, reward.branchValue ?? true, `${source}:branch:${reward.branch}`)
     }
   }
 
@@ -419,14 +424,47 @@ export class MainlineQaRunner {
     if (reward.itemId && !tables.getTable('items')[reward.itemId]) {
       this.addError(`${source}: Item ${reward.itemId} not found`)
     }
-    if (reward.exp !== undefined && reward.exp < 0) {
-      this.addError(`${source}: Exp reward ${reward.exp} is negative`)
+    this.validateNonNegativeNumber(reward.exp, `${source}: Exp reward`)
+    this.validatePositiveNumber(reward.itemQty, `${source}: Item quantity`, 'must be positive')
+    this.validateNonNegativeNumber(reward.rebuild, `${source}: Rebuild reward`)
+    if (reward.flag) {
+      this.validateBranchBackedFlagValue(reward.flag, reward.value ?? true, `${source}:flag:${reward.flag}`)
     }
-    if (reward.itemQty !== undefined && reward.itemQty <= 0) {
-      this.addError(`${source}: Item quantity ${reward.itemQty} must be positive`)
+  }
+
+  private validateNonNegativeNumber(value: number | undefined, source: string): void {
+    if (value === undefined) return
+    if (!Number.isFinite(value) || value < 0) {
+      this.addError(`${source} ${value} must be a finite non-negative number`)
     }
-    if (reward.rebuild !== undefined && reward.rebuild < 0) {
-      this.addError(`${source}: Rebuild reward ${reward.rebuild} is negative`)
+  }
+
+  private validatePositiveNumber(value: number | undefined, source: string, suffix: string): void {
+    if (value === undefined) return
+    if (!Number.isFinite(value) || value <= 0) {
+      this.addError(`${source} ${value} ${suffix}`)
+    }
+  }
+
+  private validateBranchBackedFlagValue(flag: string, value: unknown, source: string): void {
+    if (!(flag in GameData.getInstance().branches)) return
+    this.validateBranchValue(flag, value, source)
+  }
+
+  private validateBranchValue(branch: string, value: unknown, source: string): void {
+    const branches = GameData.getInstance().branches as unknown as Record<string, unknown>
+    if (!(branch in branches)) {
+      this.addError(`${source}: Branch ${branch} not found`)
+      return
+    }
+
+    const expectedType = typeof branches[branch] as BranchValueType
+    if (typeof value !== expectedType) {
+      this.addError(`${source}: Branch ${branch} value must be ${expectedType}, got ${typeof value}`)
+      return
+    }
+    if (expectedType === 'number' && !Number.isFinite(value)) {
+      this.addError(`${source}: Branch ${branch} value must be finite`)
     }
   }
 
@@ -465,17 +503,31 @@ export class MainlineQaRunner {
         case 'questAdvance':
         case 'questComplete':
           if (!tables.getTable('quests')[action.questId]) this.addError(`${source}: Quest ${action.questId} not found`)
+          if (action.type === 'questAdvance') {
+            this.validatePositiveNumber(action.amount, `${source}: Quest advance amount`, 'must be positive')
+          }
+          break
+        case 'setFlag':
+          this.validateBranchBackedFlagValue(action.flag, action.value, `${source}:setFlag:${action.flag}`)
+          break
+        case 'setBranch':
+          this.validateBranchValue(action.branch, action.value, `${source}:setBranch:${action.branch}`)
           break
         case 'addItem':
           if (!tables.getTable('items')[action.itemId]) this.addError(`${source}: Item ${action.itemId} not found`)
+          this.validatePositiveNumber(action.quantity, `${source}: Item quantity`, 'must be positive')
           break
         case 'removeItem':
           if (!tables.getTable('items')[action.itemId]) this.addError(`${source}: Item ${action.itemId} not found`)
+          this.validatePositiveNumber(action.quantity, `${source}: Item quantity`, 'must be positive')
           break
         case 'addParty':
         case 'removeParty':
         case 'adjustTrust':
           if (!tables.getTable('characters')[action.characterId]) this.addError(`${source}: Character ${action.characterId} not found`)
+          break
+        case 'rebuild':
+          this.validateNonNegativeNumber(action.level, `${source}: Rebuild level`)
           break
         default:
           break

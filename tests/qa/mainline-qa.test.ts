@@ -236,12 +236,20 @@ describe('MainlineQaRunner', () => {
     const originalEncounter = encounters.BTL_001!
     encounters.BTL_001 = {
       ...originalEncounter,
-      rewards: [{ itemId: 'heal_grass', branch: 'missing_branch' as never, branchValue: true }],
+      rewards: [
+        { itemId: 'missing_item', itemQty: 0, branch: 'missing_branch' as never, branchValue: true },
+        { flag: 'rebuild_level', value: true },
+        { branch: 'mercy_score', branchValue: true },
+      ],
     }
 
     try {
       const report = new MainlineQaRunner([]).run()
-      expect(report.errors).toContain('config:BTL_001:rewards: Branch missing_branch not found')
+      expect(report.errors).toContain('config:BTL_001:rewards: Item missing_item not found')
+      expect(report.errors).toContain('config:BTL_001:rewards: Item quantity 0 must be positive')
+      expect(report.errors).toContain('config:BTL_001:rewards:branch:missing_branch: Branch missing_branch not found')
+      expect(report.errors).toContain('config:BTL_001:rewards:flag:rebuild_level: Branch rebuild_level value must be number, got boolean')
+      expect(report.errors).toContain('config:BTL_001:rewards:branch:mercy_score: Branch mercy_score value must be number, got boolean')
     } finally {
       encounters.BTL_001 = originalEncounter
     }
@@ -252,15 +260,16 @@ describe('MainlineQaRunner', () => {
     const originalQuest = quests.QST_001!
     quests.QST_001 = {
       ...originalQuest,
-      rewards: [{ exp: -1, itemId: 'missing_item', itemQty: 0, rebuild: -1 }],
+      rewards: [{ exp: -1, itemId: 'missing_item', itemQty: 0, rebuild: -1, flag: 'rebuild_level', value: true }],
     }
 
     try {
       const report = new MainlineQaRunner([]).run()
       expect(report.errors).toContain('config:QST_001:rewards: Item missing_item not found')
-      expect(report.errors).toContain('config:QST_001:rewards: Exp reward -1 is negative')
+      expect(report.errors).toContain('config:QST_001:rewards: Exp reward -1 must be a finite non-negative number')
       expect(report.errors).toContain('config:QST_001:rewards: Item quantity 0 must be positive')
-      expect(report.errors).toContain('config:QST_001:rewards: Rebuild reward -1 is negative')
+      expect(report.errors).toContain('config:QST_001:rewards: Rebuild reward -1 must be a finite non-negative number')
+      expect(report.errors).toContain('config:QST_001:rewards:flag:rebuild_level: Branch rebuild_level value must be number, got boolean')
     } finally {
       quests.QST_001 = originalQuest
     }
