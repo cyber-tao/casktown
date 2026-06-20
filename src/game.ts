@@ -15,6 +15,8 @@ import { WorldMapOverlay } from './scenes/WorldMapOverlay'
 import { GAME_CANVAS_BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH, TOUCH_INPUT } from './utils/constants'
 
 export class CaskTownGame extends Phaser.Game {
+  private scaleSyncRaf = 0
+
   constructor() {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.CANVAS,
@@ -49,5 +51,44 @@ export class CaskTownGame extends Phaser.Game {
       },
     }
     super(config)
+    this.bindContainerScaleSync()
+  }
+
+  private bindContainerScaleSync(): void {
+    if (typeof window === 'undefined') return
+    const parent = document.getElementById('game-container')
+    if (!parent) return
+
+    let observer: ResizeObserver | null = null
+    const scheduleSync = (): void => {
+      if (this.scaleSyncRaf) window.cancelAnimationFrame(this.scaleSyncRaf)
+      this.scaleSyncRaf = window.requestAnimationFrame(() => {
+        this.scaleSyncRaf = 0
+        this.syncScaleToContainer(parent)
+      })
+    }
+
+    scheduleSync()
+    window.addEventListener('resize', scheduleSync)
+    window.addEventListener('orientationchange', scheduleSync)
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(scheduleSync)
+      observer.observe(parent)
+    }
+    this.events.once(Phaser.Core.Events.DESTROY, () => {
+      if (this.scaleSyncRaf) window.cancelAnimationFrame(this.scaleSyncRaf)
+      window.removeEventListener('resize', scheduleSync)
+      window.removeEventListener('orientationchange', scheduleSync)
+      observer?.disconnect()
+    })
+  }
+
+  private syncScaleToContainer(parent: HTMLElement): void {
+    const bounds = parent.getBoundingClientRect()
+    const width = Math.round(bounds.width)
+    const height = Math.round(bounds.height)
+    if (width <= 0 || height <= 0) return
+    this.scale.setParentSize(width, height)
+    this.scale.refresh()
   }
 }
