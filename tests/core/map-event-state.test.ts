@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import type { MapEvent } from '../../src/data/types.ts'
+import type { EventAction, MapEvent } from '../../src/data/types.ts'
 import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent, isMapEventCompleted } from '../../src/core/MapEventState.ts'
 
-function mapEvent(id: string, type: MapEvent['type']): MapEvent {
+function mapEvent(id: string, type: MapEvent['type'], actions: EventAction[] = []): MapEvent {
   return {
     id,
     type,
@@ -11,7 +11,7 @@ function mapEvent(id: string, type: MapEvent['type']): MapEvent {
     y: 0,
     width: 1,
     height: 1,
-    actions: [],
+    actions,
   }
 }
 
@@ -29,6 +29,16 @@ describe('MapEventState', () => {
     expect(isCompletableMapEvent(mapEvent('EXIT_TEST', 'transfer'))).toBe(false)
   })
 
+  test('keeps facility menu triggers repeatable', () => {
+    const rebuildMenu = mapEvent('EVT_REBUILD_MENU', 'trigger', [{ type: 'rebuildMenu' }])
+    const shop = mapEvent('EVT_SHOP', 'trigger', [{ type: 'shop' }])
+    const training = mapEvent('EVT_TRAINING', 'trigger', [{ type: 'training' }])
+
+    expect(isCompletableMapEvent(rebuildMenu)).toBe(false)
+    expect(isCompletableMapEvent(shop)).toBe(false)
+    expect(isCompletableMapEvent(training)).toBe(false)
+  })
+
   test('detects completed chest and trigger events from saved flags', () => {
     const flags: Record<string, unknown> = {
       chest_opened_CHEST_TEST: true,
@@ -39,5 +49,11 @@ describe('MapEventState', () => {
     expect(isMapEventCompleted(mapEvent('CHEST_TEST', 'chest'), readFlag)).toBe(true)
     expect(isMapEventCompleted(mapEvent('EVT_TEST', 'trigger'), readFlag)).toBe(true)
     expect(isMapEventCompleted(mapEvent('NPC_TEST', 'npc'), readFlag)).toBe(false)
+  })
+
+  test('ignores completion flags for repeatable menu triggers', () => {
+    const readFlag = (flag: string): unknown => flag === 'event_done_EVT_REBUILD_MENU'
+
+    expect(isMapEventCompleted(mapEvent('EVT_REBUILD_MENU', 'trigger', [{ type: 'rebuildMenu' }]), readFlag)).toBe(false)
   })
 })

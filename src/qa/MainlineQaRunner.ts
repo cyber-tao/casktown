@@ -8,7 +8,7 @@ import { QuestSystem } from '../core/QuestSystem'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { getBlockedMapDialogueId } from '../core/MapAccess'
 import { applyEncounterVictoryRewards } from '../core/BattleRewards'
-import { getChestOpenedFlag, getFieldEventDoneFlag } from '../core/MapEventState'
+import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent } from '../core/MapEventState'
 import { applyStateEventAction } from '../core/EventActionExecutor'
 import {
   MAINLINE_QA,
@@ -166,7 +166,7 @@ export class MainlineQaRunner {
 
     this.executeActions(event.actions, source, event.id)
 
-    if (event.type !== 'npc' && event.type !== 'battle' && event.type !== 'transfer') {
+    if (isCompletableMapEvent(event)) {
       gd.setFlag(getFieldEventDoneFlag(event.id), true)
     }
   }
