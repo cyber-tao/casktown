@@ -30,6 +30,8 @@ import {
   STARTUP_LOADING,
   TITLE_GITHUB_LINK,
   TITLE_MENU_LAYOUT,
+  BATTLE_DEFAULT_ENEMY_SPRITE_FRAME,
+  BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES,
 } from '../../src/utils/constants.ts'
 
 describe('constants consistency', () => {
@@ -122,6 +124,29 @@ describe('constants consistency', () => {
     expect(BATTLE_LAYOUT.UNIT_NAME_STROKE_THICKNESS).toBeGreaterThan(0)
     expect(BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH).toBeGreaterThanOrEqual(BATTLE_LAYOUT.UNIT_BAR_WIDTH)
     expect(BATTLE_LAYOUT.UNIT_NAME_MAX_WIDTH).toBeLessThan(BATTLE_LAYOUT.ENEMY_GAP_X)
+  })
+
+  test('boss battle sprites scale up without covering their status UI', () => {
+    const defaultSpriteSize = BATTLE_LAYOUT.UNIT_SPRITE_SIZE
+    const bossSpriteSize = Math.round(defaultSpriteSize * BATTLE_LAYOUT.BOSS_SPRITE_SCALE)
+    const defaultUiOffset = defaultSpriteSize / 2 + BATTLE_LAYOUT.UNIT_UI_SPRITE_GAP_Y
+    const bossUiOffset = bossSpriteSize / 2 + BATTLE_LAYOUT.UNIT_UI_SPRITE_GAP_Y
+    const bossTop = BATTLE_LAYOUT.ENEMY_START_Y - bossSpriteSize / 2
+    const bossUiBottom = BATTLE_LAYOUT.ENEMY_START_Y - bossUiOffset +
+      BATTLE_LAYOUT.UNIT_BAR_HEIGHT * 2 +
+      BATTLE_LAYOUT.UNIT_BAR_GAP_Y
+
+    expect(BATTLE_LAYOUT.BOSS_SPRITE_SCALE).toBeGreaterThan(1)
+    expect(defaultUiOffset).toBe(BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
+    expect(bossSpriteSize).toBeGreaterThan(defaultSpriteSize)
+    expect(bossUiBottom).toBeLessThanOrEqual(bossTop)
+    expect(bossSpriteSize).toBeLessThan(BATTLE_LAYOUT.ENEMY_GAP_X)
+  })
+
+  test('battle enemy sprite frame overrides use explicit non-default frames', () => {
+    expect(BATTLE_DEFAULT_ENEMY_SPRITE_FRAME).toBe('01')
+    expect(BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES.wuxiang).toBe('02')
+    expect(BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES.wuxiang).not.toBe(BATTLE_DEFAULT_ENEMY_SPRITE_FRAME)
   })
 
   test('elements enum has no duplicates', () => {

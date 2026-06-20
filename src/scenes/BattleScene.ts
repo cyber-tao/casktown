@@ -11,7 +11,9 @@ import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } 
 import { getTriggeredMidBattleDialogue, getMidBattleDialoguePreview } from '../data/battleDialogues'
 import {
   BATTLE_COMMAND_LABELS,
+  BATTLE_DEFAULT_ENEMY_SPRITE_FRAME,
   BATTLE_DIFFICULTY_MULTIPLIERS,
+  BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES,
   BATTLE_LAYOUT,
   BATTLE_RANDOM_TARGET_HITS,
   BATTLE_RESULT_PANEL,
@@ -256,7 +258,8 @@ export class BattleScene extends Phaser.Scene {
       const baseKey = this.getCharacterSpriteBase(char.id)
       const textureKey = this.resolveTextureKey(`${baseKey}_front_idle_01`, DEFAULT_CHARACTER_SPRITE_KEY) ?? DEFAULT_CHARACTER_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
-      sprite.setDisplaySize(BATTLE_LAYOUT.UNIT_SPRITE_SIZE, BATTLE_LAYOUT.UNIT_SPRITE_SIZE)
+      const spriteSize = this.getBattleUnitSpriteSize(false)
+      sprite.setDisplaySize(spriteSize, spriteSize)
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
 
@@ -281,7 +284,7 @@ export class BattleScene extends Phaser.Scene {
       sprite.setInteractive({ useHandCursor: true })
       sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
-      this.createUnitUI(unit, x, y - BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
+      this.createUnitUI(unit, x, y - this.getBattleUnitUiOffset(spriteSize))
     }
 
     // Spawn enemies (demo: use encounterId to pick enemies)
@@ -292,9 +295,10 @@ export class BattleScene extends Phaser.Scene {
       if (!ed) continue
       const x = BATTLE_LAYOUT.ENEMY_START_X + (i % BATTLE_LAYOUT.ENEMY_COLUMNS) * BATTLE_LAYOUT.ENEMY_GAP_X
       const y = BATTLE_LAYOUT.ENEMY_START_Y + Math.floor(i / BATTLE_LAYOUT.ENEMY_COLUMNS) * BATTLE_LAYOUT.ENEMY_ROW_GAP_Y
-      const textureKey = this.resolveTextureKey(`mon_${ed.id}_01`, DEFAULT_ENEMY_SPRITE_KEY) ?? DEFAULT_ENEMY_SPRITE_KEY
+      const textureKey = this.resolveTextureKey(this.getBattleEnemyTextureKey(ed.id), DEFAULT_ENEMY_SPRITE_KEY) ?? DEFAULT_ENEMY_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
-      sprite.setDisplaySize(BATTLE_LAYOUT.UNIT_SPRITE_SIZE, BATTLE_LAYOUT.UNIT_SPRITE_SIZE)
+      const spriteSize = this.getBattleUnitSpriteSize(ed.isBoss)
+      sprite.setDisplaySize(spriteSize, spriteSize)
       sprite.setDepth(305)
       sprite.setScrollFactor(0)
 
@@ -321,8 +325,22 @@ export class BattleScene extends Phaser.Scene {
       sprite.on(Phaser.Input.Events.POINTER_DOWN, () => this.selectTarget(unit))
       this.units.push(unit)
       this.enemyData.push(ed)
-      this.createUnitUI(unit, x, y - BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
+      this.createUnitUI(unit, x, y - this.getBattleUnitUiOffset(spriteSize))
     }
+  }
+
+  private getBattleUnitSpriteSize(isBoss: boolean): number {
+    const scale = isBoss ? BATTLE_LAYOUT.BOSS_SPRITE_SCALE : 1
+    return Math.round(BATTLE_LAYOUT.UNIT_SPRITE_SIZE * scale)
+  }
+
+  private getBattleUnitUiOffset(spriteSize: number): number {
+    return spriteSize / 2 + BATTLE_LAYOUT.UNIT_UI_SPRITE_GAP_Y
+  }
+
+  private getBattleEnemyTextureKey(enemyId: string): string {
+    const frame = BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES[enemyId] ?? BATTLE_DEFAULT_ENEMY_SPRITE_FRAME
+    return `mon_${enemyId}_${frame}`
   }
 
   private getBattlePartyIds(party: readonly string[]): string[] {

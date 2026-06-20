@@ -1507,6 +1507,10 @@ export const TEXT_SPEED = {
 } as const
 
 export const BATTLE_COMMAND_LABELS = ['攻击', '技能', '连携', '防御', '道具', '木桶', '逃跑'] as const
+export const BATTLE_DEFAULT_ENEMY_SPRITE_FRAME = '01'
+export const BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES: Record<string, string> = {
+  wuxiang: '02',
+} as const
 
 export const BATTLE_LAYOUT = {
   BACKGROUND_OVERLAY_COLOR: 0x24170e,
@@ -1528,7 +1532,9 @@ export const BATTLE_LAYOUT = {
   ENEMY_GAP_X: scalePx(120),
   ENEMY_ROW_GAP_Y: scalePx(62),
   UNIT_SPRITE_SIZE: scalePx(64),
+  BOSS_SPRITE_SCALE: 1.55,
   UNIT_UI_OFFSET_Y: scalePx(55),
+  UNIT_UI_SPRITE_GAP_Y: scalePx(23),
   UNIT_NAME_OFFSET_Y: scalePx(16),
   UNIT_NAME_FONT_SIZE: scalePx(12),
   UNIT_NAME_COLOR: '#fff0d2',

@@ -14,6 +14,7 @@ import { IMAGE_ASSETS } from '../../src/data/assets.ts'
 import { TILE_SPRITES, TILESET_TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
 import { DIALOGUE_SPEAKER_FACE_MAP } from '../../src/data/dialoguePortraits.ts'
+import { BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES } from '../../src/utils/constants.ts'
 
 describe('data type integrity', () => {
   test('all items have required fields', () => {
@@ -141,6 +142,15 @@ describe('data type integrity', () => {
     const missing = Object.entries(IMAGE_ASSETS)
       .filter(([, assetPath]) => !existsSync(`assets/sprites/${assetPath}`))
       .map(([key, assetPath]) => `${key}: ${assetPath}`)
+
+    expect(missing).toEqual([])
+  })
+
+  test('battle enemy sprite frame overrides resolve to existing runtime images', () => {
+    const missing = Object.entries(BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES)
+      .map(([enemyId, frame]) => ({ enemyId, assetKey: `mon_${enemyId}_${frame}` }))
+      .filter(({ enemyId, assetKey }) => !ENEMIES[enemyId] || !IMAGE_ASSETS[assetKey] || !existsSync(`assets/sprites/${IMAGE_ASSETS[assetKey]}`))
+      .map(({ enemyId, assetKey }) => `${enemyId}: ${assetKey}`)
 
     expect(missing).toEqual([])
   })
