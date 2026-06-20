@@ -1976,19 +1976,21 @@ export class MapScene extends Phaser.Scene {
     this.scene.pause()
   }
 
-  private transferMap(mapId: string, x: number, y: number): void {
+  private transferMap(mapId: string, x: number, y: number, beforeRestart?: () => void): boolean {
     const gd = GameData.getInstance()
     const blockedDialogueId = getBlockedMapDialogueId(mapId, flag => gd.getFlag(flag))
     if (blockedDialogueId) {
       AudioManager.getInstance().playSFX('cancel')
       this.startDialogue(blockedDialogueId)
-      return
+      return false
     }
 
+    beforeRestart?.()
     AudioManager.getInstance().playSFX('warp')
     gd.currentMap = mapId
     gd.playerPosition = { x, y }
     this.requestMapRestart(mapId)
+    return true
   }
 
   private requestMapRestart(mapId: string, feedback?: MapSceneFeedback): void {
@@ -2049,7 +2051,7 @@ export class MapScene extends Phaser.Scene {
         case 'transfer':
           this.pendingActions = []
           this.pendingMapEventId = ''
-          this.transferMap(action.targetMap, action.targetX, action.targetY)
+          this.transferMap(action.targetMap, action.targetX, action.targetY, () => this.markFieldEventCompleted(mapEventId))
           return
         case 'shop':
           this.pendingActions = actions.slice(i + 1)

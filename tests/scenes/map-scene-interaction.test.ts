@@ -1,6 +1,78 @@
-import { describe, expect, test } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import type { EventAction } from '../../src/data/types.ts'
 import { FIELD_ENTITY_BEHAVIOR, TILE_SIZE } from '../../src/utils/constants.ts'
 import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
+
+let MapSceneClass: typeof import('../../src/scenes/MapScene.ts').MapScene
+let originalWindow: unknown
+let originalDocument: unknown
+let originalImage: unknown
+let originalCanvas: unknown
+let originalNavigator: unknown
+
+type ExecuteActionsHarness = {
+  pendingActions: EventAction[]
+  pendingMapEventId: string
+  transferMap: (mapId: string, x: number, y: number, beforeRestart?: () => void) => boolean
+  markFieldEventCompleted: (eventId?: string) => void
+}
+
+type ExecuteActions = (this: ExecuteActionsHarness, actions: EventAction[], mapEventId?: string) => void
+
+beforeAll(async () => {
+  const runtime = globalThis as unknown as Record<string, unknown>
+  originalWindow = runtime.window
+  originalDocument = runtime.document
+  originalImage = runtime.Image
+  originalCanvas = runtime.HTMLCanvasElement
+  originalNavigator = runtime.navigator
+
+  ;(globalThis as unknown as { window: unknown }).window = globalThis
+  class FakeCanvas {
+    style = {}
+    parentNode: { removeChild: () => void } | null = null
+    getContext(): object {
+      return {
+        fillRect: () => {},
+        drawImage: () => {},
+        getImageData: () => ({ data: new Uint8ClampedArray([0, 0, 0, 0]) }),
+        putImageData: () => {},
+        createImageData: () => ({ data: new Uint8ClampedArray(4) }),
+      }
+    }
+  }
+  ;(globalThis as unknown as { Image: unknown }).Image = class {
+    onload: (() => void) | null = null
+    set src(_value: string) {}
+  }
+  ;(globalThis as unknown as { HTMLCanvasElement: unknown }).HTMLCanvasElement = FakeCanvas
+  ;(globalThis as unknown as { document: unknown }).document = {
+    pointerLockElement: null,
+    documentElement: {},
+    createElement: (tagName: string) => tagName === 'audio'
+      ? { canPlayType: () => '' }
+      : new FakeCanvas(),
+  }
+  if (!('navigator' in globalThis)) {
+    ;(globalThis as unknown as { navigator: Record<string, unknown> }).navigator = {}
+  }
+
+  ;({ MapScene: MapSceneClass } = await import('../../src/scenes/MapScene.ts'))
+})
+
+afterAll(() => {
+  const runtime = globalThis as unknown as Record<string, unknown>
+  if (originalWindow === undefined) delete runtime.window
+  else runtime.window = originalWindow
+  if (originalDocument === undefined) delete runtime.document
+  else runtime.document = originalDocument
+  if (originalImage === undefined) delete runtime.Image
+  else runtime.Image = originalImage
+  if (originalCanvas === undefined) delete runtime.HTMLCanvasElement
+  else runtime.HTMLCanvasElement = originalCanvas
+  if (originalNavigator === undefined) delete runtime.navigator
+  else runtime.navigator = originalNavigator
+})
 
 function createNpcSprite(spriteX: number): Parameters<typeof isTileInsideSpriteBounds>[0] {
   return {
@@ -36,5 +108,53 @@ describe('MapScene NPC interaction', () => {
       TILE_SIZE,
       FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_BOUNDS_EPSILON_PX,
     )).toBe(false)
+  })
+})
+
+describe('MapScene action sequencing', () => {
+  const transferAction: EventAction = { type: 'transfer', targetMap: 'MAP_010', targetX: 1, targetY: 2 }
+
+  function getExecuteActions(): ExecuteActions {
+    return MapSceneClass.prototype['executeActions'] as ExecuteActions
+  }
+
+  test('marks a completable field event before a successful transfer restarts the map', () => {
+    const calls: string[] = []
+    const completedEvents: string[] = []
+    const harness = {
+      pendingActions: [],
+      pendingMapEventId: '',
+      transferMap: (_mapId: string, _x: number, _y: number, beforeRestart?: () => void): boolean => {
+        calls.push('transfer-start')
+        beforeRestart?.()
+        calls.push('restart')
+        return true
+      },
+      markFieldEventCompleted: (eventId?: string): void => {
+        if (eventId) completedEvents.push(eventId)
+        calls.push(`complete:${eventId ?? ''}`)
+      },
+    }
+
+    getExecuteActions().call(harness, [transferAction], 'EVT_SCRIPT_TRANSFER')
+
+    expect(completedEvents).toEqual(['EVT_SCRIPT_TRANSFER'])
+    expect(calls).toEqual(['transfer-start', 'complete:EVT_SCRIPT_TRANSFER', 'restart'])
+  })
+
+  test('does not mark a field event when map access blocks the transfer', () => {
+    const completedEvents: string[] = []
+    const harness = {
+      pendingActions: [],
+      pendingMapEventId: '',
+      transferMap: (): boolean => false,
+      markFieldEventCompleted: (eventId?: string): void => {
+        if (eventId) completedEvents.push(eventId)
+      },
+    }
+
+    getExecuteActions().call(harness, [transferAction], 'EVT_BLOCKED_TRANSFER')
+
+    expect(completedEvents).toEqual([])
   })
 })
