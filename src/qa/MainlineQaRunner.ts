@@ -17,7 +17,9 @@ import {
   MAINLINE_QA_REQUIRED_COMPLETED_QUESTS,
   MAINLINE_QA_REQUIRED_FINAL_MAP,
   MAINLINE_QA_REQUIRED_FINAL_FLAGS,
+  MAINLINE_QA_REQUIRED_FINAL_ITEMS,
   MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL,
+  MAINLINE_QA_REQUIRED_FINAL_SKILLS,
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
@@ -57,6 +59,9 @@ export interface MainlineQaReport {
     reserve: string[]
     completedQuests: string[]
     activeQuests: string[]
+    skills: Record<string, string[]>
+    items: Record<string, number>
+    equipment: Record<string, number>
     rebuildLevel: number
     gold: number
     flags: Record<string, unknown>
@@ -556,6 +561,13 @@ export class MainlineQaRunner {
     for (const flag of MAINLINE_QA_REQUIRED_FINAL_FLAGS) {
       if (gd.getFlag(flag) !== true) this.addError(`final: Required flag ${flag} is not true`)
     }
+    for (const { characterId, skillId } of MAINLINE_QA_REQUIRED_FINAL_SKILLS) {
+      const skills = gd.characters.get(characterId)?.skills ?? []
+      if (!skills.includes(skillId)) this.addError(`final: Character ${characterId} does not know ${skillId}`)
+    }
+    for (const itemId of MAINLINE_QA_REQUIRED_FINAL_ITEMS) {
+      if (!gd.hasItem(itemId)) this.addError(`final: Required item ${itemId} is missing`)
+    }
     for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
       if (!questSystem.isQuestCompleted(questId)) {
         this.addError(`final: Quest ${questId} is not completed`)
@@ -597,6 +609,9 @@ export class MainlineQaRunner {
       reserve: [...gd.reserve],
       completedQuests: quests.filter(quest => quest.status === 'completed').map(quest => quest.id),
       activeQuests: quests.filter(quest => quest.status === 'active').map(quest => quest.id),
+      skills: Object.fromEntries(Array.from(gd.characters.entries()).map(([id, character]) => [id, [...character.skills]])),
+      items: { ...gd.inventory.items },
+      equipment: { ...gd.inventory.equipment },
       rebuildLevel: gd.rebuildLevel,
       gold: gd.gold,
       flags: { ...gd.flags },

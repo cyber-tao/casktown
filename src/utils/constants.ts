@@ -698,6 +698,14 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.REQUEST },
   { kind: 'event', mapId: 'MAP_012', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.GATHER },
   { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_HUIHUI_START' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_HUIHUI_AFTER' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_A_START' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_A_AFTER' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_CONGCONG_START' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_CONGCONG_AFTER' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_SUN_START' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_SUN_AFTER' },
   { kind: 'event', mapId: 'MAP_050', eventId: 'EVT_SPRING_BARRIER' },
   { kind: 'event', mapId: 'MAP_051', eventId: 'EVT_DRAGON_SEAL' },
   { kind: 'event', mapId: 'MAP_052', eventId: 'EVT_MEI_BOSS' },
@@ -747,7 +755,17 @@ export const MAINLINE_QA_REQUIRED_FINAL_FLAGS = [
   'has_millennium_seed',
   'has_sacred_water',
   'has_divine_laurel',
+  'side_huihui_done',
+  'side_a_done',
+  'side_congcong_done',
+  'side_sun_done',
 ] as const
+export const MAINLINE_QA_REQUIRED_FINAL_SKILLS = [
+  { characterId: 'HUIHUI', skillId: 'qingxinling' },
+  { characterId: 'A', skillId: 'shanbeng' },
+  { characterId: 'CONGCONG', skillId: 'pozhankan' },
+] as const
+export const MAINLINE_QA_REQUIRED_FINAL_ITEMS = ['pink_chime'] as const
 export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [
   'QST_001',
   'QST_002',

@@ -11,8 +11,10 @@ import {
   MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS,
   MAINLINE_QA_REQUIRED_COMPLETED_QUESTS,
   MAINLINE_QA_REQUIRED_FINAL_FLAGS,
+  MAINLINE_QA_REQUIRED_FINAL_ITEMS,
   MAINLINE_QA_REQUIRED_FINAL_MAP,
   MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL,
+  MAINLINE_QA_REQUIRED_FINAL_SKILLS,
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
@@ -50,6 +52,12 @@ describe('MainlineQaRunner', () => {
     }
     for (const flag of MAINLINE_QA_REQUIRED_FINAL_FLAGS) {
       expect(report.finalState.flags[flag]).toBe(true)
+    }
+    for (const { characterId, skillId } of MAINLINE_QA_REQUIRED_FINAL_SKILLS) {
+      expect(report.finalState.skills[characterId]).toContain(skillId)
+    }
+    for (const itemId of MAINLINE_QA_REQUIRED_FINAL_ITEMS) {
+      expect(report.finalState.items[itemId] ?? report.finalState.equipment[itemId]).toBeGreaterThan(0)
     }
     for (const facility of RebuildSystem.getInstance().getAllFacilities()) {
       expect(report.finalState.flags[facility.flag]).toBe(true)
