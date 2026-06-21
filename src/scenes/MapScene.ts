@@ -1101,11 +1101,7 @@ export class MapScene extends Phaser.Scene {
   private formatActionPrompt(event: MapEvent): string {
     const label = this.getPromptActionLabel(event)
     if (this.shouldShowTouchControls()) {
-      return [
-        `${MAP_HUD.TOUCH_PROMPT_ACTION_PREFIX}${label}`,
-        MAP_HUD.TOUCH_OPEN_HINT,
-        MAP_HUD.TOUCH_PROMPT_MENU_TEXT,
-      ].join(MAP_HUD.PROMPT_COMMAND_SEPARATOR)
+      return `${MAP_HUD.TOUCH_PROMPT_ACTION_PREFIX}${label}`
     }
     return `${this.getPromptConfirmPrefix()}${label}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.OPEN_HINT}${MAP_HUD.PROMPT_COMMAND_SEPARATOR}${MAP_HUD.PROMPT_MENU_TEXT}`
   }
