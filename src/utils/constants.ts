@@ -1867,6 +1867,7 @@ export const MAP_HUD = {
   QUICK_LOAD_FAILED_TEXT: '快速读取失败',
   QUICK_LOAD_EMPTY_TEXT: '没有快速存档',
   QUICK_ACTION_BLOCKED_TEXT: '剧情事件中无法快速存读档',
+  ACTION_FAILED_TEXT: '条件不足，事件未完成',
   QUEST_X: GAME_WIDTH - scalePx(274),
   QUEST_Y: scalePx(130),
   QUEST_WIDTH: scalePx(256),

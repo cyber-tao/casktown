@@ -12,6 +12,7 @@ export interface StateEventActionResult {
   handled: boolean
   completedQuestId?: string
   partyChanged: boolean
+  failureReason?: string
 }
 
 export function isStateEventAction(action: EventAction): action is StateEventAction {
@@ -72,7 +73,9 @@ export function applyStateEventAction(action: EventAction): StateEventActionResu
       gd.addItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
       break
     case 'removeItem':
-      gd.removeItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)
+      if (!gd.removeItem(action.itemId, action.quantity ?? DEFAULT_ITEM_QUANTITY)) {
+        result.failureReason = `Missing item ${action.itemId}`
+      }
       break
     case 'addParty':
       gd.addPartyMember(action.characterId)

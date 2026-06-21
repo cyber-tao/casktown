@@ -237,7 +237,7 @@ export class MainlineQaRunner {
           this.transferMap(action.targetMap, action.targetX, action.targetY, source)
           break
         default:
-          this.applyStateAction(action, source)
+          if (!this.applyStateAction(action, source)) return
           break
       }
     }
@@ -249,17 +249,22 @@ export class MainlineQaRunner {
         this.addWarning(`${source}: Immediate action ${action.type} is skipped by dialogue choice handling`)
         continue
       }
-      this.applyStateAction(action, source)
+      if (!this.applyStateAction(action, source)) return
     }
   }
 
-  private applyStateAction(action: EventAction, source: string): void {
+  private applyStateAction(action: EventAction, source: string): boolean {
     const result = applyStateEventAction(action)
+    if (result.failureReason) {
+      this.addError(`${source}: State action ${action.type} failed: ${result.failureReason}`)
+      return false
+    }
     if (result.completedQuestId) {
       this.recordCompletedQuestSource(result.completedQuestId, source)
     } else if (!result.handled && (action.type === 'shop' || action.type === 'training' || action.type === 'rebuildMenu')) {
       this.addWarning(`${source}: Interactive action ${action.type} was skipped`)
     }
+    return true
   }
 
   private applyEncounterVictory(encounterId: string, source: string, mapEventId = ''): void {

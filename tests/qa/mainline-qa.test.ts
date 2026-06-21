@@ -241,6 +241,17 @@ describe('MainlineQaRunner', () => {
     expect(report.errors).toContain('event:MAP_010:FOREST_TUTORIAL: Map MAP_010 is blocked by DIA_LOCKED_FOREST')
   })
 
+  test('fails when a route step cannot consume a required turn-in item', () => {
+    const report = new MainlineQaRunner([
+      { kind: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.TURN_IN },
+    ]).run()
+
+    expect(report.status).toBe(MAINLINE_QA.STATUS_FAILED)
+    expect(report.errors).toContain(`dialogue:${BLUE_MINT_SIDE_QUEST.DIALOGUES.TURN_IN}:onComplete: State action removeItem failed: Missing item ${BLUE_MINT_SIDE_QUEST.ITEM_ID}`)
+    expect(report.finalState.flags[BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED]).toBeUndefined()
+    expect(report.finalState.completedQuests).not.toContain(BLUE_MINT_SIDE_QUEST.QUEST_ID)
+  })
+
   test('validates every field in encounter rewards', () => {
     const encounters = GAME_CONFIG_DATABASE.getTable('encounters')
     const originalEncounter = encounters.BTL_001!

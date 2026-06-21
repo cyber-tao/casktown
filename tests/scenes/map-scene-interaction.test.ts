@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { EventAction } from '../../src/data/types.ts'
+import { GameData } from '../../src/core/GameData.ts'
 import { FIELD_ENTITY_BEHAVIOR, TILE_SIZE } from '../../src/utils/constants.ts'
 import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
 
@@ -15,6 +16,7 @@ type ExecuteActionsHarness = {
   pendingMapEventId: string
   transferMap: (mapId: string, x: number, y: number, beforeRestart?: () => void) => boolean
   markFieldEventCompleted: (eventId?: string) => void
+  handleStateActionFailure: (reason: string) => void
 }
 
 type ExecuteActions = (this: ExecuteActionsHarness, actions: EventAction[], mapEventId?: string) => void
@@ -134,6 +136,7 @@ describe('MapScene action sequencing', () => {
         if (eventId) completedEvents.push(eventId)
         calls.push(`complete:${eventId ?? ''}`)
       },
+      handleStateActionFailure: () => {},
     }
 
     getExecuteActions().call(harness, [transferAction], 'EVT_SCRIPT_TRANSFER')
@@ -151,10 +154,36 @@ describe('MapScene action sequencing', () => {
       markFieldEventCompleted: (eventId?: string): void => {
         if (eventId) completedEvents.push(eventId)
       },
+      handleStateActionFailure: () => {},
     }
 
     getExecuteActions().call(harness, [transferAction], 'EVT_BLOCKED_TRANSFER')
 
+    expect(completedEvents).toEqual([])
+  })
+
+  test('does not complete an event after a failed state action', () => {
+    GameData.getInstance().reset()
+    const completedEvents: string[] = []
+    const failures: string[] = []
+    const harness = {
+      pendingActions: [],
+      pendingMapEventId: '',
+      transferMap: (): boolean => true,
+      markFieldEventCompleted: (eventId?: string): void => {
+        if (eventId) completedEvents.push(eventId)
+      },
+      handleStateActionFailure: (reason: string): void => {
+        failures.push(reason)
+      },
+    }
+
+    getExecuteActions().call(harness, [
+      { type: 'removeItem', itemId: 'blue_mint', quantity: 1 },
+      { type: 'questComplete', questId: 'QST_014' },
+    ], 'EVT_FAILED_TURNIN')
+
+    expect(failures).toEqual(['Missing item blue_mint'])
     expect(completedEvents).toEqual([])
   })
 })

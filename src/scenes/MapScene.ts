@@ -2073,6 +2073,10 @@ export class MapScene extends Phaser.Scene {
           return
         default: {
           const result = applyStateEventAction(action)
+          if (result.failureReason) {
+            this.handleStateActionFailure(result.failureReason)
+            return
+          }
           if (!result.handled) break
           if (!result.partyChanged) break
           this.removeSuppressedFieldEventSprites()
@@ -2085,6 +2089,15 @@ export class MapScene extends Phaser.Scene {
     this.pendingActions = []
     this.pendingMapEventId = ''
     this.markFieldEventCompleted(mapEventId)
+    this.inEvent = false
+  }
+
+  private handleStateActionFailure(reason: string): void {
+    console.warn(`Map event action failed: ${reason}`)
+    AudioManager.getInstance().playSFX('cancel')
+    this.pendingActions = []
+    this.pendingMapEventId = ''
+    this.showMapFeedback(MAP_HUD.ACTION_FAILED_TEXT, false)
     this.inEvent = false
   }
 

@@ -23,6 +23,14 @@ describe('EventActionExecutor', () => {
     expect(gd.getItemQuantity('blue_mint')).toBe(1)
   })
 
+  test('reports failed item removal without mutating inventory', () => {
+    const result = applyStateEventAction({ type: 'removeItem', itemId: 'blue_mint' })
+
+    expect(result.handled).toBe(true)
+    expect(result.failureReason).toBe('Missing item blue_mint')
+    expect(GameData.getInstance().getItemQuantity('blue_mint')).toBe(0)
+  })
+
   test('reports quest completion source for route QA', () => {
     const qs = QuestSystem.getInstance()
     applyStateEventAction({ type: 'questStart', questId: 'QST_001' })
