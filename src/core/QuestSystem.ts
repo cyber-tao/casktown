@@ -57,7 +57,6 @@ export class QuestSystem {
     if (state.status === 'completed') return
     state.status = 'completed'
     state.progress = state.maxProgress
-    EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
 
     const def = GAME_CONFIG_DATABASE.getTable('quests')[questId]
     if (def?.rewards) {
@@ -77,6 +76,7 @@ export class QuestSystem {
       }
     }
     SkillGrowth.getInstance().checkAllUnlocks()
+    EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
   }
 
   failQuest(questId: string): void {

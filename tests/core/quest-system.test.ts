@@ -103,6 +103,27 @@ describe('QuestSystem', () => {
     expect(qs.getCompletedQuests().filter(q => q.id === questId)).toHaveLength(1)
   })
 
+  test('completeQuest emits quest update after rewards settle', () => {
+    const gd = GameData.getInstance()
+    const qs = QuestSystem.getInstance()
+    let observedRewardFlag: unknown
+    const handler = (questId: string) => {
+      if (questId === 'QST_001') {
+        observedRewardFlag = gd.getFlag('ring_awakened')
+      }
+    }
+
+    EventBus.on(GameEvents.QUEST_UPDATE, handler)
+    try {
+      qs.startQuest('QST_001')
+      qs.completeQuest('QST_001')
+    } finally {
+      EventBus.off(GameEvents.QUEST_UPDATE, handler)
+    }
+
+    expect(observedRewardFlag).toBe(true)
+  })
+
   test('completeQuest unlocks skills after non-exp rewards settle', () => {
     const gd = GameData.getInstance()
     const qs = QuestSystem.getInstance()
