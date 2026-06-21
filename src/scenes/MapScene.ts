@@ -141,6 +141,7 @@ export class MapScene extends Phaser.Scene {
   private animationTimeMs = 0
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
   private touchControls: Phaser.GameObjects.GameObject[] = []
+  private touchLayoutActive = false
   private minimapGraphics?: Phaser.GameObjects.Graphics
   private minimapDynamicGraphics?: Phaser.GameObjects.Graphics
   private minimapPlayerMarker?: Phaser.GameObjects.Rectangle
@@ -326,6 +327,7 @@ export class MapScene extends Phaser.Scene {
     this.inputResumeBlockedUntilMs = 0
     this.feedbackToken = 0
     this.promptText = undefined
+    this.touchLayoutActive = this.shouldShowTouchControls()
     this.weatherEmitter = null
     this.minimapGraphics = undefined
     this.minimapDynamicGraphics = undefined
@@ -904,13 +906,27 @@ export class MapScene extends Phaser.Scene {
   }
 
   private syncTouchControls(): void {
-    if (this.shouldShowTouchControls()) {
+    const shouldShowTouchControls = this.shouldShowTouchControls()
+    if (shouldShowTouchControls !== this.touchLayoutActive) {
+      this.touchLayoutActive = shouldShowTouchControls
+      this.rebuildResponsiveHudForInputMode()
+    }
+
+    if (shouldShowTouchControls) {
       if (this.touchControls.length > 0) this.destroyTouchControls()
       this.createTouchControls()
       return
     }
 
     this.destroyTouchControls()
+  }
+
+  private rebuildResponsiveHudForInputMode(): void {
+    this.feedbackToken++
+    this.createPartyHud()
+    this.destroyQuestHud()
+    this.createQuestHud()
+    this.recreatePrompt()
   }
 
   private getTouchSize(baseGamePx: number, minCssPx: number): number {
@@ -1048,7 +1064,10 @@ export class MapScene extends Phaser.Scene {
   private createUI(): void {
     this.createPartyHud()
     this.createQuestHud()
+    this.createPrompt()
+  }
 
+  private createPrompt(): void {
     const touchControls = this.shouldShowTouchControls()
     const promptYOffset = touchControls ? MAP_HUD.TOUCH_PROMPT_Y_OFFSET : MAP_HUD.PROMPT_Y_OFFSET
     const promptFontSize = touchControls
@@ -1069,6 +1088,16 @@ export class MapScene extends Phaser.Scene {
     prompt.setDepth(MAP_HUD.PROMPT_DEPTH)
     this.promptText = prompt
     this.uiTexts.push(prompt)
+  }
+
+  private recreatePrompt(): void {
+    if (this.promptText) {
+      const prompt = this.promptText
+      this.uiTexts = this.uiTexts.filter(text => text !== prompt)
+      prompt.destroy()
+      this.promptText = undefined
+    }
+    this.createPrompt()
   }
 
   private updatePrompt(): void {

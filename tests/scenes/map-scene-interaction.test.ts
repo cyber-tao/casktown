@@ -21,6 +21,17 @@ type ExecuteActionsHarness = {
 
 type ExecuteActions = (this: ExecuteActionsHarness, actions: EventAction[], mapEventId?: string) => void
 
+type TouchLayoutHarness = {
+  touchLayoutActive: boolean
+  touchControls: unknown[]
+  shouldShowTouchControls: () => boolean
+  rebuildResponsiveHudForInputMode: () => void
+  destroyTouchControls: () => void
+  createTouchControls: () => void
+}
+
+type SyncTouchControls = (this: TouchLayoutHarness) => void
+
 beforeAll(async () => {
   const runtime = globalThis as unknown as Record<string, unknown>
   originalWindow = runtime.window
@@ -185,5 +196,57 @@ describe('MapScene action sequencing', () => {
 
     expect(failures).toEqual(['Missing item blue_mint'])
     expect(completedEvents).toEqual([])
+  })
+})
+
+describe('MapScene responsive touch layout', () => {
+  function getSyncTouchControls(): SyncTouchControls {
+    return MapSceneClass.prototype['syncTouchControls'] as SyncTouchControls
+  }
+
+  test('rebuilds HUD surfaces when resize switches into touch layout', () => {
+    const calls: string[] = []
+    const harness = {
+      touchLayoutActive: false,
+      touchControls: [],
+      shouldShowTouchControls: () => true,
+      rebuildResponsiveHudForInputMode: () => calls.push('rebuild-hud'),
+      destroyTouchControls: () => {
+        calls.push('destroy-touch')
+        harness.touchControls = []
+      },
+      createTouchControls: () => {
+        calls.push('create-touch')
+        harness.touchControls = [{}]
+      },
+    }
+
+    getSyncTouchControls().call(harness)
+
+    expect(harness.touchLayoutActive).toBe(true)
+    expect(calls).toEqual(['rebuild-hud', 'create-touch'])
+  })
+
+  test('does not rebuild HUD surfaces when touch layout stays active', () => {
+    const calls: string[] = []
+    const harness = {
+      touchLayoutActive: true,
+      touchControls: [{}],
+      shouldShowTouchControls: () => true,
+      rebuildResponsiveHudForInputMode: () => calls.push('rebuild-hud'),
+      destroyTouchControls: () => {
+        calls.push('destroy-touch')
+        harness.touchControls = []
+      },
+      createTouchControls: () => {
+        calls.push('create-touch')
+        harness.touchControls = [{}]
+      },
+    }
+
+    getSyncTouchControls().call(harness)
+
+    expect(harness.touchLayoutActive).toBe(true)
+    expect(calls).toEqual(['destroy-touch', 'create-touch'])
   })
 })
