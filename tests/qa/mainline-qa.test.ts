@@ -18,6 +18,7 @@ import {
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
+  ROAMING_ENCOUNTER_RESPAWN,
   START_MAP_ID,
   START_PLAYER_POSITION,
 } from '../../src/utils/constants.ts'
@@ -75,6 +76,7 @@ describe('MainlineQaRunner', () => {
     }
     expect(report.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
     expect(report.coverage.encounterIds).toContain(MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID)
+    expect(report.finalState.flags[`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}EVT_TIGER`]).toBe(true)
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
     }

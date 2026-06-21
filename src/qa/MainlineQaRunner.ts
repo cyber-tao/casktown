@@ -171,9 +171,9 @@ export class MainlineQaRunner {
     }
   }
 
-  private runDialogue(dialogueId: string, source: string): void {
+  private runDialogue(dialogueId: string, source: string, mapEventId = ''): void {
     const completionActions = this.collectDialogueCompletionActions(dialogueId, source)
-    this.executeActions(getUniqueEventActions(completionActions), `${source}:onComplete`)
+    this.executeActions(getUniqueEventActions(completionActions), `${source}:onComplete`, mapEventId)
   }
 
   private collectDialogueCompletionActions(dialogueId: string, source: string): EventAction[] {
@@ -228,7 +228,7 @@ export class MainlineQaRunner {
     for (const action of actions) {
       switch (action.type) {
         case 'dialogue':
-          this.runDialogue(action.dialogueId, `${source}:dialogue:${action.dialogueId}`)
+          this.runDialogue(action.dialogueId, `${source}:dialogue:${action.dialogueId}`, mapEventId)
           break
         case 'battle':
           this.applyEncounterVictory(action.encounterId, `${source}:battle:${action.encounterId}`, mapEventId)
