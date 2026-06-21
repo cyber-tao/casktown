@@ -10,6 +10,7 @@ import {
   START_INVENTORY_ITEMS,
   START_MAP_ID,
   START_PARTY,
+  START_PLAYER_POSITION,
   TIME_MS_PER_SECOND,
   TRUE_ROUTE_MIN_MERCY,
   TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
@@ -145,6 +146,41 @@ describe('GameData', () => {
     expect(gd.party).toHaveLength(PARTY_RULES.ACTIVE_MEMBER_LIMIT)
     expect(gd.party).toEqual(['T', 'HUIHUI', 'A', 'CONGCONG'])
     expect(gd.reserve).toEqual(['SUN', 'xiaoai'])
+  })
+
+  test('deserialize falls back from missing maps to a safe start location', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize()
+
+    gd.deserialize({
+      ...snapshot,
+      currentMap: 'MAP_MISSING',
+      playerPosition: { x: 999, y: -20 },
+    })
+
+    expect(gd.currentMap).toBe(START_MAP_ID)
+    expect(gd.playerPosition).toEqual(START_PLAYER_POSITION)
+  })
+
+  test('deserialize keeps saved locations inside walkable map bounds', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize()
+    const mapId = 'MAP_001'
+    const map = GAME_CONFIG_DATABASE.getTable('maps')[mapId]!
+
+    gd.deserialize({
+      ...snapshot,
+      currentMap: mapId,
+      playerPosition: { x: Number.POSITIVE_INFINITY, y: map.height + 100 },
+    })
+
+    const index = gd.playerPosition.y * map.width + gd.playerPosition.x
+    expect(gd.currentMap).toBe(mapId)
+    expect(gd.playerPosition.x).toBeGreaterThanOrEqual(0)
+    expect(gd.playerPosition.y).toBeGreaterThanOrEqual(0)
+    expect(gd.playerPosition.x).toBeLessThan(map.width)
+    expect(gd.playerPosition.y).toBeLessThan(map.height)
+    expect(map.collisions).not.toContain(index)
   })
 
   test('syncPlayTime accumulates elapsed seconds', () => {

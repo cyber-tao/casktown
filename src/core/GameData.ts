@@ -1,5 +1,5 @@
 import { EventBus, GameEvents } from './EventBus'
-import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, BranchState } from '../data/types'
+import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, BranchState, MapData } from '../data/types'
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
@@ -647,6 +647,44 @@ export class GameData {
     this.reserve = nextReserve
   }
 
+  private isWalkableSavedPosition(map: MapData, x: number, y: number): boolean {
+    if (x < 0 || y < 0 || x >= map.width || y >= map.height) return false
+    return !map.collisions.includes(y * map.width + x)
+  }
+
+  private findNearestWalkableSavedPosition(map: MapData, target: { x: number; y: number }): { x: number; y: number } | null {
+    const fallbackX = Number.isFinite(target.x) ? Math.floor(target.x) : START_PLAYER_POSITION.x
+    const fallbackY = Number.isFinite(target.y) ? Math.floor(target.y) : START_PLAYER_POSITION.y
+    const centerX = Math.max(0, Math.min(map.width - 1, fallbackX))
+    const centerY = Math.max(0, Math.min(map.height - 1, fallbackY))
+    if (this.isWalkableSavedPosition(map, centerX, centerY)) return { x: centerX, y: centerY }
+
+    const maxRadius = Math.max(map.width, map.height)
+    for (let radius = 1; radius <= maxRadius; radius++) {
+      for (let y = centerY - radius; y <= centerY + radius; y++) {
+        for (let x = centerX - radius; x <= centerX + radius; x++) {
+          if (Math.abs(x - centerX) !== radius && Math.abs(y - centerY) !== radius) continue
+          if (this.isWalkableSavedPosition(map, x, y)) return { x, y }
+        }
+      }
+    }
+    return null
+  }
+
+  private normalizeCurrentLocation(): void {
+    const maps = GAME_CONFIG_DATABASE.getTable('maps')
+    let map = maps[this.currentMap]
+    if (!map) {
+      this.currentMap = START_MAP_ID
+      map = maps[START_MAP_ID]
+      this.playerPosition = { ...START_PLAYER_POSITION }
+    }
+    if (!map) return
+
+    const walkable = this.findNearestWalkableSavedPosition(map, this.playerPosition)
+    this.playerPosition = walkable ?? { x: 0, y: 0 }
+  }
+
   serialize(): object {
     this.syncPlayTime()
     return {
@@ -718,6 +756,7 @@ export class GameData {
     this.syncTrueRouteState()
     this.syncProgressionFlags()
     this.syncRebuildFacilityFlags()
+    this.normalizeCurrentLocation()
   }
 
   syncPlayTime(nowMs = Date.now()): void {
