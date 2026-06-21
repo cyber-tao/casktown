@@ -137,14 +137,14 @@ export const ENEMIES: Record<string, EnemyData> = {
 
   // 魔宫 Boss
   fake_xiaoai: {
-    id: 'fake_xiaoai', name: '假·xiaoai',
+    id: 'fake_xiaoai', name: 'xiaoai之影',
     stats: { hp: 1000, maxHp: 1000, mp: 200, maxMp: 200, atk: 32, def: 24, matk: 30, mdef: 24, speed: 18, level: 27, exp: 600, expToNext: 0 },
     skills: ['shadow_blade', 'dark_mirror', 'afternoon_tea'],
     element: 'dark', weakness: ['light'], resistance: ['dark'],
     drops: [], exp: 600, gold: 300, isBoss: true, aiType: 'boss_fake_xiaoai',
   },
   xiaoai_true: {
-    id: 'xiaoai_true', name: 'xiaoai·真身',
+    id: 'xiaoai_true', name: 'xiaoai真身',
     stats: { hp: 1500, maxHp: 1500, mp: 300, maxMp: 300, atk: 40, def: 28, matk: 38, mdef: 30, speed: 24, level: 28, exp: 800, expToNext: 0 },
     skills: ['wind_moon_slash', 'dark_purge', 'soul_drain', 'fallen_angel'],
     element: 'dark', weakness: ['light'], resistance: ['dark', 'wind'],
