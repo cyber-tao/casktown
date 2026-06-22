@@ -154,6 +154,7 @@ export class SaveManager {
     try {
       const data = JSON.parse(dataStr)
       this.gameData.deserialize(data)
+      InputManager.getInstance().syncFromGameData()
       return this.save(slot)
     } catch {
       return false

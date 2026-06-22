@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
+import { InputManager } from '../../src/core/InputManager.ts'
 import { SaveManager } from '../../src/core/SaveManager.ts'
-import { SAVE_SLOTS, INITIAL_GOLD, QUICK_SAVE_SLOT } from '../../src/utils/constants.ts'
+import { CONTROL_MODE, SAVE_SLOTS, INITIAL_GOLD, QUICK_SAVE_SLOT } from '../../src/utils/constants.ts'
 
 const SAVE_KEY = 'casktown_save'
 
@@ -137,6 +138,23 @@ describe('SaveManager', () => {
     expect(sm.importSave(2, exported)).toBe(true)
     sm.load(2)
     expect(gd.gold).toBe(savedGold)
+  })
+
+  test('importSave syncs input bindings from imported settings', () => {
+    const gd = GameData.getInstance()
+    const input = InputManager.getInstance()
+    input.setWASD()
+    sm.save(1)
+    const exported = sm.exportSave(1)!
+
+    gd.reset()
+    input.resetToDefault()
+    expect(input.isWASDMode()).toBe(false)
+
+    expect(sm.importSave(2, exported)).toBe(true)
+    expect(gd.settings.controlMode).toBe(CONTROL_MODE.WASD)
+    expect(input.isWASDMode()).toBe(true)
+    expect(input.getBindings().confirm).toBe('Space')
   })
 
   test('importSave rejects invalid JSON', () => {
