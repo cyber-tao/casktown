@@ -21,6 +21,7 @@ import {
   ELEMENTS,
   MAP_ACCESS_REQUIREMENTS,
   WORLD_MAP_LOCATION_POINTS,
+  WORLD_MAP_UI,
   DIRECTION,
   DIRECTION_VECTORS,
   TOUCH_INPUT,
@@ -181,6 +182,15 @@ describe('constants consistency', () => {
       expect(point.y).toBeGreaterThanOrEqual(0)
       expect(point.y).toBeLessThanOrEqual(GAME_HEIGHT)
     }
+  })
+
+  test('world map current marker stays subtle over dense map labels', () => {
+    expect(WORLD_MAP_UI.LOCATION_PIN_SIZE).toBeLessThanOrEqual(WORLD_MAP_UI.LOCATION_LABEL_FONT_SIZE / 2)
+    expect(WORLD_MAP_UI.LOCATION_PIN_ALPHA).toBeLessThan(0.5)
+    expect(WORLD_MAP_UI.LOCATION_PIN_STROKE_ALPHA).toBeGreaterThan(0.7)
+    expect(WORLD_MAP_UI.LOCATION_PULSE_FILL_ALPHA).toBeLessThanOrEqual(0.1)
+    expect(WORLD_MAP_UI.LOCATION_PULSE_ALPHA).toBeLessThan(0.5)
+    expect(WORLD_MAP_LOCATION_POINTS.MAP_070.y).toBeLessThan(WORLD_MAP_UI.LOCATION_LABEL_Y - WORLD_MAP_UI.LOCATION_PULSE_SIZE)
   })
 
   test('UI font family includes CJK fonts', () => {
