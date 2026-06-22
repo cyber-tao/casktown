@@ -4,6 +4,10 @@ import { SFXSynth } from './SFXSynth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { BGM_FADE_DURATIONS, VOICE_AUDIO_PATH } from '../utils/constants'
 
+type VolumeControlledSound = Phaser.Sound.BaseSound & {
+  setVolume(value: number): Phaser.Sound.BaseSound
+}
+
 export class AudioManager {
   private static instance: AudioManager
   private scene: Phaser.Scene | null = null
@@ -210,10 +214,6 @@ export class AudioManager {
     if (!this.scene || this.voiceMuted) return
     this.stopVoice()
 
-    const gd = GameData.getInstance()
-    const masterVol = gd.settings.masterVolume
-    const volume = gd.settings.uiVolume * masterVol
-
     const path = `${VOICE_AUDIO_PATH.DIRECTORY}/${voiceKey}${VOICE_AUDIO_PATH.EXTENSION}`
     const key = `voice_${voiceKey}`
     this.requestedVoiceKey = key
@@ -223,7 +223,7 @@ export class AudioManager {
       this.scene.load.once(`filecomplete-audio-${key}`, () => {
         if (this.scene && this.requestedVoiceKey === key) {
           this.requestedVoiceKey = ''
-          this.playLoadedVoice(key, volume)
+          this.playLoadedVoice(key)
         }
       })
       this.scene.load.once(`loaderror-audio-${key}`, () => {
@@ -232,13 +232,18 @@ export class AudioManager {
       this.scene.load.start()
     } else {
       this.requestedVoiceKey = ''
-      this.playLoadedVoice(key, volume)
+      this.playLoadedVoice(key)
     }
   }
 
-  private playLoadedVoice(key: string, volume: number): void {
+  private getVoiceVolume(): number {
+    const gd = GameData.getInstance()
+    return gd.settings.uiVolume * gd.settings.masterVolume
+  }
+
+  private playLoadedVoice(key: string): void {
     if (!this.scene) return
-    const voice = this.scene.sound.add(key, { volume, loop: false })
+    const voice = this.scene.sound.add(key, { volume: this.getVoiceVolume(), loop: false })
     this.currentVoice = voice
     voice.once('complete', () => {
       if (this.currentVoice === voice) this.currentVoice = null
@@ -276,14 +281,19 @@ export class AudioManager {
   }
 
   updateVolume(): void {
-    if (!this.currentBgm) return
-    const gd = GameData.getInstance()
-    const config = GAME_CONFIG_DATABASE.getTable('bgmTracks')[this.currentBgmKey]
-    if (!config) return
-    const masterVol = gd.settings.masterVolume
-    const musicVol = gd.settings.musicVolume
-    const targetVolume = this.bgmMuted ? 0 : config.volume * masterVol * musicVol
-    ;(this.currentBgm as Phaser.Sound.WebAudioSound).setVolume(targetVolume)
+    if (this.currentBgm) {
+      const gd = GameData.getInstance()
+      const config = GAME_CONFIG_DATABASE.getTable('bgmTracks')[this.currentBgmKey]
+      if (config) {
+        const masterVol = gd.settings.masterVolume
+        const musicVol = gd.settings.musicVolume
+        const targetVolume = this.bgmMuted ? 0 : config.volume * masterVol * musicVol
+        ;(this.currentBgm as VolumeControlledSound).setVolume(targetVolume)
+      }
+    }
+    if (this.currentVoice) {
+      ;(this.currentVoice as VolumeControlledSound).setVolume(this.voiceMuted ? 0 : this.getVoiceVolume())
+    }
   }
 
   setBGMMuted(muted: boolean): void {

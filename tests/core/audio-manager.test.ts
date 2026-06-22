@@ -18,19 +18,22 @@ interface FakeSound {
   stop: () => void
   pause: () => void
   destroy: () => void
+  setVolume: (value: number) => FakeSound
+  once: (eventName: string, listener: () => void) => FakeSound
 }
 
 class FakeSoundManager {
   locked = true
   readonly addCalls: string[] = []
+  readonly sounds: FakeSound[] = []
   playCalls = 0
   private readonly listeners = new Map<string, Set<() => void>>()
 
-  add(key: string): FakeSound {
+  add(key: string, config: { volume?: number } = {}): FakeSound {
     this.addCalls.push(key)
     const sound: FakeSound = {
       isPlaying: false,
-      volume: 0,
+      volume: config.volume ?? 0,
       play: () => {
         sound.isPlaying = true
         this.playCalls++
@@ -42,7 +45,13 @@ class FakeSoundManager {
         sound.isPlaying = false
       },
       destroy: () => {},
+      setVolume: (value: number) => {
+        sound.volume = value
+        return sound
+      },
+      once: () => sound,
     }
+    this.sounds.push(sound)
     return sound
   }
 
@@ -185,5 +194,23 @@ describe('AudioManager', () => {
 
     expect(sound.addCalls).toEqual(['bgm_battle_normal'])
     expect(sound.playCalls).toBe(1)
+  })
+
+  test('updates the currently playing voice volume when settings change', () => {
+    const sound = new FakeSoundManager()
+    const manager = AudioManagerClass.getInstance()
+    manager.setScene(createFakeScene(sound))
+
+    manager.playVoice('DIA_TEST', 'Test line')
+
+    expect(sound.addCalls).toEqual(['voice_DIA_TEST'])
+    expect(sound.sounds.at(-1)?.volume).toBe(1)
+
+    GameData.getInstance().settings.masterVolume = 0.5
+    GameData.getInstance().settings.uiVolume = 0.4
+    manager.updateVolume()
+
+    expect(sound.sounds.at(-1)?.volume).toBe(0.2)
+    manager.stopVoice()
   })
 })
