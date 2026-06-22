@@ -86,6 +86,8 @@ describe('MainlineQaRunner', () => {
 
   test('publishes a browser-readable report for visual QA automation', () => {
     const originalDocument = (globalThis as unknown as { document?: unknown }).document
+    const globalReports = globalThis as unknown as Record<string, unknown>
+    const originalGlobalReport = globalReports[MAINLINE_QA.REPORT_GLOBAL_KEY]
     const elements = new Map<string, { id: string; textContent: string; type?: string; setAttribute: (key: string, value: string) => void }>()
     const attributes = new Map<string, string>()
     const documentStub = {
@@ -122,11 +124,17 @@ describe('MainlineQaRunner', () => {
       expect(publishedReport.status).toBe(report.status)
       expect(publishedReport.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
       expect(publishedReport.coverage.encounterIds).toContain(MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID)
+      expect(globalReports[MAINLINE_QA.REPORT_GLOBAL_KEY]).toBe(report)
       for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
         expect(publishedReport.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
       }
     } finally {
       ;(globalThis as unknown as { document?: unknown }).document = originalDocument
+      if (originalGlobalReport === undefined) {
+        delete globalReports[MAINLINE_QA.REPORT_GLOBAL_KEY]
+      } else {
+        globalReports[MAINLINE_QA.REPORT_GLOBAL_KEY] = originalGlobalReport
+      }
     }
   })
 
