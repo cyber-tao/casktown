@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { ITEMS } from '../../src/data/items.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import { ENEMIES } from '../../src/data/enemies.ts'
@@ -15,6 +16,14 @@ import { TILE_SPRITES, TILESET_TILE_SPRITES, resolveTileSpriteKey } from '../../
 import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
 import { DIALOGUE_SPEAKER_FACE_MAP } from '../../src/data/dialoguePortraits.ts'
 import { BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES } from '../../src/utils/constants.ts'
+
+function collectSourceFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) return collectSourceFiles(path)
+    return entry.isFile() && path.endsWith('.ts') ? [path] : []
+  })
+}
 
 describe('data type integrity', () => {
   test('all items have required fields', () => {
@@ -208,6 +217,17 @@ describe('data type integrity', () => {
     const missing = audioAssets
       .filter(asset => !existsSync(`assets/${asset.path}`))
       .map(asset => `${asset.key}: ${asset.path}`)
+
+    expect(missing).toEqual([])
+  })
+
+  test('literal SFX calls resolve to configured tracks', () => {
+    const sfxCallPattern = /playSFX\(\s*['"`]([^'"`]+)['"`]\s*\)/g
+    const missing = collectSourceFiles('src')
+      .flatMap(file => [...readFileSync(file, 'utf8').matchAll(sfxCallPattern)]
+        .map(match => ({ file, sfxId: match[1]! })))
+      .filter(({ sfxId }) => !SFX_TRACKS[sfxId])
+      .map(({ file, sfxId }) => `${file}: ${sfxId}`)
 
     expect(missing).toEqual([])
   })
