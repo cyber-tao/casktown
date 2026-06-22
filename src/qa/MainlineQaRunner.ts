@@ -164,9 +164,10 @@ export class MainlineQaRunner {
       gd.setFlag(getChestOpenedFlag(event.id), true)
     }
 
+    const actionErrorCount = this.errors.length
     this.executeActions(event.actions, source, event.id)
 
-    if (isCompletableMapEvent(event)) {
+    if (isCompletableMapEvent(event) && this.errors.length === actionErrorCount) {
       gd.setFlag(getFieldEventDoneFlag(event.id), true)
     }
   }

@@ -4,6 +4,7 @@ import { MainlineQaRunner, getBattleVisualQaConfig, getMainlineQaSummaryStyle, p
 import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
+import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import {
   BLUE_MINT_SIDE_QUEST,
@@ -250,6 +251,40 @@ describe('MainlineQaRunner', () => {
     expect(report.errors).toContain(`dialogue:${BLUE_MINT_SIDE_QUEST.DIALOGUES.TURN_IN}:onComplete: State action removeItem failed: Missing item ${BLUE_MINT_SIDE_QUEST.ITEM_ID}`)
     expect(report.finalState.flags[BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED]).toBeUndefined()
     expect(report.finalState.completedQuests).not.toContain(BLUE_MINT_SIDE_QUEST.QUEST_ID)
+  })
+
+  test('does not mark a failed field event as completed', () => {
+    const maps = GAME_CONFIG_DATABASE.getTable('maps')
+    const originalMap = maps.MAP_001!
+    const failedEventId = 'QA_FAILED_FIELD_EVENT'
+    maps.MAP_001 = {
+      ...originalMap,
+      events: [
+        ...originalMap.events,
+        {
+          id: failedEventId,
+          x: START_PLAYER_POSITION.x,
+          y: START_PLAYER_POSITION.y,
+          width: 1,
+          height: 1,
+          type: 'trigger',
+          trigger: 'action',
+          actions: [{ type: 'removeItem', itemId: BLUE_MINT_SIDE_QUEST.ITEM_ID, quantity: 1 }],
+        },
+      ],
+    }
+
+    try {
+      const report = new MainlineQaRunner([
+        { kind: 'event', mapId: START_MAP_ID, eventId: failedEventId },
+      ]).run()
+
+      expect(report.status).toBe(MAINLINE_QA.STATUS_FAILED)
+      expect(report.errors).toContain(`event:${START_MAP_ID}:${failedEventId}: State action removeItem failed: Missing item ${BLUE_MINT_SIDE_QUEST.ITEM_ID}`)
+      expect(report.finalState.flags[getFieldEventDoneFlag(failedEventId)]).toBeUndefined()
+    } finally {
+      maps.MAP_001 = originalMap
+    }
   })
 
   test('validates every field in encounter rewards', () => {
