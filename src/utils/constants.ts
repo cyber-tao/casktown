@@ -110,7 +110,6 @@ export const LOADING_SCREEN = {
 } as const
 
 export const ITEM_ICON_KEY_PREFIX = 'item_'
-export const APPROVED_ITEM_ICON_IDS = ['heal_grass', 'pineapple_rice', 'antidote', 'pineapple_seed'] as const
 export const ENEMY_ICON_KEY_PREFIX = 'mon_'
 export const ENEMY_ICON_DEFAULT_FRAME = '01'
 export const TIME_MS_PER_SECOND = 1000
