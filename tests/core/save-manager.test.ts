@@ -16,6 +16,19 @@ class LocalStorageMock {
   key(_index: number): string | null { return null }
 }
 
+class FailingSetItemStorage extends LocalStorageMock {
+  constructor(private readonly failingKey: string) {
+    super()
+  }
+
+  setItem(key: string, value: string): void {
+    if (key === this.failingKey) {
+      throw new Error(`Failed to write ${key}`)
+    }
+    super.setItem(key, value)
+  }
+}
+
 describe('SaveManager', () => {
   let sm: SaveManager
   let mockStorage: LocalStorageMock
@@ -161,6 +174,16 @@ describe('SaveManager', () => {
     expect(sm.importSave(1, 'not-json')).toBe(false)
   })
 
+  test('importSave rejects non-object JSON without changing current state', () => {
+    const gd = GameData.getInstance()
+    gd.addGold(999)
+    const currentGold = gd.gold
+
+    expect(sm.importSave(1, '123')).toBe(false)
+    expect(sm.importSave(1, '[]')).toBe(false)
+    expect(gd.gold).toBe(currentGold)
+  })
+
   test('importSave rejects invalid slots without changing current state', () => {
     const gd = GameData.getInstance()
     gd.addGold(999)
@@ -173,6 +196,34 @@ describe('SaveManager', () => {
     expect(sm.importSave(-1, exported)).toBe(false)
     expect(gd.gold).toBe(INITIAL_GOLD)
     expect(gd.gold).not.toBe(savedGold)
+  })
+
+  test('importSave rolls back current state and partial slot writes when saving fails', () => {
+    const gd = GameData.getInstance()
+    const input = InputManager.getInstance()
+    gd.addGold(999)
+    input.setWASD()
+    sm.save(1)
+    const exported = sm.exportSave(1)!
+
+    gd.reset()
+    input.resetToDefault()
+    expect(input.isWASDMode()).toBe(false)
+
+    const failingStorage = new FailingSetItemStorage(`${SAVE_KEY}_meta_2`)
+    ;(globalThis as Record<string, unknown>).localStorage = failingStorage
+
+    const originalError = console.error
+    console.error = () => {}
+    try {
+      expect(sm.importSave(2, exported)).toBe(false)
+    } finally {
+      console.error = originalError
+    }
+    expect(gd.gold).toBe(INITIAL_GOLD)
+    expect(input.isWASDMode()).toBe(false)
+    expect(failingStorage.getItem(`${SAVE_KEY}_data_2`)).toBeNull()
+    expect(failingStorage.getItem(`${SAVE_KEY}_meta_2`)).toBeNull()
   })
 
   test('multiple saves to different slots are independent', () => {

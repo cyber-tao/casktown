@@ -2,6 +2,10 @@ import { GameData } from './GameData'
 import { InputManager } from './InputManager'
 import { QUICK_SAVE_SLOT, SAVE_SLOT_MIN, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
 
+function isSaveImportObject(data: unknown): data is object {
+  return typeof data === 'object' && data !== null && !Array.isArray(data)
+}
+
 export interface SaveMeta {
   slot: number
   timestamp: number
@@ -35,6 +39,25 @@ export class SaveManager {
     } catch (e) {
       console.warn('Local save storage is unavailable:', e)
       return null
+    }
+  }
+
+  private restoreSlot(storage: Storage, slot: number, data: string | null, meta: string | null): void {
+    const dataKey = `${SAVE_STORAGE_KEY}_data_${slot}`
+    const metaKey = `${SAVE_STORAGE_KEY}_meta_${slot}`
+    try {
+      if (data === null) {
+        storage.removeItem(dataKey)
+      } else {
+        storage.setItem(dataKey, data)
+      }
+      if (meta === null) {
+        storage.removeItem(metaKey)
+      } else {
+        storage.setItem(metaKey, meta)
+      }
+    } catch (e) {
+      console.error('Import save rollback failed:', e)
     }
   }
 
@@ -150,14 +173,35 @@ export class SaveManager {
 
   importSave(slot: number, dataStr: string): boolean {
     if (!this.isValidSlot(slot)) return false
-    if (!this.getStorage()) return false
+    let data: unknown
     try {
-      const data = JSON.parse(dataStr)
-      this.gameData.deserialize(data)
-      InputManager.getInstance().syncFromGameData()
-      return this.save(slot)
+      data = JSON.parse(dataStr)
     } catch {
       return false
     }
+    if (!isSaveImportObject(data)) return false
+
+    const storage = this.getStorage()
+    if (!storage) return false
+
+    const dataKey = `${SAVE_STORAGE_KEY}_data_${slot}`
+    const metaKey = `${SAVE_STORAGE_KEY}_meta_${slot}`
+    const previousSlotData = storage.getItem(dataKey)
+    const previousSlotMeta = storage.getItem(metaKey)
+    const previousGameData = this.gameData.serialize()
+    const inputManager = InputManager.getInstance()
+
+    try {
+      this.gameData.deserialize(data)
+      inputManager.syncFromGameData()
+      if (this.save(slot)) return true
+    } catch {
+      // Fall through to restore the current play session below.
+    }
+
+    this.gameData.deserialize(previousGameData)
+    inputManager.syncFromGameData()
+    this.restoreSlot(storage, slot, previousSlotData, previousSlotMeta)
+    return false
   }
 }
