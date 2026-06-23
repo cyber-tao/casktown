@@ -24,10 +24,9 @@ export class AudioManager {
   private pendingBgmRequest: { bgmId: string; fadeDuration: number } | null = null
   private pendingBgmUnlockScene: Phaser.Scene | null = null
   private sfxSynth: SFXSynth | null = null
+  private sfxSynthUnavailable = false
 
-  private constructor() {
-    this.sfxSynth = new SFXSynth()
-  }
+  private constructor() {}
 
   static getInstance(): AudioManager {
     if (!AudioManager.instance) {
@@ -184,30 +183,41 @@ export class AudioManager {
     }
 
     // Fallback to synthesized SFX
-    if (!this.sfxSynth) return
+    const sfxSynth = this.getSfxSynth()
+    if (!sfxSynth) return
     switch (sfxId) {
-      case 'cursor': this.sfxSynth.playCursor(); break
-      case 'confirm': this.sfxSynth.playConfirm(); break
-      case 'cancel': this.sfxSynth.playCancel(); break
-      case 'battle_start': this.sfxSynth.playEncounter(); break
-      case 'attack_hit': this.sfxSynth.playAttackHit(); break
-      case 'attack_slash': this.sfxSynth.playAttackSlash(); break
-      case 'magic_cast': this.sfxSynth.playMagicCast(); break
-      case 'heal': this.sfxSynth.playHeal(); break
-      case 'item_use': this.sfxSynth.playItemUse(); break
-      case 'level_up': this.sfxSynth.playLevelUp(); break
-      case 'open_menu': this.sfxSynth.playOpenMenu(); break
-      case 'close_menu': this.sfxSynth.playCloseMenu(); break
-      case 'equip': this.sfxSynth.playEquip(); break
-      case 'get_item': this.sfxSynth.playGetItem(); break
-      case 'encounter': this.sfxSynth.playEncounter(); break
+      case 'cursor': sfxSynth.playCursor(); break
+      case 'confirm': sfxSynth.playConfirm(); break
+      case 'cancel': sfxSynth.playCancel(); break
+      case 'battle_start': sfxSynth.playEncounter(); break
+      case 'attack_hit': sfxSynth.playAttackHit(); break
+      case 'attack_slash': sfxSynth.playAttackSlash(); break
+      case 'magic_cast': sfxSynth.playMagicCast(); break
+      case 'heal': sfxSynth.playHeal(); break
+      case 'item_use': sfxSynth.playItemUse(); break
+      case 'level_up': sfxSynth.playLevelUp(); break
+      case 'open_menu': sfxSynth.playOpenMenu(); break
+      case 'close_menu': sfxSynth.playCloseMenu(); break
+      case 'equip': sfxSynth.playEquip(); break
+      case 'get_item': sfxSynth.playGetItem(); break
+      case 'encounter': sfxSynth.playEncounter(); break
       case 'step_grass':
-      case 'step_stone': this.sfxSynth.playStep(); break
-      case 'warp': this.sfxSynth.playWarp(); break
-      case 'victory_fanfare': this.sfxSynth.playLevelUp(); break
-      case 'dialogue_advance': this.sfxSynth.playDialogue(); break
+      case 'step_stone': sfxSynth.playStep(); break
+      case 'warp': sfxSynth.playWarp(); break
+      case 'victory_fanfare': sfxSynth.playLevelUp(); break
+      case 'dialogue_advance': sfxSynth.playDialogue(); break
       default: console.warn(`No synth fallback for SFX ${sfxId}`)
     }
+  }
+
+  private getSfxSynth(): SFXSynth | null {
+    if (this.sfxSynth || this.sfxSynthUnavailable) return this.sfxSynth
+    try {
+      this.sfxSynth = new SFXSynth()
+    } catch {
+      this.sfxSynthUnavailable = true
+    }
+    return this.sfxSynth
   }
 
   playVoice(voiceKey: string, _text: string): void {

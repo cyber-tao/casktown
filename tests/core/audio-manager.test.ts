@@ -26,6 +26,7 @@ class FakeSoundManager {
   locked = true
   readonly addCalls: string[] = []
   readonly sounds: FakeSound[] = []
+  readonly directPlayKeys: string[] = []
   playCalls = 0
   private readonly listeners = new Map<string, Set<() => void>>()
 
@@ -53,6 +54,11 @@ class FakeSoundManager {
     }
     this.sounds.push(sound)
     return sound
+  }
+
+  play(key: string): void {
+    this.directPlayKeys.push(key)
+    this.playCalls++
   }
 
   once(eventName: string, listener: () => void): void {
@@ -165,6 +171,48 @@ describe('AudioManager', () => {
 
   afterEach(() => {
     AudioManagerClass.getInstance().stopBGM(0)
+  })
+
+  test('does not create synthesized SFX during singleton setup', () => {
+    const runtime = globalThis as unknown as Record<string, unknown>
+    const previousAudioContext = runtime.AudioContext
+    let constructed = 0
+    runtime.AudioContext = class {
+      constructor() {
+        constructed++
+      }
+    }
+
+    try {
+      expect(() => AudioManagerClass.getInstance()).not.toThrow()
+      expect(constructed).toBe(0)
+    } finally {
+      runtime.AudioContext = previousAudioContext
+    }
+  })
+
+  test('plays cached SFX without creating synthesized fallback audio', () => {
+    const runtime = globalThis as unknown as Record<string, unknown>
+    const previousAudioContext = runtime.AudioContext
+    let constructed = 0
+    runtime.AudioContext = class {
+      constructor() {
+        constructed++
+      }
+    }
+
+    try {
+      const sound = new FakeSoundManager()
+      const manager = AudioManagerClass.getInstance()
+      manager.setScene(createFakeScene(sound))
+
+      manager.playSFX('cursor')
+
+      expect(sound.directPlayKeys).toEqual(['sfx_cursor'])
+      expect(constructed).toBe(0)
+    } finally {
+      runtime.AudioContext = previousAudioContext
+    }
   })
 
   test('defers BGM playback until browser audio is unlocked', () => {
