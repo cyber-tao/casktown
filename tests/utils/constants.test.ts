@@ -310,12 +310,18 @@ describe('constants consistency', () => {
       landscapePhoneViewport.height / GAME_HEIGHT,
     )
     const unprotectedBodyCssFontSize = MAP_HUD.QUEST_BODY_FONT_SIZE * displayScale
+    const questCssWidth = MAP_HUD.QUEST_WIDTH * displayScale
+    const questRight = (MAP_HUD.QUEST_X + MAP_HUD.QUEST_WIDTH) * displayScale
+    const minimapBottom = (MAP_HUD.MINIMAP_Y + MAP_HUD.MINIMAP_HEIGHT) * displayScale
 
     expect(MAP_HUD.TOUCH_QUEST_TITLE_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(10)
     expect(MAP_HUD.TOUCH_QUEST_NAME_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(12)
     expect(MAP_HUD.TOUCH_QUEST_BODY_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(11)
     expect(MAP_HUD.TOUCH_QUEST_PROGRESS_MIN_CSS_FONT_SIZE).toBeGreaterThanOrEqual(10)
     expect(unprotectedBodyCssFontSize).toBeLessThan(MAP_HUD.TOUCH_QUEST_BODY_MIN_CSS_FONT_SIZE)
+    expect(questCssWidth).toBeLessThanOrEqual(304)
+    expect(questRight).toBeLessThanOrEqual(landscapePhoneViewport.width - 8)
+    expect(MAP_HUD.QUEST_Y * displayScale).toBeGreaterThan(minimapBottom + 8)
   })
 
   test('touch controls cover common landscape phone widths', () => {

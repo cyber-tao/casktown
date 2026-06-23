@@ -30,6 +30,7 @@ import { DialogueCompletionQueue } from '../core/DialogueCompletionQueue'
 import { areEventConditionsMet } from '../core/EventConditions'
 import { applyStateEventAction } from '../core/EventActionExecutor'
 import { showLoadingScreen } from '../utils/loadingScreen'
+import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { DialogueChoice, DialogueData, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
 
@@ -110,20 +111,13 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   private addRuntimePanel(x: number, y: number, width: number, height: number, textureKey: string, fallbackColor: number, fallbackAlpha: number, depth: number): Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image {
-    if (this.textures.exists(textureKey)) {
-      const panel = this.add.image(x, y, textureKey)
-      panel.setDisplaySize(width, height)
-      panel.setAlpha(fallbackAlpha)
-      panel.setDepth(depth)
-      panel.setScrollFactor(0)
-      return panel
-    }
-
-    const panel = this.add.rectangle(x, y, width, height, fallbackColor, fallbackAlpha)
-    panel.setStrokeStyle(DIALOGUE_UI.STROKE_WIDTH, DIALOGUE_UI.BORDER_COLOR)
-    panel.setDepth(depth)
-    panel.setScrollFactor(0)
-    return panel
+    return createRuntimePanel(this, x, y, width, height, textureKey, fallbackColor, fallbackAlpha, {
+      depth,
+      fallbackStroke: {
+        width: DIALOGUE_UI.STROKE_WIDTH,
+        color: DIALOGUE_UI.BORDER_COLOR,
+      },
+    })
   }
 
   create(data: { dialogueId: string }): void {

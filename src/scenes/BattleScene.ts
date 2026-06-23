@@ -49,6 +49,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
+import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
 
 interface ComboDef {
@@ -752,20 +753,13 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private addRuntimePanel(x: number, y: number, width: number, height: number, textureKey: string, fallbackColor: number, fallbackAlpha: number, depth: number): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
-    if (this.textures.exists(textureKey)) {
-      const panel = this.add.image(x, y, textureKey)
-      panel.setDisplaySize(width, height)
-      panel.setAlpha(fallbackAlpha)
-      panel.setDepth(depth)
-      panel.setScrollFactor(0)
-      return panel
-    }
-
-    const panel = this.add.rectangle(x, y, width, height, fallbackColor, fallbackAlpha)
-    panel.setStrokeStyle(BATTLE_LAYOUT.COMMAND_PANEL_STROKE_WIDTH, BATTLE_LAYOUT.COMMAND_PANEL_STROKE_COLOR)
-    panel.setDepth(depth)
-    panel.setScrollFactor(0)
-    return panel
+    return createRuntimePanel(this, x, y, width, height, textureKey, fallbackColor, fallbackAlpha, {
+      depth,
+      fallbackStroke: {
+        width: BATTLE_LAYOUT.COMMAND_PANEL_STROKE_WIDTH,
+        color: BATTLE_LAYOUT.COMMAND_PANEL_STROKE_COLOR,
+      },
+    })
   }
 
   private createUI(): void {

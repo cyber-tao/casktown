@@ -65,6 +65,7 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { cssToGamePx } from '../utils/touch'
 import { isTileInsideSpriteBounds } from '../utils/fieldGeometry'
+import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 
 type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
 
@@ -1157,17 +1158,10 @@ export class MapScene extends Phaser.Scene {
   }
 
   private addRuntimePanel(x: number, y: number, width: number, height: number, textureKey: string, fallbackColor: number, fallbackAlpha: number): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
-    if (this.textures.exists(textureKey)) {
-      const panel = this.add.image(x, y, textureKey)
-      panel.setOrigin(0, 0)
-      panel.setDisplaySize(width, height)
-      panel.setAlpha(fallbackAlpha)
-      return panel
-    }
-
-    const panel = this.add.rectangle(x, y, width, height, fallbackColor, fallbackAlpha)
-    panel.setOrigin(0, 0)
-    return panel
+    return createRuntimePanel(this, x, y, width, height, textureKey, fallbackColor, fallbackAlpha, {
+      depth: MAP_HUD.DEPTH,
+      origin: { x: 0, y: 0 },
+    })
   }
 
   private createPartyHud(): void {
