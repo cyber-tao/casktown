@@ -35,9 +35,6 @@ import {
   MENU_SETTINGS_OPTION_LABELS,
   MENU_SETTINGS_OPTIONS,
   SAVE_LOAD_FEEDBACK_DELAY_MS,
-  SAVE_SLOTS,
-  SECONDS_PER_HOUR,
-  SECONDS_PER_MINUTE,
   RUNTIME_UI_ASSET_KEYS,
   UI_FONT_FAMILY,
   UI_TITLE_FONT_FAMILY,
@@ -45,6 +42,7 @@ import {
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
+import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
 
@@ -1151,14 +1149,14 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private renderSaveSummary(): void {
-    this.renderHeader('存档', '记录')
+    this.renderHeader('存读档', '保存 / 读取')
     this.renderSaveRows(false)
     this.renderFeedback()
   }
 
   private renderSave(): void {
     this.clearContent()
-    this.renderHeader(this.loadMode ? '读取存档' : '保存', this.loadMode ? '选择槽位' : '保存或读取')
+    this.renderHeader(this.loadMode ? '读取存档' : '保存存档', this.loadMode ? '选择槽位或快速存档' : '选择槽位，或切换读取')
     this.renderSaveRows(true)
     this.renderFeedback()
   }
@@ -1185,21 +1183,25 @@ export class MenuOverlay extends Phaser.Scene {
 
   private confirmSave(): void {
     if (this.loadMode) {
-      if (this.saveIndex >= SAVE_SLOTS) {
+      const loadSlots = getLoadSaveSlots(true)
+      const selectedSlot = loadSlots[this.saveIndex]
+      if (!selectedSlot) {
         this.loadMode = false
         this.saveIndex = 0
         this.renderSave()
         return
       }
-      this.doLoad(this.saveIndex + 1)
+      this.doLoad(selectedSlot)
       return
     }
 
-    if (this.saveIndex < SAVE_SLOTS) {
-      this.doSave(this.saveIndex + 1)
+    const manualSaveSlots = getManualSaveSlots()
+    const selectedSlot = manualSaveSlots[this.saveIndex]
+    if (selectedSlot) {
+      this.doSave(selectedSlot)
       return
     }
-    if (this.saveIndex === SAVE_SLOTS) {
+    if (this.saveIndex === manualSaveSlots.length) {
       this.loadMode = true
       this.saveIndex = 0
       this.renderSave()
@@ -1238,20 +1240,12 @@ export class MenuOverlay extends Phaser.Scene {
     const sm = SaveManager.getInstance()
     if (this.loadMode) {
       return [
-        ...Array.from({ length: SAVE_SLOTS }, (_, i) => {
-          const slot = i + 1
-          const meta = sm.getMeta(slot)
-          return meta ? `槽位 ${slot} · ${meta.preview} · ${this.formatTime(meta.playTime)}` : `槽位 ${slot} · 空`
-        }),
+        ...getLoadSaveSlots(true).map(slot => formatSaveSlotLabel(slot, sm.getMeta(slot), 'load')),
         '返回',
       ]
     }
     return [
-      ...Array.from({ length: SAVE_SLOTS }, (_, i) => {
-        const slot = i + 1
-        const meta = sm.getMeta(slot)
-        return meta ? `保存到槽位 ${slot} · ${meta.preview} · ${this.formatTime(meta.playTime)}` : `保存到槽位 ${slot} · 空`
-      }),
+      ...getManualSaveSlots().map(slot => formatSaveSlotLabel(slot, sm.getMeta(slot), 'save')),
       '读取存档',
       '返回',
     ]
@@ -1862,13 +1856,5 @@ export class MenuOverlay extends Phaser.Scene {
     AudioManager.getInstance().playSFX('close_menu')
     EventBus.emit(GameEvents.MENU_CLOSE)
     this.scene.stop()
-  }
-
-  private formatTime(seconds: number): string {
-    const totalSeconds = Math.max(0, Math.floor(seconds))
-    const h = Math.floor(totalSeconds / SECONDS_PER_HOUR)
-    const m = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
-    if (h === 0 && m === 0) return `${totalSeconds}s`
-    return `${h}h${m}m`
   }
 }

@@ -22,6 +22,7 @@ import {
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { markStartupReady } from '../utils/startup'
+import { formatSaveSlotLabel, getLoadSaveSlots } from '../utils/saveSlots'
 
 type ViteImportMeta = ImportMeta & {
   readonly env: {
@@ -32,10 +33,13 @@ type ViteImportMeta = ImportMeta & {
 export class TitleScene extends Phaser.Scene {
   private menuIndex = 0
   private menuItems: Phaser.GameObjects.Text[] = []
-  private cursor!: Phaser.GameObjects.Rectangle
+  private cursor?: Phaser.GameObjects.Rectangle
   private bg!: Phaser.GameObjects.Image
   private titleBgmRequested = false
   private transitioning = false
+  private isSelectingSave = false
+  private saveIndex = 0
+  private saveRows: Array<{ slot: number | null; label: string }> = []
 
   constructor() {
     super({ key: 'TitleScene' })
@@ -47,6 +51,9 @@ export class TitleScene extends Phaser.Scene {
     this.menuItems = []
     this.titleBgmRequested = false
     this.transitioning = false
+    this.isSelectingSave = false
+    this.saveIndex = 0
+    this.saveRows = []
 
     this.createBackground()
 
@@ -81,26 +88,14 @@ export class TitleScene extends Phaser.Scene {
       TITLE_MENU_LAYOUT.PANEL_BORDER_ALPHA,
     )
 
-    for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
-      const text = this.add.text(TITLE_MENU_LAYOUT.MENU_X, TITLE_MENU_LAYOUT.START_Y + i * TITLE_MENU_LAYOUT.GAP_Y, TITLE_MENU_ITEMS[i]!, {
-        fontSize: scaleFont(TITLE_MENU_LAYOUT.MENU_FONT_SIZE),
-        color: TITLE_MENU_LAYOUT.MENU_COLOR,
-        fontFamily: UI_FONT_FAMILY,
-        stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
-        strokeThickness: TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS,
-      }).setOrigin(0.5)
-      bindTouchText(text, () => this.selectMenuItem(i))
-      this.menuItems.push(text)
-    }
-
-    this.cursor = this.add.rectangle(TITLE_MENU_LAYOUT.MENU_X - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, TITLE_MENU_LAYOUT.START_Y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_COLOR)
-    this.cursor.setOrigin(0.5)
+    this.renderMainMenu()
 
     cleanupKeyboardOnShutdown(this)
     this.input.keyboard?.on('keydown-UP', () => this.changeMenu(-1))
     this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
     this.input.keyboard?.on('keydown-SPACE', () => this.selectMenu())
+    this.input.keyboard?.on('keydown-ESC', () => this.handleCancel())
 
     bindTouchText(this.add.text(TITLE_GITHUB_LINK.x, TITLE_GITHUB_LINK.y, 'GitHub', {
       fontSize: `${TITLE_GITHUB_LINK.fontSize}px`,
@@ -148,6 +143,12 @@ export class TitleScene extends Phaser.Scene {
 
   private changeMenu(dir: number): void {
     this.ensureTitleBGM()
+    if (this.isSelectingSave) {
+      this.saveIndex = (this.saveIndex + dir + this.saveRows.length) % this.saveRows.length
+      this.updateCursor()
+      AudioManager.getInstance().playSFX('cursor')
+      return
+    }
     this.menuIndex = (this.menuIndex + dir + this.menuItems.length) % this.menuItems.length
     this.updateCursor()
   }
@@ -159,12 +160,16 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private updateCursor(): void {
-    const target = this.menuItems[this.menuIndex]!
-    this.cursor.setY(target.y)
+    const target = this.isSelectingSave ? this.menuItems[this.saveIndex] : this.menuItems[this.menuIndex]
+    if (target && this.cursor) this.cursor.setY(target.y)
   }
 
   private selectMenu(): void {
     if (this.transitioning) return
+    if (this.isSelectingSave) {
+      this.confirmSaveSelection()
+      return
+    }
     switch (this.menuIndex) {
       case TITLE_MENU_ACTION_INDEX.NEW_GAME:
         this.startNewGame()
@@ -188,6 +193,79 @@ export class TitleScene extends Phaser.Scene {
     this.menuIndex = index
     this.updateCursor()
     this.selectMenu()
+  }
+
+  private clearMenuRows(): void {
+    for (const text of this.menuItems) text.destroy()
+    this.menuItems = []
+    this.cursor?.destroy()
+    this.cursor = undefined
+  }
+
+  private renderMainMenu(): void {
+    this.isSelectingSave = false
+    this.saveRows = []
+    this.clearMenuRows()
+    for (let i = 0; i < TITLE_MENU_ITEMS.length; i++) {
+      const text = this.addTitleMenuText(TITLE_MENU_ITEMS[i]!, i, TITLE_MENU_LAYOUT.MENU_FONT_SIZE)
+      bindTouchText(text, () => this.selectMenuItem(i))
+      this.menuItems.push(text)
+    }
+    this.cursor = this.addTitleCursor(TITLE_MENU_LAYOUT.START_Y + this.menuIndex * TITLE_MENU_LAYOUT.GAP_Y)
+  }
+
+  private renderSaveSelector(): void {
+    this.isSelectingSave = true
+    this.saveRows = [
+      ...getLoadSaveSlots(true).map(slot => ({
+        slot,
+        label: formatSaveSlotLabel(slot, SaveManager.getInstance().getMeta(slot), 'load'),
+      })),
+      { slot: null, label: '返回' },
+    ]
+    this.saveIndex = 0
+    this.clearMenuRows()
+    for (let i = 0; i < this.saveRows.length; i++) {
+      const text = this.addTitleMenuText(this.saveRows[i]!.label, i, TITLE_MENU_LAYOUT.LOAD_FONT_SIZE)
+      bindTouchText(text, () => {
+        this.saveIndex = i
+        this.updateCursor()
+        this.confirmSaveSelection()
+      })
+      this.menuItems.push(text)
+    }
+    this.cursor = this.addTitleCursor(TITLE_MENU_LAYOUT.START_Y)
+  }
+
+  private addTitleMenuText(label: string, index: number, fontSize: number): Phaser.GameObjects.Text {
+    const text = this.add.text(TITLE_MENU_LAYOUT.MENU_X, TITLE_MENU_LAYOUT.START_Y + index * TITLE_MENU_LAYOUT.GAP_Y, label, {
+      fontSize: scaleFont(fontSize),
+      color: TITLE_MENU_LAYOUT.MENU_COLOR,
+      fontFamily: UI_FONT_FAMILY,
+      stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
+      strokeThickness: TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS,
+    }).setOrigin(0.5)
+    this.fitTitleMenuText(text)
+    return text
+  }
+
+  private addTitleCursor(y: number): Phaser.GameObjects.Rectangle {
+    const cursor = this.add.rectangle(TITLE_MENU_LAYOUT.MENU_X - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X, y, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_SIZE, TITLE_MENU_LAYOUT.CURSOR_COLOR)
+    cursor.setOrigin(0.5)
+    return cursor
+  }
+
+  private fitTitleMenuText(text: Phaser.GameObjects.Text): void {
+    const maxWidth = TITLE_MENU_LAYOUT.PANEL_WIDTH - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X
+    const width = text.getBounds().width
+    if (width <= maxWidth) return
+    text.setScale(Math.max(0.72, maxWidth / width), 1)
+  }
+
+  private handleCancel(): void {
+    if (!this.isSelectingSave) return
+    AudioManager.getInstance().playSFX('cancel')
+    this.renderMainMenu()
   }
 
   private openGithub(): void {
@@ -223,13 +301,23 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private loadGame(): void {
-    const saveManager = SaveManager.getInstance()
-    const slot = saveManager.getLatestSaveSlot()
-    if (!slot) {
-      this.showMessage('无存档')
+    this.renderSaveSelector()
+  }
+
+  private confirmSaveSelection(): void {
+    const selected = this.saveRows[this.saveIndex]
+    if (!selected) return
+    if (selected.slot === null) {
+      AudioManager.getInstance().playSFX('cancel')
+      this.renderMainMenu()
       return
     }
-    if (!saveManager.load(slot)) {
+    const saveManager = SaveManager.getInstance()
+    if (!saveManager.hasSave(selected.slot)) {
+      this.showMessage('该槽位没有存档')
+      return
+    }
+    if (!saveManager.load(selected.slot)) {
       this.showMessage('读取失败')
       return
     }

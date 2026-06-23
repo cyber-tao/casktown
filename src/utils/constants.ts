@@ -117,7 +117,7 @@ export const SECONDS_PER_MINUTE = 60
 export const MINUTES_PER_HOUR = 60
 export const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
 
-export const MENU_NAV_LABELS = ['预言之书', '队伍', '背包', '技能', '图鉴', '存档', '设置', '返回游戏'] as const
+export const MENU_NAV_LABELS = ['预言之书', '队伍', '背包', '技能', '图鉴', '存读档', '设置', '返回游戏'] as const
 export const MENU_NAV_INDEX = {
   PROPHECY: 0,
   PARTY: 1,
@@ -438,12 +438,13 @@ export const TITLE_MENU_LAYOUT = {
   TITLE_FONT_SIZE: 64,
   SUBTITLE_Y: scalePx(190),
   SUBTITLE_FONT_SIZE: 28,
-  MENU_X: GAME_WIDTH - scalePx(140),
+  MENU_X: GAME_WIDTH - scalePx(170),
   MENU_FONT_SIZE: 24,
-  MENU_TEXT_HALF_WIDTH: scalePx(64),
-  PANEL_X: GAME_WIDTH - scalePx(140),
+  LOAD_FONT_SIZE: 16,
+  MENU_TEXT_HALF_WIDTH: scalePx(120),
+  PANEL_X: GAME_WIDTH - scalePx(170),
   PANEL_Y: scalePx(372),
-  PANEL_WIDTH: scalePx(220),
+  PANEL_WIDTH: scalePx(300),
   PANEL_HEIGHT: scalePx(264),
   PANEL_FILL_COLOR: 0x07101a,
   PANEL_ALPHA: 0.48,
@@ -455,7 +456,7 @@ export const TITLE_MENU_LAYOUT = {
   CURSOR_OFFSET_X: scalePx(80),
   CURSOR_SIZE: scalePx(12),
   CURSOR_COLOR: 0xf2c45a,
-  MESSAGE_X: GAME_WIDTH - scalePx(140),
+  MESSAGE_X: GAME_WIDTH - scalePx(170),
   MESSAGE_Y: scalePx(480),
   MESSAGE_FONT_SIZE: 20,
   MESSAGE_COLOR: '#862016',
