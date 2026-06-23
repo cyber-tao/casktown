@@ -1893,18 +1893,15 @@ export class MapScene extends Phaser.Scene {
     if (this.isSuppressedFieldEvent(event)) return false
     const sprite = event.type === 'npc' ? this.npcs.get(event.id) : event.type === 'battle' ? this.battleEnemies.get(event.id) : undefined
     if (sprite) {
+      if (event.type === 'npc') return this.isNpcReachableByTile(sprite, px, py, fx, fy)
+
       const behavior = this.fieldEntityBehaviors.get(event.id)
       const distanceTiles = behavior?.interactionDistanceTiles ?? FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_DISTANCE_TILES
       const facingX = fx * TILE_SIZE + TILE_SIZE / 2
       const facingY = fy * TILE_SIZE + TILE_SIZE / 2
-      const playerDist = event.type === 'battle'
-        ? this.getSpriteBoundsDistance(sprite, this.player.x, this.player.y)
-        : Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
-      const facingDist = event.type === 'battle'
-        ? this.getSpriteBoundsDistance(sprite, facingX, facingY)
-        : Phaser.Math.Distance.Between(facingX, facingY, sprite.x, sprite.y)
+      const playerDist = this.getSpriteBoundsDistance(sprite, this.player.x, this.player.y)
+      const facingDist = this.getSpriteBoundsDistance(sprite, facingX, facingY)
       if (playerDist <= distanceTiles * TILE_SIZE || facingDist <= distanceTiles * TILE_SIZE) return true
-      if (event.type === 'npc') return this.isNpcReachableByTile(sprite, px, py, fx, fy)
       return false
     }
     return this.checkEventCollision(event, fx, fy) || this.checkEventCollision(event, px, py)

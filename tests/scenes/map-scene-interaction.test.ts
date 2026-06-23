@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import type { EventAction } from '../../src/data/types.ts'
+import type { EventAction, MapEvent } from '../../src/data/types.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { FIELD_ENTITY_BEHAVIOR, TILE_SIZE } from '../../src/utils/constants.ts'
 import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
@@ -31,6 +31,16 @@ type TouchLayoutHarness = {
 }
 
 type SyncTouchControls = (this: TouchLayoutHarness) => void
+
+type CanInteractHarness = {
+  npcs: Map<string, unknown>
+  battleEnemies: Map<string, unknown>
+  fieldEntityBehaviors: Map<string, unknown>
+  player: { x: number; y: number }
+  isSuppressedFieldEvent: () => boolean
+}
+
+type CanInteractWithEvent = (this: CanInteractHarness, event: MapEvent, px: number, py: number, fx: number, fy: number) => boolean
 
 beforeAll(async () => {
   const runtime = globalThis as unknown as Record<string, unknown>
@@ -98,6 +108,44 @@ function createNpcSprite(spriteX: number): Parameters<typeof isTileInsideSpriteB
   }
 }
 
+function createActionNpcEvent(): MapEvent {
+  return {
+    id: 'NPC_MOVING_TEST',
+    x: 17,
+    y: 23,
+    width: 1,
+    height: 1,
+    type: 'npc',
+    trigger: 'action',
+    actions: [{ type: 'dialogue', dialogueId: 'DIA_TEST' }],
+  }
+}
+
+function getCanInteractWithEvent(): CanInteractWithEvent {
+  return MapSceneClass.prototype['canInteractWithEvent'] as CanInteractWithEvent
+}
+
+function createNpcInteractionHarness(spriteTileX: number, spriteTileY: number, playerTileX: number, playerTileY: number): CanInteractHarness {
+  const sprite = {
+    x: spriteTileX * TILE_SIZE + TILE_SIZE / 2,
+    y: spriteTileY * TILE_SIZE + TILE_SIZE / 2,
+    displayWidth: TILE_SIZE,
+    displayHeight: TILE_SIZE,
+    originX: 0.5,
+    originY: 0.5,
+  }
+  return Object.assign(Object.create(MapSceneClass.prototype), {
+    npcs: new Map([['NPC_MOVING_TEST', sprite]]),
+    battleEnemies: new Map(),
+    fieldEntityBehaviors: new Map(),
+    player: {
+      x: playerTileX * TILE_SIZE + TILE_SIZE / 2,
+      y: playerTileY * TILE_SIZE + TILE_SIZE / 2,
+    },
+    isSuppressedFieldEvent: () => false,
+  }) as CanInteractHarness
+}
+
 describe('MapScene NPC interaction', () => {
   test('detects a moving NPC that still overlaps the faced tile', () => {
     const sprite = createNpcSprite(7 * TILE_SIZE - 2)
@@ -121,6 +169,32 @@ describe('MapScene NPC interaction', () => {
       TILE_SIZE,
       FIELD_ENTITY_BEHAVIOR.NPC_INTERACTION_BOUNDS_EPSILON_PX,
     )).toBe(false)
+  })
+
+  test('does not trigger a moved NPC from its stale origin radius', () => {
+    const harness = createNpcInteractionHarness(18, 23, 17, 23)
+
+    expect(getCanInteractWithEvent().call(
+      harness,
+      createActionNpcEvent(),
+      17,
+      23,
+      17,
+      22,
+    )).toBe(false)
+  })
+
+  test('triggers a moved NPC when facing its current sprite tile', () => {
+    const harness = createNpcInteractionHarness(18, 23, 17, 23)
+
+    expect(getCanInteractWithEvent().call(
+      harness,
+      createActionNpcEvent(),
+      17,
+      23,
+      18,
+      23,
+    )).toBe(true)
   })
 })
 
