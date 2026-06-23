@@ -757,10 +757,9 @@ function bindMainlineQaSummaryViewportListeners(summaryElement: MainlineQaSummar
 export function getMainlineQaSummaryStyle(compactViewport: boolean): string {
   const position = compactViewport
     ? [
-        'left:50%',
-        'top:max(44px, calc(env(safe-area-inset-top) + 44px))',
-        'transform:translateX(-50%)',
-        'max-width:min(260px, calc(100vw - 16px))',
+        'right:max(12px, env(safe-area-inset-right))',
+        'top:max(126px, calc(env(safe-area-inset-top) + 126px))',
+        'max-width:min(240px, calc(100vw - 24px))',
         'padding:5px 7px',
         'font:600 9px/1.3 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
       ]

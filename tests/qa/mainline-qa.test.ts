@@ -159,8 +159,10 @@ describe('MainlineQaRunner', () => {
     expect(desktopStyle).toContain('bottom:max(12px')
     expect(desktopStyle).not.toContain('left:max(12px')
     expect(desktopStyle).not.toContain('transform:translateX(-50%)')
-    expect(compactStyle).toContain('top:max(44px')
-    expect(compactStyle).toContain('left:50%')
+    expect(compactStyle).toContain('right:max(12px')
+    expect(compactStyle).toContain('top:max(126px')
+    expect(compactStyle).not.toContain('left:50%')
+    expect(compactStyle).not.toContain('transform:translateX(-50%)')
     expect(compactStyle).not.toContain('bottom:max(12px')
   })
 
@@ -232,8 +234,9 @@ describe('MainlineQaRunner', () => {
       viewport.height = 390
       for (const listener of listeners.get('resize') ?? []) listener()
 
-      expect(summaryElement?.attributes.get('style')).toContain('top:max(44px')
-      expect(summaryElement?.attributes.get('style')).toContain('left:50%')
+      expect(summaryElement?.attributes.get('style')).toContain('right:max(12px')
+      expect(summaryElement?.attributes.get('style')).toContain('top:max(126px')
+      expect(summaryElement?.attributes.get('style')).not.toContain('left:50%')
       expect(summaryElement?.attributes.get('style')).not.toContain('bottom:max(12px')
     } finally {
       ;(globalThis as unknown as { document?: unknown }).document = originalDocument
