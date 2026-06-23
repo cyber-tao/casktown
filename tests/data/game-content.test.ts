@@ -8,6 +8,7 @@ import { MAPS } from '../../src/data/maps.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
+import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
@@ -481,6 +482,7 @@ describe('game content data', () => {
     const xiyuanAfter = findEvent('MAP_031', 'NPC_XIYUAN_AFTER')
 
     expectCondition(mayorBefore, STORY_PROGRESS_FLAGS.FESTIVAL_DONE, false)
+    expectCondition(mayorBefore, STORY_PROGRESS_FLAGS.MET_MAYOR, false)
     expect(mayorBefore.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_004_MAYOR' })
     expectCondition(mayorStory, STORY_PROGRESS_FLAGS.FESTIVAL_DONE, true)
     expectCondition(mayorStory, STORY_PROGRESS_FLAGS.MET_MAYOR, false)
@@ -492,6 +494,23 @@ describe('game content data', () => {
     expect(xiyuanBefore.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN' })
     expectCondition(xiyuanAfter, 'xiyuan_quiz_completed', true)
     expect(xiyuanAfter.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_203_XIYUAN_AFTER' })
+  })
+
+  test('ruined town exposes only one mayor npc across story flag states', () => {
+    const mayorEventIds = new Set(['NPC_MAYOR', 'NPC_MAYOR_STORY', 'NPC_MAYOR_AFTER'])
+    const mayorEvents = MAPS['MAP_001']!.events.filter(event => mayorEventIds.has(event.id))
+    const flagStates: Record<string, unknown>[] = [
+      {},
+      { [STORY_PROGRESS_FLAGS.FESTIVAL_DONE]: false, [STORY_PROGRESS_FLAGS.MET_MAYOR]: false },
+      { [STORY_PROGRESS_FLAGS.FESTIVAL_DONE]: true, [STORY_PROGRESS_FLAGS.MET_MAYOR]: false },
+      { [STORY_PROGRESS_FLAGS.FESTIVAL_DONE]: true, [STORY_PROGRESS_FLAGS.MET_MAYOR]: true },
+      { [STORY_PROGRESS_FLAGS.FESTIVAL_DONE]: false, [STORY_PROGRESS_FLAGS.MET_MAYOR]: true },
+    ]
+
+    for (const flags of flagStates) {
+      const visibleMayors = mayorEvents.filter(event => areEventConditionsMet(event.conditions, flag => flags[flag]))
+      expect(visibleMayors).toHaveLength(1)
+    }
   })
 
   test('garden quest flow events progress through flag chain', () => {

@@ -306,7 +306,7 @@ function buildMap001(): MapData {
     {
       id: 'NPC_MAYOR', x: 16, y: 5, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
-      conditions: [{ flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: false }],
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: false }, { flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_004_MAYOR' }],
     },
     {
