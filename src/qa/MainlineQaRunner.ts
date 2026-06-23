@@ -758,7 +758,7 @@ export function getMainlineQaSummaryStyle(compactViewport: boolean): string {
   const position = compactViewport
     ? [
         'left:50%',
-        'top:max(8px, calc(env(safe-area-inset-top) + 8px))',
+        'top:max(44px, calc(env(safe-area-inset-top) + 44px))',
         'transform:translateX(-50%)',
         'max-width:min(260px, calc(100vw - 16px))',
         'padding:5px 7px',
