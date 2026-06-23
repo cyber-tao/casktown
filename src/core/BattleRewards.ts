@@ -99,8 +99,9 @@ export function applyEncounterVictoryRewards(options: EncounterVictoryRewardOpti
       qs.completeQuest(encounter.questId)
       result.questProgress = 'completed'
     } else {
+      const wasCompleted = qs.isQuestCompleted(encounter.questId)
       qs.advanceQuest(encounter.questId)
-      result.questProgress = 'advanced'
+      result.questProgress = !wasCompleted && qs.isQuestCompleted(encounter.questId) ? 'completed' : 'advanced'
     }
   }
 

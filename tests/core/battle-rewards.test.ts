@@ -52,6 +52,20 @@ describe('BattleRewards', () => {
     }
   })
 
+  test('reports completed when an advance battle finishes a quest', () => {
+    const qs = QuestSystem.getInstance()
+    qs.startQuest('QST_006')
+    qs.advanceQuest('QST_006', 2)
+
+    const result = applyEncounterVictoryRewards({
+      encounterId: 'BTL_201',
+      rollDrop: () => false,
+    })
+
+    expect(result.questProgress).toBe('completed')
+    expect(qs.isQuestCompleted('QST_006')).toBe(true)
+  })
+
   test('reports missing encounters without mutating rewards', () => {
     const result = applyEncounterVictoryRewards({ encounterId: 'MISSING_ENCOUNTER' })
 
