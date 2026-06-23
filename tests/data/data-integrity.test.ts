@@ -63,10 +63,11 @@ describe('data type integrity', () => {
   })
 
   test('xiaoai boss display names are readable', () => {
-    expect(ENEMIES.fake_xiaoai.name).toBe('xiaoai之影')
-    expect(ENEMIES.xiaoai_true.name).toBe('xiaoai真身')
-    expect(ENEMIES.fake_xiaoai.name).not.toMatch(/\s/)
-    expect(ENEMIES.xiaoai_true.name).not.toMatch(/\s/)
+    expect(INITIAL_CHARACTERS.xiaoai.name).toBe('xiaoai')
+    expect(ENEMIES.fake_xiaoai.name).toBe('xiaoai 之影')
+    expect(ENEMIES.xiaoai_true.name).toBe('xiaoai 真身')
+    expect(ENEMIES.fake_xiaoai.name).toContain(' ')
+    expect(ENEMIES.xiaoai_true.name).toContain(' ')
     expect(ENEMIES.fake_xiaoai.name).not.toMatch(/[·-]/)
     expect(ENEMIES.xiaoai_true.name).not.toMatch(/[·-]/)
   })
