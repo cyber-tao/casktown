@@ -226,7 +226,7 @@ export class TitleScene extends Phaser.Scene {
     this.saveIndex = 0
     this.clearMenuRows()
     for (let i = 0; i < this.saveRows.length; i++) {
-      const text = this.addTitleMenuText(this.saveRows[i]!.label, i, TITLE_MENU_LAYOUT.LOAD_FONT_SIZE)
+      const text = this.addTitleMenuText(this.saveRows[i]!.label, i, TITLE_MENU_LAYOUT.LOAD_FONT_SIZE, 'left')
       bindTouchText(text, () => {
         this.saveIndex = i
         this.updateCursor()
@@ -237,15 +237,21 @@ export class TitleScene extends Phaser.Scene {
     this.cursor = this.addTitleCursor(TITLE_MENU_LAYOUT.START_Y)
   }
 
-  private addTitleMenuText(label: string, index: number, fontSize: number): Phaser.GameObjects.Text {
-    const text = this.add.text(TITLE_MENU_LAYOUT.MENU_X, TITLE_MENU_LAYOUT.START_Y + index * TITLE_MENU_LAYOUT.GAP_Y, label, {
+  private addTitleMenuText(label: string, index: number, fontSize: number, align: 'center' | 'left' = 'center'): Phaser.GameObjects.Text {
+    const isLeftAligned = align === 'left'
+    const x = isLeftAligned
+      ? TITLE_MENU_LAYOUT.PANEL_X - TITLE_MENU_LAYOUT.PANEL_WIDTH / 2 + TITLE_MENU_LAYOUT.CURSOR_OFFSET_X + TITLE_MENU_LAYOUT.CURSOR_SIZE * 2
+      : TITLE_MENU_LAYOUT.MENU_X
+    const text = this.add.text(x, TITLE_MENU_LAYOUT.START_Y + index * TITLE_MENU_LAYOUT.GAP_Y, label, {
       fontSize: scaleFont(fontSize),
       color: TITLE_MENU_LAYOUT.MENU_COLOR,
       fontFamily: UI_FONT_FAMILY,
       stroke: TITLE_MENU_LAYOUT.STROKE_COLOR,
       strokeThickness: TITLE_MENU_LAYOUT.MENU_STROKE_THICKNESS,
-    }).setOrigin(0.5)
-    this.fitTitleMenuText(text)
+    }).setOrigin(isLeftAligned ? 0 : 0.5, 0.5)
+    this.fitTitleMenuText(text, isLeftAligned
+      ? TITLE_MENU_LAYOUT.PANEL_WIDTH - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X - TITLE_MENU_LAYOUT.CURSOR_SIZE * 4
+      : TITLE_MENU_LAYOUT.PANEL_WIDTH - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X)
     return text
   }
 
@@ -255,8 +261,7 @@ export class TitleScene extends Phaser.Scene {
     return cursor
   }
 
-  private fitTitleMenuText(text: Phaser.GameObjects.Text): void {
-    const maxWidth = TITLE_MENU_LAYOUT.PANEL_WIDTH - TITLE_MENU_LAYOUT.CURSOR_OFFSET_X
+  private fitTitleMenuText(text: Phaser.GameObjects.Text, maxWidth: number): void {
     const width = text.getBounds().width
     if (width <= maxWidth) return
     text.setScale(Math.max(0.72, maxWidth / width), 1)
