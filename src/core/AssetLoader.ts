@@ -11,6 +11,7 @@ import {
   PUBLIC_ASSET_CACHE_VERSION,
   REBUILD_TILE_REPLACEMENTS,
   RUNTIME_UI_ASSET_KEYS,
+  WORLD_MAP_BACKGROUND_LAYOUT,
   SPRITE_CROP_DEFAULTS,
   STRETCHED_TILE_TEXTURE_KEYS,
   TILE_SIZE,
@@ -268,6 +269,7 @@ export function collectMapTileTextureKeys(mapData: MapData): Set<string> {
 export function collectMapImageKeys(mapData: MapData, partyIds: readonly string[]): Set<string> {
   const keys = collectMapTileTextureKeys(mapData)
   addRuntimeUiImageKeys(keys)
+  addConfiguredKey(keys, WORLD_MAP_BACKGROUND_LAYOUT.KEY)
   addConfiguredKey(keys, DEFAULT_CHARACTER_SPRITE_KEY)
   addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
   addPlayableCharacterImageKeys(keys)

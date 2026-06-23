@@ -1,10 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { EventAction, MapEvent } from '../../src/data/types.ts'
+import { MAPS } from '../../src/data/maps.ts'
 import { GameData } from '../../src/core/GameData.ts'
-import { FIELD_ENTITY_BEHAVIOR, TILE_SIZE } from '../../src/utils/constants.ts'
+import { FIELD_ENTITY_BEHAVIOR, START_MAP_ID, TILE_SIZE, WORLD_MAP_BACKGROUND_LAYOUT } from '../../src/utils/constants.ts'
 import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
 
 let MapSceneClass: typeof import('../../src/scenes/MapScene.ts').MapScene
+let collectMapImageKeys: typeof import('../../src/core/AssetLoader.ts').collectMapImageKeys
 let originalWindow: unknown
 let originalDocument: unknown
 let originalImage: unknown
@@ -81,6 +83,7 @@ beforeAll(async () => {
   }
 
   ;({ MapScene: MapSceneClass } = await import('../../src/scenes/MapScene.ts'))
+  ;({ collectMapImageKeys } = await import('../../src/core/AssetLoader.ts'))
 })
 
 afterAll(() => {
@@ -322,5 +325,13 @@ describe('MapScene responsive touch layout', () => {
 
     expect(harness.touchLayoutActive).toBe(true)
     expect(calls).toEqual(['destroy-touch', 'create-touch'])
+  })
+})
+
+describe('MapScene runtime assets', () => {
+  test('preloads the world map background before opening the overlay', () => {
+    const mapKeys = collectMapImageKeys(MAPS[START_MAP_ID]!, ['T'])
+
+    expect(mapKeys.has(WORLD_MAP_BACKGROUND_LAYOUT.KEY)).toBe(true)
   })
 })
