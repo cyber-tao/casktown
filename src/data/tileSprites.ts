@@ -25,6 +25,11 @@ export const TILE_SPRITES: Record<number, string> = {
   24: 'env_cabbage',
   25: 'env_farmland_plain',
   26: 'obj_festival_plaza',
+  27: 'obj_T_house',
+  28: 'obj_boluo_farmhouse',
+  29: 'obj_mayor_house',
+  30: 'obj_shop',
+  31: 'obj_central_tower',
 }
 
 export const TILESET_TILE_SPRITES: Record<string, Partial<Record<number, string>>> = {

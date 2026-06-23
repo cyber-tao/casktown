@@ -8,6 +8,7 @@ import { MAPS } from '../../src/data/maps.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { SKILLS } from '../../src/data/skills.ts'
 import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
+import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
@@ -27,6 +28,15 @@ const BRANCH_KEYS = new Set([
   'xiaoai_purified',
   'normal_ending_seen',
   'true_route_unlocked',
+])
+
+const TOWN_BUILDING_SPRITE_KEYS = new Set([
+  'obj_T_house',
+  'obj_boluo_farmhouse',
+  'obj_mayor_house',
+  'obj_cottage',
+  'obj_shop',
+  'obj_central_tower',
 ])
 
 function pushMissing(errors: string[], source: string, kind: string, id: string): void {
@@ -153,6 +163,15 @@ function validateMapGeometry(map: MapData, errors: string[]): void {
       errors.push(`${map.id}/${event.id} event bounds outside map`)
     }
   }
+}
+
+function countTownBuildings(map: MapData): number {
+  const objectLayer = map.layers[1]
+  if (!objectLayer) return 0
+  return objectLayer.data
+    .map(tileId => resolveTileSpriteKey(TILE_SPRITES, map.tileset, tileId))
+    .filter(spriteKey => spriteKey && TOWN_BUILDING_SPRITE_KEYS.has(spriteKey))
+    .length
 }
 
 type TilePoint = [x: number, y: number]
@@ -284,6 +303,11 @@ describe('game content data', () => {
     }
 
     expect(errors).toEqual([])
+  })
+
+  test('town maps contain dense settlement landmarks', () => {
+    expect(countTownBuildings(MAPS['MAP_001']!)).toBeGreaterThanOrEqual(8)
+    expect(countTownBuildings(MAPS['MAP_002']!)).toBeGreaterThanOrEqual(9)
   })
 
   test('story maps use matching visual tilesets', () => {

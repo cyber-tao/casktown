@@ -526,7 +526,7 @@ export const DIRECTION = {
 } as const
 
 export const START_MAP_ID = 'MAP_001'
-export const REDESIGNED_TOWN_START_POSITION = { x: 22, y: 23 } as const
+export const REDESIGNED_TOWN_START_POSITION = { x: 22, y: 12 } as const
 export const START_PLAYER_POSITION = REDESIGNED_TOWN_START_POSITION
 export const START_PLAYER_DIRECTION = DIRECTION.DOWN
 export const START_PARTY = ['T'] as const
@@ -972,6 +972,11 @@ export const MAP_TILE_KEYS = {
   FENCE: 'FENCE',
   BRIDGE: 'BRIDGE',
   HOUSE: 'HOUSE',
+  T_HOUSE: 'T_HOUSE',
+  FARMHOUSE: 'FARMHOUSE',
+  MAYOR_HOUSE: 'MAYOR_HOUSE',
+  SHOP: 'SHOP',
+  CENTRAL_TOWER: 'CENTRAL_TOWER',
   WELL: 'WELL',
   PATH: 'PATH',
   BUSH: 'BUSH',
@@ -997,7 +1002,12 @@ export const MAP_LAYER_INDEX = {
 } as const
 
 export const TILE_SPRITE_FOOTPRINTS: Record<string, { readonly width: number; readonly height: number }> = {
+  obj_T_house: { width: 3, height: 3 },
+  obj_boluo_farmhouse: { width: 3, height: 3 },
+  obj_mayor_house: { width: 3, height: 3 },
   obj_cottage: { width: 3, height: 3 },
+  obj_shop: { width: 3, height: 3 },
+  obj_central_tower: { width: 4, height: 4 },
   obj_festival_plaza: { width: 3, height: 3 },
   env_well_small: { width: 2, height: 2 },
 } as const
@@ -1024,10 +1034,12 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 4, y: 20, width: 14, height: 10, tile: MAP_TILE_KEYS.GRASS },
       { x: 28, y: 21, width: 12, height: 8, tile: MAP_TILE_KEYS.GRASS },
       { x: 20, y: 8, width: 5, height: 26, tile: MAP_TILE_KEYS.PATH },
+      { x: 5, y: 9, width: 30, height: 4, tile: MAP_TILE_KEYS.PATH },
       { x: 0, y: 14, width: 44, height: 5, tile: MAP_TILE_KEYS.PATH },
       { x: 8, y: 21, width: 16, height: 4, tile: MAP_TILE_KEYS.PATH },
       { x: 22, y: 14, width: 16, height: 4, tile: MAP_TILE_KEYS.PATH },
       { x: 22, y: 21, width: 16, height: 4, tile: MAP_TILE_KEYS.PATH },
+      { x: 24, y: 25, width: 13, height: 3, tile: MAP_TILE_KEYS.PATH },
       { x: 35, y: 0, width: 3, height: 34, tile: MAP_TILE_KEYS.WATER },
       { x: 19, y: 30, width: 8, height: 4, tile: MAP_TILE_KEYS.WATER },
       { x: 35, y: 15, width: 3, height: 4, tile: MAP_TILE_KEYS.PATH },
@@ -1051,18 +1063,23 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 16, y: 23, width: 1, height: 2 },
     ],
     objects: [
-      { x: 22, y: 7, tile: MAP_TILE_KEYS.RUIN }, { x: 22, y: 16, tile: MAP_TILE_KEYS.FESTIVAL },
-      { x: 22, y: 25, tile: MAP_TILE_KEYS.HOUSE }, { x: 10, y: 21, tile: MAP_TILE_KEYS.HOUSE },
+      { x: 7, y: 5, tile: MAP_TILE_KEYS.T_HOUSE }, { x: 14, y: 5, tile: MAP_TILE_KEYS.HOUSE },
+      { x: 21, y: 4, tile: MAP_TILE_KEYS.CENTRAL_TOWER }, { x: 28, y: 5, tile: MAP_TILE_KEYS.MAYOR_HOUSE },
+      { x: 31, y: 10, tile: MAP_TILE_KEYS.SHOP }, { x: 22, y: 16, tile: MAP_TILE_KEYS.FESTIVAL },
+      { x: 22, y: 25, tile: MAP_TILE_KEYS.HOUSE }, { x: 30, y: 25, tile: MAP_TILE_KEYS.HOUSE },
+      { x: 10, y: 21, tile: MAP_TILE_KEYS.FARMHOUSE },
       { x: 31, y: 22, tile: MAP_TILE_KEYS.RUIN }, { x: 15, y: 9, tile: MAP_TILE_KEYS.WELL },
       { x: 20, y: 15, tile: MAP_TILE_KEYS.BARREL }, { x: 24, y: 15, tile: MAP_TILE_KEYS.BARREL },
       { x: 14, y: 24, tile: MAP_TILE_KEYS.BARREL },
+      { x: 9, y: 12, tile: MAP_TILE_KEYS.STUMP }, { x: 18, y: 12, tile: MAP_TILE_KEYS.STUMP },
+      { x: 29, y: 13, tile: MAP_TILE_KEYS.BARREL }, { x: 33, y: 14, tile: MAP_TILE_KEYS.BARREL },
       { x: 35, y: 15, tile: MAP_TILE_KEYS.BRIDGE }, { x: 36, y: 16, tile: MAP_TILE_KEYS.BRIDGE }, { x: 37, y: 17, tile: MAP_TILE_KEYS.BRIDGE },
       { x: 35, y: 21, tile: MAP_TILE_KEYS.BRIDGE }, { x: 36, y: 22, tile: MAP_TILE_KEYS.BRIDGE }, { x: 37, y: 23, tile: MAP_TILE_KEYS.BRIDGE },
       { x: 21, y: 30, tile: MAP_TILE_KEYS.BRIDGE }, { x: 23, y: 30, tile: MAP_TILE_KEYS.BRIDGE },
       { x: 3, y: 16, tile: MAP_TILE_KEYS.SIGN }, { x: 40, y: 16, tile: MAP_TILE_KEYS.SIGN }, { x: 40, y: 23, tile: MAP_TILE_KEYS.SIGN },
     ],
     eventPositions: {
-      EVT_START: { x: 22, y: 23, width: 1, height: 1 }, NPC_HUIHUI: { x: 26, y: 17, width: 1, height: 1 },
+      EVT_START: { x: 22, y: 12, width: 1, height: 1 }, NPC_HUIHUI: { x: 26, y: 17, width: 1, height: 1 },
       NPC_A: { x: 20, y: 17, width: 1, height: 1 }, NPC_MAYOR: { x: 25, y: 10, width: 1, height: 1 },
       NPC_MAYOR_STORY: { x: 25, y: 10, width: 1, height: 1 },
       NPC_MAYOR_AFTER: { x: 25, y: 10, width: 1, height: 1 },
@@ -1086,9 +1103,11 @@ export const REDESIGNED_MAP_LAYOUTS = {
     width: 44, height: 34, baseTile: MAP_TILE_KEYS.GRASS, frameTile: MAP_TILE_KEYS.TREE, frameThickness: 2,
     groundRects: [
       { x: 20, y: 8, width: 5, height: 26, tile: MAP_TILE_KEYS.PATH },
+      { x: 5, y: 9, width: 30, height: 4, tile: MAP_TILE_KEYS.PATH },
       { x: 0, y: 14, width: 44, height: 5, tile: MAP_TILE_KEYS.PATH },
       { x: 8, y: 21, width: 16, height: 4, tile: MAP_TILE_KEYS.PATH },
       { x: 24, y: 21, width: 12, height: 4, tile: MAP_TILE_KEYS.PATH },
+      { x: 24, y: 25, width: 13, height: 3, tile: MAP_TILE_KEYS.PATH },
       { x: 35, y: 0, width: 3, height: 34, tile: MAP_TILE_KEYS.WATER },
       { x: 19, y: 30, width: 8, height: 4, tile: MAP_TILE_KEYS.WATER },
       { x: 35, y: 15, width: 3, height: 4, tile: MAP_TILE_KEYS.PATH },
@@ -1110,11 +1129,16 @@ export const REDESIGNED_MAP_LAYOUTS = {
       { x: 20, y: 32, width: 5, height: 2 },
     ],
     objects: [
-      { x: 22, y: 7, tile: MAP_TILE_KEYS.HOUSE }, { x: 22, y: 16, tile: MAP_TILE_KEYS.FESTIVAL },
-      { x: 22, y: 25, tile: MAP_TILE_KEYS.HOUSE }, { x: 10, y: 21, tile: MAP_TILE_KEYS.HOUSE },
+      { x: 7, y: 5, tile: MAP_TILE_KEYS.T_HOUSE }, { x: 14, y: 5, tile: MAP_TILE_KEYS.HOUSE },
+      { x: 21, y: 4, tile: MAP_TILE_KEYS.CENTRAL_TOWER }, { x: 28, y: 5, tile: MAP_TILE_KEYS.MAYOR_HOUSE },
+      { x: 31, y: 10, tile: MAP_TILE_KEYS.SHOP }, { x: 22, y: 16, tile: MAP_TILE_KEYS.FESTIVAL },
+      { x: 22, y: 25, tile: MAP_TILE_KEYS.HOUSE }, { x: 30, y: 25, tile: MAP_TILE_KEYS.HOUSE },
+      { x: 10, y: 21, tile: MAP_TILE_KEYS.FARMHOUSE },
       { x: 31, y: 22, tile: MAP_TILE_KEYS.HOUSE }, { x: 28, y: 22, tile: MAP_TILE_KEYS.BENCH },
       { x: 15, y: 9, tile: MAP_TILE_KEYS.WELL }, { x: 19, y: 13, tile: MAP_TILE_KEYS.LAMP }, { x: 25, y: 13, tile: MAP_TILE_KEYS.LAMP },
       { x: 19, y: 19, tile: MAP_TILE_KEYS.LAMP }, { x: 25, y: 19, tile: MAP_TILE_KEYS.LAMP },
+      { x: 9, y: 12, tile: MAP_TILE_KEYS.LAMP }, { x: 18, y: 12, tile: MAP_TILE_KEYS.LAMP },
+      { x: 29, y: 13, tile: MAP_TILE_KEYS.LAMP }, { x: 33, y: 14, tile: MAP_TILE_KEYS.BARREL },
       { x: 35, y: 15, tile: MAP_TILE_KEYS.BRIDGE }, { x: 36, y: 16, tile: MAP_TILE_KEYS.BRIDGE }, { x: 37, y: 17, tile: MAP_TILE_KEYS.BRIDGE },
       { x: 35, y: 21, tile: MAP_TILE_KEYS.BRIDGE }, { x: 36, y: 22, tile: MAP_TILE_KEYS.BRIDGE }, { x: 37, y: 23, tile: MAP_TILE_KEYS.BRIDGE },
       { x: 21, y: 30, tile: MAP_TILE_KEYS.BRIDGE }, { x: 23, y: 30, tile: MAP_TILE_KEYS.BRIDGE },

@@ -10,6 +10,8 @@ const T = {
   GRASS_CLUMP: 20, FLOWERS_WHITE: 21, SAPLING: 22,
   WHEAT: 23, CABBAGE: 24, FARMLAND: 25,
   FESTIVAL: 26,
+  T_HOUSE: 27, FARMHOUSE: 28, MAYOR_HOUSE: 29, SHOP: 30,
+  CENTRAL_TOWER: 31,
 }
 
 function createLayer(w: number, h: number, fill: number): MapLayer {
@@ -52,6 +54,7 @@ type RedesignLayout = {
 
 const COLLISION_OBJECT_TILES = new Set<number>([
   T.TREE, T.ROCK, T.FENCE, T.HOUSE, T.WELL, T.BUSH, T.STUMP, T.RUIN, T.BARREL, T.CAMPFIRE,
+  T.T_HOUSE, T.FARMHOUSE, T.MAYOR_HOUSE, T.SHOP, T.CENTRAL_TOWER,
 ])
 
 function tile(name: string): number {
