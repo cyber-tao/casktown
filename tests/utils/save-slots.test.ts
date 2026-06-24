@@ -8,7 +8,7 @@ const meta: SaveMeta = {
   timestamp: 1,
   playTime: 125,
   currentMap: 'MAP_001',
-  preview: 'T, HUIHUI',
+  preview: 'T, 慧慧',
 }
 
 describe('save slot presentation', () => {
@@ -25,12 +25,13 @@ describe('save slot presentation', () => {
 
   test('formats labels for save and load menus', () => {
     expect(formatSaveSlotLabel(1, null, 'save')).toBe('保存到槽位 1 · 空')
-    expect(formatSaveSlotLabel(1, meta, 'load')).toBe('槽位 1 · T, HUIHUI · 0h2m')
+    expect(formatSaveSlotLabel(1, meta, 'load')).toBe('槽位 1 · T, 慧慧 · 0h2m')
     expect(formatSaveSlotLabel(QUICK_SAVE_SLOT, null, 'load')).toBe('快速存档 · 空')
   })
 
   test('keeps long party previews compact', () => {
     expect(formatSavePreview('T, HUIHUI, CONGCONG, SUN')).toBe('T 等4人')
+    expect(formatSavePreview('HUIHUI, CONGCONG')).toBe('慧慧, 葱葱')
     expect(formatSavePreview('')).toBe('未知队伍')
   })
 

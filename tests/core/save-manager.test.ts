@@ -89,11 +89,13 @@ describe('SaveManager', () => {
 
   test('getMeta returns metadata after save', () => {
     const gd = GameData.getInstance()
+    gd.addPartyMember('HUIHUI')
     sm.save(1)
     const meta = sm.getMeta(1)
     expect(meta).not.toBeNull()
     expect(meta!.slot).toBe(1)
     expect(meta!.currentMap).toBe(gd.currentMap)
+    expect(meta!.preview).toBe('T, 慧慧')
   })
 
   test('getMeta returns null for empty slot', () => {

@@ -61,6 +61,12 @@ export class SaveManager {
     }
   }
 
+  private getPartyPreview(): string {
+    return this.gameData.party
+      .map(charId => this.gameData.characters.get(charId)?.name ?? charId)
+      .join(', ')
+  }
+
   save(slot: number): boolean {
     if (!this.isValidSlot(slot)) return false
     const storage = this.getStorage()
@@ -72,7 +78,7 @@ export class SaveManager {
         timestamp: Date.now(),
         playTime: this.gameData.playTime,
         currentMap: this.gameData.currentMap,
-        preview: this.gameData.party.join(', '),
+        preview: this.getPartyPreview(),
       }
       storage.setItem(`${SAVE_STORAGE_KEY}_data_${slot}`, JSON.stringify(data))
       storage.setItem(`${SAVE_STORAGE_KEY}_meta_${slot}`, JSON.stringify(meta))

@@ -1,4 +1,5 @@
 import type { SaveMeta } from '../core/SaveManager'
+import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { QUICK_SAVE_SLOT, SAVE_SLOT_MIN, SAVE_SLOTS, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from './constants'
 
 export type SaveSlotAction = 'save' | 'load'
@@ -24,7 +25,12 @@ export function formatSavePlayTime(seconds: number): string {
 }
 
 export function formatSavePreview(preview: string): string {
-  const members = preview.split(',').map(member => member.trim()).filter(Boolean)
+  const characters = GAME_CONFIG_DATABASE.getTable('characters')
+  const members = preview
+    .split(',')
+    .map(member => member.trim())
+    .filter(Boolean)
+    .map(member => characters[member]?.name ?? member)
   if (members.length > 2) return `${members[0]} 等${members.length}人`
   return members.length > 0 ? members.join(', ') : '未知队伍'
 }
