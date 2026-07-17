@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { InputManager } from '../../src/core/InputManager.ts'
 import { SaveManager } from '../../src/core/SaveManager.ts'
-import { CONTROL_MODE, SAVE_SLOTS, INITIAL_GOLD, QUICK_SAVE_SLOT } from '../../src/utils/constants.ts'
+import { BATTLE_RULES, CONTROL_MODE, SAVE_SLOTS, INITIAL_GOLD, QUICK_SAVE_SLOT } from '../../src/utils/constants.ts'
 
 const SAVE_KEY = 'casktown_save'
 
@@ -25,6 +25,33 @@ class FailingSetItemStorage extends LocalStorageMock {
     if (key === this.failingKey) {
       throw new Error(`Failed to write ${key}`)
     }
+    super.setItem(key, value)
+  }
+
+  seed(key: string, value: string): void {
+    super.setItem(key, value)
+  }
+}
+
+class FailingGetItemStorage extends LocalStorageMock {
+  getItem(_key: string): string | null {
+    throw new Error('Failed to read save storage')
+  }
+}
+
+class FailingRemoveItemStorage extends LocalStorageMock {
+  constructor(private readonly failingKey: string) {
+    super()
+  }
+
+  removeItem(key: string): void {
+    if (key === this.failingKey) {
+      throw new Error(`Failed to remove ${key}`)
+    }
+    super.removeItem(key)
+  }
+
+  seed(key: string, value: string): void {
     super.setItem(key, value)
   }
 }
@@ -60,14 +87,102 @@ describe('SaveManager', () => {
     expect(gd.getFlag('test_save_flag')).toBe(true)
   })
 
+  test('save validation preserves legitimate negative trust values', () => {
+    const gd = GameData.getInstance()
+    gd.updateBranch('trust_huihui', -20)
+
+    expect(sm.save(1)).toBe(true)
+    gd.updateBranch('trust_huihui', 10)
+
+    expect(sm.load(1)).toBe(true)
+    expect(gd.branches.trust_huihui).toBe(-20)
+  })
+
   test('save rejects invalid slot numbers', () => {
     expect(sm.save(QUICK_SAVE_SLOT)).toBe(true) // quick save slot is valid
     expect(sm.save(-1)).toBe(false)
+    expect(sm.save(1.5)).toBe(false)
     expect(sm.save(SAVE_SLOTS + 2)).toBe(false) // beyond quick save slot
   })
 
   test('load returns false for empty slot', () => {
     expect(sm.load(1)).toBe(false)
+  })
+
+  test('load rolls back game data and input bindings when deserialization fails', () => {
+    const gd = GameData.getInstance()
+    const input = InputManager.getInstance()
+    gd.currentMap = 'MAP_001'
+    gd.addGold(999)
+    input.setWASD()
+    const expectedGold = gd.gold
+
+    const corruptSave = {
+      ...(gd.serialize() as Record<string, unknown>),
+      currentMap: 'MAP_010',
+      party: 42,
+    }
+    mockStorage.setItem(`${SAVE_KEY}_data_1`, JSON.stringify(corruptSave))
+
+    const originalError = console.error
+    console.error = () => {}
+    try {
+      expect(sm.load(1)).toBe(false)
+    } finally {
+      console.error = originalError
+    }
+
+    expect(gd.currentMap).toBe('MAP_001')
+    expect(gd.gold).toBe(expectedGold)
+    expect(gd.party).toEqual(['T'])
+    expect(gd.settings.controlMode).toBe(CONTROL_MODE.WASD)
+    expect(input.isWASDMode()).toBe(true)
+  })
+
+  test('load rejects non-object JSON without changing current state', () => {
+    const gd = GameData.getInstance()
+    gd.addGold(999)
+    const expectedGold = gd.gold
+    mockStorage.setItem(`${SAVE_KEY}_data_1`, '123')
+
+    expect(sm.load(1)).toBe(false)
+    expect(gd.gold).toBe(expectedGold)
+  })
+
+  test('load rejects type-corrupt save fields without changing current state', () => {
+    const gd = GameData.getInstance()
+    gd.addGold(999)
+    const expectedGold = gd.gold
+    const validSave = gd.serialize() as Record<string, unknown>
+    const corruptSaves = [
+      { ...validSave, gold: 'corrupt' },
+      { ...validSave, playTime: 'corrupt' },
+      { ...validSave, settings: { ...(validSave.settings as object), difficulty: 'nightmare' } },
+      { ...validSave, inventory: { items: { heal_grass: 'many' }, equipment: {} } },
+      {
+        ...validSave,
+        characters: {
+          ...(validSave.characters as object),
+          T: {
+            ...((validSave.characters as Record<string, object>).T),
+            stats: { ...((validSave.characters as Record<string, { stats: object }>).T.stats), hp: 'many' },
+          },
+        },
+      },
+      {
+        ...validSave,
+        characters: {
+          ...(validSave.characters as object),
+          T: { ...((validSave.characters as Record<string, object>).T), tp: BATTLE_RULES.MAX_TP + 1 },
+        },
+      },
+    ]
+
+    for (const save of corruptSaves) {
+      mockStorage.setItem(`${SAVE_KEY}_data_1`, JSON.stringify(save))
+      expect(sm.load(1)).toBe(false)
+      expect(gd.gold).toBe(expectedGold)
+    }
   })
 
   test('hasSave returns false before saving and true after', () => {
@@ -87,6 +202,32 @@ describe('SaveManager', () => {
     expect(sm.deleteSave(-1)).toBe(false)
   })
 
+  test('deleteSave restores both records when either removal fails', () => {
+    expect(sm.save(1)).toBe(true)
+    const dataKey = `${SAVE_KEY}_data_1`
+    const metaKey = `${SAVE_KEY}_meta_1`
+    const previousData = mockStorage.getItem(dataKey)!
+    const previousMeta = mockStorage.getItem(metaKey)!
+
+    for (const failingKey of [dataKey, metaKey]) {
+      const failingStorage = new FailingRemoveItemStorage(failingKey)
+      failingStorage.seed(dataKey, previousData)
+      failingStorage.seed(metaKey, previousMeta)
+      ;(globalThis as Record<string, unknown>).localStorage = failingStorage
+
+      const originalError = console.error
+      console.error = () => {}
+      try {
+        expect(sm.deleteSave(1)).toBe(false)
+      } finally {
+        console.error = originalError
+      }
+
+      expect(failingStorage.getItem(dataKey)).toBe(previousData)
+      expect(failingStorage.getItem(metaKey)).toBe(previousMeta)
+    }
+  })
+
   test('getMeta returns metadata after save', () => {
     const gd = GameData.getInstance()
     gd.addPartyMember('HUIHUI')
@@ -100,6 +241,56 @@ describe('SaveManager', () => {
 
   test('getMeta returns null for empty slot', () => {
     expect(sm.getMeta(1)).toBeNull()
+  })
+
+  test('getMeta rejects malformed fields in valid JSON', () => {
+    const validMeta = {
+      slot: 1,
+      timestamp: Date.now(),
+      playTime: 120,
+      currentMap: 'MAP_001',
+      preview: 'T',
+    }
+    const invalidMeta = [
+      { ...validMeta, slot: 2 },
+      { ...validMeta, timestamp: 'now' },
+      { ...validMeta, playTime: -1 },
+      { ...validMeta, currentMap: '' },
+      { ...validMeta, preview: ['T'] },
+    ]
+
+    for (const meta of invalidMeta) {
+      mockStorage.setItem(`${SAVE_KEY}_meta_1`, JSON.stringify(meta))
+      expect(sm.getMeta(1)).toBeNull()
+    }
+  })
+
+  test('save restores previous data and metadata when either write fails', () => {
+    const gd = GameData.getInstance()
+    expect(sm.save(1)).toBe(true)
+    const dataKey = `${SAVE_KEY}_data_1`
+    const metaKey = `${SAVE_KEY}_meta_1`
+    const previousData = mockStorage.getItem(dataKey)!
+    const previousMeta = mockStorage.getItem(metaKey)!
+
+    for (const failingKey of [dataKey, metaKey]) {
+      const failingStorage = new FailingSetItemStorage(failingKey)
+      failingStorage.seed(dataKey, previousData)
+      failingStorage.seed(metaKey, previousMeta)
+      ;(globalThis as Record<string, unknown>).localStorage = failingStorage
+      gd.addGold(100)
+
+      const originalError = console.error
+      console.error = () => {}
+      try {
+        expect(sm.save(1)).toBe(false)
+      } finally {
+        console.error = originalError
+      }
+
+      expect(failingStorage.getItem(dataKey)).toBe(previousData)
+      expect(failingStorage.getItem(metaKey)).toBe(previousMeta)
+    }
   })
 
   test('quickSave and quickLoad use the quick-save slot', () => {
@@ -123,6 +314,19 @@ describe('SaveManager', () => {
     mockStorage.setItem(`${SAVE_KEY}_meta_${QUICK_SAVE_SLOT}`, JSON.stringify(quickMeta))
 
     expect(sm.getLatestSaveSlot()).toBe(QUICK_SAVE_SLOT)
+  })
+
+  test('getLatestSaveSlot skips newer slots whose data cannot be loaded', () => {
+    expect(sm.save(1)).toBe(true)
+    expect(sm.save(2)).toBe(true)
+    const corruptMeta = sm.getMeta(2)!
+    corruptMeta.timestamp += 1_000
+    mockStorage.setItem(`${SAVE_KEY}_meta_2`, JSON.stringify(corruptMeta))
+    mockStorage.setItem(`${SAVE_KEY}_data_2`, '{"flags":{}}')
+
+    expect(sm.getLatestSaveSlot()).toBe(1)
+    expect(sm.load(1)).toBe(true)
+    expect(sm.load(2)).toBe(false)
   })
 
   test('exportSave returns serialized data string', () => {
@@ -184,6 +388,31 @@ describe('SaveManager', () => {
     expect(sm.importSave(1, '123')).toBe(false)
     expect(sm.importSave(1, '[]')).toBe(false)
     expect(gd.gold).toBe(currentGold)
+  })
+
+  test('importSave rejects objects without core save identity fields', () => {
+    const gd = GameData.getInstance()
+    gd.addGold(999)
+    const currentGold = gd.gold
+    const currentMap = gd.currentMap
+
+    expect(sm.importSave(1, '{"flags":{}}')).toBe(false)
+    expect(gd.gold).toBe(currentGold)
+    expect(gd.currentMap).toBe(currentMap)
+  })
+
+  test('importSave returns false when existing slot storage cannot be read', () => {
+    const gd = GameData.getInstance()
+    const exported = JSON.stringify(gd.serialize())
+    ;(globalThis as Record<string, unknown>).localStorage = new FailingGetItemStorage()
+
+    const originalError = console.error
+    console.error = () => {}
+    try {
+      expect(sm.importSave(1, exported)).toBe(false)
+    } finally {
+      console.error = originalError
+    }
   })
 
   test('importSave rejects invalid slots without changing current state', () => {

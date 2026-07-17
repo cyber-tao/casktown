@@ -33,10 +33,17 @@ describe('save slot presentation', () => {
     expect(formatSavePreview('T, HUIHUI, CONGCONG, SUN')).toBe('T 等4人')
     expect(formatSavePreview('HUIHUI, CONGCONG')).toBe('慧慧, 葱葱')
     expect(formatSavePreview('')).toBe('未知队伍')
+    expect(formatSavePreview(null)).toBe('未知队伍')
   })
 
   test('formats short and invalid play time defensively', () => {
     expect(formatSavePlayTime(12)).toBe('12s')
     expect(formatSavePlayTime(Number.NaN)).toBe('0s')
+    expect(formatSavePlayTime('invalid')).toBe('0s')
+  })
+
+  test('formats malformed metadata without throwing', () => {
+    const malformedMeta = { preview: null, playTime: 'invalid' } as unknown as SaveMeta
+    expect(formatSaveSlotLabel(1, malformedMeta, 'load')).toBe('槽位 1 · 未知队伍 · 0s')
   })
 })
