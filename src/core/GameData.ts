@@ -444,16 +444,18 @@ export class GameData {
     this.equipment = nextEquipment
   }
 
-  private restoreBaseStats(serializedBaseStats: Record<string, CharacterStats> | undefined, subtractEquipmentBonuses: boolean): void {
+  private restoreBaseStats(
+    serializedBaseStats: Record<string, CharacterStats> | undefined,
+    serializedCharacterIds: ReadonlySet<string>,
+  ): void {
     this.baseStats = new Map()
-    if (serializedBaseStats) {
-      for (const [charId, stats] of Object.entries(serializedBaseStats)) {
-        this.baseStats.set(charId, { ...stats })
-      }
-      return
-    }
     for (const [charId, char] of this.characters) {
-      const bonus = subtractEquipmentBonuses ? this.getEquipStats(charId) : createEmptyEquipStats()
+      const serializedStats = serializedBaseStats?.[charId]
+      if (serializedStats) {
+        this.baseStats.set(charId, { ...serializedStats })
+        continue
+      }
+      const bonus = serializedCharacterIds.has(charId) ? this.getEquipStats(charId) : createEmptyEquipStats()
       this.baseStats.set(charId, {
         ...char.stats,
         atk: char.stats.atk - bonus.atk,
@@ -735,6 +737,7 @@ export class GameData {
     this.party = [...((d.party as string[] | undefined) ?? START_PARTY)]
     this.reserve = [...((d.reserve as string[] | undefined) ?? [])]
     const characters = d.characters as Record<string, CharacterData> | undefined
+    const serializedCharacterIds = new Set(Object.keys(characters ?? {}))
     this.characters = characters && Object.keys(characters).length > 0
       ? new Map(Object.entries(characters).map(([id, char]) => [id, this.cloneCharacter(char)]))
       : new Map(Object.keys(GAME_CONFIG_DATABASE.getTable('characters')).map(id => [id, createConfiguredCharacter(id)]))
@@ -763,7 +766,7 @@ export class GameData {
     this.unlockedCodex = [...((d.unlockedCodex as string[] | undefined) ?? [])]
     this.settings = { ...DEFAULT_GAME_SETTINGS, ...((d.settings as Partial<GameSettings>) ?? {}) }
     this.syncEquipmentIndex(serializedEquipment)
-    this.restoreBaseStats(serializedBaseStats, Object.keys(serializedEquipment).length > 0)
+    this.restoreBaseStats(serializedBaseStats, serializedCharacterIds)
     for (const charId of this.characters.keys()) {
       this.applyEquipment(charId)
     }

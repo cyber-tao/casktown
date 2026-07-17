@@ -3,6 +3,8 @@ import { GameData } from '../../src/core/GameData.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../../src/data/configDatabase.ts'
 import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
+import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
+import type { CharacterData, CharacterStats } from '../../src/data/types.ts'
 import {
   INITIAL_GOLD,
   REBUILD_VISUAL_MAP_THRESHOLD,
@@ -97,6 +99,55 @@ describe('GameData', () => {
     expect(gd.characters.get('T')!.stats.hp).toBe(originalHp)
     expect(gd.inventory.items.heal_grass).toBe(originalItems)
     expect(gd.party).toEqual([...START_PARTY])
+  })
+
+  test('deserialize legacy saves without equipment indexes applies equipped bonuses once', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as Record<string, unknown>
+    const savedCharacters = snapshot.characters as Record<string, CharacterData>
+    const savedHeroAttack = savedCharacters.T!.stats.atk
+    delete snapshot.equipment
+    delete snapshot.baseStats
+
+    gd.deserialize(snapshot)
+
+    expect(gd.characters.get('T')!.stats.atk).toBe(savedHeroAttack)
+    const normalized = gd.serialize() as { baseStats: Record<string, CharacterStats> }
+    expect(normalized.baseStats.T!.atk).toBe(INITIAL_CHARACTERS.T!.stats.atk)
+  })
+
+  test('deserialize fills partial base stats before later equipment changes', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as Record<string, unknown>
+    const savedCharacters = snapshot.characters as Record<string, CharacterData>
+    const savedBaseStats = snapshot.baseStats as Record<string, CharacterStats>
+    const savedHuihuiAttack = savedCharacters.HUIHUI!.stats.atk
+    const savedHuihuiSpeed = savedCharacters.HUIHUI!.stats.speed
+    snapshot.baseStats = { T: savedBaseStats.T! }
+
+    gd.deserialize(snapshot)
+    gd.equipItem('HUIHUI', 'pink_chime', 'accessory')
+
+    expect(gd.characters.get('HUIHUI')!.stats.atk).toBe(savedHuihuiAttack)
+    expect(gd.characters.get('HUIHUI')!.stats.speed).toBe(savedHuihuiSpeed + EQUIP_STAT_BONUSES.pink_chime!.speed!)
+    const normalized = gd.serialize() as { baseStats: Record<string, CharacterStats> }
+    expect(normalized.baseStats.HUIHUI!.atk).toBe(INITIAL_CHARACTERS.HUIHUI!.stats.atk)
+  })
+
+  test('deserialize keeps configured base stats for newly backfilled characters', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as Record<string, unknown>
+    const savedCharacters = snapshot.characters as Record<string, CharacterData>
+    const savedBaseStats = snapshot.baseStats as Record<string, CharacterStats>
+    const savedSunMagicAttack = savedCharacters.SUN!.stats.matk
+    snapshot.characters = Object.fromEntries(
+      Object.entries(savedCharacters).filter(([charId]) => charId !== 'SUN'),
+    )
+    snapshot.baseStats = { T: savedBaseStats.T! }
+
+    gd.deserialize(snapshot)
+
+    expect(gd.characters.get('SUN')!.stats.matk).toBe(savedSunMagicAttack)
   })
 
   test('true route unlock syncs from branch and flag state', () => {
