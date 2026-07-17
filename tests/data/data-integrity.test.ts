@@ -10,7 +10,7 @@ import { MAPS } from '../../src/data/maps.ts'
 import { DIALOGUES } from '../../src/data/dialogues.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { PROPHECIES } from '../../src/data/prophecies.ts'
-import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
+import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
 import { IMAGE_ASSETS } from '../../src/data/assets.ts'
 import { TILE_SPRITES, TILESET_TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
@@ -127,6 +127,20 @@ describe('data type integrity', () => {
 
   test('equip stat bonuses have valid structure', () => {
     expect(typeof EQUIP_STAT_BONUSES).toBe('object')
+  })
+
+  test('every equipment item has a usable slot and stat bonus', () => {
+    for (const item of Object.values(ITEMS).filter(item => item.type === 'equipment')) {
+      expect(EQUIP_SLOT_MAP[item.id]).toBeDefined()
+      expect(EQUIP_STAT_BONUSES[item.id]).toBeDefined()
+    }
+  })
+
+  test('field-usable consumables have effects supported outside battle', () => {
+    const supportedPrefixes = ['heal_hp:', 'heal_mp:', 'revive:']
+    for (const item of Object.values(ITEMS).filter(item => item.type === 'consumable' && item.usableInField)) {
+      expect(supportedPrefixes.some(prefix => item.effect.startsWith(prefix))).toBe(true)
+    }
   })
 
   test('prophecies have required structure', () => {

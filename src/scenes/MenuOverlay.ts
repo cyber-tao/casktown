@@ -43,6 +43,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
+import { resolveItemRecoveryAmount } from '../utils/itemEffects'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
 
@@ -1561,7 +1562,7 @@ export class MenuOverlay extends Phaser.Scene {
     if (!applied) return false
     if (!gd.removeItem(itemId, 1)) return false
     for (const char of targets) {
-      this.applyFieldEffect(effect, char)
+      this.applyFieldEffect(itemId, effect, char)
     }
     AudioManager.getInstance().playSFX('item_use')
     return true
@@ -1574,9 +1575,10 @@ export class MenuOverlay extends Phaser.Scene {
     return false
   }
 
-  private applyFieldEffect(effect: string, char: CharacterData): void {
+  private applyFieldEffect(itemId: string, effect: string, char: CharacterData): void {
     if (effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)) {
-      const amount = this.parseEffectAmount(effect, BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)
+      const baseAmount = this.parseEffectAmount(effect, BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)
+      const amount = resolveItemRecoveryAmount(itemId, char.id, baseAmount)
       if (char.stats.hp < char.stats.maxHp) {
         char.stats.hp = Math.min(char.stats.maxHp, char.stats.hp + amount)
       }

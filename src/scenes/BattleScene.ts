@@ -48,6 +48,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
+import { resolveItemRecoveryAmount } from '../utils/itemEffects'
 import {
   advanceBattleTurn,
   advanceBreakGauge,
@@ -1672,14 +1673,16 @@ export class BattleScene extends Phaser.Scene {
     AudioManager.getInstance().playSFX('item_use')
     const effect = item.effect
     if (effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)) {
-      const amount = parseInt(effect.split(':')[1]!)
+      const baseAmount = parseInt(effect.split(':')[1]!)
       if (this.isAllTargetItemEffect(effect)) {
         const targets = this.getLivePlayers()
         for (const t of targets) {
+          const amount = resolveItemRecoveryAmount(itemId, t.id, baseAmount)
           this.healUnit(t, amount)
         }
-        this.log(`${item.name}！全队回复 ${amount} HP！`)
+        this.log(`${item.name}！全队恢复了生命！`)
       } else {
+        const amount = resolveItemRecoveryAmount(itemId, target.id, baseAmount)
         this.healUnit(target, amount)
         this.log(`${item.name}！${target.name} 回复 ${amount} HP！`)
       }

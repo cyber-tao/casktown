@@ -62,12 +62,12 @@ export const ITEMS: Record<string, ItemData> = {
   antidote: {
     id: 'antidote', name: '解毒草', type: 'consumable',
     effect: 'cure_poison', description: '解除中毒',
-    usableInBattle: true, usableInField: true, price: 20,
+    usableInBattle: true, usableInField: false, price: 20,
   },
   clear_bell: {
     id: 'clear_bell', name: '清心铃', type: 'consumable',
     effect: 'cure_confuse_charm_fear', description: '解除迷惘、魅惑、恐惧',
-    usableInBattle: true, usableInField: true, price: 40,
+    usableInBattle: true, usableInField: false, price: 40,
   },
   revive_feather: {
     id: 'revive_feather', name: '复生羽', type: 'consumable',
@@ -82,12 +82,12 @@ export const ITEMS: Record<string, ItemData> = {
   wind_pill: {
     id: 'wind_pill', name: '风铃丸', type: 'consumable',
     effect: 'buff_speed', description: '速度提升2回合',
-    usableInBattle: true, usableInField: true, price: 45,
+    usableInBattle: true, usableInField: false, price: 45,
   },
   amulet: {
     id: 'amulet', name: '护身符', type: 'consumable',
     effect: 'barrier_status', description: '抵挡一次异常状态',
-    usableInBattle: true, usableInField: true, price: 70,
+    usableInBattle: true, usableInField: false, price: 70,
   },
 
   // Seal items
