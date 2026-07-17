@@ -151,6 +151,50 @@ export const ENEMIES: Record<string, EnemyData> = {
     drops: [], exp: 800, gold: 400, isBoss: true, aiType: 'boss_xiaoai_true',
   },
 
+  // 人心之渊：五位专属心影
+  heart_shadow_t: {
+    id: 'heart_shadow_t', name: '心影·迟到的 T',
+    stats: { hp: 1900, maxHp: 1900, mp: 300, maxMp: 300, atk: 34, def: 30, matk: 32, mdef: 28, speed: 22, level: 29, exp: 500, expToNext: 0 },
+    skills: ['shadow_blade', 'illusion_strike', 'heal', 'armor_up', 'confuse', 'copy_party'],
+    element: 'dark', weakness: ['light'], resistance: ['dark'],
+    drops: [], exp: 500, gold: 0, isBoss: true, aiType: 'heart_shadow_t',
+  },
+  heart_shadow_huihui: {
+    id: 'heart_shadow_huihui', name: '心影·害怕失去的慧慧',
+    stats: { hp: 1500, maxHp: 1500, mp: 260, maxMp: 260, atk: 26, def: 26, matk: 34, mdef: 32, speed: 24, level: 29, exp: 450, expToNext: 0 },
+    skills: ['worry_mend', 'shadow_blade'],
+    element: 'dark', weakness: ['light'], resistance: ['dark'],
+    drops: [], exp: 450, gold: 0, isBoss: true, aiType: 'heart_shadow_huihui',
+  },
+  worry_chain: {
+    id: 'worry_chain', name: '担忧锁链',
+    stats: { hp: 900, maxHp: 900, mp: 120, maxMp: 120, atk: 24, def: 32, matk: 18, mdef: 26, speed: 10, level: 29, exp: 150, expToNext: 0 },
+    skills: ['normal_attack', 'bind'],
+    element: 'dark', weakness: ['wind', 'light'], resistance: ['dark'],
+    drops: [], exp: 150, gold: 0, isBoss: false, aiType: 'basic',
+  },
+  heart_shadow_a: {
+    id: 'heart_shadow_a', name: '心影·沉默的 A',
+    stats: { hp: 2100, maxHp: 2100, mp: 260, maxMp: 260, atk: 38, def: 70, matk: 24, mdef: 48, speed: 14, level: 29, exp: 500, expToNext: 0 },
+    skills: ['armor_up', 'earthquake', 'flame_charge'],
+    element: 'earth', weakness: ['earth'], resistance: ['dark'],
+    drops: [], exp: 500, gold: 0, isBoss: true, aiType: 'boss_qilin',
+  },
+  heart_shadow_congcong: {
+    id: 'heart_shadow_congcong', name: '心影·空话的葱葱',
+    stats: { hp: 1700, maxHp: 1700, mp: 260, maxMp: 260, atk: 35, def: 26, matk: 26, mdef: 27, speed: 30, level: 29, exp: 500, expToNext: 0 },
+    skills: ['tiefengbu', 'jingyuezhan'],
+    element: 'wind', weakness: ['wind', 'light'], resistance: ['dark'],
+    drops: [], exp: 500, gold: 0, isBoss: true, aiType: 'heart_shadow_congcong',
+  },
+  heart_shadow_sun: {
+    id: 'heart_shadow_sun', name: '心影·旁观的 sun',
+    stats: { hp: 1900, maxHp: 1900, mp: 320, maxMp: 320, atk: 25, def: 30, matk: 38, mdef: 42, speed: 20, level: 29, exp: 500, expToNext: 0 },
+    skills: ['shengdun', 'illusion_strike'],
+    element: 'dark', weakness: ['light'], resistance: ['dark'],
+    drops: [], exp: 500, gold: 0, isBoss: true, aiType: 'heart_shadow_sun',
+  },
+
   // 真结局最终 Boss
   wuxiang: {
     id: 'wuxiang', name: '无相',

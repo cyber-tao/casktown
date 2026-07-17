@@ -205,6 +205,11 @@ export const SKILLS: Record<string, SkillData> = {
     element: 'none', power: 30, costMp: 8, costTp: 0,
     description: '恢复自身HP',
   },
+  worry_mend: {
+    id: 'worry_mend', name: '维系担忧', type: 'heal', target: 'single',
+    element: 'dark', power: 20, costMp: 0, costTp: 0,
+    description: '持续修复担忧锁链',
+  },
 
   // Boss skills
   tiger_claw: {

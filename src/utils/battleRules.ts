@@ -11,6 +11,87 @@ export interface ElementalDamageModifier {
   result: ElementalHitResult
 }
 
+export const HEART_SHADOW_ENEMY_IDS = {
+  T: 'heart_shadow_t',
+  HUIHUI: 'heart_shadow_huihui',
+  WORRY_CHAIN: 'worry_chain',
+  A: 'heart_shadow_a',
+  CONGCONG: 'heart_shadow_congcong',
+  SUN: 'heart_shadow_sun',
+} as const
+
+const HEART_SHADOW_DOPPELGANGER_IDS = [
+  HEART_SHADOW_ENEMY_IDS.T,
+  HEART_SHADOW_ENEMY_IDS.HUIHUI,
+  HEART_SHADOW_ENEMY_IDS.A,
+  HEART_SHADOW_ENEMY_IDS.CONGCONG,
+  HEART_SHADOW_ENEMY_IDS.SUN,
+] as const
+
+export function isHeartShadowDoppelganger(enemyId: string): boolean {
+  return (HEART_SHADOW_DOPPELGANGER_IDS as readonly string[]).includes(enemyId)
+}
+
+export type RecordedPlayerAction =
+  | { type: 'attack' }
+  | { type: 'defend' }
+  | { type: 'item' }
+  | { type: 'skill'; skillId: string }
+
+export type HeartShadowCopyAction =
+  | { type: 'attack' }
+  | { type: 'defend' }
+  | { type: 'skill'; skillId: string }
+
+const HEART_SHADOW_COPY_FALLBACKS: Record<SkillData['type'], string> = {
+  attack: 'shadow_blade',
+  magic: 'illusion_strike',
+  heal: 'heal',
+  buff: 'armor_up',
+  debuff: 'confuse',
+  special: 'copy_party',
+}
+
+const HUIHUI_EVASION_COUNTER_SKILLS = ['xiubiao', 'dushebiao', 'huixuanbiao'] as const
+
+export function resolveHeartShadowCopyAction(
+  action: RecordedPlayerAction | null,
+  skills: Readonly<Record<string, SkillData>>,
+): HeartShadowCopyAction {
+  if (!action || action.type === 'attack') return { type: 'attack' }
+  if (action.type === 'defend') return { type: 'defend' }
+  if (action.type === 'item') return { type: 'skill', skillId: 'heal' }
+
+  const skill = skills[action.skillId]
+  if (!skill) return { type: 'attack' }
+  return {
+    type: 'skill',
+    skillId: skill.costTp === 0 ? skill.id : HEART_SHADOW_COPY_FALLBACKS[skill.type],
+  }
+}
+
+export function resolveHeartShadowHuihuiSkill(hasLivingChain: boolean): string {
+  return hasLivingChain ? 'worry_mend' : 'shadow_blade'
+}
+
+export function resolveHeartShadowBreakMax(enemyId: string, defaultMax: number): number {
+  return enemyId === HEART_SHADOW_ENEMY_IDS.A ? Math.min(defaultMax, 100) : defaultMax
+}
+
+export function isHeartShadowEvasionCounter(enemyId: string, actorId: string, skillId: string): boolean {
+  if (enemyId !== HEART_SHADOW_ENEMY_IDS.CONGCONG) return false
+  return (actorId === 'HUIHUI' && (HUIHUI_EVASION_COUNTER_SKILLS as readonly string[]).includes(skillId)) ||
+    (actorId === 'SUN' && skillId === 'shenyu')
+}
+
+export function shouldHeartShadowSunCastShield(completedRounds: number, hasShield: boolean): boolean {
+  return !hasShield && completedRounds >= 0 && completedRounds % 3 === 0
+}
+
+export function isHeartShadowShieldDispel(enemyId: string, skillId: string): boolean {
+  return enemyId === HEART_SHADOW_ENEMY_IDS.SUN && skillId === 'jieguangjinghua'
+}
+
 export function resolveEncounterPartyIds(party: readonly string[], encounterId: string): string[] {
   if ((BATTLE_SOLO_ENCOUNTER_IDS as readonly string[]).includes(encounterId)) {
     return [BATTLE_SOLO_CHARACTER_ID]

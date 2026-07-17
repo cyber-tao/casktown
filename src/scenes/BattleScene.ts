@@ -59,11 +59,20 @@ import {
   canEscapeBattle,
   canUseBattleSkill,
   hasCompletedSurvivalRounds,
+  HEART_SHADOW_ENEMY_IDS,
+  isHeartShadowEvasionCounter,
+  isHeartShadowDoppelganger,
+  isHeartShadowShieldDispel,
+  type RecordedPlayerAction,
   resolveBreakGaugeGain,
   resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
+  resolveHeartShadowBreakMax,
+  resolveHeartShadowCopyAction,
+  resolveHeartShadowHuihuiSkill,
   resolveLimitedSkillTargets,
   resolveEscapeAttempt,
+  shouldHeartShadowSunCastShield,
   shouldEvadeBattleAttack,
   shouldGrantExtraTurnOnKill,
 } from '../utils/battleRules'
@@ -124,6 +133,7 @@ export class BattleScene extends Phaser.Scene {
   private mapId = ''
   private mapEventId = ''
   private completedRoundCount = 0
+  private lastPlayerAction: RecordedPlayerAction | null = null
   private resultSummary: BattleResultSummary | null = null
   private resultPanel: Phaser.GameObjects.Container | null = null
   private gamepadNavigation = new GamepadNavigationController()
@@ -175,6 +185,7 @@ export class BattleScene extends Phaser.Scene {
     this.mapId = data.mapId || GameData.getInstance().currentMap
     this.mapEventId = data.mapEventId || ''
     this.completedRoundCount = 0
+    this.lastPlayerAction = null
     this.resultSummary = null
     this.resultPanel = null
     this.gamepadNavigation.reset()
@@ -308,6 +319,10 @@ export class BattleScene extends Phaser.Scene {
       const y = BATTLE_LAYOUT.ENEMY_START_Y + Math.floor(i / BATTLE_LAYOUT.ENEMY_COLUMNS) * BATTLE_LAYOUT.ENEMY_ROW_GAP_Y
       const textureKey = this.resolveTextureKey(this.getBattleEnemyTextureKey(ed.id), DEFAULT_ENEMY_SPRITE_KEY) ?? DEFAULT_ENEMY_SPRITE_KEY
       const sprite = this.add.sprite(x, y, textureKey)
+      if (isHeartShadowDoppelganger(ed.id)) {
+        sprite.setTint(BATTLE_LAYOUT.HEART_SHADOW_TINT)
+        sprite.setFlipX(true)
+      }
       const spriteSize = this.getBattleUnitSpriteSize(ed.isBoss)
       sprite.setDisplaySize(spriteSize, spriteSize)
       sprite.setDepth(305)
@@ -328,7 +343,7 @@ export class BattleScene extends Phaser.Scene {
         sprite,
         tp: 0,
         breakGauge: 0,
-        breakMax: ed.isBoss ? 200 : 100,
+        breakMax: resolveHeartShadowBreakMax(ed.id, ed.isBoss ? 200 : 100),
         status: [],
         data: ed,
       }
@@ -688,6 +703,11 @@ export class BattleScene extends Phaser.Scene {
 
     this.addStatus(target, BATTLE_STATUS.BREAK, undefined, false)
     this.addStatus(target, BATTLE_STATUS.BREAK_TURNS, BATTLE_STATUS_DURATIONS.SHORT, false)
+    if ((target.data as EnemyData).id === HEART_SHADOW_ENEMY_IDS.A) {
+      this.removeStatus(target, BATTLE_STATUS.ARMOR_UP)
+      this.removeStatus(target, BATTLE_STATUS.DEFENSE_UP)
+      this.log(`${target.name} 的沉默防线被破势击碎！`)
+    }
     this.log(`${target.name} 陷入破势状态！`)
   }
 
@@ -1113,6 +1133,11 @@ export class BattleScene extends Phaser.Scene {
     this.setCommandMenuVisible(true)
     this.hideTargetIndicator()
     if (actionConsumed) {
+      if (action === 'skill') {
+        this.lastPlayerAction = { type: 'skill', skillId: this.actionStack[1]! }
+      } else if (action === 'attack' || action === 'item') {
+        this.lastPlayerAction = { type: action }
+      }
       const opponentsAfter = action === 'skill' ? this.getLiveOpponents(actor).length : opponentsBefore
       if (shouldGrantExtraTurnOnKill(selectedSkill, opponentsBefore, opponentsAfter)) {
         this.actionStack = []
@@ -1132,6 +1157,7 @@ export class BattleScene extends Phaser.Scene {
     if (!actor) return
     this.log(`${actor.name} 采取防御姿态。`)
     this.addStatus(actor, BATTLE_STATUS.DEFEND)
+    this.lastPlayerAction = { type: 'defend' }
     // TP recovery on defend
     this.addTp(actor, BATTLE_RULES.DEFEND_TP_GAIN)
     this.nextTurn()
@@ -1439,6 +1465,7 @@ export class BattleScene extends Phaser.Scene {
     if (!actor) return
 
     this.performBarrel(actor, color)
+    this.lastPlayerAction = { type: 'item' }
     this.nextTurn()
   }
 
@@ -1539,6 +1566,7 @@ export class BattleScene extends Phaser.Scene {
 
     const skill = GAME_CONFIG_DATABASE.getTable('skills')[combo.skillId]
     if (!skill) return
+    this.lastPlayerAction = { type: 'skill', skillId: combo.skillId }
 
     unit1.tp -= COMBO_TP_COST
     unit2.tp -= COMBO_TP_COST
@@ -1921,6 +1949,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private performSpecialSkill(actor: BattleUnit, targets: BattleUnit[], skill: SkillData): boolean {
+    if (skill.id === 'jieguangjinghua') {
+      for (const target of targets) {
+        if (isHeartShadowShieldDispel((target.data as EnemyData).id, skill.id)) {
+          const hadShield = [BATTLE_STATUS.SHIELD, BATTLE_STATUS.MAGIC_SHIELD, BATTLE_STATUS.LIGHT_SHIELD]
+            .some(status => this.hasStatus(target, status))
+          this.removeStatus(target, BATTLE_STATUS.SHIELD)
+          this.removeStatus(target, BATTLE_STATUS.MAGIC_SHIELD)
+          this.removeStatus(target, BATTLE_STATUS.LIGHT_SHIELD)
+          if (hadShield) this.log(`${target.name} 的旁观护盾被戒光净化驱散！`)
+        }
+        this.calculateAndDealSkillDamage(actor, target, skill)
+      }
+      return true
+    }
     if (skill.id === 'afternoon_tea') {
       const healed = this.healUnit(actor, actor.stats.maxHp * BATTLE_RULES.AFTERNOON_TEA_HEAL_RATIO)
       this.addStatus(actor, BATTLE_STATUS.ATTACK_UP, BATTLE_STATUS_DURATIONS.SHORT)
@@ -2006,7 +2048,7 @@ export class BattleScene extends Phaser.Scene {
       this.addTp(actor, BATTLE_RULES.PLAYER_SKILL_TP_GAIN)
     }
 
-    if (this.tryEvadeAttack(target)) {
+    if (this.tryEvadeAttack(target, actor, skill.id)) {
       this.log(`${target.name} 闪避了 ${actor.name} 的${skill.name}！`)
       return
     }
@@ -2040,7 +2082,15 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private tryEvadeAttack(target: BattleUnit): boolean {
+  private tryEvadeAttack(target: BattleUnit, actor?: BattleUnit, skillId?: string): boolean {
+    const enemyId = target.isPlayer ? '' : (target.data as EnemyData).id
+    if (actor && skillId && isHeartShadowEvasionCounter(enemyId, actor.id, skillId)) {
+      if (this.hasStatus(target, BATTLE_STATUS.EVASION_UP)) {
+        this.removeStatus(target, BATTLE_STATUS.EVASION_UP)
+        this.log(`${target.name} 的虚浮身法被看破！`)
+      }
+      return false
+    }
     return shouldEvadeBattleAttack(this.hasStatus(target, BATTLE_STATUS.EVASION_UP), Math.random())
   }
 
@@ -2064,6 +2114,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private applyDebuff(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
+    if (isHeartShadowEvasionCounter(target.isPlayer ? '' : (target.data as EnemyData).id, actor.id, skill.id)) {
+      this.removeStatus(target, BATTLE_STATUS.EVASION_UP)
+      this.log(`${target.name} 的虚浮身法被神谕看破！`)
+    }
     if (!this.applyConfiguredSkillStatuses(target, skill)) this.addStatus(target, skill.id)
     this.log(`${actor.name} 使用 ${skill.name}！`)
   }
@@ -2216,6 +2270,10 @@ export class BattleScene extends Phaser.Scene {
       case 'boss_fake_xiaoai': this.bossFakeXiaoaiAI(unit); break
       case 'boss_xiaoai_true': this.bossXiaoaiTrueAI(unit); break
       case 'boss_wuxiang': this.bossWuxiangAI(unit); break
+      case 'heart_shadow_t': this.heartShadowTAI(unit); break
+      case 'heart_shadow_huihui': this.heartShadowHuihuiAI(unit); break
+      case 'heart_shadow_congcong': this.heartShadowCongcongAI(unit); break
+      case 'heart_shadow_sun': this.heartShadowSunAI(unit); break
       default: this.basicAI(unit); break
     }
   }
@@ -2264,6 +2322,55 @@ export class BattleScene extends Phaser.Scene {
       this.performSkill(unit, target, skillId)
     } else {
       this.performAttack(unit, target)
+    }
+    this.nextTurn()
+  }
+
+  private heartShadowTAI(unit: BattleUnit): void {
+    const target = this.pickRandomTarget(this.getLivePlayers())
+    if (!target) return
+    const action = resolveHeartShadowCopyAction(this.lastPlayerAction, GAME_CONFIG_DATABASE.getTable('skills'))
+    if (action.type === 'attack') {
+      this.performAttack(unit, target)
+    } else if (action.type === 'defend') {
+      this.addStatus(unit, BATTLE_STATUS.DEFEND)
+      this.log(`${unit.name} 复制了防御姿态。`)
+    } else {
+      const skill = GAME_CONFIG_DATABASE.getTable('skills')[action.skillId]
+      const skillTarget = skill && (skill.target === 'self' || skill.type === 'heal' || skill.type === 'buff') ? unit : target
+      this.log(`${unit.name} 映照了上一项行动。`)
+      this.performSkill(unit, skillTarget, action.skillId)
+    }
+    this.nextTurn()
+  }
+
+  private heartShadowHuihuiAI(unit: BattleUnit): void {
+    const chain = this.getLiveEnemies().find(enemy => (enemy.data as EnemyData).id === HEART_SHADOW_ENEMY_IDS.WORRY_CHAIN)
+    const skillId = resolveHeartShadowHuihuiSkill(Boolean(chain))
+    const target = chain ?? this.pickRandomTarget(this.getLivePlayers())
+    if (!target) return
+    this.performSkill(unit, target, skillId)
+    this.nextTurn()
+  }
+
+  private heartShadowCongcongAI(unit: BattleUnit): void {
+    const target = this.pickRandomTarget(this.getLivePlayers())
+    if (!target) return
+    if (!this.hasStatus(unit, BATTLE_STATUS.EVASION_UP)) {
+      this.performSkill(unit, unit, 'tiefengbu')
+    } else {
+      this.performSkill(unit, target, 'jingyuezhan')
+    }
+    this.nextTurn()
+  }
+
+  private heartShadowSunAI(unit: BattleUnit): void {
+    const target = this.pickRandomTarget(this.getLivePlayers())
+    if (!target) return
+    if (shouldHeartShadowSunCastShield(this.completedRoundCount, this.hasStatus(unit, BATTLE_STATUS.SHIELD))) {
+      this.performSkill(unit, unit, 'shengdun')
+    } else {
+      this.performSkill(unit, target, 'illusion_strike')
     }
     this.nextTurn()
   }

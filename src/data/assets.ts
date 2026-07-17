@@ -179,6 +179,20 @@ for (const [character, poses] of Object.entries(CHARACTER_POSES)) {
   }
 }
 
+const HEART_SHADOW_IMAGE_PATHS: Record<string, string> = {
+  heart_shadow_t: 'characters/T/front_idle_01.png',
+  heart_shadow_huihui: 'characters/huihui/front_idle_01.png',
+  worry_chain: 'dark_fantasy/misc/chain_hook.png',
+  heart_shadow_a: 'characters/abo/front_idle_01.png',
+  heart_shadow_congcong: 'characters/congcong/front_idle_01.png',
+  heart_shadow_sun: 'characters/sun/front_idle_01.png',
+}
+
+for (const [enemyId, path] of Object.entries(HEART_SHADOW_IMAGE_PATHS)) {
+  imageAssets[`mon_${enemyId}_01`] = path
+  imageAssets[`mon_${enemyId}_02`] = path
+}
+
 for (const tile of ENVIRONMENT_TILES) {
   imageAssets[`env_${tile}`] = `environment/misc/${tile}.png`
 }
