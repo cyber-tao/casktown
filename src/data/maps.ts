@@ -1854,6 +1854,7 @@ function buildMap051(): MapData {
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_512_DRAGON_SEAL' },
         { type: 'battle', encounterId: 'BTL_CHI' },
+        { type: 'dialogue', dialogueId: 'DIA_411_CHI_AFTER' },
       ],
     },
     {
@@ -1943,6 +1944,7 @@ function buildMap052(): MapData {
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_522_MEI_BATTLE' },
         { type: 'battle', encounterId: 'BTL_MEI' },
+        { type: 'dialogue', dialogueId: 'DIA_412_MEI_AFTER' },
       ],
     },
     {
@@ -2035,6 +2037,7 @@ function buildMap053(): MapData {
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_531_WANG_BATTLE' },
         { type: 'battle', encounterId: 'BTL_WANG' },
+        { type: 'dialogue', dialogueId: 'DIA_413_WANG_AFTER' },
       ],
     },
     {
@@ -2122,6 +2125,7 @@ function buildMap054(): MapData {
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_541_LIANG_BATTLE' },
         { type: 'battle', encounterId: 'BTL_LIANG' },
+        { type: 'dialogue', dialogueId: 'DIA_414_LIANG_AFTER' },
       ],
     },
     {
@@ -2248,7 +2252,10 @@ function buildMap055(): MapData {
       ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_555_MEMORY_FINAL' },
-        { type: 'battle', encounterId: 'BTL_XIAOAI_SHADOW' },
+        { type: 'dialogue', dialogueId: 'DIA_430_SHADOW' },
+        { type: 'dialogue', dialogueId: 'DIA_430_SHADOW_AFTER' },
+        { type: 'dialogue', dialogueId: 'DIA_430_RETURN_TOWN' },
+        { type: 'questStart', questId: 'QST_012' },
         { type: 'setFlag', flag: 'dream_completed', value: true },
         { type: 'setFlag', flag: 'dream_active', value: false },
       ],

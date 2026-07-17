@@ -562,6 +562,67 @@ describe('game content data', () => {
     expect(findEvent('MAP_030', 'EVT_SHUIYAO_GATE').actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_202_SHUIYAO_AFTER' })
   })
 
+  test('forest tree encounters include the authored second guardian battle', () => {
+    expect(ENCOUNTERS.BTL_112?.enemies).toEqual(['xiao_yao', 'xiao_yao', 'xiao_shuidi'])
+    expect(DIALOGUES.DIA_104_TREE_2?.onComplete).toEqual([{ type: 'battle', encounterId: 'BTL_112' }])
+    expect(DIALOGUES.DIA_105_TREE_2?.onComplete).toEqual([{ type: 'battle', encounterId: 'BTL_112' }])
+    expect(findEvent('MAP_012', 'EVT_PUZZLE_TREE_2').actions[0]).toEqual({ type: 'dialogue', dialogueId: 'DIA_105_TREE_2' })
+  })
+
+  test('four-seal battles continue into their authored victory dialogue', () => {
+    const sealFlows = [
+      ['MAP_051', 'EVT_DRAGON_SEAL', 'BTL_CHI', 'DIA_411_CHI_AFTER'],
+      ['MAP_052', 'EVT_MEI_BOSS', 'BTL_MEI', 'DIA_412_MEI_AFTER'],
+      ['MAP_053', 'EVT_WANG_BOSS', 'BTL_WANG', 'DIA_413_WANG_AFTER'],
+      ['MAP_054', 'EVT_LIANG_BOSS', 'BTL_LIANG', 'DIA_414_LIANG_AFTER'],
+    ] as const
+
+    for (const [mapId, eventId, encounterId, afterDialogueId] of sealFlows) {
+      const actions = findEvent(mapId, eventId).actions
+      const battleIndex = actions.findIndex(action => action.type === 'battle' && action.encounterId === encounterId)
+      expect(battleIndex).toBeGreaterThanOrEqual(0)
+      expect(actions[battleIndex + 1]).toEqual({ type: 'dialogue', dialogueId: afterDialogueId })
+    }
+  })
+
+  test('five-god summon skills expose their authored TP costs and effects', () => {
+    for (const skillId of ['wushenzhaohuan_qing', 'wushenzhaohuan_bai', 'wushenzhaohuan_zhu', 'wushenzhaohuan_xuan']) {
+      expect(SKILLS[skillId]?.costTp).toBe(50)
+    }
+    expect(SKILLS.wushenzhaohuan_si?.costTp).toBe(100)
+    expect(SKILLS.wushenzhaohuan_qing?.target).toBe('all')
+    expect(SKILLS.wushenzhaohuan_zhu?.element).toBe('fire')
+    expect(BATTLE_SKILL_STATUS_EFFECTS.wushenzhaohuan_bai).toContainEqual(expect.objectContaining({ status: BATTLE_STATUS.DEFENSE_UP }))
+    expect(BATTLE_SKILL_STATUS_EFFECTS.wushenzhaohuan_bai).toContainEqual(expect.objectContaining({ status: BATTLE_STATUS.COUNTER }))
+  })
+
+  test('reincarnation shadow uses one nested battle and starts the palace quest after victory dialogue', () => {
+    const actions = findEvent('MAP_055', 'EVT_MEMORY_FINAL').actions
+    const shadowIndex = actions.findIndex(action => action.type === 'dialogue' && action.dialogueId === 'DIA_430_SHADOW')
+    const questIndex = actions.findIndex(action => action.type === 'questStart' && action.questId === 'QST_012')
+
+    expect(DIALOGUES.DIA_430_SHADOW?.onComplete).toEqual([{ type: 'battle', encounterId: 'BTL_430' }])
+    expect(actions.filter(action => action.type === 'battle')).toEqual([])
+    expect(actions.slice(shadowIndex, questIndex + 1)).toEqual([
+      { type: 'dialogue', dialogueId: 'DIA_430_SHADOW' },
+      { type: 'dialogue', dialogueId: 'DIA_430_SHADOW_AFTER' },
+      { type: 'dialogue', dialogueId: 'DIA_430_RETURN_TOWN' },
+      { type: 'questStart', questId: 'QST_012' },
+    ])
+    expect(actions.at(-2)).toEqual({ type: 'setFlag', flag: 'dream_completed', value: true })
+    expect(actions.at(-1)).toEqual({ type: 'setFlag', flag: 'dream_active', value: false })
+  })
+
+  test('checking town casualties grants the promised field supplies', () => {
+    expect(DIALOGUES.DIA_501_CHECK?.onComplete).toEqual([
+      { type: 'addItem', itemId: 'heal_grass', quantity: 3 },
+      { type: 'addItem', itemId: 'antidote', quantity: 2 },
+      { type: 'setFlag', flag: 'a_captured', value: true },
+      { type: 'questStart', questId: 'QST_012' },
+      { type: 'removeParty', characterId: 'A' },
+    ])
+  })
+
   test('town services follow rebuild facility milestones', () => {
     expect(REBUILD_VISUAL_MAP_THRESHOLD).toBe(3)
     expectCondition(findEvent('MAP_001', 'NPC_PINEAPPLE_SHOP'), 'facility_herb_shop', true)

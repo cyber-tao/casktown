@@ -38,7 +38,7 @@ export const PROPHECIES: ProphecyVerse[] = [
     verse: '四方封印镇泉眼，青龙白虎朱雀玄。解放四体方入内，魍魉之路不可忘。',
     hint: '进入生命之泉，解放四封印（青龙潭、白虎穴、朱雀林、玄武殿）',
     explicit: '目标：生命之泉 → 依次击败魑魅魍魉 → 解放四封印',
-    condition: 'released_four_seals',
+    condition: 'quest_started_QST_009',
   },
   {
     id: 'P005',
@@ -46,7 +46,7 @@ export const PROPHECIES: ProphecyVerse[] = [
     verse: '影中身影似故人，花茶之下藏杀心。净化的光从何来？木桶精灵说分明。',
     hint: '进入魔宫，面对假 xiaoai，找到净化方法',
     explicit: '目标：魔宫 → 击败假 xiaoai → 找到净化 xiaoai 的方法',
-    condition: 'fake_xiaoai_defeated',
+    condition: 'quest_started_QST_012',
   },
   {
     id: 'P006',

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { SkillGrowth } from '../../src/core/SkillGrowth.ts'
 import { COMBO_DEFINITIONS } from '../../src/data/combos.ts'
-import { STORY_SKILL_UNLOCK_FLAGS, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../../src/utils/constants.ts'
+import { STORY_SKILL_UNLOCK_FLAGS, TRUE_ROUTE_MIN_MERCY, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../../src/utils/constants.ts'
 
 describe('SkillGrowth', () => {
   beforeEach(() => {
@@ -125,7 +125,62 @@ describe('SkillGrowth', () => {
     sg.checkUnlocksForCharacter('SUN')
     expect(sun.skills).not.toContain('rendeqiyuan')
     gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, true)
+    expect(sg.checkUnlocksForCharacter('SUN')).not.toContain('rendeqiyuan')
+    gd.setFlag('heart_shadow_sun_defeated', true)
     expect(sg.checkUnlocksForCharacter('SUN')).toContain('rendeqiyuan')
+  })
+
+  test('heart-shadow skills unlock only after their matching victory flags', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const unlocks = [
+      { characterId: 'T', skillId: 'shouxiangxin', flag: 'heart_shadow_t_defeated' },
+      { characterId: 'HUIHUI', skillId: 'butaozhiling', flag: 'heart_shadow_huihui_defeated' },
+      { characterId: 'A', skillId: 'shanyuexin', flag: 'heart_shadow_a_defeated' },
+      { characterId: 'CONGCONG', skillId: 'zhenfengbu', flag: 'heart_shadow_congcong_defeated' },
+      { characterId: 'SUN', skillId: 'rendeqiyuan', flag: 'heart_shadow_sun_defeated' },
+    ] as const
+
+    gd.setFlag('true_route_unlocked', true)
+    gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, true)
+    for (const unlock of unlocks) {
+      sg.checkUnlocksForCharacter(unlock.characterId)
+      expect(gd.characters.get(unlock.characterId)?.skills).not.toContain(unlock.skillId)
+    }
+
+    for (const unlock of unlocks) {
+      gd.setFlag(unlock.flag, true)
+      expect(sg.checkUnlocksForCharacter(unlock.characterId)).toContain(unlock.skillId)
+    }
+  })
+
+  test('five-god summons unlock from their matching seal and true-route flags', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const sun = gd.characters.get('SUN')!
+    const unlocks = [
+      ['seal_qinglong_released', 'wushenzhaohuan_qing'],
+      ['seal_baihu_released', 'wushenzhaohuan_bai'],
+      ['seal_zhuque_released', 'wushenzhaohuan_zhu'],
+      ['seal_xuanwu_released', 'wushenzhaohuan_xuan'],
+      ['true_route_unlocked', 'wushenzhaohuan_si'],
+    ] as const
+
+    sg.checkUnlocksForCharacter('SUN')
+    for (const [, skillId] of unlocks) expect(sun.skills).not.toContain(skillId)
+
+    for (const [flag, skillId] of unlocks.slice(0, 4)) {
+      gd.setFlag(flag, true)
+      expect(sg.checkUnlocksForCharacter('SUN')).toContain(skillId)
+    }
+
+    gd.setFlag('white_tiger_respected', true)
+    gd.setFlag('answered_xiyuan_kindly', true)
+    gd.setFlag('xiaoai_purified', true)
+    gd.setFlag('true_route_reincarnation', true)
+    gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
+    gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+    expect(sg.checkUnlocksForCharacter('SUN')).toContain('wushenzhaohuan_si')
   })
 
   test('combo definitions unlock through the shared skill growth source', () => {

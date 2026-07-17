@@ -24,6 +24,15 @@ type ExecuteActionsHarness = {
 
 type ExecuteActions = (this: ExecuteActionsHarness, actions: EventAction[], mapEventId?: string) => void
 
+type FailedBattleContinuationHarness = {
+  pendingActions: EventAction[]
+  pendingMapEventId: string
+  inEvent: boolean
+  scene: { start: (sceneKey: string) => void }
+}
+
+type OnBattleEnd = (this: FailedBattleContinuationHarness, victory: boolean, result?: { escaped?: boolean }) => void
+
 type TouchLayoutHarness = {
   touchLayoutActive: boolean
   touchControls: unknown[]
@@ -439,6 +448,29 @@ describe('MapScene action sequencing', () => {
 
     expect(failures).toEqual(['Missing item blue_mint'])
     expect(completedEvents).toEqual([])
+  })
+
+  test('discards story follow-ups when a nested battle is lost', () => {
+    GameData.getInstance().reset()
+    const event = MAPS.MAP_055!.events.find(candidate => candidate.id === 'EVT_MEMORY_FINAL')!
+    const shadowIndex = event.actions.findIndex(action => action.type === 'dialogue' && action.dialogueId === 'DIA_430_SHADOW')
+    const startedScenes: string[] = []
+    const harness: FailedBattleContinuationHarness = {
+      pendingActions: event.actions.slice(shadowIndex + 1),
+      pendingMapEventId: event.id,
+      inEvent: true,
+      scene: { start: sceneKey => startedScenes.push(sceneKey) },
+    }
+    const onBattleEnd = MapSceneClass.prototype['onBattleEnd'] as OnBattleEnd
+
+    onBattleEnd.call(harness, false)
+
+    expect(harness.pendingActions).toEqual([])
+    expect(harness.pendingMapEventId).toBe('')
+    expect(harness.inEvent).toBe(false)
+    expect(GameData.getInstance().quests.has('QST_012')).toBe(false)
+    expect(GameData.getInstance().getFlag('dream_completed')).not.toBe(true)
+    expect(startedScenes).toEqual(['GameOverScene'])
   })
 })
 

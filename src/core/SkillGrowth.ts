@@ -1,6 +1,5 @@
 import { GameData } from './GameData'
 import { COMBO_DEFINITIONS } from '../data/combos'
-import { STORY_SKILL_UNLOCK_FLAGS } from '../utils/constants'
 
 interface SkillUnlockCondition {
   skillId: string
@@ -26,7 +25,7 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'zhuifengdian', characterId: 'T', type: 'level', value: 18 },
   { skillId: 'shouxiangshi', characterId: 'T', type: 'rebuild', value: 2 },
   { skillId: 'jieguangjinghua', characterId: 'T', type: 'flag', value: 'has_sacred_water' },
-  { skillId: 'shouxiangxin', characterId: 'T', type: 'flag', value: 'true_route_unlocked' },
+  { skillId: 'shouxiangxin', characterId: 'T', type: 'flag', value: 'heart_shadow_t_defeated' },
   // HUIHUI skills
   { skillId: 'xiubiao', characterId: 'HUIHUI', type: 'level', value: 1 },
   { skillId: 'dushebiao', characterId: 'HUIHUI', type: 'level', value: 6 },
@@ -35,7 +34,7 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'fengleisan', characterId: 'HUIHUI', type: 'level', value: 14 },
   { skillId: 'huamantianji', characterId: 'HUIHUI', type: 'flag', value: 'temple_visited' },
   { skillId: 'qingxinling', characterId: 'HUIHUI', type: 'flag', value: 'side_huihui_done' },
-  { skillId: 'butaozhiling', characterId: 'HUIHUI', type: 'flag', value: 'true_route_unlocked' },
+  { skillId: 'butaozhiling', characterId: 'HUIHUI', type: 'flag', value: 'heart_shadow_huihui_defeated' },
   // A skills
   { skillId: 'hengzhan', characterId: 'A', type: 'level', value: 1 },
   { skillId: 'zhendizhan', characterId: 'A', type: 'level', value: 7 },
@@ -44,7 +43,7 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'nianbi', characterId: 'A', type: 'flag', value: 'has_baihu_kai' },
   { skillId: 'shanbeng', characterId: 'A', type: 'level', value: 20 },
   { skillId: 'shanbeng', characterId: 'A', type: 'flag', value: 'side_a_done' },
-  { skillId: 'shanyuexin', characterId: 'A', type: 'flag', value: 'true_route_unlocked' },
+  { skillId: 'shanyuexin', characterId: 'A', type: 'flag', value: 'heart_shadow_a_defeated' },
   // CONGCONG skills
   { skillId: 'yufengzhan', characterId: 'CONGCONG', type: 'level', value: 1 },
   { skillId: 'wuhuazhui', characterId: 'CONGCONG', type: 'level', value: 1 },
@@ -52,13 +51,18 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'tiefengbu', characterId: 'CONGCONG', type: 'level', value: 16 },
   { skillId: 'pozhankan', characterId: 'CONGCONG', type: 'flag', value: 'side_congcong_done' },
   { skillId: 'tianjianyishan', characterId: 'CONGCONG', type: 'level', value: 24 },
-  { skillId: 'zhenfengbu', characterId: 'CONGCONG', type: 'flag', value: 'true_route_unlocked' },
+  { skillId: 'zhenfengbu', characterId: 'CONGCONG', type: 'flag', value: 'heart_shadow_congcong_defeated' },
   // SUN skills
   { skillId: 'shenyu', characterId: 'SUN', type: 'level', value: 1 },
   { skillId: 'zhufu', characterId: 'SUN', type: 'level', value: 1 },
   { skillId: 'jiezhang', characterId: 'SUN', type: 'flag', value: 'life_spring_visited' },
   { skillId: 'zhoushufengsha', characterId: 'SUN', type: 'flag', value: 'temple_visited' },
-  { skillId: 'rendeqiyuan', characterId: 'SUN', type: 'flag', value: STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN },
+  { skillId: 'wushenzhaohuan_qing', characterId: 'SUN', type: 'flag', value: 'seal_qinglong_released' },
+  { skillId: 'wushenzhaohuan_bai', characterId: 'SUN', type: 'flag', value: 'seal_baihu_released' },
+  { skillId: 'wushenzhaohuan_zhu', characterId: 'SUN', type: 'flag', value: 'seal_zhuque_released' },
+  { skillId: 'wushenzhaohuan_xuan', characterId: 'SUN', type: 'flag', value: 'seal_xuanwu_released' },
+  { skillId: 'wushenzhaohuan_si', characterId: 'SUN', type: 'flag', value: 'true_route_unlocked' },
+  { skillId: 'rendeqiyuan', characterId: 'SUN', type: 'flag', value: 'heart_shadow_sun_defeated' },
   ...COMBO_SKILL_UNLOCKS,
 ]
 

@@ -299,6 +299,31 @@ export const SKILLS: Record<string, SkillData> = {
     element: 'light', power: 0, costMp: 20, costTp: 0,
     description: '降低Boss行动速度，非完全控制',
   },
+  wushenzhaohuan_qing: {
+    id: 'wushenzhaohuan_qing', name: '五神召唤·青', type: 'special', target: 'all',
+    element: 'water', power: 55, costMp: 0, costTp: 50,
+    description: '水木之力攻击全体敌人，并为全队解毒',
+  },
+  wushenzhaohuan_bai: {
+    id: 'wushenzhaohuan_bai', name: '五神召唤·白', type: 'buff', target: 'all',
+    element: 'earth', power: 0, costMp: 0, costTp: 50,
+    description: '全体防御提升并获得反击姿态',
+  },
+  wushenzhaohuan_zhu: {
+    id: 'wushenzhaohuan_zhu', name: '五神召唤·朱', type: 'magic', target: 'all',
+    element: 'fire', power: 75, costMp: 0, costTp: 50,
+    description: '朱雀之火对全体敌人造成爆发伤害',
+  },
+  wushenzhaohuan_xuan: {
+    id: 'wushenzhaohuan_xuan', name: '五神召唤·玄', type: 'special', target: 'all',
+    element: 'water', power: 0, costMp: 0, costTp: 50,
+    description: '为全队施加护盾，并降低全体敌人速度',
+  },
+  wushenzhaohuan_si: {
+    id: 'wushenzhaohuan_si', name: '五神召唤·祀', type: 'special', target: 'all',
+    element: 'light', power: 90, costMp: 0, costTp: 100,
+    description: '祀神之光净化全队，并攻击全体敌人',
+  },
 
   // 魑魅魍魉技能
   poison_mist: {

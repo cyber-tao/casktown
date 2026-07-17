@@ -521,6 +521,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: 'T', text: '也许树喝太多了。' },
       { speaker: '旁白', text: '按照水滴落下顺序踩地砖，机关启动。蓝露树发光。' },
     ],
+    onComplete: [{ type: 'battle', encounterId: 'BTL_112' }],
   },
   DIA_104_TREE_3: {
     id: 'DIA_104_TREE_3',
@@ -1137,7 +1138,6 @@ export const DIALOGUES: Record<string, DialogueData> = {
     lines: [
       { speaker: '系统', text: '获得【玄武碑牌】。sun解锁【五神召唤·玄】。' },
       { speaker: '系统', text: '四封印全部解除！' },
-      { speaker: '系统', text: 'released_four_seals = true' },
     ],
     onComplete: [{ type: 'setFlag', flag: 'released_four_seals', value: true }],
   },
@@ -1336,7 +1336,11 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '慧慧', text: '谢谢你的关心，T。' },
       { speaker: '系统', text: '获得额外补给。悲悯值+1。' },
     ],
-    onComplete: DARK_PALACE_CAPTURED_COMPLETION_ACTIONS,
+    onComplete: [
+      { type: 'addItem', itemId: 'heal_grass', quantity: 3 },
+      { type: 'addItem', itemId: 'antidote', quantity: 2 },
+      ...DARK_PALACE_CAPTURED_COMPLETION_ACTIONS,
+    ],
   },
   DIA_501_SOLO: {
     id: 'DIA_501_SOLO',
@@ -1959,7 +1963,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
   DIA_SIDE_SUN_01_AFTER: {
     id: 'DIA_SIDE_SUN_01_AFTER',
     lines: [
-      { speaker: '系统', text: 'sun技能【人的祈愿】解锁。真结局阶段增益提升。' },
+      { speaker: '系统', text: 'sun直面了旁观者的责任。' },
     ],
   },
 
@@ -3053,7 +3057,7 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_205_SHOP: { target: 'DIA_SHOP_PINE', includeOnComplete: true },
   DIA_206_TRAIN: { target: 'DIA_TRAINING', includeOnComplete: true },
   DIA_105_TREE_1: { target: 'DIA_104_TREE_1', includeOnComplete: true },
-  DIA_105_TREE_2: { target: 'DIA_104_TREE_2' },
+  DIA_105_TREE_2: { target: 'DIA_104_TREE_2', includeOnComplete: true },
   DIA_105_TREE_3: { target: 'DIA_104_TREE_3' },
   DIA_106_ALTAR: { target: 'DIA_104_SEED' },
   DIA_107_SAILOR: { target: 'DIA_201_BOAT' },

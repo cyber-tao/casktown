@@ -1947,6 +1947,28 @@ export class BattleScene extends Phaser.Scene {
       this.log(`${actor.name} 让众人的祈愿回应了战场。`)
       return true
     }
+    if (skill.id === 'wushenzhaohuan_qing') {
+      for (const target of targets) this.calculateAndDealSkillDamage(actor, target, skill)
+      for (const ally of this.getLiveAllies(actor)) this.removeStatus(ally, BATTLE_STATUS.POISON)
+      this.log('青龙之力洗净了队伍身上的毒。')
+      return true
+    }
+    if (skill.id === 'wushenzhaohuan_xuan') {
+      for (const ally of targets) this.addStatus(ally, BATTLE_STATUS.SHIELD, BATTLE_STATUS_DURATIONS.STANDARD)
+      for (const opponent of this.getLiveOpponents(actor)) {
+        this.addStatus(opponent, BATTLE_STATUS.SPEED_DOWN, BATTLE_STATUS_DURATIONS.STANDARD)
+      }
+      this.log('玄武之力护住队伍，并压制了敌人的速度。')
+      return true
+    }
+    if (skill.id === 'wushenzhaohuan_si') {
+      for (const target of targets) this.calculateAndDealSkillDamage(actor, target, skill)
+      for (const ally of this.getLiveAllies(actor)) {
+        for (const status of BATTLE_NEGATIVE_STATUSES) this.removeStatus(ally, status)
+      }
+      this.log('祀神之光净化了队伍。')
+      return true
+    }
     return false
   }
 
@@ -1962,7 +1984,7 @@ export class BattleScene extends Phaser.Scene {
       stat = isPlayer ? char.stats.matk : enemy.stats.matk
     }
 
-    const isMagic = skill.type === 'magic'
+    const isMagic = skill.type === 'magic' || (skill.type === 'special' && skill.element !== 'none')
     const def = target.isPlayer
       ? (isMagic ? (target.data as CharacterData).stats.mdef : (target.data as CharacterData).stats.def)
       : (isMagic ? (target.data as EnemyData).stats.mdef : (target.data as EnemyData).stats.def)

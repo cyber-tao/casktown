@@ -26,7 +26,7 @@ export const ENCOUNTERS: Record<string, EncounterData> = {
   BTL_103: { id: 'BTL_103', enemies: ['du_ye_chong', 'du_ye_chong', 'du_ye_chong'], bgm: 'battle_normal' },
   BTL_110: { id: 'BTL_110', enemies: ['baihu'], bgm: 'battle_boss', victoryFlag: 'defeated_baihu', questId: 'QST_005', questProgress: 'complete', rewards: [{ flag: 'has_baihu_kai', value: true }] },
   BTL_111: { id: 'BTL_111', enemies: ['teng_yao', 'teng_yao', 'du_ye_chong', 'du_ye_chong'], bgm: 'battle_normal' },
-  BTL_112: { id: 'BTL_112', enemies: ['teng_yao', 'barrel_fake'], bgm: 'battle_normal' },
+  BTL_112: { id: 'BTL_112', enemies: ['xiao_yao', 'xiao_yao', 'xiao_shuidi'], bgm: 'battle_normal' },
   BTL_113: { id: 'BTL_113', enemies: ['barrel_fake', 'barrel_fake', 'xiao_yao'], bgm: 'battle_boss', questId: 'QST_004', questProgress: 'complete', rewards: [{ itemId: 'seed', itemQty: 1 }, { flag: 'has_millennium_seed', value: true }] },
   BTL_201: { id: 'BTL_201', enemies: ['shui_yao', 'feng_chi'], bgm: 'battle_boss', victoryFlag: 'shuiyao_fengchi_defeated', questId: 'QST_006', questProgress: 'advance' },
   BTL_202A: { id: 'BTL_202A', enemies: ['shui_yao'], bgm: 'battle_normal' },
