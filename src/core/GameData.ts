@@ -3,7 +3,7 @@ import type { CharacterData, CharacterStats, Inventory, QuestState, GameFlags, B
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
-import { REBUILD_FACILITIES } from '../data/rebuild'
+import { REBUILD_FACILITIES, REBUILD_MILESTONES } from '../data/rebuild'
 import { resolveCanonicalMapId } from './MapAccess'
 import {
   BARREL_UNLOCK_PROGRESS_FLAGS,
@@ -164,6 +164,24 @@ export class GameData {
     }
   }
 
+  private syncRebuildMilestoneLevel(): void {
+    const milestoneLevel = REBUILD_MILESTONES.reduce<number>(
+      (level, milestone) => this.flags[milestone.sourceFlag] === true || this.getFlag(milestone.sourceFlag) === true
+        ? Math.max(level, milestone.level)
+        : level,
+      REBUILD_LEVEL_LIMITS.MIN,
+    )
+    if (milestoneLevel <= this.rebuildLevel) return
+
+    this.rebuildLevel = this.clampRebuildLevel(milestoneLevel)
+    this.branches.rebuild_level = this.rebuildLevel
+    this.flags.rebuild_level = this.rebuildLevel
+    this.syncRebuildFacilityFlags()
+    if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
+      this.currentMap = REBUILT_TOWN_MAP_ID
+    }
+  }
+
   reset(options: { preserveSettings?: boolean } = {}): void {
     const preservedSettings = options.preserveSettings ? { ...this.settings } : null
     this.playTime = 0
@@ -192,6 +210,7 @@ export class GameData {
   }
 
   setFlag(key: string, value: unknown): void {
+    const previousRebuildLevel = this.rebuildLevel
     const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
     if (!BRANCH_KEYS.has(key as keyof BranchState)) {
       this.flags[key] = normalizedValue
@@ -217,6 +236,9 @@ export class GameData {
       }
     }
     this.syncProgressionFlags()
+    if (key !== 'rebuild_level' && this.rebuildLevel !== previousRebuildLevel) {
+      EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', this.rebuildLevel)
+    }
     EventBus.emit(GameEvents.FLAG_SET, key, this.getFlag(key))
   }
 
@@ -233,10 +255,12 @@ export class GameData {
 
   updateBranch(key: keyof BranchState, value: unknown): void {
     const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
-    ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
-      this.rebuildLevel = normalizedValue
+      this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
+      this.branches.rebuild_level = this.rebuildLevel
       this.syncRebuildFacilityFlags()
+    } else {
+      ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
     }
     this.syncFlagFromBranch(key)
     this.syncTrueRouteState()
@@ -311,6 +335,7 @@ export class GameData {
     if (this.flags.game_cleared) {
       this.flags.defeated_wuxiang = true
     }
+    this.syncRebuildMilestoneLevel()
     this.syncPresentBranchFlags()
     this.syncTrueRouteState()
   }

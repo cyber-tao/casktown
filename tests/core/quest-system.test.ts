@@ -127,10 +127,11 @@ describe('QuestSystem', () => {
   test('completeQuest unlocks skills after non-exp rewards settle', () => {
     const gd = GameData.getInstance()
     const qs = QuestSystem.getInstance()
+    gd.setFlag('has_sacred_water', true)
     qs.startQuest('QST_008')
     qs.completeQuest('QST_008')
 
-    expect(gd.rebuildLevel).toBeGreaterThanOrEqual(3)
+    expect(gd.rebuildLevel).toBe(3)
     expect(gd.characters.get('T')?.skills).toContain('shouxiangshi')
   })
 

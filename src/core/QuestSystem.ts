@@ -71,7 +71,7 @@ export class QuestSystem {
           gd.setFlag(reward.flag, reward.value ?? true)
         }
         if (reward.rebuild) {
-          RebuildSystem.getInstance().addProgress(reward.rebuild)
+          RebuildSystem.getInstance().setLevel(reward.rebuild)
         }
       }
     }

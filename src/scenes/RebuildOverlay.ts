@@ -1,9 +1,9 @@
 import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
-import { RebuildSystem } from '../core/RebuildSystem'
 import { AudioManager } from '../core/AudioManager'
 import { queueImageAssets } from '../core/AssetLoader'
+import { REBUILD_MILESTONES } from '../data/rebuild'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, MENU_OVERLAY_UI, REBUILD_MENU, RUNTIME_UI_ASSET_KEYS, scaleFont } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
@@ -15,7 +15,7 @@ export class RebuildOverlay extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Rectangle
   private titleText!: Phaser.GameObjects.Text
   private descText!: Phaser.GameObjects.Text
-  private goldText!: Phaser.GameObjects.Text
+  private progressText!: Phaser.GameObjects.Text
 
   constructor() {
     super({ key: 'RebuildOverlay', active: false })
@@ -48,11 +48,11 @@ export class RebuildOverlay extends Phaser.Scene {
 
     const gd = GameData.getInstance()
 
-    this.goldText = this.add.text(REBUILD_MENU.GOLD_X, REBUILD_MENU.GOLD_Y, `${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`, {
+    this.progressText = this.add.text(REBUILD_MENU.GOLD_X, REBUILD_MENU.GOLD_Y, `当前 Lv.${gd.rebuildLevel}`, {
       fontSize: scaleFont(REBUILD_MENU.GOLD_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
     })
-    this.goldText.setScrollFactor(0)
-    this.goldText.setDepth(REBUILD_MENU.CONTENT_DEPTH)
+    this.progressText.setScrollFactor(0)
+    this.progressText.setDepth(REBUILD_MENU.CONTENT_DEPTH)
 
     this.cursor = this.add.rectangle(REBUILD_MENU.CURSOR_X, REBUILD_MENU.OPTION_START_Y, REBUILD_MENU.CURSOR_WIDTH, REBUILD_MENU.CURSOR_HEIGHT, REBUILD_MENU.CURSOR_COLOR, REBUILD_MENU.CURSOR_ALPHA)
     this.cursor.setOrigin(0, 0.5)
@@ -60,11 +60,11 @@ export class RebuildOverlay extends Phaser.Scene {
     this.cursor.setScrollFactor(0)
 
     this.items = []
-    for (let i = 0; i < REBUILD_MENU.OPTIONS.length; i++) {
-      const opt = REBUILD_MENU.OPTIONS[i]!
-      const built = gd.getFlag(`${REBUILD_MENU.BUILT_FLAG_PREFIX}${opt.id}`) === true
-      const label = built ? `${opt.name} [已完成]` : `${opt.name} (${opt.goldCost}G)`
-      const color = built ? MENU_OVERLAY_UI.COLORS.dim : MENU_OVERLAY_UI.COLORS.text
+    for (let i = 0; i < REBUILD_MILESTONES.length; i++) {
+      const milestone = REBUILD_MILESTONES[i]!
+      const reached = gd.rebuildLevel >= milestone.level
+      const label = `Lv.${milestone.level} ${milestone.name} [${reached ? '已达成' : '未达成'}]`
+      const color = reached ? MENU_OVERLAY_UI.COLORS.dim : MENU_OVERLAY_UI.COLORS.text
       const text = this.add.text(REBUILD_MENU.OPTION_X, REBUILD_MENU.OPTION_START_Y + i * REBUILD_MENU.OPTION_GAP_Y, label, {
         fontSize: scaleFont(REBUILD_MENU.OPTION_FONT_SIZE), color,
       })
@@ -91,15 +91,12 @@ export class RebuildOverlay extends Phaser.Scene {
     this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
       switch (event.code) {
         case 'ArrowUp': case 'KeyW':
-          this.cursorIndex = (this.cursorIndex - 1 + REBUILD_MENU.OPTIONS.length) % REBUILD_MENU.OPTIONS.length
+          this.cursorIndex = (this.cursorIndex - 1 + REBUILD_MILESTONES.length) % REBUILD_MILESTONES.length
           this.updateCursor()
           break
         case 'ArrowDown': case 'KeyS':
-          this.cursorIndex = (this.cursorIndex + 1) % REBUILD_MENU.OPTIONS.length
+          this.cursorIndex = (this.cursorIndex + 1) % REBUILD_MILESTONES.length
           this.updateCursor()
-          break
-        case 'Enter': case 'Space':
-          this.selectItem()
           break
         case 'Escape':
           this.close()
@@ -114,40 +111,16 @@ export class RebuildOverlay extends Phaser.Scene {
   }
 
   private updateDescription(): void {
-    const opt = REBUILD_MENU.OPTIONS[this.cursorIndex]!
-    this.descText.setText(opt.desc)
-  }
-
-  private selectItem(): void {
     const gd = GameData.getInstance()
-    const opt = REBUILD_MENU.OPTIONS[this.cursorIndex]!
-    const builtFlag = `${REBUILD_MENU.BUILT_FLAG_PREFIX}${opt.id}`
-
-    if (gd.getFlag(builtFlag) === true) {
-      return
-    }
-
-    if (!gd.spendGold(opt.goldCost)) {
-      this.descText.setText('金币不足！')
-      AudioManager.getInstance().playSFX('cancel')
-      return
-    }
-    gd.setFlag(builtFlag, true)
-    RebuildSystem.getInstance().addProgress(1)
-    AudioManager.getInstance().playSFX('open_menu')
-
-    this.items[this.cursorIndex]!.setText(`${opt.name} [已完成]`)
-    this.items[this.cursorIndex]!.setColor(MENU_OVERLAY_UI.COLORS.dim)
-    this.goldText.setText(`${REBUILD_MENU.GOLD_COST_LABEL}: ${gd.gold}G`)
-
-    this.descText.setText(`${opt.name} 重建完成！`)
+    const milestone = REBUILD_MILESTONES[this.cursorIndex]!
+    const state = gd.rebuildLevel >= milestone.level ? '已达成' : `达成条件：${milestone.condition}`
+    this.descText.setText(`${state}\n\n${milestone.description}`)
   }
 
   private selectTouchItem(index: number): void {
-    if (index < 0 || index >= REBUILD_MENU.OPTIONS.length) return
+    if (index < 0 || index >= REBUILD_MILESTONES.length) return
     this.cursorIndex = index
     this.updateCursor()
-    this.selectItem()
   }
 
   private close(): void {

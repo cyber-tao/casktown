@@ -417,6 +417,46 @@ describe('RebuildSystem', () => {
     expect(RebuildSystem.getInstance().getUnlockedFacilities().length).toBeGreaterThan(0)
   })
 
+  test('story milestones advance rebuild levels from one through five', () => {
+    const gd = GameData.getInstance()
+    const milestones = [
+      ['has_millennium_seed', 1],
+      ['has_sacred_water', 2],
+      ['rebuild_ceremony_done', 3],
+      ['released_four_seals', 4],
+      ['game_cleared', 5],
+    ] as const
+
+    for (const [flag, level] of milestones) {
+      gd.setFlag(flag, true)
+      expect(gd.rebuildLevel).toBe(level)
+      expect(gd.branches.rebuild_level).toBe(level)
+      expect(gd.flags.rebuild_level).toBe(level)
+    }
+  })
+
+  test('story milestones unlock only the facilities assigned to their level', () => {
+    const gd = GameData.getInstance()
+    const rebuildSystem = RebuildSystem.getInstance()
+
+    gd.setFlag('has_millennium_seed', true)
+    expect(rebuildSystem.getUnlockedFacilities().map(facility => facility.id)).toEqual(['herb_shop', 'farm'])
+
+    gd.setFlag('has_sacred_water', true)
+    expect(rebuildSystem.getFacilitiesForLevel(2).map(facility => facility.id)).toEqual(['item_shop', 'dock'])
+    expect(gd.getFlag('facility_item_shop')).toBe(true)
+    expect(gd.getFlag('facility_plaza')).not.toBe(true)
+
+    gd.setFlag('rebuild_ceremony_done', true)
+    expect(gd.getFlag('facility_equipment_shop')).toBe(true)
+    expect(gd.getFlag('facility_quest_board')).toBe(true)
+    expect(gd.getFlag('facility_defense')).not.toBe(true)
+
+    gd.setFlag('released_four_seals', true)
+    expect(gd.getFlag('facility_defense')).toBe(true)
+    expect(gd.getFlag('facility_teleport')).toBe(true)
+  })
+
   test('direct rebuild level flags unlock matching facilities', () => {
     const gd = GameData.getInstance()
     const rebuildSystem = RebuildSystem.getInstance()
@@ -445,12 +485,44 @@ describe('RebuildSystem', () => {
     }
   })
 
-  test('setLevel does not downgrade rebuild progress', () => {
+  test('deserialize upgrades legacy rebuild progress from story flags without downgrading newer saves', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { flags: Record<string, unknown>; rebuildLevel: number; branches: Record<string, unknown> }
+
+    gd.deserialize({
+      ...snapshot,
+      flags: { has_sacred_water: true },
+      branches: { ...snapshot.branches, rebuild_level: 0 },
+      rebuildLevel: 0,
+    })
+    expect(gd.rebuildLevel).toBe(2)
+    expect(gd.getFlag('facility_item_shop')).toBe(true)
+
+    gd.deserialize({
+      ...snapshot,
+      flags: {},
+      branches: { ...snapshot.branches, released_four_seals: true, rebuild_level: 0 },
+      rebuildLevel: 0,
+    })
+    expect(gd.rebuildLevel).toBe(4)
+    expect(gd.getFlag('facility_teleport')).toBe(true)
+
+    gd.deserialize({
+      ...snapshot,
+      flags: { has_millennium_seed: true },
+      branches: { ...snapshot.branches, rebuild_level: 4 },
+      rebuildLevel: 4,
+    })
+    expect(gd.rebuildLevel).toBe(4)
+  })
+
+  test('rebuild progression APIs do not downgrade progress', () => {
     const gd = GameData.getInstance()
     const higherLevel = REBUILD_VISUAL_MAP_THRESHOLD + 2
 
     RebuildSystem.getInstance().setLevel(higherLevel)
     RebuildSystem.getInstance().setLevel(REBUILD_VISUAL_MAP_THRESHOLD)
+    gd.updateBranch('rebuild_level', REBUILD_VISUAL_MAP_THRESHOLD)
 
     expect(gd.rebuildLevel).toBe(higherLevel)
     expect(gd.branches.rebuild_level).toBe(higherLevel)
