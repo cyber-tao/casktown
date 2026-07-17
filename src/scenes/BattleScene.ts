@@ -49,7 +49,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
-import { resolveItemRecoveryAmount } from '../utils/itemEffects'
+import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import { isComboSkillId, isComboUnlocked } from '../utils/comboRules'
 import {
@@ -1681,8 +1681,17 @@ export class BattleScene extends Phaser.Scene {
     const item = this.getItemData(itemId)
     if (!item) return false
 
-    if (this.isReviveEffect(item.effect) && target.stats.hp > 0) {
-      this.log(`${target.name} 还活着！`)
+    const effect = item.effect
+    const effectTargets = this.isAllTargetItemEffect(effect) ? this.getLivePlayers() : [target]
+    const canApply = canApplyConsumableEffect(effect, effectTargets.map(unit => ({
+      hp: unit.stats.hp,
+      maxHp: unit.stats.maxHp,
+      mp: unit.stats.mp,
+      maxMp: unit.stats.maxMp,
+      hasStatus: status => this.hasStatus(unit, status),
+    })))
+    if (!canApply) {
+      this.log(`现在使用${item.name}不会产生效果！`)
       return false
     }
     if (!gd.removeItem(itemId, 1)) {
@@ -1691,25 +1700,26 @@ export class BattleScene extends Phaser.Scene {
     }
 
     AudioManager.getInstance().playSFX('item_use')
-    const effect = item.effect
     if (effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)) {
       const baseAmount = parseInt(effect.split(':')[1]!)
       if (this.isAllTargetItemEffect(effect)) {
-        const targets = this.getLivePlayers()
-        for (const t of targets) {
+        let restoredHp = 0
+        for (const t of effectTargets) {
           const amount = resolveItemRecoveryAmount(itemId, t.id, baseAmount)
-          this.healUnit(t, amount)
+          restoredHp += this.healUnit(t, amount)
         }
-        this.log(`${item.name}！全队恢复了生命！`)
+        this.log(`${item.name}！全队共回复 ${restoredHp} HP！`)
       } else {
         const amount = resolveItemRecoveryAmount(itemId, target.id, baseAmount)
-        this.healUnit(target, amount)
-        this.log(`${item.name}！${target.name} 回复 ${amount} HP！`)
+        const restoredHp = this.healUnit(target, amount)
+        this.log(`${item.name}！${target.name} 回复 ${restoredHp} HP！`)
       }
     } else if (effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX)) {
       const amount = parseInt(effect.split(':')[1]!)
+      const previousMp = target.stats.mp
       target.stats.mp = Math.min(target.stats.maxMp, target.stats.mp + amount)
-      this.log(`${item.name}！${target.name} 回复 ${amount} MP！`)
+      this.updateUnitBars(target)
+      this.log(`${item.name}！${target.name} 回复 ${target.stats.mp - previousMp} MP！`)
     } else if (effect === 'cure_poison') {
       this.removeStatus(target, BATTLE_STATUS.POISON)
       this.log(`${item.name}！${target.name} 解毒成功！`)

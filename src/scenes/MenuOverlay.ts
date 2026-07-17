@@ -43,7 +43,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
-import { resolveItemRecoveryAmount } from '../utils/itemEffects'
+import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
@@ -1602,10 +1602,12 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private canApplyFieldEffect(effect: string, char: CharacterData): boolean {
-    if (effect.startsWith(BATTLE_RULES.HEAL_HP_EFFECT_PREFIX)) return char.stats.hp < char.stats.maxHp
-    if (effect.startsWith(BATTLE_RULES.HEAL_MP_EFFECT_PREFIX)) return char.stats.mp < char.stats.maxMp
-    if (effect.startsWith(BATTLE_RULES.REVIVE_EFFECT_PREFIX)) return char.stats.hp <= 0
-    return false
+    return canApplyConsumableEffect(effect, [{
+      hp: char.stats.hp,
+      maxHp: char.stats.maxHp,
+      mp: char.stats.mp,
+      maxMp: char.stats.maxMp,
+    }])
   }
 
   private applyFieldEffect(itemId: string, effect: string, char: CharacterData): void {
