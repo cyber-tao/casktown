@@ -222,13 +222,10 @@ export class MenuOverlay extends Phaser.Scene {
 
   private setupInput(): void {
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-UP', () => this.handleUp())
-    this.input.keyboard?.on('keydown-DOWN', () => this.handleDown())
-    this.input.keyboard?.on('keydown-LEFT', () => this.handleLeft())
-    this.input.keyboard?.on('keydown-RIGHT', () => this.handleRight())
-    this.input.keyboard?.on('keydown-ENTER', () => this.handleConfirm())
-    this.input.keyboard?.on('keydown-SPACE', () => this.handleConfirm())
-    this.input.keyboard?.on('keydown-ESC', () => this.handleCancel())
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const action = InputManager.getInstance().getNavigationAction(event.code)
+      if (action) this.handleGamepadAction(action)
+    })
   }
 
   private handleGamepadAction(action: GamepadNavigationAction): void {

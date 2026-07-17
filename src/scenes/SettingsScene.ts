@@ -195,13 +195,10 @@ export class SettingsScene extends Phaser.Scene {
 
   private setupInput(): void {
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-UP', () => this.moveMenu(-1))
-    this.input.keyboard?.on('keydown-DOWN', () => this.moveMenu(1))
-    this.input.keyboard?.on('keydown-LEFT', () => this.changeValue(-1))
-    this.input.keyboard?.on('keydown-RIGHT', () => this.changeValue(1))
-    this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
-    this.input.keyboard?.on('keydown-SPACE', () => this.selectMenu())
-    this.input.keyboard?.on('keydown-ESC', () => this.goBack())
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const action = InputManager.getInstance().getNavigationAction(event.code)
+      if (action) this.handleGamepadAction(action)
+    })
   }
 
   private moveMenu(dir: number): void {

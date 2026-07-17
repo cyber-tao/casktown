@@ -46,6 +46,19 @@ describe('InputManager', () => {
     expect(input.isCancel('KeyX')).toBe(true)
   })
 
+  test('resolves keyboard input through the same navigation actions as gamepads', () => {
+    input.setWASD()
+
+    expect(input.getNavigationAction('KeyW')).toBe('up')
+    expect(input.getNavigationAction('KeyS')).toBe('down')
+    expect(input.getNavigationAction('KeyA')).toBe('left')
+    expect(input.getNavigationAction('KeyD')).toBe('right')
+    expect(input.getNavigationAction('Space')).toBe('confirm')
+    expect(input.getNavigationAction('Escape')).toBe('cancel')
+    expect(input.getNavigationAction('Tab')).toBe('menu')
+    expect(input.getNavigationAction('KeyQ')).toBeNull()
+  })
+
   test('translates browser codes at the Phaser polling boundary', () => {
     expect(toPhaserKeyName('ArrowUp')).toBe('UP')
     expect(toPhaserKeyName('KeyW')).toBe('W')

@@ -94,11 +94,10 @@ export class TitleScene extends Phaser.Scene {
     this.renderMainMenu()
 
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-UP', () => this.changeMenu(-1))
-    this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
-    this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
-    this.input.keyboard?.on('keydown-SPACE', () => this.selectMenu())
-    this.input.keyboard?.on('keydown-ESC', () => this.handleCancel())
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const action = InputManager.getInstance().getNavigationAction(event.code)
+      if (action) this.handleGamepadAction(action)
+    })
 
     bindTouchText(this.add.text(TITLE_GITHUB_LINK.x, TITLE_GITHUB_LINK.y, 'GitHub', {
       fontSize: `${TITLE_GITHUB_LINK.fontSize}px`,

@@ -1,5 +1,6 @@
 import { GameData } from './GameData'
 import { CONTROL_MODE } from '../utils/constants'
+import type { GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 export interface KeyBindings {
   up: string
@@ -191,6 +192,15 @@ export class InputManager {
     if (code === this.bindings.down || code === 'ArrowDown' || code === 'KeyS') return 'down'
     if (code === this.bindings.left || code === 'ArrowLeft' || code === 'KeyA') return 'left'
     if (code === this.bindings.right || code === 'ArrowRight' || code === 'KeyD') return 'right'
+    return null
+  }
+
+  getNavigationAction(code: string): GamepadNavigationAction | null {
+    const direction = this.isDirection(code)
+    if (direction) return direction
+    if (this.isConfirm(code)) return 'confirm'
+    if (this.isCancel(code)) return 'cancel'
+    if (this.isMenu(code)) return 'menu'
     return null
   }
 

@@ -67,10 +67,10 @@ export class GameOverScene extends Phaser.Scene {
     this.cursor.setScrollFactor(0)
 
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-UP', () => this.changeMenu(-1))
-    this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
-    this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
-    this.input.keyboard?.on('keydown-SPACE', () => this.selectMenu())
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const action = InputManager.getInstance().getNavigationAction(event.code)
+      if (action) this.handleGamepadAction(action)
+    })
   }
 
   override update(): void {

@@ -194,10 +194,10 @@ export class DialogueOverlay extends Phaser.Scene {
     this.textObj.on(Phaser.Input.Events.POINTER_DOWN, () => this.handleTouchAdvance())
 
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-SPACE', () => this.advance())
-    this.input.keyboard?.on('keydown-ENTER', () => this.advance())
-    this.input.keyboard?.on('keydown-UP', () => this.moveChoice(-1))
-    this.input.keyboard?.on('keydown-DOWN', () => this.moveChoice(1))
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const action = InputManager.getInstance().getNavigationAction(event.code)
+      if (action) this.handleGamepadAction(action)
+    })
 
     // Start first line
     this.showLine()

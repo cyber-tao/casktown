@@ -142,11 +142,10 @@ export class TrainingOverlay extends Phaser.Scene {
 
   private setupInput(): void {
     cleanupKeyboardOnShutdown(this)
-    this.input.keyboard?.on('keydown-UP', () => this.move(-1))
-    this.input.keyboard?.on('keydown-DOWN', () => this.move(1))
-    this.input.keyboard?.on('keydown-ENTER', () => this.train())
-    this.input.keyboard?.on('keydown-SPACE', () => this.train())
-    this.input.keyboard?.on('keydown-ESC', () => this.close())
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const action = InputManager.getInstance().getNavigationAction(event.code)
+      if (action) this.handleGamepadAction(action)
+    })
   }
 
   private move(dir: number): void {
