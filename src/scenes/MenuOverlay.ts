@@ -39,7 +39,7 @@ import {
   UI_FONT_FAMILY,
   UI_TITLE_FONT_FAMILY,
 } from '../utils/constants'
-import { bindTouchText } from '../utils/touch'
+import { bindTouchText, cssToGamePx } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
@@ -69,6 +69,12 @@ interface InventoryEntry {
 interface PendingInventoryAction {
   itemId: string
   kind: 'use' | 'equip'
+}
+
+interface SettingsLayout {
+  fontSize: number
+  rowHeight: number
+  visibleRows: number
 }
 
 export class MenuOverlay extends Phaser.Scene {
@@ -134,6 +140,10 @@ export class MenuOverlay extends Phaser.Scene {
     this.renderNav()
     this.renderMain()
     this.setupInput()
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.handleSettingsResize, this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.handleSettingsResize, this)
+    })
   }
 
   override update(): void {
@@ -1139,17 +1149,19 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private renderSettingsContent(interactive: boolean): void {
-    const visibleRows = MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS
-    const maxStart = Math.max(0, MENU_SETTINGS_OPTIONS.length - visibleRows)
-    const start = interactive ? Phaser.Math.Clamp(this.settingsIndex - visibleRows + 1, 0, maxStart) : 0
+    const { fontSize, rowHeight, visibleRows } = this.getSettingsLayout()
+    const pageStart = Math.floor(this.settingsIndex / visibleRows) * visibleRows
+    const start = interactive ? pageStart : 0
     const end = Math.min(MENU_SETTINGS_OPTIONS.length, start + visibleRows)
     for (let i = start; i < end; i++) {
       const config = MENU_SETTINGS_OPTIONS[i]!
       const selected = interactive && i === this.settingsIndex
       const rowIndex = i - start
-      const y = MENU_OVERLAY_UI.SETTINGS_ROW_Y + rowIndex * MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT
-      const labelRow = this.addContentRect(0, y, MENU_OVERLAY_UI.SETTINGS_LABEL_PANEL_WIDTH, MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT - MENU_OVERLAY_UI.CARD_GAP / 2, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
-      const valueRow = this.addContentRect(MENU_OVERLAY_UI.SETTINGS_VALUE_PANEL_X, y, MENU_OVERLAY_UI.SETTINGS_VALUE_PANEL_WIDTH, MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT - MENU_OVERLAY_UI.CARD_GAP / 2, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
+      const y = MENU_OVERLAY_UI.SETTINGS_ROW_Y + rowIndex * rowHeight
+      const rowPanelHeight = rowHeight - MENU_OVERLAY_UI.CARD_GAP / 2
+      const textY = y + Math.max(MENU_OVERLAY_UI.CARD_GAP / 3, (rowHeight - fontSize) / 2)
+      const labelRow = this.addContentRect(0, y, MENU_OVERLAY_UI.SETTINGS_LABEL_PANEL_WIDTH, rowPanelHeight, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
+      const valueRow = this.addContentRect(MENU_OVERLAY_UI.SETTINGS_VALUE_PANEL_X, y, MENU_OVERLAY_UI.SETTINGS_VALUE_PANEL_WIDTH, rowPanelHeight, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
       for (const row of [labelRow, valueRow]) {
         row.setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, selected ? MENU_OVERLAY_UI.COLORS.highlight : MENU_OVERLAY_UI.COLORS.borderMuted)
         if (interactive) {
@@ -1161,14 +1173,23 @@ export class MenuOverlay extends Phaser.Scene {
           })
         }
       }
-      this.addText(MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.CARD_GAP / 3, config.label, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.SETTINGS_LABEL_PANEL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
-      this.addText(MENU_OVERLAY_UI.SETTINGS_VALUE_X, y + MENU_OVERLAY_UI.CARD_GAP / 3, this.getSettingValueText(config), MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.CONTENT_WIDTH - MENU_OVERLAY_UI.SETTINGS_VALUE_X - MENU_OVERLAY_UI.CARD_GAP)
+      this.addText(MENU_OVERLAY_UI.CARD_GAP, textY, config.label, fontSize, selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.SETTINGS_LABEL_PANEL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+      this.addText(MENU_OVERLAY_UI.SETTINGS_VALUE_X, textY, this.getSettingValueText(config), fontSize, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.CONTENT_WIDTH - MENU_OVERLAY_UI.SETTINGS_VALUE_X - MENU_OVERLAY_UI.CARD_GAP)
       if (config.type === 'slider') {
-        this.renderSettingSlider(config.key, y)
+        this.renderSettingSlider(config.key, y, rowHeight, fontSize)
       }
     }
     if (MENU_SETTINGS_OPTIONS.length > visibleRows) {
-      this.addText(MENU_OVERLAY_UI.PAGE_TEXT_X, MENU_OVERLAY_UI.FOOTER_Y, `${start + 1}-${end}/${MENU_SETTINGS_OPTIONS.length}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.dim)
+      this.addText(MENU_OVERLAY_UI.SETTINGS_PAGE_TEXT_X, MENU_OVERLAY_UI.FOOTER_Y, `${start + 1}-${end}/${MENU_SETTINGS_OPTIONS.length}`, fontSize, MENU_OVERLAY_UI.COLORS.dim)
+        .setOrigin(0.5, 0)
+      if (interactive) {
+        const previous = this.addText(MENU_OVERLAY_UI.SETTINGS_PAGE_PREVIOUS_X, MENU_OVERLAY_UI.FOOTER_Y, '‹', fontSize, MENU_OVERLAY_UI.COLORS.accent)
+          .setOrigin(0.5, 0)
+        const next = this.addText(MENU_OVERLAY_UI.SETTINGS_PAGE_NEXT_X, MENU_OVERLAY_UI.FOOTER_Y, '›', fontSize, MENU_OVERLAY_UI.COLORS.accent)
+          .setOrigin(0.5, 0)
+        bindTouchText(previous, () => this.moveSettingsPage(-1))
+        bindTouchText(next, () => this.moveSettingsPage(1))
+      }
     }
   }
 
@@ -1358,6 +1379,16 @@ export class MenuOverlay extends Phaser.Scene {
 
   private moveSettings(dir: number): void {
     this.settingsIndex = (this.settingsIndex + dir + MENU_SETTINGS_OPTIONS.length) % MENU_SETTINGS_OPTIONS.length
+    this.renderSettings()
+    AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private moveSettingsPage(dir: number): void {
+    const { visibleRows } = this.getSettingsLayout()
+    const pageCount = Math.ceil(MENU_SETTINGS_OPTIONS.length / visibleRows)
+    const currentPage = Math.floor(this.settingsIndex / visibleRows)
+    const nextPage = (currentPage + dir + pageCount) % pageCount
+    this.settingsIndex = Math.min(nextPage * visibleRows, MENU_SETTINGS_OPTIONS.length - 1)
     this.renderSettings()
     AudioManager.getInstance().playSFX('cursor')
   }
@@ -1697,14 +1728,18 @@ export class MenuOverlay extends Phaser.Scene {
     return value ? '开' : '关'
   }
 
-  private renderSettingSlider(configKey: string, y: number): void {
+  private renderSettingSlider(configKey: string, y: number, rowHeight: number, fontSize: number): void {
     const config = MENU_SETTINGS_OPTIONS.find(option => option.key === configKey)
     if (!config || config.type !== 'slider') return
     const value = (GameData.getInstance().settings as Record<string, unknown>)[config.key]
     const numberValue = typeof value === 'number' ? value : config.min
     const ratio = (numberValue - config.min) / (config.max - config.min)
-    const x = MENU_OVERLAY_UI.SETTINGS_VALUE_X + MENU_OVERLAY_UI.RESOURCE_LABEL_WIDTH
-    const barY = y + MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT / 2
+    const valueColumnWidth = Math.max(
+      MENU_OVERLAY_UI.RESOURCE_LABEL_WIDTH,
+      fontSize * MENU_OVERLAY_UI.SETTINGS_SLIDER_VALUE_COLUMN_EM,
+    )
+    const x = MENU_OVERLAY_UI.SETTINGS_VALUE_X + valueColumnWidth
+    const barY = y + rowHeight / 2
     this.addContentRect(x, barY, MENU_OVERLAY_UI.SETTINGS_BAR_WIDTH, MENU_OVERLAY_UI.SETTINGS_BAR_HEIGHT, MENU_OVERLAY_UI.COLORS.panelDeep)
     this.addContentRect(x, barY, MENU_OVERLAY_UI.SETTINGS_BAR_WIDTH * Phaser.Math.Clamp(ratio, 0, 1), MENU_OVERLAY_UI.SETTINGS_BAR_HEIGHT, MENU_OVERLAY_UI.COLORS.accentBar)
   }
@@ -1840,6 +1875,38 @@ export class MenuOverlay extends Phaser.Scene {
     else if (this.submenu === 'codex') this.renderCodex()
     else if (this.submenu === 'save') this.renderSave()
     else if (this.submenu === 'settings') this.renderSettings()
+  }
+
+  private getSettingsLayout(): SettingsLayout {
+    const fontSize = Math.max(
+      MENU_OVERLAY_UI.CAPTION_FONT_SIZE,
+      cssToGamePx(this, MENU_OVERLAY_UI.SETTINGS_MIN_CSS_FONT_SIZE),
+    )
+    const rowHeight = Math.max(
+      MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT,
+      fontSize + cssToGamePx(this, MENU_OVERLAY_UI.SETTINGS_ROW_GAP_CSS),
+    )
+    const availableHeight = MENU_OVERLAY_UI.FOOTER_Y
+      - MENU_OVERLAY_UI.SETTINGS_FOOTER_GAP
+      - MENU_OVERLAY_UI.SETTINGS_ROW_Y
+    const visibleRows = Phaser.Math.Clamp(
+      Math.floor(availableHeight / rowHeight),
+      MENU_OVERLAY_UI.SETTINGS_MIN_VISIBLE_ROWS,
+      MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS,
+    )
+    return { fontSize, rowHeight, visibleRows }
+  }
+
+  private handleSettingsResize(): void {
+    if (!this.scene.isActive()) return
+    if (this.submenu === 'settings') {
+      this.renderSettings()
+      return
+    }
+    if (this.submenu === 'main' && this.navIndex === MENU_NAV_INDEX.SETTINGS) {
+      this.clearContent()
+      this.renderSettingsSummary()
+    }
   }
 
   private clearContent(): void {

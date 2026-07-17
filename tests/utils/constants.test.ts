@@ -34,6 +34,8 @@ import {
   TITLE_MENU_LAYOUT,
   BATTLE_DEFAULT_ENEMY_SPRITE_FRAME,
   BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES,
+  MENU_OVERLAY_UI,
+  MENU_SETTINGS_OPTIONS,
   REBUILD_MENU,
 } from '../../src/utils/constants.ts'
 
@@ -264,6 +266,61 @@ describe('constants consistency', () => {
     expect(menuCenterX).toBeLessThan(landscapePhoneViewport.width * 0.86)
     expect(panelRight).toBeLessThanOrEqual(landscapePhoneViewport.width - 8)
     expect(finalMenuItemY).toBeLessThan(landscapePhoneViewport.height - 24)
+  })
+
+  test('settings rows remain readable and paginated on landscape phones', () => {
+    const phoneViewports = [
+      { width: 568, height: 320 },
+      { width: 667, height: 375 },
+    ]
+
+    for (const viewport of phoneViewports) {
+      const displayScale = Math.min(viewport.width / GAME_WIDTH, viewport.height / GAME_HEIGHT)
+      const cssToGameScale = 1 / displayScale
+      const fontSize = Math.max(
+        MENU_OVERLAY_UI.CAPTION_FONT_SIZE,
+        Math.round(MENU_OVERLAY_UI.SETTINGS_MIN_CSS_FONT_SIZE * cssToGameScale),
+      )
+      const rowHeight = Math.max(
+        MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT,
+        fontSize + Math.round(MENU_OVERLAY_UI.SETTINGS_ROW_GAP_CSS * cssToGameScale),
+      )
+      const availableHeight = MENU_OVERLAY_UI.FOOTER_Y
+        - MENU_OVERLAY_UI.SETTINGS_FOOTER_GAP
+        - MENU_OVERLAY_UI.SETTINGS_ROW_Y
+      const visibleRows = Math.max(
+        MENU_OVERLAY_UI.SETTINGS_MIN_VISIBLE_ROWS,
+        Math.min(MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS, Math.floor(availableHeight / rowHeight)),
+      )
+
+      expect(fontSize * displayScale).toBeGreaterThanOrEqual(MENU_OVERLAY_UI.SETTINGS_MIN_CSS_FONT_SIZE)
+      expect(visibleRows).toBeLessThan(MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS)
+      expect(visibleRows).toBeGreaterThanOrEqual(MENU_OVERLAY_UI.SETTINGS_MIN_VISIBLE_ROWS)
+      expect(MENU_OVERLAY_UI.SETTINGS_ROW_Y + visibleRows * rowHeight)
+        .toBeLessThanOrEqual(MENU_OVERLAY_UI.FOOTER_Y - MENU_OVERLAY_UI.SETTINGS_FOOTER_GAP)
+      expect((MENU_OVERLAY_UI.SETTINGS_PAGE_TEXT_X - MENU_OVERLAY_UI.SETTINGS_PAGE_PREVIOUS_X) * displayScale)
+        .toBeGreaterThanOrEqual(TOUCH_INPUT.TEXT_HIT_AREA_MIN_CSS_WIDTH)
+      expect((MENU_OVERLAY_UI.SETTINGS_PAGE_NEXT_X - MENU_OVERLAY_UI.SETTINGS_PAGE_TEXT_X) * displayScale)
+        .toBeGreaterThanOrEqual(TOUCH_INPUT.TEXT_HIT_AREA_MIN_CSS_WIDTH)
+    }
+
+    const desktopScale = 1
+    const desktopFontSize = Math.max(
+      MENU_OVERLAY_UI.CAPTION_FONT_SIZE,
+      Math.round(MENU_OVERLAY_UI.SETTINGS_MIN_CSS_FONT_SIZE / desktopScale),
+    )
+    const desktopRowHeight = Math.max(
+      MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT,
+      desktopFontSize + Math.round(MENU_OVERLAY_UI.SETTINGS_ROW_GAP_CSS / desktopScale),
+    )
+    const desktopAvailableHeight = MENU_OVERLAY_UI.FOOTER_Y
+      - MENU_OVERLAY_UI.SETTINGS_FOOTER_GAP
+      - MENU_OVERLAY_UI.SETTINGS_ROW_Y
+
+    expect(desktopFontSize).toBe(MENU_OVERLAY_UI.CAPTION_FONT_SIZE)
+    expect(desktopRowHeight).toBe(MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT)
+    expect(Math.floor(desktopAvailableHeight / desktopRowHeight)).toBe(MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS)
+    expect(MENU_SETTINGS_OPTIONS.length).toBeGreaterThan(MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS)
   })
 
   test('rebuild progress text stays inside the book pages', () => {
