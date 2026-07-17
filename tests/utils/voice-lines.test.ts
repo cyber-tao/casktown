@@ -1,9 +1,23 @@
 import { describe, expect, test } from 'bun:test'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolveDialogueVoiceKey, getDialogueVoicePath } from '../../src/utils/voiceLines.ts'
 import { VOICE_AUDIO_PATH } from '../../src/utils/constants.ts'
 import type { DialogueLine } from '../../src/data/types.ts'
 import voiceLines from '../../voice_lines.json'
+
+const MIN_VOICE_DURATION_SECONDS = 0.1
+
+function getOggVorbisDurationSeconds(path: string): number | null {
+  const data = readFileSync(path)
+  const identificationHeader = data.indexOf(Buffer.from([1, 118, 111, 114, 98, 105, 115]))
+  const finalPage = data.lastIndexOf(Buffer.from('OggS'))
+  if (identificationHeader < 0 || finalPage < 0) return null
+
+  const sampleRate = data.readUInt32LE(identificationHeader + 12)
+  const granulePosition = Number(data.readBigUInt64LE(finalPage + 6))
+  if (sampleRate <= 0 || !Number.isSafeInteger(granulePosition)) return null
+  return granulePosition / sampleRate
+}
 
 describe('resolveDialogueVoiceKey', () => {
   test('returns null for out-of-range line index', () => {
@@ -21,10 +35,10 @@ describe('resolveDialogueVoiceKey', () => {
     expect(resolveDialogueVoiceKey('FAKE_DIA', lines, 0)).toBeNull()
   })
 
-  test('resolves voice key for a known dialogue line', () => {
+  test('does not play corrupt audio for silent reaction lines', () => {
     const lines: DialogueLine[] = [{ speaker: 'T', text: '……' }]
-    const result = resolveDialogueVoiceKey('DIA_001_START', lines, 0)
-    expect(result === null || typeof result === 'string').toBe(true)
+    expect(resolveDialogueVoiceKey('DIA_004_MAYOR', lines, 0)).toBeNull()
+    expect((voiceLines as Array<{ text: string }>).some(line => line.text === '……')).toBe(false)
   })
 
   test('handles duplicate speaker/text within same dialogue', () => {
@@ -60,5 +74,17 @@ describe('voice line assets', () => {
       .filter(assetKey => !existsSync(`assets/${getDialogueVoicePath(assetKey)}`))
 
     expect(missing).toEqual([])
+  })
+
+  test('all configured voice assets contain decodable audio duration', () => {
+    const invalid = (voiceLines as Array<{ assetKey?: string }>)
+      .map(line => line.assetKey)
+      .filter((assetKey): assetKey is string => Boolean(assetKey))
+      .filter(assetKey => {
+        const duration = getOggVorbisDurationSeconds(`assets/${getDialogueVoicePath(assetKey)}`)
+        return duration === null || duration < MIN_VOICE_DURATION_SECONDS
+      })
+
+    expect(invalid).toEqual([])
   })
 })

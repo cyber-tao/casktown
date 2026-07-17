@@ -151,12 +151,6 @@
   },
   {
     "diaId": "DIA_004_MAYOR",
-    "speaker": "T",
-    "text": "……",
-    "assetKey": "DIA_004_MAYOR_28"
-  },
-  {
-    "diaId": "DIA_004_MAYOR",
     "speaker": "镇长",
     "text": "去会场吧。有些事情，该让你知道了。",
     "assetKey": "DIA_004_MAYOR_29"
@@ -1680,12 +1674,6 @@
     "assetKey": "DIA_101_COLD_001"
   },
   {
-    "diaId": "DIA_101_COLD",
-    "speaker": "阿博",
-    "text": "……",
-    "assetKey": "DIA_101_COLD_002"
-  },
-  {
     "diaId": "DIA_102_POISON",
     "speaker": "阿博",
     "text": "小心叶子背面，有虫。",
@@ -3088,12 +3076,6 @@
     "speaker": "无相",
     "text": "你说神不能替人选择。其实是你害怕自己选择错。",
     "assetKey": "DIA_715_SHADOW_SUN_001"
-  },
-  {
-    "diaId": "DIA_715_SHADOW_SUN",
-    "speaker": "sun",
-    "text": "……",
-    "assetKey": "DIA_715_SHADOW_SUN_002"
   },
   {
     "diaId": "DIA_715_SHADOW_SUN",
