@@ -749,6 +749,16 @@ export class GameData {
     this.reserve = nextReserve
   }
 
+  private normalizeQuestState(questId: string, state: QuestState): QuestState {
+    const definition = GAME_CONFIG_DATABASE.getTable('quests')[questId]
+    if (!definition) return { ...state }
+    const maxProgress = definition.objectives.length
+    const progress = state.status === 'completed'
+      ? maxProgress
+      : Math.max(0, Math.min(maxProgress, state.progress))
+    return { ...state, id: questId, progress, maxProgress }
+  }
+
   private isWalkableSavedPosition(map: MapData, x: number, y: number): boolean {
     if (x < 0 || y < 0 || x >= map.width || y >= map.height) return false
     return !map.collisions.includes(y * map.width + x)
@@ -842,7 +852,8 @@ export class GameData {
     const serializedEquipment = this.cloneEquipmentIndex((d.equipment as Record<string, string[]>) ?? {})
     const serializedBaseStats = d.baseStats as Record<string, CharacterStats> | undefined
     this.equipment = serializedEquipment
-    this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {}).map(([id, quest]) => [id, { ...quest }]))
+    this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {})
+      .map(([id, quest]) => [id, this.normalizeQuestState(id, quest)]))
     this.flags = { ...((d.flags as GameFlags) ?? {}) }
     this.branches = { ...createDefaultBranches(), ...((d.branches as Partial<BranchState>) ?? {}) }
     this.normalizeBranchNumbers()

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
+import { QuestSystem } from '../../src/core/QuestSystem.ts'
 import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../../src/data/configDatabase.ts'
 import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
@@ -209,6 +210,34 @@ describe('GameData', () => {
       expect(gd.getFlag(flag)).toBe(true)
     }
     expect(gd.getFlag('true_route_reincarnation')).toBe(true)
+  })
+
+  test('deserialize migrates active quests to the current objective count', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { quests: Record<string, unknown> }
+    snapshot.quests.QST_014 = { id: 'QST_014', status: 'active', progress: 0, maxProgress: 1 }
+
+    gd.deserialize(snapshot)
+    expect(gd.quests.get('QST_014')).toEqual({ id: 'QST_014', status: 'active', progress: 0, maxProgress: 2 })
+
+    QuestSystem.getInstance().advanceQuest('QST_014')
+    expect(gd.quests.get('QST_014')).toEqual({ id: 'QST_014', status: 'active', progress: 1, maxProgress: 2 })
+  })
+
+  test('deserialize preserves quest status while normalizing known progress only', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { quests: Record<string, unknown> }
+    snapshot.quests = {
+      QST_014: { id: 'QST_014', status: 'completed', progress: 1, maxProgress: 1 },
+      QST_013: { id: 'QST_013', status: 'failed', progress: 99, maxProgress: 99 },
+      MOD_QUEST: { id: 'MOD_QUEST', status: 'active', progress: 2, maxProgress: 7 },
+    }
+
+    gd.deserialize(snapshot)
+
+    expect(gd.quests.get('QST_014')).toEqual({ id: 'QST_014', status: 'completed', progress: 2, maxProgress: 2 })
+    expect(gd.quests.get('QST_013')).toEqual({ id: 'QST_013', status: 'failed', progress: 3, maxProgress: 3 })
+    expect(gd.quests.get('MOD_QUEST')).toEqual({ id: 'MOD_QUEST', status: 'active', progress: 2, maxProgress: 7 })
   })
 
   test('true route unlock syncs from branch and flag state', () => {
