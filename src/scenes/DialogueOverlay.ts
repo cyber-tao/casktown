@@ -121,6 +121,7 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   create(data: { dialogueId: string }): void {
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => AudioManager.getInstance().stopVoice())
     this.lineIndex = 0
     this.charIndex = 0
     this.isTyping = false
@@ -429,6 +430,7 @@ export class DialogueOverlay extends Phaser.Scene {
       return
     }
     const actions = this.completionQueue.finalize()
+    AudioManager.getInstance().stopVoice()
     this.scene.stop()
     if (actions && actions.length > 0) {
       EventBus.emit(GameEvents.DIALOGUE_END, { actions })
@@ -439,6 +441,7 @@ export class DialogueOverlay extends Phaser.Scene {
 
   private closeMissingDialogue(): void {
     this.typeTimer?.remove()
+    AudioManager.getInstance().stopVoice()
     this.scene.stop()
     EventBus.emit(GameEvents.DIALOGUE_END)
   }
