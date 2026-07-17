@@ -32,7 +32,6 @@ import {
   COMBO_TP_COST,
   DEFAULT_CHARACTER_SPRITE_KEY,
   DEFAULT_ENEMY_SPRITE_KEY,
-  ELEMENT_WEAKNESS,
   GAME_HEIGHT,
   GAME_WIDTH,
   LOADING_SCREEN,
@@ -49,6 +48,14 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
+import {
+  advanceBattleTurn,
+  advanceBreakGauge,
+  canGainBreakGauge,
+  canEscapeBattle,
+  canUseBattleSkill,
+  resolveEnemyElementalDamageModifier,
+} from '../utils/battleRules'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
 
@@ -121,7 +128,7 @@ export class BattleScene extends Phaser.Scene {
   private encounterId = ''
   private mapId = ''
   private mapEventId = ''
-  private turnCount = 0
+  private completedRoundCount = 0
   private resultSummary: BattleResultSummary | null = null
   private resultPanel: Phaser.GameObjects.Container | null = null
 
@@ -171,7 +178,7 @@ export class BattleScene extends Phaser.Scene {
     this.encounterId = data.encounterId
     this.mapId = data.mapId || GameData.getInstance().currentMap
     this.mapEventId = data.mapEventId || ''
-    this.turnCount = 0
+    this.completedRoundCount = 0
     this.resultSummary = null
     this.resultPanel = null
 
@@ -586,8 +593,12 @@ export class BattleScene extends Phaser.Scene {
     return this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.FESTIVAL_DEFENSE
   }
 
+  private canEscapeCurrentBattle(): boolean {
+    return canEscapeBattle(this.enemyData, this.isFestivalDefenseEncounter())
+  }
+
   private hasFestivalDefenseSucceeded(): boolean {
-    return this.isFestivalDefenseEncounter() && this.turnCount >= BATTLE_RULES.FESTIVAL_DEFENSE_SURVIVE_TURNS
+    return this.isFestivalDefenseEncounter() && this.completedRoundCount >= BATTLE_RULES.FESTIVAL_DEFENSE_SURVIVE_TURNS
   }
 
   private completeFestivalDefense(message: string): boolean {
@@ -618,7 +629,7 @@ export class BattleScene extends Phaser.Scene {
   private hasBaihuTrialSucceeded(liveEnemies = this.getLiveEnemies()): boolean {
     const baihu = this.getBaihuTrialUnit(liveEnemies)
     if (!baihu) return false
-    return this.turnCount >= BATTLE_RULES.BAIHU_TRIAL_SURVIVE_TURNS || baihu.stats.hp / baihu.stats.maxHp <= BATTLE_RULES.BAIHU_TRIAL_HP_RATIO
+    return this.completedRoundCount >= BATTLE_RULES.BAIHU_TRIAL_SURVIVE_TURNS || baihu.stats.hp / baihu.stats.maxHp <= BATTLE_RULES.BAIHU_TRIAL_HP_RATIO
   }
 
   private completeBaihuTrial(message: string): boolean {
@@ -645,6 +656,18 @@ export class BattleScene extends Phaser.Scene {
     if (unit.tp >= BATTLE_RULES.MAX_TP) return
     unit.tp = Math.min(BATTLE_RULES.MAX_TP, unit.tp + amount)
     this.updateUnitBars(unit)
+  }
+
+  private applyBreakGauge(target: BattleUnit, gain: number): void {
+    if (!canGainBreakGauge(target.isPlayer, target.stats.hp, this.hasStatus(target, BATTLE_STATUS.BREAK))) return
+    const result = advanceBreakGauge(target.breakGauge, target.breakMax, gain)
+    target.breakGauge = result.gauge
+    this.updateUnitBars(target)
+    if (!result.shouldBreak) return
+
+    this.addStatus(target, BATTLE_STATUS.BREAK, undefined, false)
+    this.addStatus(target, BATTLE_STATUS.BREAK_TURNS, BATTLE_STATUS_DURATIONS.SHORT, false)
+    this.log(`${target.name} 陷入破势状态！`)
   }
 
   private isReviveEffect(effect: string): boolean {
@@ -768,8 +791,9 @@ export class BattleScene extends Phaser.Scene {
     this.commandMenuObjects.push(menuBg)
 
     // Menu items
-    for (let i = 0; i < BATTLE_COMMAND_LABELS.length; i++) {
-      const text = this.add.text(BATTLE_LAYOUT.COMMAND_ITEM_X, BATTLE_LAYOUT.COMMAND_ITEM_START_Y + i * BATTLE_LAYOUT.COMMAND_ITEM_GAP_Y, BATTLE_COMMAND_LABELS[i]!, {
+    const commandLabels = this.canEscapeCurrentBattle() ? BATTLE_COMMAND_LABELS : BATTLE_COMMAND_LABELS.slice(0, -1)
+    for (let i = 0; i < commandLabels.length; i++) {
+      const text = this.add.text(BATTLE_LAYOUT.COMMAND_ITEM_X, BATTLE_LAYOUT.COMMAND_ITEM_START_Y + i * BATTLE_LAYOUT.COMMAND_ITEM_GAP_Y, commandLabels[i]!, {
         fontSize: `${BATTLE_LAYOUT.COMMAND_ITEM_FONT_SIZE}px`,
         color: BATTLE_LAYOUT.COMMAND_ITEM_COLOR,
         fontFamily: BATTLE_LAYOUT.COMMAND_ITEM_FONT_FAMILY,
@@ -1124,16 +1148,21 @@ export class BattleScene extends Phaser.Scene {
   private inSkillMenu = false
   private skillMenuBg!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
 
+  private getUsableSkillIds(actor: BattleUnit): string[] {
+    if (!actor.isPlayer) return []
+    const char = actor.data as CharacterData
+    const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
+    return char.skills.filter(skillId => {
+      const skill = skillDefs[skillId]
+      return Boolean(skill && canUseBattleSkill(actor.stats.mp, actor.tp, skill))
+    })
+  }
+
   private showSkills(): void {
     const actor = this.getCurrentUnit()
     if (!actor || !actor.isPlayer) return
-    const char = actor.data as CharacterData
     const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
-    const skills = char.skills.filter(s => {
-      const sk = skillDefs[s]
-      if (!sk) return false
-      return char.stats.mp >= sk.costMp && actor.tp >= sk.costTp
-    })
+    const skills = this.getUsableSkillIds(actor)
     if (skills.length === 0) {
       this.log('没有可用技能')
       return
@@ -1173,13 +1202,8 @@ export class BattleScene extends Phaser.Scene {
     if (!this.inSkillMenu) return
     const actor = this.getCurrentUnit()
     if (!actor || !actor.isPlayer) return
-    const char = actor.data as CharacterData
     const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
-    const skills = char.skills.filter(s => {
-      const sk = skillDefs[s]
-      if (!sk) return false
-      return char.stats.mp >= sk.costMp && actor.tp >= sk.costTp
-    })
+    const skills = this.getUsableSkillIds(actor)
     const skillId = skills[this.skillMenuIndex]
     if (!skillId) return
     this.closeSkillMenu()
@@ -1671,6 +1695,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private tryEscape(): void {
+    if (!this.canEscapeCurrentBattle()) {
+      AudioManager.getInstance().playSFX('cancel')
+      this.log('这场战斗无法逃跑！')
+      return
+    }
+
     const success = Math.random() < BATTLE_RULES.ESCAPE_SUCCESS_RATE
     if (success) {
       this.log('成功逃跑了！')
@@ -1710,11 +1740,7 @@ export class BattleScene extends Phaser.Scene {
       this.addTp(actor, BATTLE_RULES.ENEMY_ATTACK_TP_GAIN)
     }
 
-    // Break gauge for enemies
-    if (!target.isPlayer && !this.hasStatus(target, BATTLE_STATUS.BREAK)) {
-      target.breakGauge = Math.min(target.breakMax, target.breakGauge + BATTLE_RULES.NORMAL_BREAK_GAIN)
-      this.updateUnitBars(target)
-    }
+    this.applyBreakGauge(target, BATTLE_RULES.NORMAL_BREAK_GAIN)
 
     // Animation
     this.tweens.add({
@@ -1876,13 +1902,16 @@ export class BattleScene extends Phaser.Scene {
       damage = Math.floor(damage * this.getPlayerDamageMultiplier())
     }
 
-    // Element weakness
     let isWeakHit = false
-    const targetElement = target.isPlayer ? 'none' : (target.data as EnemyData).element
-    if (ELEMENT_WEAKNESS[targetElement]?.includes(skill.element)) {
-      damage = Math.floor(damage * 1.5)
-      isWeakHit = true
-      this.log(`弱点打击！`)
+    if (!target.isPlayer) {
+      const elementalModifier = resolveEnemyElementalDamageModifier(target.data as EnemyData, skill.element)
+      damage = Math.floor(damage * elementalModifier.multiplier)
+      if (elementalModifier.result === 'weak') {
+        isWeakHit = true
+        this.log('弱点打击！')
+      } else if (elementalModifier.result === 'resisted') {
+        this.log('属性抵抗！')
+      }
     }
 
     damage = this.applyDamageVariance(damage)
@@ -1892,18 +1921,8 @@ export class BattleScene extends Phaser.Scene {
       this.addTp(actor, BATTLE_RULES.PLAYER_SKILL_TP_GAIN)
     }
 
-    // Break gauge for enemies
-    if (!target.isPlayer && !this.hasStatus(target, BATTLE_STATUS.BREAK)) {
-      const breakGain = isWeakHit ? BATTLE_RULES.WEAK_SKILL_BREAK_GAIN : BATTLE_RULES.SKILL_BREAK_GAIN
-      target.breakGauge = Math.min(target.breakMax, target.breakGauge + breakGain)
-      this.updateUnitBars(target)
-      if (target.breakGauge >= target.breakMax) {
-        this.addStatus(target, BATTLE_STATUS.BREAK, undefined, false)
-        this.log(`${target.name} 陷入破势状态！`)
-        // Break lasts 2 turns
-        this.addStatus(target, BATTLE_STATUS.BREAK_TURNS, BATTLE_STATUS_DURATIONS.SHORT, false)
-      }
-    }
+    const breakGain = isWeakHit ? BATTLE_RULES.WEAK_SKILL_BREAK_GAIN : BATTLE_RULES.SKILL_BREAK_GAIN
+    this.applyBreakGauge(target, breakGain)
 
     AudioManager.getInstance().playSFX(skill.type === 'magic' ? 'magic_cast' : 'attack_slash')
     this.log(`${actor.name} 使用 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`)
@@ -2011,7 +2030,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private startTurn(): void {
-    if (this.currentTurn === 0) this.turnCount++
+    if (this.hasFestivalDefenseSucceeded()) {
+      this.completeFestivalDefense('无名戒指发出白光，黑暗小妖被迫退开。')
+      return
+    }
+
+    if (this.hasBaihuTrialSucceeded()) {
+      this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
+      return
+    }
+
     const unitIdx = this.turnOrder[this.currentTurn]!
     const unit = this.units[unitIdx]
 
@@ -2023,16 +2051,6 @@ export class BattleScene extends Phaser.Scene {
     if (this.hasStatus(unit, BATTLE_STATUS.COMBO_ACTED)) {
       this.removeStatus(unit, BATTLE_STATUS.COMBO_ACTED)
       this.nextTurn()
-      return
-    }
-
-    if (this.hasFestivalDefenseSucceeded()) {
-      this.completeFestivalDefense('无名戒指发出白光，黑暗小妖被迫退开。')
-      return
-    }
-
-    if (this.hasBaihuTrialSucceeded()) {
-      this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
       return
     }
 
@@ -2388,9 +2406,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private advanceTurn(): void {
-    this.currentTurn++
-    if (this.currentTurn >= this.turnOrder.length) {
-      this.currentTurn = 0
+    const result = advanceBattleTurn(this.currentTurn, this.turnOrder.length, this.completedRoundCount)
+    this.currentTurn = result.currentTurn
+    this.completedRoundCount = result.completedRounds
+    if (result.roundCompleted) {
       this.calculateTurnOrder()
     }
     this.startTurn()
