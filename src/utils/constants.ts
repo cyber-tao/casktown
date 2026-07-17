@@ -1706,7 +1706,7 @@ export const DIALOGUE_TEXT_POSITION = {
 } as const
 export const DIALOGUE_TEXT_FACELESS_POSITION = {
   x: DIALOGUE_BOX.x - DIALOGUE_BOX.width / 2 + DIALOGUE_BOX.padding,
-  y: DIALOGUE_TEXT_POSITION.y,
+  y: DIALOGUE_NAME_POSITION.y + scalePx(36),
 } as const
 export const DIALOGUE_TEXT_FACELESS_WIDTH = DIALOGUE_BOX.width - DIALOGUE_BOX.padding * 2
 export const DIALOGUE_CHOICE = {

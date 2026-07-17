@@ -237,7 +237,10 @@ export class DialogueOverlay extends Phaser.Scene {
     const faceKey = DIALOGUE_SPEAKER_FACE_MAP[line.speaker]
     const hasFace = Boolean(faceKey && this.textures.exists(faceKey))
     this.faceRect.setVisible(hasFace)
-    this.textObj.setX(hasFace ? DIALOGUE_TEXT_POSITION.x : DIALOGUE_TEXT_FACELESS_POSITION.x)
+    this.textObj.setPosition(
+      hasFace ? DIALOGUE_TEXT_POSITION.x : DIALOGUE_TEXT_FACELESS_POSITION.x,
+      hasFace ? DIALOGUE_TEXT_POSITION.y : DIALOGUE_TEXT_FACELESS_POSITION.y,
+    )
     this.textObj.setWordWrapWidth(hasFace ? DIALOGUE_TEXT_WIDTH : DIALOGUE_TEXT_FACELESS_WIDTH, true)
     this.textObj.setFixedSize(hasFace ? DIALOGUE_TEXT_WIDTH : DIALOGUE_TEXT_FACELESS_WIDTH, 0)
 
