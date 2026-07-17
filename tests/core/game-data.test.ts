@@ -97,6 +97,21 @@ describe('GameData', () => {
     expect(gd.getFlag('true_route_unlocked')).toBe(true)
   })
 
+  test('true route stays locked below the authored mercy threshold', () => {
+    const gd = GameData.getInstance()
+
+    gd.setFlag('white_tiger_respected', true)
+    gd.setFlag('answered_xiyuan_kindly', true)
+    gd.setFlag('released_four_seals', true)
+    gd.setFlag('xiaoai_purified', true)
+    gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+    gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY - 1)
+
+    expect(gd.branches.true_route_unlocked).toBe(false)
+    gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
+    expect(gd.branches.true_route_unlocked).toBe(true)
+  })
+
   test('numeric branch flags mirror cumulative branch values', () => {
     const gd = GameData.getInstance()
 
@@ -160,6 +175,21 @@ describe('GameData', () => {
 
     expect(gd.currentMap).toBe(START_MAP_ID)
     expect(gd.playerPosition).toEqual(START_PLAYER_POSITION)
+  })
+
+  test('deserialize keeps rebuilt town saves on the rebuilt map', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as Record<string, unknown>
+    snapshot.currentMap = START_MAP_ID
+    snapshot.rebuildLevel = REBUILD_VISUAL_MAP_THRESHOLD
+    snapshot.branches = {
+      ...(snapshot.branches as Record<string, unknown>),
+      rebuild_level: REBUILD_VISUAL_MAP_THRESHOLD,
+    }
+
+    gd.deserialize(snapshot)
+
+    expect(gd.currentMap).toBe(REBUILT_TOWN_MAP_ID)
   })
 
   test('deserialize keeps saved locations inside walkable map bounds', () => {

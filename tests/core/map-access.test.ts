@@ -1,8 +1,19 @@
 import { describe, expect, test } from 'bun:test'
-import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
-import { MAP_ACCESS_REQUIREMENTS } from '../../src/utils/constants.ts'
+import { getBlockedMapDialogueId, resolveCanonicalMapId } from '../../src/core/MapAccess.ts'
+import {
+  MAP_ACCESS_REQUIREMENTS,
+  REBUILD_VISUAL_MAP_THRESHOLD,
+  REBUILT_TOWN_MAP_ID,
+  RUINED_TOWN_MAP_ID,
+} from '../../src/utils/constants.ts'
 
 describe('MapAccess', () => {
+  test('keeps rebuilt town canonical after later transfers', () => {
+    expect(resolveCanonicalMapId(RUINED_TOWN_MAP_ID, REBUILD_VISUAL_MAP_THRESHOLD - 1)).toBe(RUINED_TOWN_MAP_ID)
+    expect(resolveCanonicalMapId(RUINED_TOWN_MAP_ID, REBUILD_VISUAL_MAP_THRESHOLD)).toBe(REBUILT_TOWN_MAP_ID)
+    expect(resolveCanonicalMapId('MAP_010', REBUILD_VISUAL_MAP_THRESHOLD)).toBe('MAP_010')
+  })
+
   test('returns null for map without access requirement', () => {
     const readFlag = () => undefined
     expect(getBlockedMapDialogueId('MAP_001', readFlag)).toBeNull()

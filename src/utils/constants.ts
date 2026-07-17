@@ -533,7 +533,7 @@ export const START_PARTY = ['T'] as const
 export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
 export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
 export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
-export const TRUE_ROUTE_MIN_MERCY = 3
+export const TRUE_ROUTE_MIN_MERCY = 5
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3
 export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
   T: 't',

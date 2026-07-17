@@ -66,6 +66,33 @@ describe('BattleRewards', () => {
     expect(qs.isQuestCompleted('QST_006')).toBe(true)
   })
 
+  test('releases all four seals only after every guardian in any order', () => {
+    const encounterOrders = [
+      ['BTL_LIANG', 'BTL_CHI', 'BTL_MEI', 'BTL_WANG'],
+      ['BTL_WANG', 'BTL_MEI', 'BTL_LIANG', 'BTL_CHI'],
+    ] as const
+
+    for (const encounterOrder of encounterOrders) {
+      const gd = GameData.getInstance()
+      gd.reset()
+
+      for (const encounterId of encounterOrder.slice(0, -1)) {
+        applyEncounterVictoryRewards({ encounterId, rollDrop: () => false })
+        expect(gd.getFlag('released_four_seals')).not.toBe(true)
+        expect(QuestSystem.getInstance().isQuestCompleted('QST_010')).toBe(false)
+      }
+
+      applyEncounterVictoryRewards({ encounterId: encounterOrder.at(-1)!, rollDrop: () => false })
+
+      expect(gd.getFlag('seal_qinglong_released')).toBe(true)
+      expect(gd.getFlag('seal_baihu_released')).toBe(true)
+      expect(gd.getFlag('seal_zhuque_released')).toBe(true)
+      expect(gd.getFlag('seal_xuanwu_released')).toBe(true)
+      expect(gd.getFlag('released_four_seals')).toBe(true)
+      expect(QuestSystem.getInstance().isQuestCompleted('QST_010')).toBe(true)
+    }
+  })
+
   test('reports missing encounters without mutating rewards', () => {
     const result = applyEncounterVictoryRewards({ encounterId: 'MISSING_ENCOUNTER' })
 

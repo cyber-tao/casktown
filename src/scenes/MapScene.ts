@@ -5,7 +5,7 @@ import { QuestSystem } from '../core/QuestSystem'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { SaveManager } from '../core/SaveManager'
-import { getBlockedMapDialogueId } from '../core/MapAccess'
+import { getBlockedMapDialogueId, resolveCanonicalMapId } from '../core/MapAccess'
 import { areEventConditionsMet as areConditionsMet } from '../core/EventConditions'
 import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent, isMapEventCompleted } from '../core/MapEventState'
 import { applyStateEventAction } from '../core/EventActionExecutor'
@@ -290,11 +290,12 @@ export class MapScene extends Phaser.Scene {
   }
 
   init(data: MapSceneStartData = {}): void {
-    const mapId = data.mapId || GameData.getInstance().currentMap
+    const gd = GameData.getInstance()
+    const mapId = resolveCanonicalMapId(data.mapId || gd.currentMap, gd.rebuildLevel)
     const maps = GAME_CONFIG_DATABASE.getTable('maps')
     this.mapData = maps[mapId] || maps.MAP_001!
     this.initialFeedback = data.feedback ?? null
-    GameData.getInstance().currentMap = this.mapData.id
+    gd.currentMap = this.mapData.id
   }
 
   preload(): void {
@@ -1994,7 +1995,8 @@ export class MapScene extends Phaser.Scene {
 
   private transferMap(mapId: string, x: number, y: number, beforeRestart?: () => void): boolean {
     const gd = GameData.getInstance()
-    const blockedDialogueId = getBlockedMapDialogueId(mapId, flag => gd.getFlag(flag))
+    const targetMapId = resolveCanonicalMapId(mapId, gd.rebuildLevel)
+    const blockedDialogueId = getBlockedMapDialogueId(targetMapId, flag => gd.getFlag(flag))
     if (blockedDialogueId) {
       AudioManager.getInstance().playSFX('cancel')
       this.startDialogue(blockedDialogueId)
@@ -2003,9 +2005,9 @@ export class MapScene extends Phaser.Scene {
 
     beforeRestart?.()
     AudioManager.getInstance().playSFX('warp')
-    gd.currentMap = mapId
+    gd.currentMap = targetMapId
     gd.playerPosition = { x, y }
-    this.requestMapRestart(mapId)
+    this.requestMapRestart(targetMapId)
     return true
   }
 

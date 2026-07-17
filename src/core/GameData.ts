@@ -4,6 +4,7 @@ import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import { REBUILD_FACILITIES } from '../data/rebuild'
+import { resolveCanonicalMapId } from './MapAccess'
 import {
   BARREL_UNLOCK_PROGRESS_FLAGS,
   INITIAL_GOLD,
@@ -673,6 +674,7 @@ export class GameData {
 
   private normalizeCurrentLocation(): void {
     const maps = GAME_CONFIG_DATABASE.getTable('maps')
+    this.currentMap = resolveCanonicalMapId(this.currentMap, this.rebuildLevel)
     let map = maps[this.currentMap]
     if (!map) {
       this.currentMap = START_MAP_ID
