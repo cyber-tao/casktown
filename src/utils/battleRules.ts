@@ -1,5 +1,5 @@
 import type { EnemyData, SkillData } from '../data/types'
-import { BATTLE_SOLO_CHARACTER_ID, BATTLE_SOLO_ENCOUNTER_IDS, ELEMENT_WEAKNESS } from './constants'
+import { BATTLE_RULES, BATTLE_SOLO_CHARACTER_ID, BATTLE_SOLO_ENCOUNTER_IDS, ELEMENT_WEAKNESS } from './constants'
 
 const WEAKNESS_DAMAGE_MULTIPLIER = 1.5
 const RESISTANCE_DAMAGE_MULTIPLIER = 0.5
@@ -87,4 +87,30 @@ export function canUseBattleSkill(
   skill: Pick<SkillData, 'costMp' | 'costTp'>,
 ): boolean {
   return currentMp >= skill.costMp && currentTp >= skill.costTp
+}
+
+export function resolveLimitedSkillTargets<T>(selected: T, candidates: readonly T[], targetCount = 1): T[] {
+  const count = Math.max(1, Math.floor(targetCount))
+  const selectedIndex = candidates.indexOf(selected)
+  const ordered = selectedIndex >= 0
+    ? [...candidates.slice(selectedIndex), ...candidates.slice(0, selectedIndex)]
+    : [selected, ...candidates]
+  return [...new Set(ordered)].slice(0, count)
+}
+
+export function shouldEvadeBattleAttack(hasEvasionUp: boolean, roll: number): boolean {
+  return hasEvasionUp && roll >= 0 && roll < BATTLE_RULES.EVASION_UP_CHANCE
+}
+
+export function resolveBreakGaugeGain(baseGain: number, weaknessExposed: boolean): number {
+  const multiplier = weaknessExposed ? BATTLE_RULES.WEAKNESS_EXPOSED_BREAK_GAIN_MULTIPLIER : 1
+  return Math.max(0, Math.floor(baseGain * multiplier))
+}
+
+export function shouldGrantExtraTurnOnKill(
+  skill: Pick<SkillData, 'grantsExtraTurnOnKill'> | undefined,
+  opponentsBefore: number,
+  opponentsAfter: number,
+): boolean {
+  return skill?.grantsExtraTurnOnKill === true && opponentsAfter > 0 && opponentsAfter < opponentsBefore
 }

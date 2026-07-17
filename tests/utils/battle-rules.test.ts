@@ -6,8 +6,12 @@ import {
   canEscapeBattle,
   canUseBattleSkill,
   hasCompletedSurvivalRounds,
+  resolveBreakGaugeGain,
   resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
+  resolveLimitedSkillTargets,
+  shouldEvadeBattleAttack,
+  shouldGrantExtraTurnOnKill,
 } from '../../src/utils/battleRules.ts'
 
 describe('battle rules', () => {
@@ -67,5 +71,36 @@ describe('battle rules', () => {
 
     expect(canUseBattleSkill(20, 10, skill)).toBe(true)
     expect(canUseBattleSkill(19, 10, skill)).toBe(false)
+  })
+
+  test('selects a primary target plus the next distinct target', () => {
+    const enemies = ['A', 'B', 'C']
+
+    expect(resolveLimitedSkillTargets('B', enemies, 2)).toEqual(['B', 'C'])
+    expect(resolveLimitedSkillTargets('C', enemies, 2)).toEqual(['C', 'A'])
+    expect(resolveLimitedSkillTargets('A', ['A'], 2)).toEqual(['A'])
+    expect(resolveLimitedSkillTargets('A', enemies)).toEqual(['A'])
+  })
+
+  test('applies the authored evasion threshold only while the buff is active', () => {
+    expect(shouldEvadeBattleAttack(true, 0.399)).toBe(true)
+    expect(shouldEvadeBattleAttack(true, 0.4)).toBe(false)
+    expect(shouldEvadeBattleAttack(false, 0)).toBe(false)
+  })
+
+  test('increases break gauge gain by twenty percent against exposed weakness', () => {
+    expect(resolveBreakGaugeGain(10, true)).toBe(12)
+    expect(resolveBreakGaugeGain(15, true)).toBe(18)
+    expect(resolveBreakGaugeGain(25, true)).toBe(30)
+    expect(resolveBreakGaugeGain(15, false)).toBe(15)
+  })
+
+  test('grants another action only when a marked skill defeats a non-final enemy', () => {
+    const skill = { grantsExtraTurnOnKill: true }
+
+    expect(shouldGrantExtraTurnOnKill(skill, 2, 1)).toBe(true)
+    expect(shouldGrantExtraTurnOnKill(skill, 1, 0)).toBe(false)
+    expect(shouldGrantExtraTurnOnKill(skill, 2, 2)).toBe(false)
+    expect(shouldGrantExtraTurnOnKill({}, 2, 1)).toBe(false)
   })
 })

@@ -13,7 +13,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -667,6 +667,13 @@ describe('game content data', () => {
       type: 'setFlag', flag: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, value: true,
     })
     expect(ENCOUNTERS.BTL_SIDE_SUN_01?.rewards).toContainEqual({ flag: STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, value: true })
+  })
+
+  test('companion skill data exposes its authored battle mechanics', () => {
+    expect(SKILLS.huixuanbiao?.targetCount).toBe(2)
+    expect(SKILLS.tianjianyishan?.grantsExtraTurnOnKill).toBe(true)
+    expect(BATTLE_SKILL_STATUS_EFFECTS.tiefengbu).toContainEqual(expect.objectContaining({ status: BATTLE_STATUS.EVASION_UP }))
+    expect(BATTLE_SKILL_STATUS_EFFECTS.pozhankan).toContainEqual(expect.objectContaining({ status: BATTLE_STATUS.WEAKNESS_EXPOSED }))
   })
 
   test('the five authored memory sources can reach the fragment threshold', () => {

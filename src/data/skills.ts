@@ -57,7 +57,7 @@ export const SKILLS: Record<string, SkillData> = {
   huixuanbiao: {
     id: 'huixuanbiao', name: '回旋镖', type: 'attack', target: 'single',
     element: 'wind', power: 35, costMp: 8, costTp: 0,
-    description: '攻击两名敌人',
+    description: '攻击两名敌人', targetCount: 2,
   },
   yuliaoshu: {
     id: 'yuliaoshu', name: '御疗术', type: 'heal', target: 'single',
@@ -141,7 +141,7 @@ export const SKILLS: Record<string, SkillData> = {
   tianjianyishan: {
     id: 'tianjianyishan', name: '天剑一闪', type: 'attack', target: 'single',
     element: 'wind', power: 100, costMp: 0, costTp: 70,
-    description: '先制强击，若击杀则再次行动',
+    description: '先制强击，若击杀则再次行动', grantsExtraTurnOnKill: true,
   },
 
   // Enemy basic skills

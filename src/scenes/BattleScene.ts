@@ -59,8 +59,12 @@ import {
   canEscapeBattle,
   canUseBattleSkill,
   hasCompletedSurvivalRounds,
+  resolveBreakGaugeGain,
   resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
+  resolveLimitedSkillTargets,
+  shouldEvadeBattleAttack,
+  shouldGrantExtraTurnOnKill,
 } from '../utils/battleRules'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
@@ -675,7 +679,8 @@ export class BattleScene extends Phaser.Scene {
 
   private applyBreakGauge(target: BattleUnit, gain: number): void {
     if (!canGainBreakGauge(target.isPlayer, target.stats.hp, this.hasStatus(target, BATTLE_STATUS.BREAK))) return
-    const result = advanceBreakGauge(target.breakGauge, target.breakMax, gain)
+    const adjustedGain = resolveBreakGaugeGain(gain, this.hasStatus(target, BATTLE_STATUS.WEAKNESS_EXPOSED))
+    const result = advanceBreakGauge(target.breakGauge, target.breakMax, adjustedGain)
     target.breakGauge = result.gauge
     this.updateUnitBars(target)
     if (!result.shouldBreak) return
@@ -700,6 +705,11 @@ export class BattleScene extends Phaser.Scene {
       return targetsAllies ? this.getLiveAllies(actor) : this.getLiveOpponents(actor)
     }
     if (skill.target === 'random') return this.getLiveOpponents(actor)
+    if ((skill.targetCount ?? 1) > 1) {
+      const targetsAllies = skill.type === 'heal' || skill.type === 'buff'
+      const candidates = targetsAllies ? this.getLiveAllies(actor) : this.getLiveOpponents(actor)
+      return resolveLimitedSkillTargets(selectedTarget, candidates, skill.targetCount)
+    }
     return [selectedTarget]
   }
 
@@ -1072,6 +1082,9 @@ export class BattleScene extends Phaser.Scene {
     if (!actor) return
 
     const action = this.actionStack[0]
+    const selectedSkill = action === 'skill'
+      ? GAME_CONFIG_DATABASE.getTable('skills')[this.actionStack[1]!]
+      : undefined
     const targets = this.getSelectableTargets()
     const target = targets[this.targetIndex]
 
@@ -1082,6 +1095,7 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
+    const opponentsBefore = action === 'skill' ? this.getLiveOpponents(actor).length : 0
     let actionConsumed = false
     if (action === 'attack') {
       this.performAttack(actor, target)
@@ -1098,6 +1112,12 @@ export class BattleScene extends Phaser.Scene {
     this.setCommandMenuVisible(true)
     this.hideTargetIndicator()
     if (actionConsumed) {
+      const opponentsAfter = action === 'skill' ? this.getLiveOpponents(actor).length : opponentsBefore
+      if (shouldGrantExtraTurnOnKill(selectedSkill, opponentsBefore, opponentsAfter)) {
+        this.actionStack = []
+        this.log(`${actor.name} 击破敌阵，获得再次行动！`)
+        return
+      }
       this.nextTurn()
     }
   }
@@ -1780,8 +1800,6 @@ export class BattleScene extends Phaser.Scene {
     damage = this.applyDamageVariance(damage)
 
     AudioManager.getInstance().playSFX('attack_slash')
-    this.log(`${actor.name} 攻击 ${target.name}，造成 ${damage} 点伤害！`)
-    this.dealDamage(target, damage, actor, false)
 
     // TP generation for player
     if (isPlayer) {
@@ -1791,8 +1809,13 @@ export class BattleScene extends Phaser.Scene {
     if (!isPlayer) {
       this.addTp(actor, BATTLE_RULES.ENEMY_ATTACK_TP_GAIN)
     }
-
-    this.applyBreakGauge(target, BATTLE_RULES.NORMAL_BREAK_GAIN)
+    if (this.tryEvadeAttack(target)) {
+      this.log(`${target.name} 闪避了 ${actor.name} 的攻击！`)
+    } else {
+      this.log(`${actor.name} 攻击 ${target.name}，造成 ${damage} 点伤害！`)
+      this.dealDamage(target, damage, actor, false)
+      this.applyBreakGauge(target, BATTLE_RULES.NORMAL_BREAK_GAIN)
+    }
 
     // Animation
     this.tweens.add({
@@ -1954,6 +1977,16 @@ export class BattleScene extends Phaser.Scene {
       damage = Math.floor(damage * this.getPlayerDamageMultiplier())
     }
 
+    // TP generation for player
+    if (actor.isPlayer) {
+      this.addTp(actor, BATTLE_RULES.PLAYER_SKILL_TP_GAIN)
+    }
+
+    if (this.tryEvadeAttack(target)) {
+      this.log(`${target.name} 闪避了 ${actor.name} 的${skill.name}！`)
+      return
+    }
+
     let isWeakHit = false
     if (!target.isPlayer) {
       const elementalModifier = resolveEnemyElementalDamageModifier(target.data as EnemyData, skill.element)
@@ -1968,11 +2001,6 @@ export class BattleScene extends Phaser.Scene {
 
     damage = this.applyDamageVariance(damage)
 
-    // TP generation for player
-    if (actor.isPlayer) {
-      this.addTp(actor, BATTLE_RULES.PLAYER_SKILL_TP_GAIN)
-    }
-
     const breakGain = isWeakHit ? BATTLE_RULES.WEAK_SKILL_BREAK_GAIN : BATTLE_RULES.SKILL_BREAK_GAIN
     this.applyBreakGauge(target, breakGain)
 
@@ -1986,6 +2014,10 @@ export class BattleScene extends Phaser.Scene {
     if (target.stats.hp > 0) {
       this.applyConfiguredSkillStatuses(target, skill)
     }
+  }
+
+  private tryEvadeAttack(target: BattleUnit): boolean {
+    return shouldEvadeBattleAttack(this.hasStatus(target, BATTLE_STATUS.EVASION_UP), Math.random())
   }
 
   private performHeal(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {

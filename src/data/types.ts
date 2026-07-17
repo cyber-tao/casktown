@@ -37,6 +37,8 @@ export interface SkillData {
   costTp: number
   description: string
   effects?: string[]
+  targetCount?: number
+  grantsExtraTurnOnKill?: boolean
 }
 
 export interface ItemData {

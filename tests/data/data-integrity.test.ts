@@ -43,6 +43,13 @@ describe('data type integrity', () => {
       expect(skill.name).toBeTruthy()
       expect(skill.type).toBeTruthy()
       expect(typeof skill.power).toBe('number')
+      if (skill.targetCount !== undefined) {
+        expect(Number.isInteger(skill.targetCount)).toBe(true)
+        expect(skill.targetCount).toBeGreaterThan(0)
+      }
+      if (skill.grantsExtraTurnOnKill !== undefined) {
+        expect(typeof skill.grantsExtraTurnOnKill).toBe('boolean')
+      }
     }
   })
 
