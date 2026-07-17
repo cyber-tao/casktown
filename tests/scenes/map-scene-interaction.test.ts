@@ -4,7 +4,7 @@ import { MAPS } from '../../src/data/maps.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { InputManager } from '../../src/core/InputManager.ts'
 import { FIELD_ENTITY_BEHAVIOR, REBUILT_TOWN_MAP_ID, START_MAP_ID, TILE_SIZE, WORLD_MAP_BACKGROUND_LAYOUT } from '../../src/utils/constants.ts'
-import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
+import { getEscapeRetreatTiles, isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
 
 let MapSceneClass: typeof import('../../src/scenes/MapScene.ts').MapScene
 let collectMapImageKeys: typeof import('../../src/core/AssetLoader.ts').collectMapImageKeys
@@ -86,6 +86,23 @@ type CanInteractHarness = {
 }
 
 type CanInteractWithEvent = (this: CanInteractHarness, event: MapEvent, px: number, py: number, fx: number, fy: number) => boolean
+
+type EscapeRetreatHarness = {
+  battleEnemies: Map<string, { x: number; y: number }>
+  battleEnemyReentryBlockedUntilMs: Map<string, number>
+  fieldEntityOrigins: Map<string, { x: number; y: number }>
+  fieldEntityDirections: Map<string, number>
+  player: { x: number; y: number }
+  time: { now: number }
+  tweens: { killTweensOf: (target: unknown) => void }
+  canMoveTo: (x: number, y: number) => boolean
+  canFieldEntityOccupyPixel: (x: number, y: number) => boolean
+  updateFieldEntityFrame: () => void
+  savePosition: () => void
+}
+
+type RetreatFromEscapedTouchBattle = (this: EscapeRetreatHarness, event: MapEvent) => void
+type IsBattleEnemyReentryBlocked = (this: Pick<EscapeRetreatHarness, 'battleEnemyReentryBlockedUntilMs' | 'time'>, eventId: string) => boolean
 
 beforeAll(async () => {
   const runtime = globalThis as unknown as Record<string, unknown>
@@ -241,6 +258,82 @@ describe('MapScene NPC interaction', () => {
       18,
       23,
     )).toBe(true)
+  })
+})
+
+describe('MapScene touch-battle escape retreat', () => {
+  test('orders retreat tiles away from the enemy instead of using player facing', () => {
+    expect(getEscapeRetreatTiles({ x: 5, y: 5 }, { x: 4, y: 5 })[0]).toEqual({ x: 6, y: 5 })
+    expect(getEscapeRetreatTiles({ x: 5, y: 5 }, { x: 5, y: 6 })[0]).toEqual({ x: 5, y: 4 })
+  })
+
+  test('uses the farthest legal tile, resets the enemy, and starts a reentry guard', () => {
+    const enemy = { x: 4 * TILE_SIZE + TILE_SIZE / 2, y: 5 * TILE_SIZE + TILE_SIZE / 2 }
+    const calls: string[] = []
+    const harness: EscapeRetreatHarness = {
+      battleEnemies: new Map([['TOUCH_ENEMY', enemy]]),
+      battleEnemyReentryBlockedUntilMs: new Map(),
+      fieldEntityOrigins: new Map([['TOUCH_ENEMY', { x: 2 * TILE_SIZE, y: 2 * TILE_SIZE }]]),
+      fieldEntityDirections: new Map(),
+      player: { x: 5 * TILE_SIZE + TILE_SIZE / 2, y: 5 * TILE_SIZE + TILE_SIZE / 2 },
+      time: { now: 500 },
+      tweens: { killTweensOf: () => calls.push('kill-tween') },
+      canMoveTo: (x, y) => x === 5 && y === 4,
+      canFieldEntityOccupyPixel: () => true,
+      updateFieldEntityFrame: () => calls.push('idle-frame'),
+      savePosition: () => calls.push('save-position'),
+    }
+    const retreat = MapSceneClass.prototype['retreatFromEscapedTouchBattle'] as RetreatFromEscapedTouchBattle
+
+    retreat.call(harness, {
+      id: 'TOUCH_ENEMY', x: 4, y: 5, width: 1, height: 1,
+      type: 'battle', trigger: 'touch', actions: [],
+    })
+
+    expect(harness.player).toEqual({ x: 5 * TILE_SIZE + TILE_SIZE / 2, y: 4 * TILE_SIZE + TILE_SIZE / 2 })
+    expect(enemy).toEqual({ x: 2 * TILE_SIZE, y: 2 * TILE_SIZE })
+    expect(harness.battleEnemyReentryBlockedUntilMs.get('TOUCH_ENEMY')).toBe(1500)
+    expect(calls).toEqual(['kill-tween', 'idle-frame', 'save-position'])
+  })
+
+  test('keeps the player on a legal tile when no retreat neighbor is open', () => {
+    const enemy = { x: 5 * TILE_SIZE, y: 5 * TILE_SIZE }
+    const harness: EscapeRetreatHarness = {
+      battleEnemies: new Map([['TOUCH_ENEMY', enemy]]),
+      battleEnemyReentryBlockedUntilMs: new Map(),
+      fieldEntityOrigins: new Map([['TOUCH_ENEMY', { x: TILE_SIZE, y: TILE_SIZE }]]),
+      fieldEntityDirections: new Map(),
+      player: { x: 5 * TILE_SIZE + TILE_SIZE / 2, y: 5 * TILE_SIZE + TILE_SIZE / 2 },
+      time: { now: 0 },
+      tweens: { killTweensOf: () => {} },
+      canMoveTo: () => false,
+      canFieldEntityOccupyPixel: () => true,
+      updateFieldEntityFrame: () => {},
+      savePosition: () => {},
+    }
+    const retreat = MapSceneClass.prototype['retreatFromEscapedTouchBattle'] as RetreatFromEscapedTouchBattle
+    const originalPlayerPosition = { ...harness.player }
+
+    retreat.call(harness, {
+      id: 'TOUCH_ENEMY', x: 5, y: 5, width: 1, height: 1,
+      type: 'battle', trigger: 'touch', actions: [],
+    })
+
+    expect(harness.player).toEqual(originalPlayerPosition)
+    expect(enemy).toEqual({ x: TILE_SIZE, y: TILE_SIZE })
+  })
+
+  test('blocks the escaped enemy until the guard expires', () => {
+    const harness = {
+      battleEnemyReentryBlockedUntilMs: new Map([['TOUCH_ENEMY', 1500]]),
+      time: { now: 1499 },
+    }
+    const isBlocked = MapSceneClass.prototype['isBattleEnemyReentryBlocked'] as IsBattleEnemyReentryBlocked
+
+    expect(isBlocked.call(harness, 'TOUCH_ENEMY')).toBe(true)
+    harness.time.now = 1500
+    expect(isBlocked.call(harness, 'TOUCH_ENEMY')).toBe(false)
+    expect(harness.battleEnemyReentryBlockedUntilMs.has('TOUCH_ENEMY')).toBe(false)
   })
 })
 

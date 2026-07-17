@@ -64,7 +64,7 @@ import type { MapData, MapEvent, EventAction, FieldEntityBehavior, QuestState } 
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { cssToGamePx } from '../utils/touch'
-import { isTileInsideSpriteBounds } from '../utils/fieldGeometry'
+import { getEscapeRetreatTiles, isTileInsideSpriteBounds } from '../utils/fieldGeometry'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 
 type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
@@ -136,6 +136,7 @@ export class MapScene extends Phaser.Scene {
   private fieldEntityOrigins: Map<string, { x: number; y: number }> = new Map()
   private fieldEntityDirections: Map<string, number> = new Map()
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
+  private battleEnemyReentryBlockedUntilMs: Map<string, number> = new Map()
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
   private pendingMapRestartId = ''
@@ -328,6 +329,7 @@ export class MapScene extends Phaser.Scene {
     this.fieldEntityOrigins = new Map()
     this.fieldEntityDirections = new Map()
     this.enemyPatrolTimers = []
+    this.battleEnemyReentryBlockedUntilMs = new Map()
     this.npcTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
@@ -742,6 +744,10 @@ export class MapScene extends Phaser.Scene {
       }
       const behavior = this.fieldEntityBehaviors.get(id)
       if (!behavior || behavior.chaseDistanceTiles <= 0) continue
+      if (this.isBattleEnemyReentryBlocked(id)) {
+        this.updateFieldEntityFrame(id, sprite, this.fieldEntityDirections.get(id) ?? DIRECTION.DOWN, false)
+        continue
+      }
       const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y)
       const currentDirection = this.fieldEntityDirections.get(id) ?? DIRECTION.DOWN
       if (dist > behavior.chaseDistanceTiles * TILE_SIZE) {
@@ -789,6 +795,7 @@ export class MapScene extends Phaser.Scene {
         continue
       }
       if (event.trigger !== 'touch') continue
+      if (this.isBattleEnemyReentryBlocked(id)) continue
       const behavior = this.fieldEntityBehaviors.get(id) ?? this.getBattleFieldBehavior(event)
       const dist = this.getSpriteBoundsDistance(sprite, this.player.x, this.player.y)
       if (dist <= behavior.interactionDistanceTiles * TILE_SIZE) {
@@ -807,6 +814,44 @@ export class MapScene extends Phaser.Scene {
     this.fieldEntityBehaviors.delete(eventId)
     this.fieldEntityOrigins.delete(eventId)
     this.fieldEntityDirections.delete(eventId)
+    this.battleEnemyReentryBlockedUntilMs.delete(eventId)
+  }
+
+  private isBattleEnemyReentryBlocked(eventId: string): boolean {
+    const blockedUntilMs = this.battleEnemyReentryBlockedUntilMs.get(eventId)
+    if (blockedUntilMs === undefined) return false
+    if (this.time.now < blockedUntilMs) return true
+    this.battleEnemyReentryBlockedUntilMs.delete(eventId)
+    return false
+  }
+
+  private retreatFromEscapedTouchBattle(event: MapEvent): void {
+    const enemy = this.battleEnemies.get(event.id)
+    this.battleEnemyReentryBlockedUntilMs.set(event.id, this.time.now + FIELD_ENTITY_BEHAVIOR.ESCAPE_REENTRY_GUARD_MS)
+    if (!enemy) return
+
+    const playerTile = {
+      x: Math.floor(this.player.x / TILE_SIZE),
+      y: Math.floor(this.player.y / TILE_SIZE),
+    }
+    const threatTile = {
+      x: enemy.x / TILE_SIZE,
+      y: enemy.y / TILE_SIZE,
+    }
+    const retreatTile = getEscapeRetreatTiles(playerTile, threatTile).find(tile => this.canMoveTo(tile.x, tile.y))
+    if (retreatTile) {
+      this.player.x = retreatTile.x * TILE_SIZE + TILE_SIZE / 2
+      this.player.y = retreatTile.y * TILE_SIZE + TILE_SIZE / 2
+    }
+
+    const origin = this.fieldEntityOrigins.get(event.id)
+    if (origin && this.canFieldEntityOccupyPixel(origin.x, origin.y)) {
+      this.tweens.killTweensOf(enemy)
+      enemy.x = origin.x
+      enemy.y = origin.y
+      this.updateFieldEntityFrame(event.id, enemy, this.fieldEntityDirections.get(event.id) ?? DIRECTION.DOWN, false)
+    }
+    this.savePosition()
   }
 
   private canFieldEntityOccupyPixel(x: number, y: number): boolean {
@@ -2162,17 +2207,14 @@ export class MapScene extends Phaser.Scene {
     AudioManager.getInstance().setScene(this)
     AudioManager.getInstance().playBGMForMap(this.mapData.id)
     this.removeSuppressedFieldEventSprites()
-    this.refreshFollowers()
 
     const battleEvent = this.pendingMapEventId
       ? this.battleEnemyEvents.get(this.pendingMapEventId) ?? this.mapData.events.find(event => event.id === this.pendingMapEventId)
       : undefined
     if (result?.escaped && battleEvent?.trigger === 'touch') {
-      const dv = DIRECTION_VECTORS[this.currentDir]!
-      this.player.x -= dv.x * TILE_SIZE
-      this.player.y -= dv.y * TILE_SIZE
-      this.savePosition()
+      this.retreatFromEscapedTouchBattle(battleEvent)
     }
+    this.refreshFollowers()
 
     for (const [eventId, sprite] of this.battleEnemies) {
       const event = this.battleEnemyEvents.get(eventId)
