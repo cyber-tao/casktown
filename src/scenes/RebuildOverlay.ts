@@ -52,8 +52,8 @@ export class RebuildOverlay extends Phaser.Scene {
 
     const gd = GameData.getInstance()
 
-    this.progressText = this.add.text(REBUILD_MENU.GOLD_X, REBUILD_MENU.GOLD_Y, `当前 Lv.${gd.rebuildLevel}`, {
-      fontSize: scaleFont(REBUILD_MENU.GOLD_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
+    this.progressText = this.add.text(REBUILD_MENU.PROGRESS_X, REBUILD_MENU.PROGRESS_Y, `当前 Lv.${gd.rebuildLevel}`, {
+      fontSize: scaleFont(REBUILD_MENU.PROGRESS_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
     })
     this.progressText.setScrollFactor(0)
     this.progressText.setDepth(REBUILD_MENU.CONTENT_DEPTH)
@@ -79,7 +79,9 @@ export class RebuildOverlay extends Phaser.Scene {
     }
 
     this.descText = this.add.text(REBUILD_MENU.DESC_X, REBUILD_MENU.DESC_Y, '', {
-      fontSize: scaleFont(REBUILD_MENU.DESC_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.text, wordWrap: { width: REBUILD_MENU.DESC_WRAP_WIDTH },
+      fontSize: scaleFont(REBUILD_MENU.DESC_FONT_SIZE),
+      color: MENU_OVERLAY_UI.COLORS.text,
+      wordWrap: { width: REBUILD_MENU.DESC_WRAP_WIDTH, useAdvancedWrap: true },
     })
     this.descText.setScrollFactor(0)
     this.descText.setDepth(REBUILD_MENU.CONTENT_DEPTH)

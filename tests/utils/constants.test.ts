@@ -33,6 +33,7 @@ import {
   TITLE_MENU_LAYOUT,
   BATTLE_DEFAULT_ENEMY_SPRITE_FRAME,
   BATTLE_ENEMY_SPRITE_FRAME_OVERRIDES,
+  REBUILD_MENU,
 } from '../../src/utils/constants.ts'
 
 describe('constants consistency', () => {
@@ -251,6 +252,19 @@ describe('constants consistency', () => {
     expect(menuCenterX).toBeLessThan(landscapePhoneViewport.width * 0.86)
     expect(panelRight).toBeLessThanOrEqual(landscapePhoneViewport.width - 8)
     expect(finalMenuItemY).toBeLessThan(landscapePhoneViewport.height - 24)
+  })
+
+  test('rebuild progress text stays inside the book pages', () => {
+    const panelTop = GAME_HEIGHT / 2 - REBUILD_MENU.PANEL_HEIGHT / 2
+    const panelRight = GAME_WIDTH / 2 + REBUILD_MENU.PANEL_WIDTH / 2
+    const descriptionRight = REBUILD_MENU.DESC_X + REBUILD_MENU.DESC_WRAP_WIDTH
+
+    expect(REBUILD_MENU.TITLE_Y).toBeGreaterThan(panelTop + 60 * GAME_SCALE)
+    expect(REBUILD_MENU.PROGRESS_Y).toBe(REBUILD_MENU.TITLE_Y)
+    expect(REBUILD_MENU.OPTION_START_Y - REBUILD_MENU.TITLE_Y)
+      .toBeGreaterThan(REBUILD_MENU.TITLE_FONT_SIZE * GAME_SCALE)
+    expect(REBUILD_MENU.DESC_X).toBeGreaterThan(GAME_WIDTH / 2)
+    expect(descriptionRight).toBeLessThan(panelRight - 30 * GAME_SCALE)
   })
 
   test('MAP_HUD party layout constants are defined', () => {
