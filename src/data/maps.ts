@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, REINCARNATION_TIME_LIMIT_MS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -1163,6 +1163,11 @@ function buildMap040(): MapData {
       actions: [{ type: 'dialogue', dialogueId: 'DIA_301_CONGCONG' }],
     },
     {
+      id: 'EVT_XIAOAI_MEMORY_STAFF', x: 18, y: 18, width: 5, height: 2,
+      type: 'trigger', trigger: 'touch',
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_SIDE_XAI_01' }],
+    },
+    {
       id: 'CHEST_MOUNTAIN_1', x: 24, y: 20, width: 1, height: 1,
       type: 'chest', trigger: 'action',
       actions: [{ type: 'addItem', itemId: 'revive_feather', quantity: 1 }],
@@ -2163,6 +2168,7 @@ function buildMap055(): MapData {
       type: 'trigger', trigger: 'autorun',
       conditions: [{ flag: 'released_four_seals', value: true }],
       actions: [
+        { type: 'startTimer', timerId: 'reincarnation' },
         { type: 'dialogue', dialogueId: 'DIA_551_DREAM_START' },
         { type: 'setFlag', flag: 'dream_active', value: true },
       ],
@@ -2189,7 +2195,10 @@ function buildMap055(): MapData {
         { flag: 'dream_active', value: true },
         { flag: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_2`, value: true },
       ],
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_554_MEMORY_3' }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_554_MEMORY_3' },
+        { type: 'resolveTimer', timerId: 'reincarnation', maxDurationMs: REINCARNATION_TIME_LIMIT_MS, requiredFlag: 'reincarnation_answers_complete', successFlag: 'true_route_reincarnation' },
+      ],
     },
     {
       id: 'EVT_MEMORY_FINAL', x: 9, y: 10, width: 2, height: 2,

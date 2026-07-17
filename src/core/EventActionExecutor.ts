@@ -15,6 +15,10 @@ export interface StateEventActionResult {
   failureReason?: string
 }
 
+function getTimerStartedFlag(timerId: string): string {
+  return `timer_${timerId}_started_at_ms`
+}
+
 export function isStateEventAction(action: EventAction): action is StateEventAction {
   return action.type !== 'dialogue'
     && action.type !== 'battle'
@@ -24,7 +28,7 @@ export function isStateEventAction(action: EventAction): action is StateEventAct
     && action.type !== 'rebuildMenu'
 }
 
-export function applyStateEventAction(action: EventAction): StateEventActionResult {
+export function applyStateEventAction(action: EventAction, nowMs = Date.now()): StateEventActionResult {
   if (!isStateEventAction(action)) {
     return { handled: false, partyChanged: false }
   }
@@ -63,6 +67,18 @@ export function applyStateEventAction(action: EventAction): StateEventActionResu
       gd.updateBranch(action.branch, action.value)
       SkillGrowth.getInstance().checkAllUnlocks()
       break
+    case 'startTimer':
+      gd.setFlag(getTimerStartedFlag(action.timerId), nowMs)
+      break
+    case 'resolveTimer': {
+      const startedAtMs = gd.getFlag(getTimerStartedFlag(action.timerId))
+      const elapsedMs = typeof startedAtMs === 'number' ? nowMs - startedAtMs : Number.POSITIVE_INFINITY
+      const succeeded = gd.getFlag(action.requiredFlag) === true
+        && elapsedMs >= 0
+        && elapsedMs <= action.maxDurationMs
+      gd.setFlag(action.successFlag, succeeded)
+      break
+    }
     case 'adjustTrust':
       gd.adjustTrust(action.characterId, action.amount ?? DEFAULT_EVENT_ACTION_AMOUNT)
       break

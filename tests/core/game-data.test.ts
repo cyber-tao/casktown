@@ -104,6 +104,7 @@ describe('GameData', () => {
     gd.setFlag('answered_xiyuan_kindly', true)
     gd.setFlag('released_four_seals', true)
     gd.setFlag('xiaoai_purified', true)
+    gd.setFlag('true_route_reincarnation', true)
     gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
     gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
 
@@ -118,6 +119,7 @@ describe('GameData', () => {
     gd.setFlag('answered_xiyuan_kindly', true)
     gd.setFlag('released_four_seals', true)
     gd.setFlag('xiaoai_purified', true)
+    gd.setFlag('true_route_reincarnation', true)
     gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
     gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY - 1)
 
@@ -126,12 +128,26 @@ describe('GameData', () => {
     expect(gd.branches.true_route_unlocked).toBe(true)
   })
 
+  test('true route requires the successful timed reincarnation dialogue', () => {
+    const gd = GameData.getInstance()
+    gd.setFlag('white_tiger_respected', true)
+    gd.setFlag('answered_xiyuan_kindly', true)
+    gd.setFlag('released_four_seals', true)
+    gd.setFlag('xiaoai_purified', true)
+    gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
+    gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+
+    expect(gd.branches.true_route_unlocked).toBe(false)
+    gd.setFlag('true_route_reincarnation', true)
+    expect(gd.branches.true_route_unlocked).toBe(true)
+  })
+
   test('numeric branch flags mirror cumulative branch values', () => {
     const gd = GameData.getInstance()
 
-    gd.setFlag('xiaoai_memory_fragments', 1)
-    gd.setFlag('xiaoai_memory_fragments', 1)
-    gd.setFlag('xiaoai_memory_fragments', 1)
+    for (let i = 0; i < TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS; i++) {
+      gd.setFlag('xiaoai_memory_fragments', 1)
+    }
     gd.updateBranch('mercy_score', TRUE_ROUTE_MIN_MERCY)
 
     const snapshot = gd.serialize() as { flags: Record<string, unknown>; branches: Record<string, unknown> }

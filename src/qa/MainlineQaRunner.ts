@@ -524,6 +524,13 @@ export class MainlineQaRunner {
         case 'setBranch':
           this.validateBranchValue(action.branch, action.value, `${source}:setBranch:${action.branch}`)
           break
+        case 'startTimer':
+          if (!action.timerId) this.addError(`${source}: Timer id is empty`)
+          break
+        case 'resolveTimer':
+          if (!action.timerId || !action.requiredFlag || !action.successFlag) this.addError(`${source}: Timer resolution fields are empty`)
+          this.validatePositiveNumber(action.maxDurationMs, `${source}: Timer duration`, 'must be positive')
+          break
         case 'addItem':
           if (!tables.getTable('items')[action.itemId]) this.addError(`${source}: Item ${action.itemId} not found`)
           this.validatePositiveNumber(action.quantity, `${source}: Item quantity`, 'must be positive')

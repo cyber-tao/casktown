@@ -534,7 +534,8 @@ export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
 export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
 export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
 export const TRUE_ROUTE_MIN_MERCY = 5
-export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 3
+export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 5
+export const REINCARNATION_TIME_LIMIT_MS = 60_000
 export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
   T: 't',
   HUIHUI: 'huihui',
@@ -626,6 +627,7 @@ export const MAINLINE_QA = {
     xiaoai_memory_fragments: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
     white_tiger_respected: true,
     answered_xiyuan_kindly: true,
+    true_route_reincarnation: true,
   },
   BATTLE_VISUAL_DIFFICULTY: 'story',
   BATTLE_VISUAL_SPEED: 'normal',
@@ -690,6 +692,7 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_030', eventId: 'EXIT_NORTH_30' },
   { kind: 'event', mapId: 'MAP_031', eventId: 'NPC_XIYUAN' },
   { kind: 'event', mapId: 'MAP_040', eventId: 'EVT_CONGCONG_ROCK' },
+  { kind: 'event', mapId: 'MAP_040', eventId: 'EVT_XIAOAI_MEMORY_STAFF' },
   { kind: 'event', mapId: 'MAP_041', eventId: 'EVT_PHOENIX_QILIN_BOSS' },
   { kind: 'event', mapId: 'MAP_041', eventId: 'EXIT_NORTH_41' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'NPC_SUN' },
@@ -753,6 +756,7 @@ export const MAINLINE_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number
 export const MAINLINE_QA_REQUIRED_FINAL_FLAGS = [
   'game_cleared',
   'true_route_unlocked',
+  'true_route_reincarnation',
   'xiaoai_purified',
   'released_four_seals',
   'fake_xiaoai_defeated',
@@ -1260,7 +1264,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     groundRects: [{ x: 18, y: 0, width: 5, height: 30, tile: MAP_TILE_KEYS.PATH }, { x: 10, y: 11, width: 14, height: 4, tile: MAP_TILE_KEYS.PATH }, { x: 23, y: 18, width: 8, height: 4, tile: MAP_TILE_KEYS.PATH }],
     objectClearRects: [{ x: 18, y: 0, width: 5, height: 2 }, { x: 18, y: 28, width: 5, height: 2 }],
     objects: [{ x: 15, y: 12, tile: MAP_TILE_KEYS.ROCK }, { x: 26, y: 20, tile: MAP_TILE_KEYS.BARREL }, { x: 8, y: 16, tile: MAP_TILE_KEYS.BARREL }, { x: 20, y: 4, tile: MAP_TILE_KEYS.SIGN }],
-    eventPositions: { EVT_CONGCONG_ROCK: { x: 14, y: 12, width: 3, height: 3 }, CHEST_MOUNTAIN_1: { x: 26, y: 20, width: 1, height: 1 }, CHEST_MOUNTAIN_2: { x: 8, y: 16, width: 1, height: 1 } },
+    eventPositions: { EVT_CONGCONG_ROCK: { x: 14, y: 12, width: 3, height: 3 }, EVT_XIAOAI_MEMORY_STAFF: { x: 18, y: 18, width: 5, height: 2 }, CHEST_MOUNTAIN_1: { x: 26, y: 20, width: 1, height: 1 }, CHEST_MOUNTAIN_2: { x: 8, y: 16, width: 1, height: 1 } },
     transfers: [
       { id: 'EXIT_SOUTH_40', x: 18, y: 29, width: 5, height: 1, targetMap: 'MAP_001', targetX: 22, targetY: 2, direction: DIRECTION.DOWN },
       { id: 'EXIT_NORTH_40', x: 18, y: 0, width: 5, height: 1, targetMap: 'MAP_041', targetX: 18, targetY: 27, direction: DIRECTION.UP },

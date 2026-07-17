@@ -138,7 +138,7 @@ function isGameSaveData(data: unknown): data is object {
     const branches = value as Record<string, unknown>
     const trustKeys = ['trust_huihui', 'trust_a', 'trust_congcong', 'trust_sun']
     const numberKeys = ['mercy_score', 'rebuild_level', 'xiaoai_memory_fragments']
-    const booleanKeys = ['white_tiger_respected', 'answered_xiyuan_kindly', 'released_four_seals', 'xiaoai_purified', 'normal_ending_seen', 'true_route_unlocked']
+    const booleanKeys = ['white_tiger_respected', 'answered_xiyuan_kindly', 'released_four_seals', 'xiaoai_purified', 'normal_ending_seen', 'true_route_unlocked', 'true_route_reincarnation']
     return trustKeys.every(key => hasValidOptionalField(branches, key, isFiniteNumber))
       && numberKeys.every(key => hasValidOptionalField(branches, key, isFiniteNonNegativeNumber))
       && booleanKeys.every(key => hasValidOptionalField(branches, key, item => typeof item === 'boolean'))

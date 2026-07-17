@@ -744,7 +744,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         text: '……',
         choices: [
           { text: '外表确实不重要。', next: 'DIA_203_XIYUAN_NEUTRAL' },
-          { text: '不，内心的丑陋比外表更可怕。你很善良，所以你很漂亮。', next: 'DIA_203_XIYUAN_KIND', actions: [{ type: 'setFlag', flag: 'answered_xiyuan_kindly', value: true }, { type: 'setFlag', flag: 'mercy_score', value: 1 }] },
+          { text: '不，内心的丑陋比外表更可怕。你很善良，所以你很漂亮。', next: 'DIA_203_XIYUAN_KIND', actions: [{ type: 'setFlag', flag: 'answered_xiyuan_kindly', value: true }, { type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
           { text: '你想听真话还是假话？', next: 'DIA_203_XIYUAN_BITTER' },
           { text: '我们只是来拿神水。', next: 'DIA_203_XIYUAN_COLD' },
         ],
@@ -1181,7 +1181,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
+          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
           { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }] },
           { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE' },
         ],
@@ -1198,7 +1198,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
+          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
           { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }] },
           { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE' },
         ],
@@ -1215,7 +1215,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
+          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
           { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }] },
           { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE' },
         ],
@@ -1230,7 +1230,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'true_route_reincarnation', value: true }] },
+          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'reincarnation_answers_complete', value: true }] },
           { text: '千万不要变成魔头。', next: 'DIA_420_END' },
           { text: '等我去救你。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
         ],
@@ -1246,7 +1246,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'true_route_reincarnation', value: true }] },
+          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'reincarnation_answers_complete', value: true }] },
           { text: '千万不要变成魔头。', next: 'DIA_420_END' },
           { text: '等我去救你。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
         ],
@@ -1478,6 +1478,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: 'T', text: '小心什么？' },
       { speaker: '旁白', text: 'xiaoai化为白烟。地下魔宫门打开。' },
     ],
+    onComplete: [{ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }],
   },
   DIA_530_CALL: {
     id: 'DIA_530_CALL',

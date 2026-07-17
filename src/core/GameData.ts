@@ -44,6 +44,7 @@ const BRANCH_KEYS = new Set<keyof BranchState>([
   'xiaoai_purified',
   'normal_ending_seen',
   'true_route_unlocked',
+  'true_route_reincarnation',
 ])
 
 const JOIN_FLAG_TO_CHARACTER: Record<string, string> = {
@@ -68,6 +69,7 @@ function createDefaultBranches(): BranchState {
     released_four_seals: false,
     normal_ending_seen: false,
     true_route_unlocked: false,
+    true_route_reincarnation: false,
     xiaoai_purified: false,
   }
 }
@@ -241,9 +243,12 @@ export class GameData {
   private applyBranchValue(key: keyof BranchState, value: unknown): void {
     if (BRANCH_NUMBER_KEYS.has(key)) {
       const current = this.branches[key]
-      const next = key === 'rebuild_level'
+      let next = key === 'rebuild_level'
         ? (typeof value === 'number' ? this.clampRebuildLevel(value) : current)
         : typeof value === 'number' && typeof current === 'number' ? current + value : value
+      if (key === 'xiaoai_memory_fragments' && typeof next === 'number') {
+        next = Math.max(0, Math.min(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS, next))
+      }
       ;(this.branches as unknown as Record<string, unknown>)[key] = next
       if (key === 'rebuild_level' && typeof next === 'number') {
         this.rebuildLevel = next
@@ -261,6 +266,7 @@ export class GameData {
       this.branches.released_four_seals &&
       this.branches.white_tiger_respected &&
       this.branches.answered_xiyuan_kindly &&
+      this.branches.true_route_reincarnation &&
       this.branches.mercy_score >= TRUE_ROUTE_MIN_MERCY &&
       this.branches.xiaoai_memory_fragments >= TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS
     this.branches.true_route_unlocked = unlocked

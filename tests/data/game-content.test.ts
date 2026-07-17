@@ -29,6 +29,7 @@ const BRANCH_KEYS = new Set([
   'xiaoai_purified',
   'normal_ending_seen',
   'true_route_unlocked',
+  'true_route_reincarnation',
 ])
 
 const TOWN_BUILDING_SPRITE_KEYS = new Set([
@@ -77,6 +78,14 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
       break
     case 'setBranch':
       if (!BRANCH_KEYS.has(action.branch)) pushMissing(errors, source, 'branch', action.branch)
+      break
+    case 'startTimer':
+      if (!action.timerId) errors.push(`${source} starts a timer without an id`)
+      break
+    case 'resolveTimer':
+      if (!action.timerId || !action.requiredFlag || !action.successFlag || !Number.isFinite(action.maxDurationMs) || action.maxDurationMs <= 0) {
+        errors.push(`${source} resolves an invalid timer`)
+      }
       break
     case 'adjustTrust':
     case 'addParty':
@@ -527,6 +536,7 @@ describe('game content data', () => {
   })
 
   test('reincarnation memories require the previous step and contain one choice each', () => {
+    const dreamStart = findEvent('MAP_055', 'EVT_DREAM_START')
     const memory1 = findEvent('MAP_055', 'EVT_MEMORY_1')
     const memory2 = findEvent('MAP_055', 'EVT_MEMORY_2')
     const memory3 = findEvent('MAP_055', 'EVT_MEMORY_3')
@@ -535,11 +545,31 @@ describe('game content data', () => {
     expectCondition(memory2, getFieldEventDoneFlag(memory1.id), true)
     expectCondition(memory3, getFieldEventDoneFlag(memory2.id), true)
     expectCondition(memoryFinal, getFieldEventDoneFlag(memory3.id), true)
+    expect(dreamStart.actions).toContainEqual({ type: 'startTimer', timerId: 'reincarnation' })
+    expect(memory3.actions.some(action => action.type === 'resolveTimer'
+      && action.timerId === 'reincarnation'
+      && action.successFlag === 'true_route_reincarnation')).toBe(true)
 
     for (const dialogueId of ['DIA_552_MEMORY_1', 'DIA_553_MEMORY_2', 'DIA_554_MEMORY_3']) {
       const choices = DIALOGUES[dialogueId]!.lines.flatMap(line => line.choices ?? [])
       expect(choices.length).toBeGreaterThan(0)
       expect(choices.every(choice => choice.next === undefined)).toBe(true)
+    }
+  })
+
+  test('the five authored memory sources can reach the fragment threshold', () => {
+    const staffMemory = findEvent('MAP_040', 'EVT_XIAOAI_MEMORY_STAFF')
+    const fragmentActions = [
+      DIALOGUES['DIA_SIDE_XAI_01']?.onComplete,
+      DIALOGUES['DIA_203_Q5']?.lines.flatMap(line => line.choices ?? []).find(choice => choice.next === 'DIA_203_XIYUAN_KIND')?.actions,
+      DIALOGUES['DIA_420_REINCARNATION']?.lines.flatMap(line => line.choices ?? [])[0]?.actions,
+      DIALOGUES['DIA_420_R2']?.lines.flatMap(line => line.choices ?? [])[0]?.actions,
+      DIALOGUES['DIA_530_PURIFY']?.onComplete,
+    ]
+
+    expect(staffMemory.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_SIDE_XAI_01' })
+    for (const actions of fragmentActions) {
+      expect(actions).toContainEqual({ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 })
     }
   })
 
