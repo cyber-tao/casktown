@@ -533,6 +533,13 @@ export const START_PARTY = ['T'] as const
 export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
 export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
 export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
+export const POST_NORMAL_RECOLLECTION = {
+  QUEST_ID: 'QST_015',
+  EVENT_ID: 'EVT_POST_NORMAL_RECOLLECTION',
+  START_DIALOGUE_ID: 'DIA_602_RECOLLECTION_START',
+  COMPLETE_DIALOGUE_ID: 'DIA_602_RECOLLECTION_COMPLETE',
+  COMPLETED_FLAG: 'post_normal_recollection_done',
+} as const
 export const BATTLE_SOLO_CHARACTER_ID = 'T'
 export const BATTLE_SOLO_ENCOUNTER_IDS = ['BTL_310', 'BTL_530', 'BTL_XIAOAI_TRUE'] as const
 export const PARTNER_CALL_AVAILABLE_FLAG = 'partner_call_available'

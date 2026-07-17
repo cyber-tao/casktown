@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -682,6 +682,24 @@ function buildMap002(): MapData {
       { flag: 'facility_quest_board', value: true },
       { flag: 'side_sun_done', value: true },
     ]),
+    {
+      id: POST_NORMAL_RECOLLECTION.EVENT_ID, x: 16, y: 11, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'xiaoai_front_idle_01', direction: DIRECTION.DOWN,
+      conditions: [
+        { flag: 'normal_ending_seen', value: true },
+        { flag: 'true_route_unlocked', value: false },
+        { flag: POST_NORMAL_RECOLLECTION.COMPLETED_FLAG, value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_601_NORMAL_AFTER' },
+        { type: 'questStart', questId: POST_NORMAL_RECOLLECTION.QUEST_ID },
+        { type: 'dialogue', dialogueId: POST_NORMAL_RECOLLECTION.START_DIALOGUE_ID },
+        { type: 'battle', encounterId: 'BTL_XIAOAI_SHADOW' },
+        { type: 'dialogue', dialogueId: 'DIA_SIDE_XAI_02' },
+        { type: 'dialogue', dialogueId: 'DIA_SIDE_XAI_03' },
+        { type: 'dialogue', dialogueId: POST_NORMAL_RECOLLECTION.COMPLETE_DIALOGUE_ID },
+      ],
+    },
     {
       id: 'EXIT_EAST_2', x: W - 1, y: 10, width: 1, height: 4,
       type: 'transfer', trigger: 'touch',

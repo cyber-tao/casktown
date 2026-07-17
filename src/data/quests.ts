@@ -1,4 +1,5 @@
 import type { QuestDef } from './types'
+import { POST_NORMAL_RECOLLECTION } from '../utils/constants'
 
 export const QUESTS: Record<string, QuestDef> = {
   QST_001: {
@@ -98,5 +99,12 @@ export const QUESTS: Record<string, QuestDef> = {
     description: '帮助药草商采集森林深处的蓝色薄荷',
     objectives: ['前往奇妙森林采集蓝色薄荷', '把蓝色薄荷交给药草商'],
     rewards: [{ exp: 50, itemId: 'heal_grass', itemQty: 5 }],
+  },
+  [POST_NORMAL_RECOLLECTION.QUEST_ID]: {
+    id: POST_NORMAL_RECOLLECTION.QUEST_ID,
+    name: '残光回溯',
+    description: '在重建镇的生命之泉旁，面对普通结局留下的遗憾与残光。',
+    objectives: ['触碰残光，完成回溯与补偿仪式'],
+    rewards: [{ exp: 500 }],
   },
 }

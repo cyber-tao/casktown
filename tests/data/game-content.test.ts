@@ -13,7 +13,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -592,6 +592,21 @@ describe('game content data', () => {
     expect(normalEnding?.onComplete).toContainEqual({ type: 'setFlag', flag: 'normal_ending_seen', value: true })
     expect(normalEnding?.onComplete).toContainEqual({ type: 'questComplete', questId: 'QST_012' })
     expect(normalEnding?.onComplete).toContainEqual({ type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 })
+  })
+
+  test('both normal-ending outcomes expose the one-time recollection route', () => {
+    const recollection = findEvent('MAP_002', POST_NORMAL_RECOLLECTION.EVENT_ID)
+    const completion = DIALOGUES[POST_NORMAL_RECOLLECTION.COMPLETE_DIALOGUE_ID]
+
+    expectCondition(recollection, 'normal_ending_seen', true)
+    expectCondition(recollection, 'true_route_unlocked', false)
+    expectCondition(recollection, POST_NORMAL_RECOLLECTION.COMPLETED_FLAG, false)
+    expect(recollection.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_601_NORMAL_AFTER' })
+    expect(recollection.actions).toContainEqual({ type: 'battle', encounterId: 'BTL_XIAOAI_SHADOW' })
+    expect(recollection.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_SIDE_XAI_02' })
+    expect(recollection.actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_SIDE_XAI_03' })
+    expect(completion?.onComplete).toContainEqual({ type: 'questComplete', questId: POST_NORMAL_RECOLLECTION.QUEST_ID })
+    expect(completion?.onComplete).toContainEqual({ type: 'setFlag', flag: POST_NORMAL_RECOLLECTION.COMPLETED_FLAG, value: true })
   })
 
   test('purification autoruns cover the final interaction area after map redesign', () => {

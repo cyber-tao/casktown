@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID, TRUE_ROUTE_MIN_MERCY, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -2826,7 +2826,41 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '慧慧', text: '小心别变成她那样。在恨里待太久，会忘记怎么出来。' },
       { speaker: 'T', text: '慧慧……' },
       { speaker: '慧慧', text: '你不会的。因为你不是一个人。' },
-      { speaker: '系统', text: '普通结局后可以继续探索。完成条件后可进入真结局。' },
+      { speaker: '旁白', text: '生命之泉忽然泛起微光。那不是改写过去的机会，而是一场迟来的理解与补偿。' },
+      { speaker: '系统', text: '开启补完任务【残光回溯】。触碰生命之泉旁的残光。' },
+    ],
+  },
+
+  DIA_602_RECOLLECTION_START: {
+    id: 'DIA_602_RECOLLECTION_START',
+    lines: [
+      { speaker: '木桶精灵', text: '戒指留住的不是xiaoai本人，是你没有理解的那部分记忆。' },
+      { speaker: 'T', text: '我不想假装过去没发生。' },
+      { speaker: '慧慧', text: '那就别假装。为白虎补上尊重，借水镜说出歉意，再走一次你逃开的轮回。' },
+      { speaker: '旁白', text: '残光化成一道熟悉的黑影。只有直面它，回溯才会继续。' },
+      { speaker: '系统', text: '战斗开始：xiaoai的心影。逃跑不会完成回溯，可再次挑战。' },
+    ],
+  },
+
+  DIA_602_RECOLLECTION_COMPLETE: {
+    id: 'DIA_602_RECOLLECTION_COMPLETE',
+    lines: [
+      { speaker: '旁白', text: '水镜映出白虎安静的湖岸，也映出熙苑终于收到的道歉。三段轮回记忆在泉水中重新闭合。' },
+      { speaker: 'T', text: '我不能让那些选择消失，但我可以承认它们错在哪里。' },
+      { speaker: 'xiaoai', text: '能回头看见错误的人，才不会永远困在恨里。' },
+      { speaker: '旁白', text: '残光落入无名戒指。预言之书翻到从未出现过的一页。' },
+      { speaker: '系统', text: '完成【残光回溯】。真结局区域【人心之渊】现已开放。' },
+    ],
+    onComplete: [
+      { type: 'setFlag', flag: 'white_tiger_respected', value: true },
+      { type: 'setFlag', flag: 'answered_xiyuan_kindly', value: true },
+      { type: 'setFlag', flag: 'true_route_reincarnation', value: true },
+      { type: 'setFlag', flag: 'xiaoai_purified', value: true },
+      { type: 'adjustMercy', amount: TRUE_ROUTE_MIN_MERCY },
+      { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS },
+      { type: 'addItem', itemId: 'xiaoai_light', quantity: 1 },
+      { type: 'questComplete', questId: POST_NORMAL_RECOLLECTION.QUEST_ID },
+      { type: 'setFlag', flag: POST_NORMAL_RECOLLECTION.COMPLETED_FLAG, value: true },
     ],
   },
 
