@@ -43,6 +43,7 @@ import { bindTouchText, cssToGamePx } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
+import { completeLoadedSaveTransition, type SaveLoadTransitionState } from '../utils/saveTransition'
 import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import type { CharacterData, ItemData } from '../data/types'
@@ -100,6 +101,7 @@ export class MenuOverlay extends Phaser.Scene {
   private saveIndex: number = 0
   private settingsIndex: number = 0
   private loadMode = false
+  private loadTransition: SaveLoadTransitionState = { active: false }
   private feedbackMessage = ''
   private feedbackEvent?: Phaser.Time.TimerEvent
   private gamepadNavigation = new GamepadNavigationController()
@@ -132,6 +134,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.saveIndex = 0
     this.settingsIndex = 0
     this.loadMode = false
+    this.loadTransition.active = false
     this.feedbackMessage = ''
     this.gamepadNavigation.reset()
 
@@ -239,6 +242,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (this.loadTransition.active) return
     if (action === 'up') {
       this.handleUp()
       return
@@ -522,6 +526,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private handleCancel(): void {
+    if (this.loadTransition.active) return
     if (this.submenu === 'inventory-target') {
       AudioManager.getInstance().playSFX('cancel')
       this.pendingInventoryAction = null
@@ -1269,6 +1274,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private doLoad(slot: number): void {
+    if (this.loadTransition.active) return
     const meta = SaveManager.getInstance().getMeta(slot)
     if (!meta) {
       this.setFeedback('该槽位没有存档')
@@ -1281,11 +1287,15 @@ export class MenuOverlay extends Phaser.Scene {
       this.renderSave()
       return
     }
-    this.setFeedback('读取成功')
-    this.time.delayedCall(SAVE_LOAD_FEEDBACK_DELAY_MS, () => {
-      EventBus.emit(GameEvents.SAVE_LOADED)
-      this.scene.stop()
-    })
+    this.completeSuccessfulLoadTransition()
+  }
+
+  private completeSuccessfulLoadTransition(): void {
+    completeLoadedSaveTransition(
+      this.loadTransition,
+      () => EventBus.emit(GameEvents.SAVE_LOADED),
+      () => this.scene.stop(),
+    )
   }
 
   private getSaveRows(): string[] {
@@ -1954,6 +1964,7 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private closeMenu(): void {
+    if (this.loadTransition.active) return
     AudioManager.getInstance().playSFX('close_menu')
     EventBus.emit(GameEvents.MENU_CLOSE)
     this.scene.stop()
