@@ -50,12 +50,29 @@ export class WorldMapOverlay extends Phaser.Scene {
     mapBackground.setDisplaySize(WORLD_MAP_BACKGROUND_DISPLAY_WIDTH, WORLD_MAP_BACKGROUND_LAYOUT.DISPLAY_HEIGHT)
     mapBackground.setDepth(WORLD_MAP_BACKGROUND_LAYOUT.MAP_DEPTH).setScrollFactor(0)
 
+    const titlePanel = this.add.rectangle(
+      GAME_WIDTH / 2,
+      WORLD_MAP_UI.TITLE_Y + WORLD_MAP_UI.TITLE_PANEL_HEIGHT / 2,
+      WORLD_MAP_UI.TITLE_PANEL_WIDTH,
+      WORLD_MAP_UI.TITLE_PANEL_HEIGHT,
+      WORLD_MAP_UI.TITLE_PANEL_BG_COLOR,
+      WORLD_MAP_UI.TITLE_PANEL_BG_ALPHA,
+    )
+    titlePanel.setStrokeStyle(
+      WORLD_MAP_UI.TITLE_PANEL_BORDER_WIDTH,
+      WORLD_MAP_UI.TITLE_PANEL_BORDER_COLOR,
+      WORLD_MAP_UI.TITLE_PANEL_BORDER_ALPHA,
+    )
+    titlePanel.setScrollFactor(0).setDepth(WORLD_MAP_UI.TITLE_PANEL_DEPTH)
+
     const title = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.TITLE_Y, '世界地图', {
       fontSize: `${WORLD_MAP_UI.TITLE_FONT_SIZE}px`,
       color: WORLD_MAP_UI.TITLE_COLOR,
       fontFamily: WORLD_MAP_UI.TITLE_FONT_FAMILY,
+      stroke: WORLD_MAP_UI.TITLE_STROKE_COLOR,
+      strokeThickness: WORLD_MAP_UI.TITLE_STROKE_THICKNESS,
     })
-    title.setOrigin(0.5, 0).setScrollFactor(0).setDepth(201)
+    title.setOrigin(0.5, 0).setScrollFactor(0).setDepth(WORLD_MAP_UI.TITLE_TEXT_DEPTH)
 
     const hint = this.add.text(GAME_WIDTH / 2, WORLD_MAP_UI.HINT_Y, `M / ${InputManager.getInstance().getActionName('cancel')} 返回`, {
       fontSize: `${WORLD_MAP_UI.HINT_FONT_SIZE}px`,

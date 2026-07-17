@@ -20,6 +20,7 @@ import {
   BATTLE_RULES,
   ELEMENTS,
   MAP_ACCESS_REQUIREMENTS,
+  WORLD_MAP_BACKGROUND_LAYOUT,
   WORLD_MAP_LOCATION_POINTS,
   WORLD_MAP_UI,
   DIRECTION,
@@ -192,6 +193,17 @@ describe('constants consistency', () => {
     expect(WORLD_MAP_UI.LOCATION_PULSE_FILL_ALPHA).toBeLessThanOrEqual(0.1)
     expect(WORLD_MAP_UI.LOCATION_PULSE_ALPHA).toBeLessThan(0.5)
     expect(WORLD_MAP_LOCATION_POINTS.MAP_070.y).toBeLessThan(WORLD_MAP_UI.LOCATION_LABEL_Y - WORLD_MAP_UI.LOCATION_PULSE_SIZE)
+  })
+
+  test('world map title stays readable over the illustrated clock tower', () => {
+    expect(WORLD_MAP_UI.TITLE_PANEL_WIDTH).toBeGreaterThan(WORLD_MAP_UI.TITLE_FONT_SIZE * 4)
+    expect(WORLD_MAP_UI.TITLE_PANEL_HEIGHT).toBeGreaterThan(WORLD_MAP_UI.TITLE_FONT_SIZE)
+    expect(WORLD_MAP_UI.TITLE_PANEL_BG_ALPHA).toBeGreaterThanOrEqual(0.8)
+    expect(WORLD_MAP_UI.TITLE_PANEL_BG_ALPHA).toBeLessThan(1)
+    expect(WORLD_MAP_UI.TITLE_STROKE_THICKNESS).toBeGreaterThan(0)
+    expect(WORLD_MAP_UI.TITLE_PANEL_DEPTH).toBeGreaterThan(WORLD_MAP_BACKGROUND_LAYOUT.MAP_DEPTH)
+    expect(WORLD_MAP_UI.TITLE_TEXT_DEPTH).toBeGreaterThan(WORLD_MAP_UI.TITLE_PANEL_DEPTH)
+    expect(WORLD_MAP_UI.TITLE_Y + WORLD_MAP_UI.TITLE_PANEL_HEIGHT).toBeLessThan(WORLD_MAP_UI.HINT_Y)
   })
 
   test('UI font family includes CJK fonts', () => {
