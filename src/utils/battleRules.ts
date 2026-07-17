@@ -47,6 +47,17 @@ export function canEscapeBattle(
   return !isForcedSurvivalBattle && !enemies.some(enemy => enemy.isBoss)
 }
 
+export type EscapeAttemptResult = 'blocked' | 'escaped' | 'failed'
+
+export function resolveEscapeAttempt(
+  canEscape: boolean,
+  roll: number,
+  successRate = BATTLE_RULES.ESCAPE_SUCCESS_RATE,
+): EscapeAttemptResult {
+  if (!canEscape) return 'blocked'
+  return roll >= 0 && roll < successRate ? 'escaped' : 'failed'
+}
+
 export interface BreakGaugeResult {
   gauge: number
   shouldBreak: boolean

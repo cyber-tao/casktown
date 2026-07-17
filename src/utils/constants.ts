@@ -1982,7 +1982,7 @@ export const LEVEL_GROWTH = {
   SPEED_GAIN: 1,
 } as const
 
-export const COMBO_TP_COST = 25
+export const COMBO_TP_COST = 50
 export const BATTLE_SPECIAL_ENCOUNTERS = {
   FESTIVAL_DEFENSE: 'BTL_002',
   MIST_TRIAL: 'BTL_310',

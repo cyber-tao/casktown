@@ -51,7 +51,7 @@ import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
 import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
-import { isComboSkillId, isComboUnlocked } from '../utils/comboRules'
+import { canUseComboAtTp, isComboSkillId, isComboUnlocked, shouldQueueComboTurnSkip } from '../utils/comboRules'
 import {
   advanceBattleTurn,
   advanceBreakGauge,
@@ -63,6 +63,7 @@ import {
   resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
   resolveLimitedSkillTargets,
+  resolveEscapeAttempt,
   shouldEvadeBattleAttack,
   shouldGrantExtraTurnOnKill,
 } from '../utils/battleRules'
@@ -104,7 +105,7 @@ export class BattleScene extends Phaser.Scene {
   private units: BattleUnit[] = []
   private turnOrder: number[] = []
   private currentTurn = 0
-  private phase: 'intro' | 'player' | 'enemy' | 'victory' | 'defeat' | 'result' = 'intro'
+  private phase: 'intro' | 'player' | 'enemy' | 'escaping' | 'victory' | 'defeat' | 'result' = 'intro'
   private enemyData: EnemyData[] = []
   private bg!: Phaser.GameObjects.Rectangle
   private logText!: Phaser.GameObjects.Text
@@ -1463,7 +1464,7 @@ export class BattleScene extends Phaser.Scene {
       const unit1 = this.units.find(u => u.isPlayer && u.id === def.char1)
       const unit2 = this.units.find(u => u.isPlayer && u.id === def.char2)
       if (!unit1 || !unit2 || unit1.stats.hp <= 0 || unit2.stats.hp <= 0) continue
-      if (unit1.tp < COMBO_TP_COST || unit2.tp < COMBO_TP_COST) continue
+      if (!canUseComboAtTp(unit1.tp, unit2.tp)) continue
 
       const skill = skillDefs[def.skillId]
       if (!skill) continue
@@ -1536,13 +1537,15 @@ export class BattleScene extends Phaser.Scene {
     const unit1 = this.units.find(u => u.isPlayer && u.id === combo.char1)!
     const unit2 = this.units.find(u => u.isPlayer && u.id === combo.char2)!
 
+    const skill = GAME_CONFIG_DATABASE.getTable('skills')[combo.skillId]
+    if (!skill) return
+
     unit1.tp -= COMBO_TP_COST
     unit2.tp -= COMBO_TP_COST
     this.updateUnitBars(unit1)
     this.updateUnitBars(unit2)
-
-    const skill = GAME_CONFIG_DATABASE.getTable('skills')[combo.skillId]
-    if (!skill) return
+    this.markComboUnitActed(unit1)
+    this.markComboUnitActed(unit2)
 
     AudioManager.getInstance().playSFX('magic_cast')
 
@@ -1603,14 +1606,11 @@ export class BattleScene extends Phaser.Scene {
         this.dealDamage(target, damage, unit1, isMagic)
       }
     }
-
-    this.markComboUnitActed(unit1)
-    this.markComboUnitActed(unit2)
   }
 
   private markComboUnitActed(unit: BattleUnit): void {
     const idx = this.turnOrder.indexOf(this.units.indexOf(unit))
-    if (idx > this.currentTurn) {
+    if (shouldQueueComboTurnSkip(this.currentTurn, idx)) {
       this.addStatus(unit, BATTLE_STATUS.COMBO_ACTED, undefined, false)
     }
   }
@@ -1767,14 +1767,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private tryEscape(): void {
-    if (!this.canEscapeCurrentBattle()) {
+    const result = resolveEscapeAttempt(this.canEscapeCurrentBattle(), Math.random())
+    if (result === 'blocked') {
       AudioManager.getInstance().playSFX('cancel')
       this.log('这场战斗无法逃跑！')
       return
     }
 
-    const success = Math.random() < BATTLE_RULES.ESCAPE_SUCCESS_RATE
-    if (success) {
+    if (result === 'escaped') {
+      this.phase = 'escaping'
+      this.setCommandMenuVisible(false)
       this.log('成功逃跑了！')
       this.time.delayedCall(Math.floor(1000 / this.speedMult), () => this.endBattle(false, true))
     } else {
@@ -2137,12 +2139,6 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
-    if (this.hasStatus(unit, BATTLE_STATUS.COMBO_ACTED)) {
-      this.removeStatus(unit, BATTLE_STATUS.COMBO_ACTED)
-      this.nextTurn()
-      return
-    }
-
     // Clear defend status
     this.removeStatus(unit, BATTLE_STATUS.DEFEND)
 
@@ -2160,6 +2156,12 @@ export class BattleScene extends Phaser.Scene {
     // Skip turn if dead after poison
     if (unit.stats.hp <= 0) {
       unit.sprite?.setAlpha(0.5)
+      this.nextTurn()
+      return
+    }
+
+    if (this.hasStatus(unit, BATTLE_STATUS.COMBO_ACTED)) {
+      this.removeStatus(unit, BATTLE_STATUS.COMBO_ACTED)
       this.nextTurn()
       return
     }

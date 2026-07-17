@@ -9,6 +9,7 @@ import {
   resolveBreakGaugeGain,
   resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
+  resolveEscapeAttempt,
   resolveLimitedSkillTargets,
   shouldEvadeBattleAttack,
   shouldGrantExtraTurnOnKill,
@@ -47,6 +48,13 @@ describe('battle rules', () => {
     expect(canEscapeBattle([{ isBoss: false }])).toBe(true)
     expect(canEscapeBattle([{ isBoss: true }])).toBe(false)
     expect(canEscapeBattle([{ isBoss: false }], true)).toBe(false)
+  })
+
+  test('resolves escape attempts at the authored probability boundary', () => {
+    expect(resolveEscapeAttempt(false, 0)).toBe('blocked')
+    expect(resolveEscapeAttempt(true, 0)).toBe('escaped')
+    expect(resolveEscapeAttempt(true, 0.49, 0.5)).toBe('escaped')
+    expect(resolveEscapeAttempt(true, 0.5, 0.5)).toBe('failed')
   })
 
   test('triggers break when a gauge reaches its threshold', () => {
