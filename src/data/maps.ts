@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { BLUE_MINT_SIDE_QUEST, DIRECTION, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -1629,8 +1629,92 @@ function buildMap070(): MapData {
       actions: [{ type: 'transfer', targetMap: 'MAP_001', targetX: 15, targetY: 12 }],
     },
     {
+      id: 'EVT_ABYSS_ENTRY', x: 12, y: 18, width: 6, height: 3,
+      type: 'trigger', trigger: 'autorun',
+      conditions: [
+        { flag: 'true_route_unlocked', value: true },
+        { flag: 'abyss_entry_seen', value: false },
+        { flag: 'game_cleared', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_701_BOOK' },
+        { type: 'dialogue', dialogueId: 'DIA_710_ENTER' },
+        { type: 'questStart', questId: 'QST_013' },
+        { type: 'questAdvance', questId: 'QST_013' },
+        { type: 'addParty', characterId: TRUE_ENDING_SUPPORT_CHARACTER_ID },
+        { type: 'setFlag', flag: 'abyss_entry_seen', value: true },
+      ],
+    },
+    {
+      id: 'EVT_HEART_SHADOW_T', x: 12, y: 16, width: 6, height: 2,
+      type: 'trigger', trigger: 'touch',
+      conditions: [
+        { flag: 'abyss_entry_seen', value: true },
+        { flag: 'heart_shadow_t_defeated', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_711_SHADOW_T' },
+        { type: 'dialogue', dialogueId: 'DIA_711_SHADOW_T_AFTER' },
+      ],
+    },
+    {
+      id: 'EVT_HEART_SHADOW_HUIHUI', x: 12, y: 13, width: 6, height: 2,
+      type: 'trigger', trigger: 'touch',
+      conditions: [
+        { flag: 'heart_shadow_t_defeated', value: true },
+        { flag: 'heart_shadow_huihui_defeated', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_712_SHADOW_HH' },
+        { type: 'dialogue', dialogueId: 'DIA_712_SHADOW_HH_AFTER' },
+      ],
+    },
+    {
+      id: 'EVT_HEART_SHADOW_A', x: 12, y: 10, width: 6, height: 2,
+      type: 'trigger', trigger: 'touch',
+      conditions: [
+        { flag: 'heart_shadow_huihui_defeated', value: true },
+        { flag: 'heart_shadow_a_defeated', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_713_SHADOW_A' },
+        { type: 'dialogue', dialogueId: 'DIA_713_SHADOW_A_AFTER' },
+      ],
+    },
+    {
+      id: 'EVT_HEART_SHADOW_CONGCONG', x: 12, y: 7, width: 6, height: 2,
+      type: 'trigger', trigger: 'touch',
+      conditions: [
+        { flag: 'heart_shadow_a_defeated', value: true },
+        { flag: 'heart_shadow_congcong_defeated', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_714_SHADOW_CC' },
+        { type: 'dialogue', dialogueId: 'DIA_714_SHADOW_CC_AFTER' },
+      ],
+    },
+    {
+      id: 'EVT_HEART_SHADOW_SUN', x: 12, y: 4, width: 6, height: 2,
+      type: 'trigger', trigger: 'touch',
+      conditions: [
+        { flag: 'heart_shadow_congcong_defeated', value: true },
+        { flag: 'heart_shadow_sun_defeated', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_715_SHADOW_SUN' },
+        { type: 'dialogue', dialogueId: 'DIA_715_SHADOW_SUN_AFTER' },
+      ],
+    },
+    {
       id: 'EVT_WUXIANG', x: 14, y: 8, width: 2, height: 2,
       type: 'trigger', trigger: 'action',
+      conditions: [
+        { flag: 'heart_shadow_t_defeated', value: true },
+        { flag: 'heart_shadow_huihui_defeated', value: true },
+        { flag: 'heart_shadow_a_defeated', value: true },
+        { flag: 'heart_shadow_congcong_defeated', value: true },
+        { flag: 'heart_shadow_sun_defeated', value: true },
+      ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_720_WUXIANG' },
         { type: 'dialogue', dialogueId: 'DIA_720_WUXIANG_END' },
@@ -2092,23 +2176,34 @@ function buildMap055(): MapData {
     {
       id: 'EVT_MEMORY_2', x: 14, y: 3, width: 2, height: 2,
       type: 'trigger', trigger: 'touch',
-      conditions: [{ flag: 'dream_active', value: true }],
+      conditions: [
+        { flag: 'dream_active', value: true },
+        { flag: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_1`, value: true },
+      ],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_553_MEMORY_2' }],
     },
     {
       id: 'EVT_MEMORY_3', x: 3, y: 9, width: 2, height: 2,
       type: 'trigger', trigger: 'touch',
-      conditions: [{ flag: 'dream_active', value: true }],
+      conditions: [
+        { flag: 'dream_active', value: true },
+        { flag: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_2`, value: true },
+      ],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_554_MEMORY_3' }],
     },
     {
       id: 'EVT_MEMORY_FINAL', x: 9, y: 10, width: 2, height: 2,
       type: 'trigger', trigger: 'touch',
-      conditions: [{ flag: 'dream_active', value: true }],
+      conditions: [
+        { flag: 'dream_active', value: true },
+        { flag: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_3`, value: true },
+        { flag: 'dream_completed', value: false },
+      ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_555_MEMORY_FINAL' },
         { type: 'battle', encounterId: 'BTL_XIAOAI_SHADOW' },
         { type: 'setFlag', flag: 'dream_completed', value: true },
+        { type: 'setFlag', flag: 'dream_active', value: false },
       ],
     },
     {
@@ -2197,18 +2292,34 @@ function buildMap061(): MapData {
     {
       id: 'EVT_CHAIN_1', x: 5, y: 9, width: 2, height: 2,
       type: 'trigger', trigger: 'action',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_611_CHAIN_1' }],
+      conditions: [{ flag: 'swamp_chains_resolved', value: false }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_611_CHAIN_1' },
+        { type: 'battle', encounterId: 'BTL_510' },
+      ],
     },
     {
       id: 'EVT_CHAIN_2', x: 13, y: 7, width: 2, height: 2,
       type: 'trigger', trigger: 'action',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_612_CHAIN_2' }],
+      conditions: [
+        { flag: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_CHAIN_1`, value: true },
+        { flag: 'swamp_chains_resolved', value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_612_CHAIN_2' },
+        { type: 'battle', encounterId: 'BTL_511' },
+      ],
     },
     {
       id: 'EVT_CHAIN_3', x: 22, y: 9, width: 2, height: 2,
       type: 'trigger', trigger: 'action',
+      conditions: [
+        { flag: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_CHAIN_2`, value: true },
+        { flag: 'swamp_chains_resolved', value: false },
+      ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_613_CHAIN_3' },
+        { type: 'battle', encounterId: 'BTL_512' },
         { type: 'setFlag', flag: 'swamp_chains_resolved', value: true },
       ],
     },

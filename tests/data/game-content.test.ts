@@ -11,6 +11,7 @@ import type { EventAction, MapData, MapEvent } from '../../src/data/types.ts'
 import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
+import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
 import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
@@ -496,6 +497,88 @@ describe('game content data', () => {
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'setFlag', flag: 'normal_ending_seen', value: true })
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'questComplete', questId: 'QST_012' })
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 })
+  })
+
+  test('terminal attack continues into the complete normal ending sequence', () => {
+    const killDialogue = DIALOGUES['DIA_530_KILL']
+    const normalEnding = DIALOGUES['DIA_601_NORMAL']
+
+    expect(killDialogue?.onComplete).toEqual([{ type: 'dialogue', dialogueId: 'DIA_601_NORMAL' }])
+    expect(normalEnding?.onComplete).toContainEqual({ type: 'setFlag', flag: 'normal_ending_seen', value: true })
+    expect(normalEnding?.onComplete).toContainEqual({ type: 'questComplete', questId: 'QST_012' })
+    expect(normalEnding?.onComplete).toContainEqual({ type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 })
+  })
+
+  test('purification autoruns cover the final interaction area after map redesign', () => {
+    const finalEvent = findEvent('MAP_063', 'EVT_XIAOAI_FINAL')
+    const trueEvent = findEvent('MAP_063', 'EVT_PURIFICATION_TRUE')
+    const normalEvent = findEvent('MAP_063', 'EVT_PURIFICATION_NORMAL')
+
+    expect({ x: trueEvent.x, y: trueEvent.y, width: trueEvent.width, height: trueEvent.height }).toEqual({
+      x: normalEvent.x,
+      y: normalEvent.y,
+      width: normalEvent.width,
+      height: normalEvent.height,
+    })
+    expect(trueEvent.x).toBeLessThanOrEqual(finalEvent.x - 1)
+    expect(trueEvent.y).toBeLessThanOrEqual(finalEvent.y - 1)
+    expect(trueEvent.x + trueEvent.width).toBeGreaterThanOrEqual(finalEvent.x + finalEvent.width + 1)
+    expect(trueEvent.y + trueEvent.height).toBeGreaterThanOrEqual(finalEvent.y + finalEvent.height + 1)
+  })
+
+  test('reincarnation memories require the previous step and contain one choice each', () => {
+    const memory1 = findEvent('MAP_055', 'EVT_MEMORY_1')
+    const memory2 = findEvent('MAP_055', 'EVT_MEMORY_2')
+    const memory3 = findEvent('MAP_055', 'EVT_MEMORY_3')
+    const memoryFinal = findEvent('MAP_055', 'EVT_MEMORY_FINAL')
+
+    expectCondition(memory2, getFieldEventDoneFlag(memory1.id), true)
+    expectCondition(memory3, getFieldEventDoneFlag(memory2.id), true)
+    expectCondition(memoryFinal, getFieldEventDoneFlag(memory3.id), true)
+
+    for (const dialogueId of ['DIA_552_MEMORY_1', 'DIA_553_MEMORY_2', 'DIA_554_MEMORY_3']) {
+      const choices = DIALOGUES[dialogueId]!.lines.flatMap(line => line.choices ?? [])
+      expect(choices.length).toBeGreaterThan(0)
+      expect(choices.every(choice => choice.next === undefined)).toBe(true)
+    }
+  })
+
+  test('dark swamp chains enforce order and resolve only after their battles', () => {
+    const chain1 = findEvent('MAP_061', 'EVT_CHAIN_1')
+    const chain2 = findEvent('MAP_061', 'EVT_CHAIN_2')
+    const chain3 = findEvent('MAP_061', 'EVT_CHAIN_3')
+
+    expect(chain1.actions).toContainEqual({ type: 'battle', encounterId: 'BTL_510' })
+    expectCondition(chain2, getFieldEventDoneFlag(chain1.id), true)
+    expect(chain2.actions).toContainEqual({ type: 'battle', encounterId: 'BTL_511' })
+    expectCondition(chain3, getFieldEventDoneFlag(chain2.id), true)
+    expect(chain3.actions).toContainEqual({ type: 'battle', encounterId: 'BTL_512' })
+    expect(chain3.actions.at(-1)).toEqual({ type: 'setFlag', flag: 'swamp_chains_resolved', value: true })
+  })
+
+  test('all five heart shadows gate Wuxiang and advance the abyss quest', () => {
+    const shadowFlow = [
+      ['EVT_HEART_SHADOW_T', 'BTL_701', 'heart_shadow_t_defeated'],
+      ['EVT_HEART_SHADOW_HUIHUI', 'BTL_702', 'heart_shadow_huihui_defeated'],
+      ['EVT_HEART_SHADOW_A', 'BTL_703', 'heart_shadow_a_defeated'],
+      ['EVT_HEART_SHADOW_CONGCONG', 'BTL_704', 'heart_shadow_congcong_defeated'],
+      ['EVT_HEART_SHADOW_SUN', 'BTL_705', 'heart_shadow_sun_defeated'],
+    ] as const
+    const entry = findEvent('MAP_070', 'EVT_ABYSS_ENTRY')
+    const wuxiang = findEvent('MAP_070', 'EVT_WUXIANG')
+
+    expect(entry.actions).toContainEqual({ type: 'questStart', questId: 'QST_013' })
+    expect(entry.actions).toContainEqual({ type: 'questAdvance', questId: 'QST_013' })
+
+    for (const [eventId, encounterId, victoryFlag] of shadowFlow) {
+      const event = findEvent('MAP_070', eventId)
+      expect(event.actions.some(action => action.type === 'dialogue')).toBe(true)
+      expect(ENCOUNTERS[encounterId]?.victoryFlag).toBe(victoryFlag)
+      expectCondition(wuxiang, victoryFlag, true)
+    }
+    expect(ENCOUNTERS['BTL_705']?.questId).toBe('QST_013')
+    expect(ENCOUNTERS['BTL_705']?.questProgress).toBe('advance')
+    expect(ENCOUNTERS['BTL_720']?.questProgress).toBe('complete')
   })
 
   test('critical story npcs switch to follow-up dialogue after completion flags', () => {

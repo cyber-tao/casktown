@@ -1149,6 +1149,13 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { type: 'questStart', questId: 'QST_011' },
     ],
   },
+  DIA_420_REINCARNATION_START: {
+    id: 'DIA_420_REINCARNATION_START',
+    lines: [
+      { speaker: '旁白', text: '轮回道的光影缓缓凝聚。年幼的xiaoai站在道路尽头。' },
+      { speaker: '系统', text: '依次触碰三段记忆，完成关键对白。' },
+    ],
+  },
   DIA_420_REINCARNATION: {
     id: 'DIA_420_REINCARNATION',
     lines: [
@@ -1456,7 +1463,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '旁白', text: 'xiaoai化为白烟。地下魔宫门打开。' },
       { speaker: '系统', text: '进入普通结局。normal_ending_seen = true。' },
     ],
-    onComplete: [{ type: 'questComplete', questId: 'QST_012' }],
+    onComplete: [{ type: 'dialogue', dialogueId: 'DIA_601_NORMAL' }],
   },
   DIA_530_PURIFY: {
     id: 'DIA_530_PURIFY',
@@ -2989,7 +2996,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
   },
 }
 
-const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boolean }> = {
+const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boolean; stripChoiceNext?: boolean }> = {
   DIA_002_HUIHUI: { target: 'DIA_001_HELP' },
   DIA_003_A: { target: 'DIA_101_COLD' },
   DIA_005_BARREL: { target: 'DIA_REBUILD_BOARD' },
@@ -3012,10 +3019,10 @@ const DIALOGUE_ALIASES: Record<string, { target: string; includeOnComplete?: boo
   DIA_531_WANG_BATTLE: { target: 'DIA_413_WANG_PRE' },
   DIA_541_LIANG_BATTLE: { target: 'DIA_414_LIANG_PRE' },
   DIA_542_GIANT_BEAST: { target: 'DIA_414_LIANG_PRE' },
-  DIA_551_DREAM_START: { target: 'DIA_420_REINCARNATION' },
-  DIA_552_MEMORY_1: { target: 'DIA_420_R2' },
-  DIA_553_MEMORY_2: { target: 'DIA_420_R3' },
-  DIA_554_MEMORY_3: { target: 'DIA_420_END' },
+  DIA_551_DREAM_START: { target: 'DIA_420_REINCARNATION_START' },
+  DIA_552_MEMORY_1: { target: 'DIA_420_REINCARNATION', stripChoiceNext: true },
+  DIA_553_MEMORY_2: { target: 'DIA_420_R2', stripChoiceNext: true },
+  DIA_554_MEMORY_3: { target: 'DIA_420_R3', stripChoiceNext: true },
   DIA_555_MEMORY_FINAL: { target: 'DIA_420_END' },
   DIA_501_MASK: { target: 'DIA_501_CAPTURED', includeOnComplete: true },
   DIA_611_CHAIN_1: { target: 'DIA_510_SWAMP' },
@@ -3033,7 +3040,11 @@ for (const [alias, config] of Object.entries(DIALOGUE_ALIASES)) {
   if (target) {
     DIALOGUES[alias] = {
       id: alias,
-      lines: target.lines,
+      lines: config.stripChoiceNext
+        ? target.lines.map(line => line.choices
+          ? { ...line, choices: line.choices.map(choice => ({ ...choice, next: undefined })) }
+          : line)
+        : target.lines,
       ...(config.includeOnComplete && target.onComplete ? { onComplete: target.onComplete } : {}),
     }
   }

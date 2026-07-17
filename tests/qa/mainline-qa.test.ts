@@ -77,6 +77,9 @@ describe('MainlineQaRunner', () => {
     }
     expect(report.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
     expect(report.coverage.encounterIds).toContain(MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID)
+    for (const encounterId of ['BTL_510', 'BTL_511', 'BTL_512', 'BTL_701', 'BTL_702', 'BTL_703', 'BTL_704', 'BTL_705']) {
+      expect(report.coverage.encounterIds).toContain(encounterId)
+    }
     expect(report.finalState.flags[`${ROAMING_ENCOUNTER_RESPAWN.DEFEATED_FLAG_PREFIX}EVT_TIGER`]).toBe(true)
     for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
       expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
