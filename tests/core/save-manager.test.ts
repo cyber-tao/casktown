@@ -112,6 +112,18 @@ describe('SaveManager', () => {
     expect(gd.branches.trust_huihui).toBe(-20)
   })
 
+  test('negative mercy story choices remain loadable after save', () => {
+    const gd = GameData.getInstance()
+    gd.setFlag('mercy_score', -1)
+
+    expect(gd.branches.mercy_score).toBe(0)
+    expect(sm.save(1)).toBe(true)
+
+    gd.updateBranch('mercy_score', 10)
+    expect(sm.load(1)).toBe(true)
+    expect(gd.branches.mercy_score).toBe(0)
+  })
+
   test('save rejects invalid slot numbers', () => {
     expect(sm.save(QUICK_SAVE_SLOT)).toBe(true) // quick save slot is valid
     expect(sm.save(-1)).toBe(false)

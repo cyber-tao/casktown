@@ -8,6 +8,7 @@ import { resolveCanonicalMapId } from './MapAccess'
 import {
   A_RESCUED_FLAG,
   BARREL_UNLOCK_PROGRESS_FLAGS,
+  BRANCH_VALUE_LIMITS,
   INITIAL_GOLD,
   LEGACY_SAVE_PROGRESS,
   LEVEL_GROWTH,
@@ -145,6 +146,33 @@ export class GameData {
     return Math.max(REBUILD_LEVEL_LIMITS.MIN, Math.min(REBUILD_LEVEL_LIMITS.MAX, level))
   }
 
+  private clampBranchNumber(key: keyof BranchState, value: number): number {
+    switch (key) {
+      case 'trust_huihui':
+      case 'trust_a':
+      case 'trust_congcong':
+      case 'trust_sun':
+        return Math.max(BRANCH_VALUE_LIMITS.TRUST_MIN, Math.min(BRANCH_VALUE_LIMITS.TRUST_MAX, value))
+      case 'mercy_score':
+        return Math.max(BRANCH_VALUE_LIMITS.MERCY_MIN, Math.min(BRANCH_VALUE_LIMITS.MERCY_MAX, value))
+      case 'rebuild_level':
+        return this.clampRebuildLevel(value)
+      case 'xiaoai_memory_fragments':
+        return Math.max(0, Math.min(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS, value))
+      default:
+        return value
+    }
+  }
+
+  private normalizeBranchNumbers(): void {
+    for (const key of BRANCH_NUMBER_KEYS) {
+      const value = this.branches[key]
+      if (typeof value === 'number') {
+        ;(this.branches as unknown as Record<string, unknown>)[key] = this.clampBranchNumber(key, value)
+      }
+    }
+  }
+
   private syncFlagFromBranch(key: keyof BranchState): unknown {
     const value = this.branches[key]
     this.flags[key] = value
@@ -257,7 +285,7 @@ export class GameData {
   }
 
   updateBranch(key: keyof BranchState, value: unknown): void {
-    const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
+    const normalizedValue = typeof value === 'number' ? this.clampBranchNumber(key, value) : value
     if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
       this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
       this.branches.rebuild_level = this.rebuildLevel
@@ -276,8 +304,8 @@ export class GameData {
       let next = key === 'rebuild_level'
         ? (typeof value === 'number' ? this.clampRebuildLevel(value) : current)
         : typeof value === 'number' && typeof current === 'number' ? current + value : value
-      if (key === 'xiaoai_memory_fragments' && typeof next === 'number') {
-        next = Math.max(0, Math.min(TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS, next))
+      if (typeof next === 'number') {
+        next = this.clampBranchNumber(key, next)
       }
       ;(this.branches as unknown as Record<string, unknown>)[key] = next
       if (key === 'rebuild_level' && typeof next === 'number') {
@@ -658,7 +686,7 @@ export class GameData {
     const key = trustMap[charId]
     if (!key) return
     const current = this.branches[key] as number
-    this.updateBranch(key, Math.max(-100, Math.min(100, current + amount)))
+    this.updateBranch(key, current + amount)
   }
 
   getTrustLevel(charId: string): number {
@@ -678,7 +706,7 @@ export class GameData {
   }
 
   adjustMercy(amount: number): void {
-    this.branches.mercy_score = Math.max(0, Math.min(100, this.branches.mercy_score + amount))
+    this.branches.mercy_score = this.clampBranchNumber('mercy_score', this.branches.mercy_score + amount)
     this.syncFlagFromBranch('mercy_score')
     this.syncTrueRouteState()
   }
@@ -817,6 +845,7 @@ export class GameData {
     this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {}).map(([id, quest]) => [id, { ...quest }]))
     this.flags = { ...((d.flags as GameFlags) ?? {}) }
     this.branches = { ...createDefaultBranches(), ...((d.branches as Partial<BranchState>) ?? {}) }
+    this.normalizeBranchNumbers()
     this.migrateLegacyProgressionFlags()
     const serializedRebuildLevel = typeof d.rebuildLevel === 'number' ? d.rebuildLevel : this.branches.rebuild_level
     this.rebuildLevel = this.clampRebuildLevel(serializedRebuildLevel)

@@ -537,6 +537,12 @@ export const BATTLE_SOLO_CHARACTER_ID = 'T'
 export const BATTLE_SOLO_ENCOUNTER_IDS = ['BTL_310', 'BTL_530', 'BTL_XIAOAI_TRUE'] as const
 export const PARTNER_CALL_AVAILABLE_FLAG = 'partner_call_available'
 export const PARTNER_CALL_MIN_TRUST = 4
+export const BRANCH_VALUE_LIMITS = {
+  TRUST_MIN: -100,
+  TRUST_MAX: 100,
+  MERCY_MIN: 0,
+  MERCY_MAX: 100,
+} as const
 export const TRUE_ROUTE_MIN_MERCY = 5
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 5
 export const REINCARNATION_TIME_LIMIT_MS = 60_000

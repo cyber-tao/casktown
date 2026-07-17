@@ -521,6 +521,10 @@ describe('game content data', () => {
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 })
   })
 
+  test('wrong Xiyuan mercy answer uses the clamped mercy adjustment action', () => {
+    expect(DIALOGUES.DIA_203_Q4_A?.onComplete).toEqual([{ type: 'adjustMercy', amount: -1 }])
+  })
+
   test('story-critical rewards and scene gates cannot be bypassed or farmed', () => {
     const festival = findEvent('MAP_001', 'EVT_FESTIVAL')
     const sun = findEvent('MAP_042', 'NPC_SUN')

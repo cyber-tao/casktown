@@ -735,7 +735,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '熙苑', text: '错了。白虎并非天生凶恶，是受伤后的误判。你对生命的理解还需加深。' },
       { speaker: '系统', text: '悲悯值-1。' },
     ],
-    onComplete: [{ type: 'setFlag', flag: 'mercy_score', value: -1 }],
+    onComplete: [{ type: 'adjustMercy', amount: -1 }],
   },
   DIA_203_Q5: {
     id: 'DIA_203_Q5',

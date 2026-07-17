@@ -7,6 +7,7 @@ import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
 import type { CharacterData, CharacterStats } from '../../src/data/types.ts'
 import {
   A_RESCUED_FLAG,
+  BRANCH_VALUE_LIMITS,
   INITIAL_GOLD,
   LEGACY_SAVE_PROGRESS,
   REBUILD_VISUAL_MAP_THRESHOLD,
@@ -270,6 +271,32 @@ describe('GameData', () => {
     expect(gd.flags.mercy_score).toBe(TRUE_ROUTE_MIN_MERCY)
     expect(snapshot.flags.xiaoai_memory_fragments).toBe(snapshot.branches.xiaoai_memory_fragments)
     expect(snapshot.flags.mercy_score).toBe(snapshot.branches.mercy_score)
+  })
+
+  test('numeric branch mutations stay within save-compatible authored bounds', () => {
+    const gd = GameData.getInstance()
+
+    gd.setFlag('mercy_score', -1)
+    gd.setFlag('trust_huihui', BRANCH_VALUE_LIMITS.TRUST_MIN - 1)
+    expect(gd.branches.mercy_score).toBe(BRANCH_VALUE_LIMITS.MERCY_MIN)
+    expect(gd.branches.trust_huihui).toBe(BRANCH_VALUE_LIMITS.TRUST_MIN)
+
+    gd.updateBranch('mercy_score', BRANCH_VALUE_LIMITS.MERCY_MAX + 1)
+    gd.updateBranch('trust_huihui', BRANCH_VALUE_LIMITS.TRUST_MAX + 1)
+    expect(gd.branches.mercy_score).toBe(BRANCH_VALUE_LIMITS.MERCY_MAX)
+    expect(gd.branches.trust_huihui).toBe(BRANCH_VALUE_LIMITS.TRUST_MAX)
+  })
+
+  test('deserialize normalizes legacy branch values outside authored bounds', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { branches: Record<string, unknown> }
+    snapshot.branches.mercy_score = -1
+    snapshot.branches.trust_sun = BRANCH_VALUE_LIMITS.TRUST_MAX + 10
+
+    gd.deserialize(snapshot)
+
+    expect(gd.branches.mercy_score).toBe(BRANCH_VALUE_LIMITS.MERCY_MIN)
+    expect(gd.branches.trust_sun).toBe(BRANCH_VALUE_LIMITS.TRUST_MAX)
   })
 
   test('partner call unlocks only from the authored combined trust threshold', () => {
