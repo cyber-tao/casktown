@@ -234,7 +234,7 @@ export const DEFAULT_GAME_SETTINGS = {
   pixelSharp: true,
   fullscreen: false,
   controlMode: CONTROL_MODE.ARROWS,
-  gamepad: false,
+  gamepad: true,
 } as const
 
 export const PARTY_RULES = {
@@ -816,8 +816,6 @@ export const MAINLINE_QA_REQUIRED_FINAL_MAP = 'MAP_070'
 export const MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL = REBUILD_LEVEL_LIMITS.MAX
 export const MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS = true
 export const REBUILD_MENU = {
-  BUILT_FLAG_PREFIX: 'rebuilt_',
-  GOLD_COST_LABEL: '金币',
   PANEL_WIDTH: scalePx(600),
   PANEL_HEIGHT: scalePx(420),
   OVERLAY_ALPHA: 0.7,
@@ -849,14 +847,6 @@ export const REBUILD_MENU = {
   OPTION_FONT_SIZE: 16,
   DESC_FONT_SIZE: 14,
   BACK_FONT_SIZE: 12,
-  OPTIONS: [
-    { id: 'farm', name: '菜园', goldCost: 80, desc: '恢复菠萝大叔的菜园' },
-    { id: 'plaza', name: '广场', goldCost: 160, desc: '重建盛典广场' },
-    { id: 'tower', name: '木桶塔', goldCost: 240, desc: '修复中央木桶塔' },
-    { id: 'shop', name: '杂货铺', goldCost: 120, desc: '重开杂货铺' },
-    { id: 'mayor', name: '镇长家', goldCost: 180, desc: '修缮镇长宅邸' },
-    { id: 'dock', name: '码头', goldCost: 180, desc: '修复码头设施' },
-  ],
 } as const
 
 export const FACILITY_OVERLAY_UI = {
@@ -1786,10 +1776,13 @@ export const MAP_INPUT_GUARD = {
   RESUME_LOCK_MS: 120,
 } as const
 
-export const MAP_GAMEPAD_INPUT = {
+export const GAMEPAD_INPUT = {
   AXIS_ACTIVATION_THRESHOLD: 0.3,
   AXIS_DEAD_ZONE: 0.15,
+  START_BUTTON_INDEX: 9,
 } as const
+
+export const MAP_GAMEPAD_INPUT = GAMEPAD_INPUT
 
 export const VOICE_AUDIO_PATH = {
   DIRECTORY: 'audio/voice',

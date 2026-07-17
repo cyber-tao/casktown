@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { InputManager } from '../core/InputManager'
 import { SkillGrowth } from '../core/SkillGrowth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
@@ -9,6 +10,7 @@ import { GAME_WIDTH, GAME_HEIGHT, COLORS, FACILITY_OVERLAY_UI, MENU_OVERLAY_UI, 
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 export class TrainingOverlay extends Phaser.Scene {
   private selectedIndex = 0
@@ -16,6 +18,7 @@ export class TrainingOverlay extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Rectangle
   private messageText!: Phaser.GameObjects.Text
   private goldText!: Phaser.GameObjects.Text
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'TrainingOverlay', active: false })
@@ -27,6 +30,7 @@ export class TrainingOverlay extends Phaser.Scene {
 
   create(): void {
     this.selectedIndex = 0
+    this.gamepadNavigation.reset()
     AudioManager.getInstance().playSFX('open_menu')
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, FACILITY_OVERLAY_UI.OVERLAY_ALPHA)
@@ -59,6 +63,28 @@ export class TrainingOverlay extends Phaser.Scene {
 
     this.renderList()
     this.setupInput()
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.move(-1)
+      return
+    }
+    if (action === 'down') {
+      this.move(1)
+      return
+    }
+    if (action === 'confirm') {
+      this.train()
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.close()
   }
 
   private renderList(): void {

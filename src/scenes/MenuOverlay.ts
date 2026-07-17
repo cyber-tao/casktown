@@ -44,6 +44,7 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
 import { resolveItemRecoveryAmount } from '../utils/itemEffects'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
 
@@ -95,6 +96,7 @@ export class MenuOverlay extends Phaser.Scene {
   private loadMode = false
   private feedbackMessage = ''
   private feedbackEvent?: Phaser.Time.TimerEvent
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'MenuOverlay', active: false })
@@ -125,12 +127,19 @@ export class MenuOverlay extends Phaser.Scene {
     this.settingsIndex = 0
     this.loadMode = false
     this.feedbackMessage = ''
+    this.gamepadNavigation.reset()
 
     AudioManager.getInstance().playSFX('open_menu')
     this.drawShell()
     this.renderNav()
     this.renderMain()
     this.setupInput()
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
   }
 
   private getItems(): Record<string, ItemData> {
@@ -220,6 +229,30 @@ export class MenuOverlay extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ENTER', () => this.handleConfirm())
     this.input.keyboard?.on('keydown-SPACE', () => this.handleConfirm())
     this.input.keyboard?.on('keydown-ESC', () => this.handleCancel())
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.handleUp()
+      return
+    }
+    if (action === 'down') {
+      this.handleDown()
+      return
+    }
+    if (action === 'left') {
+      this.handleLeft()
+      return
+    }
+    if (action === 'right') {
+      this.handleRight()
+      return
+    }
+    if (action === 'confirm') {
+      this.handleConfirm()
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.handleCancel()
   }
 
   private renderNav(): void {

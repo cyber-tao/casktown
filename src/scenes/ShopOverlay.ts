@@ -2,12 +2,14 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { InputManager } from '../core/InputManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, FACILITY_OVERLAY_UI, MENU_OVERLAY_UI, RUNTIME_UI_ASSET_KEYS, scaleFont } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 interface ShopItem {
   id: string
@@ -22,6 +24,7 @@ export class ShopOverlay extends Phaser.Scene {
   private descText!: Phaser.GameObjects.Text
   private goldText!: Phaser.GameObjects.Text
   private messageText!: Phaser.GameObjects.Text
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'ShopOverlay', active: false })
@@ -33,6 +36,7 @@ export class ShopOverlay extends Phaser.Scene {
 
   create(): void {
     this.selectedIndex = 0
+    this.gamepadNavigation.reset()
     AudioManager.getInstance().playSFX('open_menu')
 
     const items = GAME_CONFIG_DATABASE.getTable('items')
@@ -71,6 +75,28 @@ export class ShopOverlay extends Phaser.Scene {
     this.renderList()
     if (this.shopItems.length > 0) this.updateDesc()
     this.setupInput()
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.move(-1)
+      return
+    }
+    if (action === 'down') {
+      this.move(1)
+      return
+    }
+    if (action === 'confirm') {
+      this.buy()
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.close()
   }
 
   private renderList(): void {

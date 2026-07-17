@@ -23,6 +23,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { markStartupReady } from '../utils/startup'
 import { formatSaveSlotLabel, getLoadSaveSlots } from '../utils/saveSlots'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 type ViteImportMeta = ImportMeta & {
   readonly env: {
@@ -40,6 +41,7 @@ export class TitleScene extends Phaser.Scene {
   private isSelectingSave = false
   private saveIndex = 0
   private saveRows: Array<{ slot: number | null; label: string }> = []
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'TitleScene' })
@@ -54,6 +56,7 @@ export class TitleScene extends Phaser.Scene {
     this.isSelectingSave = false
     this.saveIndex = 0
     this.saveRows = []
+    this.gamepadNavigation.reset()
 
     this.createBackground()
 
@@ -107,6 +110,28 @@ export class TitleScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(TITLE_BACKGROUND.FADE_MS)
     markStartupReady()
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.changeMenu(-1)
+      return
+    }
+    if (action === 'down') {
+      this.changeMenu(1)
+      return
+    }
+    if (action === 'confirm') {
+      this.selectMenu()
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.handleCancel()
   }
 
   private createBackground(): void {

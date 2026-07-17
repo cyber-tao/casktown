@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { InputManager } from '../core/InputManager'
 import {
   DIALOGUE_BOX,
   DIALOGUE_CHOICE,
@@ -33,6 +34,7 @@ import { showLoadingScreen } from '../utils/loadingScreen'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { DialogueChoice, DialogueData, EventAction } from '../data/types'
 import { resolveDialogueVoiceKey } from '../utils/voiceLines'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 interface DialogueContinuation {
   script: DialogueData
@@ -78,6 +80,7 @@ export class DialogueOverlay extends Phaser.Scene {
   private continuations: DialogueContinuation[] = []
   private completionQueue = new DialogueCompletionQueue()
   private closing = false
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'DialogueOverlay', active: false })
@@ -134,6 +137,7 @@ export class DialogueOverlay extends Phaser.Scene {
     this.continuations = []
     this.completionQueue = new DialogueCompletionQueue()
     this.closing = false
+    this.gamepadNavigation.reset()
 
     const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
     const script = dialogues[data.dialogueId]
@@ -197,6 +201,28 @@ export class DialogueOverlay extends Phaser.Scene {
 
     // Start first line
     this.showLine()
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.moveChoice(-1)
+      return
+    }
+    if (action === 'down') {
+      this.moveChoice(1)
+      return
+    }
+    if (action === 'confirm') {
+      this.advance()
+      return
+    }
+    if ((action === 'cancel' || action === 'menu') && this.isTyping) this.advance()
   }
 
   private showLine(): void {

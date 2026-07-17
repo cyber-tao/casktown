@@ -2,12 +2,14 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { InputManager } from '../core/InputManager'
 import { queueImageAssets } from '../core/AssetLoader'
 import { REBUILD_MILESTONES } from '../data/rebuild'
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, MENU_OVERLAY_UI, REBUILD_MENU, RUNTIME_UI_ASSET_KEYS, scaleFont } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 export class RebuildOverlay extends Phaser.Scene {
   private cursorIndex = 0
@@ -16,6 +18,7 @@ export class RebuildOverlay extends Phaser.Scene {
   private titleText!: Phaser.GameObjects.Text
   private descText!: Phaser.GameObjects.Text
   private progressText!: Phaser.GameObjects.Text
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'RebuildOverlay', active: false })
@@ -28,6 +31,7 @@ export class RebuildOverlay extends Phaser.Scene {
   create(): void {
     this.cursorIndex = 0
     this.items = []
+    this.gamepadNavigation.reset()
     AudioManager.getInstance().setScene(this)
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, REBUILD_MENU.OVERLAY_ALPHA)
@@ -91,18 +95,39 @@ export class RebuildOverlay extends Phaser.Scene {
     this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
       switch (event.code) {
         case 'ArrowUp': case 'KeyW':
-          this.cursorIndex = (this.cursorIndex - 1 + REBUILD_MILESTONES.length) % REBUILD_MILESTONES.length
-          this.updateCursor()
+          this.moveCursor(-1)
           break
         case 'ArrowDown': case 'KeyS':
-          this.cursorIndex = (this.cursorIndex + 1) % REBUILD_MILESTONES.length
-          this.updateCursor()
+          this.moveCursor(1)
           break
         case 'Escape':
           this.close()
           break
       }
     })
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.moveCursor(-1)
+      return
+    }
+    if (action === 'down') {
+      this.moveCursor(1)
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.close()
+  }
+
+  private moveCursor(dir: number): void {
+    this.cursorIndex = (this.cursorIndex + dir + REBUILD_MILESTONES.length) % REBUILD_MILESTONES.length
+    this.updateCursor()
   }
 
   private updateCursor(): void {

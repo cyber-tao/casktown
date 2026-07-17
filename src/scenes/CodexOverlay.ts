@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
+import { InputManager } from '../core/InputManager'
 import { isProphecyConditionMet } from '../core/ProphecyConditions'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { queueImageAssets } from '../core/AssetLoader'
@@ -21,6 +22,7 @@ import {
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 type CodexTab = 'monsters' | 'items' | 'story'
 
@@ -34,6 +36,7 @@ export class CodexOverlay extends Phaser.Scene {
   private tabs: Phaser.GameObjects.Text[] = []
   private discoveredEnemies: string[] = []
   private discoveredItems: string[] = []
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'CodexOverlay', active: false })
@@ -48,6 +51,7 @@ export class CodexOverlay extends Phaser.Scene {
     this.cursorIndex = 0
     this.listTopIndex = 0
     this.listItems = []
+    this.gamepadNavigation.reset()
     const gd = GameData.getInstance()
     const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
     const items = GAME_CONFIG_DATABASE.getTable('items')
@@ -134,32 +138,62 @@ export class CodexOverlay extends Phaser.Scene {
     this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
       switch (event.code) {
         case 'ArrowUp': case 'KeyW':
-          this.cursorIndex = Math.max(0, this.cursorIndex - 1)
-          this.updateCursor()
+          this.moveCursor(-1)
           break
         case 'ArrowDown': case 'KeyS':
-          this.cursorIndex = Math.min(this.getListCount() - 1, this.cursorIndex + 1)
-          this.updateCursor()
+          this.moveCursor(1)
           break
         case 'ArrowLeft': case 'KeyA':
-          this.tab = CODEX_TAB_DEFS[(CODEX_TAB_DEFS.findIndex(t => t.key === this.tab) - 1 + CODEX_TAB_DEFS.length) % CODEX_TAB_DEFS.length]!.key
-          this.cursorIndex = 0
-          this.listTopIndex = 0
-          this.updateTabs()
-          this.renderList()
+          this.changeTab(-1)
           break
         case 'ArrowRight': case 'KeyD':
-          this.tab = CODEX_TAB_DEFS[(CODEX_TAB_DEFS.findIndex(t => t.key === this.tab) + 1) % CODEX_TAB_DEFS.length]!.key
-          this.cursorIndex = 0
-          this.listTopIndex = 0
-          this.updateTabs()
-          this.renderList()
+          this.changeTab(1)
           break
         case 'Escape':
           this.close()
           break
       }
     })
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.moveCursor(-1)
+      return
+    }
+    if (action === 'down') {
+      this.moveCursor(1)
+      return
+    }
+    if (action === 'left') {
+      this.changeTab(-1)
+      return
+    }
+    if (action === 'right') {
+      this.changeTab(1)
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.close()
+  }
+
+  private moveCursor(dir: number): void {
+    this.cursorIndex = Phaser.Math.Clamp(this.cursorIndex + dir, 0, this.getListCount() - 1)
+    this.updateCursor()
+  }
+
+  private changeTab(dir: number): void {
+    const currentIndex = CODEX_TAB_DEFS.findIndex(t => t.key === this.tab)
+    this.tab = CODEX_TAB_DEFS[(currentIndex + dir + CODEX_TAB_DEFS.length) % CODEX_TAB_DEFS.length]!.key
+    this.cursorIndex = 0
+    this.listTopIndex = 0
+    this.updateTabs()
+    this.renderList()
   }
 
   private getListCount(): number {

@@ -25,6 +25,15 @@ describe('InputManager', () => {
     expect(input.isConfirm('Enter')).toBe(true)
   })
 
+  test('enables gamepad navigation on a cold start and preserves an explicit opt-out', () => {
+    expect(input.isGamepadEnabled()).toBe(true)
+
+    input.setGamepadEnabled(false)
+    expect(GameData.getInstance().settings.gamepad).toBe(false)
+    input.syncFromGameData()
+    expect(input.isGamepadEnabled()).toBe(false)
+  })
+
   test('uses configured bindings alongside authored fallback keys', () => {
     input.setBindings({ up: 'KeyI', confirm: 'KeyE', cancel: 'Backspace' })
 

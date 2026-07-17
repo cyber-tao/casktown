@@ -17,9 +17,11 @@ import {
 } from '../utils/constants'
 import { bindTouchText } from '../utils/touch'
 import { showLoadingScreen } from '../utils/loadingScreen'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 export class WorldMapOverlay extends Phaser.Scene {
   private closing = false
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'WorldMapOverlay', active: false })
@@ -38,6 +40,7 @@ export class WorldMapOverlay extends Phaser.Scene {
 
   create(): void {
     this.closing = false
+    this.gamepadNavigation.reset()
     AudioManager.getInstance().setScene(this)
 
     const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_COLOR, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_ALPHA)
@@ -89,6 +92,16 @@ export class WorldMapOverlay extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard?.off('keydown', this.handleKeydown)
     })
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'confirm' || action === 'cancel' || action === 'menu') this.close()
   }
 
   private renderCurrentLocation(): void {

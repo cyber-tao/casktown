@@ -21,6 +21,7 @@ import {
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 type SettingOption = typeof MENU_SETTINGS_OPTIONS[number]
 
@@ -32,6 +33,7 @@ export class SettingsScene extends Phaser.Scene {
   private overlay!: Phaser.GameObjects.Rectangle
   private panel!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
   private closing = false
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'SettingsScene', active: false })
@@ -46,12 +48,43 @@ export class SettingsScene extends Phaser.Scene {
     this.menuIndex = 0
     this.menuItems = []
     this.closing = false
+    this.gamepadNavigation.reset()
 
     this.createBackground()
     this.createSettingsUI()
     this.setupInput()
 
     this.cameras.main.fadeIn(SETTINGS_PANEL.fadeMs)
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.moveMenu(-1)
+      return
+    }
+    if (action === 'down') {
+      this.moveMenu(1)
+      return
+    }
+    if (action === 'left') {
+      this.changeValue(-1)
+      return
+    }
+    if (action === 'right') {
+      this.changeValue(1)
+      return
+    }
+    if (action === 'confirm') {
+      this.selectMenu()
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.goBack()
   }
 
   private createBackground(): void {

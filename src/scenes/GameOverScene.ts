@@ -8,11 +8,13 @@ import { COLORS, GAME_HEIGHT, GAME_OVER_MENU_INDEX, GAME_OVER_MENU_LABELS, GAME_
 import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 export class GameOverScene extends Phaser.Scene {
   private menuIndex = 0
   private menuItems: Phaser.GameObjects.Text[] = []
   private cursor!: Phaser.GameObjects.Rectangle
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'GameOverScene' })
@@ -25,6 +27,7 @@ export class GameOverScene extends Phaser.Scene {
   create(): void {
     this.menuIndex = 0
     this.menuItems = []
+    this.gamepadNavigation.reset()
     AudioManager.getInstance().setScene(this)
     AudioManager.getInstance().playGameOverBGM()
 
@@ -68,6 +71,24 @@ export class GameOverScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-DOWN', () => this.changeMenu(1))
     this.input.keyboard?.on('keydown-ENTER', () => this.selectMenu())
     this.input.keyboard?.on('keydown-SPACE', () => this.selectMenu())
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.changeMenu(-1)
+      return
+    }
+    if (action === 'down') {
+      this.changeMenu(1)
+      return
+    }
+    if (action === 'confirm' || action === 'menu') this.selectMenu()
   }
 
   private changeMenu(dir: number): void {

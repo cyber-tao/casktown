@@ -49,6 +49,7 @@ import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
 import { resolveItemRecoveryAmount } from '../utils/itemEffects'
+import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import {
   advanceBattleTurn,
   advanceBreakGauge,
@@ -134,6 +135,7 @@ export class BattleScene extends Phaser.Scene {
   private completedRoundCount = 0
   private resultSummary: BattleResultSummary | null = null
   private resultPanel: Phaser.GameObjects.Container | null = null
+  private gamepadNavigation = new GamepadNavigationController()
 
   constructor() {
     super({ key: 'BattleScene', active: false })
@@ -184,6 +186,7 @@ export class BattleScene extends Phaser.Scene {
     this.completedRoundCount = 0
     this.resultSummary = null
     this.resultPanel = null
+    this.gamepadNavigation.reset()
 
     // Apply settings
     const gd = GameData.getInstance()
@@ -254,6 +257,12 @@ export class BattleScene extends Phaser.Scene {
       this.phase = 'player'
       this.startTurn()
     })
+  }
+
+  override update(): void {
+    const input = InputManager.getInstance()
+    const actions = this.gamepadNavigation.poll(this.input.gamepad, input.isGamepadEnabled())
+    for (const action of actions) this.handleGamepadAction(action)
   }
 
   private setupEncounter(encounterId: string): void {
@@ -874,6 +883,30 @@ export class BattleScene extends Phaser.Scene {
     if (input.isCancel(event.code)) {
       this.cancelActiveMenu()
     }
+  }
+
+  private handleGamepadAction(action: GamepadNavigationAction): void {
+    if (action === 'up') {
+      this.moveActiveMenu(-1)
+      return
+    }
+    if (action === 'down') {
+      this.moveActiveMenu(1)
+      return
+    }
+    if (action === 'left') {
+      this.moveTarget(-1)
+      return
+    }
+    if (action === 'right') {
+      this.moveTarget(1)
+      return
+    }
+    if (action === 'confirm') {
+      this.confirmActiveMenu()
+      return
+    }
+    if (action === 'cancel' || action === 'menu') this.cancelActiveMenu()
   }
 
   private moveActiveMenu(dir: number): void {
