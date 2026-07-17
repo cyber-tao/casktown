@@ -73,7 +73,8 @@ export function applyStateEventAction(action: EventAction, nowMs = Date.now()): 
     case 'resolveTimer': {
       const startedAtMs = gd.getFlag(getTimerStartedFlag(action.timerId))
       const elapsedMs = typeof startedAtMs === 'number' ? nowMs - startedAtMs : Number.POSITIVE_INFINITY
-      const succeeded = gd.getFlag(action.requiredFlag) === true
+      const succeeded = action.requiredFlags.length > 0
+        && action.requiredFlags.every(flag => gd.getFlag(flag) === true)
         && elapsedMs >= 0
         && elapsedMs <= action.maxDurationMs
       gd.setFlag(action.successFlag, succeeded)

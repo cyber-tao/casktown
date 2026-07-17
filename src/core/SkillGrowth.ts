@@ -1,9 +1,10 @@
 import { GameData } from './GameData'
+import { STORY_SKILL_UNLOCK_FLAGS, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../utils/constants'
 
 interface SkillUnlockCondition {
   skillId: string
   characterId: string
-  type: 'level' | 'flag' | 'rebuild' | 'trust' | 'quest'
+  type: 'level' | 'flag' | 'flagMinimum' | 'rebuild' | 'trust' | 'quest'
   value: number | string
   threshold?: number
 }
@@ -50,10 +51,10 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'zhufu', characterId: 'SUN', type: 'level', value: 1 },
   { skillId: 'jiezhang', characterId: 'SUN', type: 'flag', value: 'life_spring_visited' },
   { skillId: 'zhoushufengsha', characterId: 'SUN', type: 'flag', value: 'temple_visited' },
-  { skillId: 'rendeqiyuan', characterId: 'SUN', type: 'flag', value: 'true_route_unlocked' },
+  { skillId: 'rendeqiyuan', characterId: 'SUN', type: 'flag', value: STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN },
   // Combo skills
-  { skillId: 'yuexiahuixuan', characterId: 'T', type: 'flag', value: 'has_sacred_water' },
-  { skillId: 'fengyuezhixi', characterId: 'T', type: 'flag', value: 'xiaoai_purified' },
+  { skillId: 'yuexiahuixuan', characterId: 'T', type: 'flag', value: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN },
+  { skillId: 'fengyuezhixi', characterId: 'T', type: 'flagMinimum', value: 'xiaoai_memory_fragments', threshold: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS },
 ]
 
 export class SkillGrowth {
@@ -105,6 +106,10 @@ export class SkillGrowth {
         return (charData?.stats.level || 0) >= (cond.value as number)
       case 'flag':
         return gd.getFlag(cond.value as string) === true
+      case 'flagMinimum': {
+        const value = gd.getFlag(cond.value as string)
+        return typeof value === 'number' && value >= (cond.threshold ?? 0)
+      }
       case 'rebuild':
         return gd.rebuildLevel >= (cond.value as number)
       case 'trust': {

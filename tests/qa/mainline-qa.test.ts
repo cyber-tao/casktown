@@ -154,6 +154,16 @@ describe('MainlineQaRunner', () => {
     })
   })
 
+  test('runs the A side story only after the palace rescue', () => {
+    const rescueIndex = MAINLINE_QA_ROUTE.findIndex(step => step.kind === 'event' && step.eventId === 'EVT_FAKE_XIAOAI')
+    const sideStartIndex = MAINLINE_QA_ROUTE.findIndex(step => step.kind === 'event' && step.eventId === 'SIDE_A_START')
+    const sideAfterIndex = MAINLINE_QA_ROUTE.findIndex(step => step.kind === 'event' && step.eventId === 'SIDE_A_AFTER')
+
+    expect(rescueIndex).toBeGreaterThanOrEqual(0)
+    expect(sideStartIndex).toBeGreaterThan(rescueIndex)
+    expect(sideAfterIndex).toBeGreaterThan(sideStartIndex)
+  })
+
   test('keeps browser QA summary away from mobile map titles and touch controls', () => {
     const desktopStyle = getMainlineQaSummaryStyle(false)
     const compactStyle = getMainlineQaSummaryStyle(true)

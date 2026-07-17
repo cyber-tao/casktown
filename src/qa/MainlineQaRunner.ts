@@ -528,7 +528,9 @@ export class MainlineQaRunner {
           if (!action.timerId) this.addError(`${source}: Timer id is empty`)
           break
         case 'resolveTimer':
-          if (!action.timerId || !action.requiredFlag || !action.successFlag) this.addError(`${source}: Timer resolution fields are empty`)
+          if (!action.timerId || action.requiredFlags.length === 0 || action.requiredFlags.some(flag => !flag) || !action.successFlag) {
+            this.addError(`${source}: Timer resolution fields are empty`)
+          }
           this.validatePositiveNumber(action.maxDurationMs, `${source}: Timer duration`, 'must be positive')
           break
         case 'addItem':

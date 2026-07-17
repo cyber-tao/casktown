@@ -136,7 +136,7 @@ export type EventAction =
   | { type: 'setFlag'; flag: string; value: unknown }
   | { type: 'setBranch'; branch: keyof BranchState; value: unknown }
   | { type: 'startTimer'; timerId: string }
-  | { type: 'resolveTimer'; timerId: string; maxDurationMs: number; requiredFlag: string; successFlag: string }
+  | { type: 'resolveTimer'; timerId: string; maxDurationMs: number; requiredFlags: readonly string[]; successFlag: string }
   | { type: 'adjustTrust'; characterId: string; amount?: number }
   | { type: 'adjustMercy'; amount?: number }
   | { type: 'addItem'; itemId: string; quantity?: number }

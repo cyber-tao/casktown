@@ -540,6 +540,16 @@ export const PARTNER_CALL_MIN_TRUST = 4
 export const TRUE_ROUTE_MIN_MERCY = 5
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 5
 export const REINCARNATION_TIME_LIMIT_MS = 60_000
+export const A_RESCUED_FLAG = 'a_rescued'
+export const STORY_SKILL_UNLOCK_FLAGS = {
+  YUEXIAHUIXUAN: 'yuexiahuixuan_unlocked',
+  RENDEQIYUAN: 'side_sun_done',
+} as const
+export const REINCARNATION_CORRECT_ANSWER_FLAGS = [
+  'reincarnation_answer_1_correct',
+  'reincarnation_answer_2_correct',
+  'reincarnation_answer_3_correct',
+] as const
 export const CHARACTER_SPRITE_BASE_KEYS: Record<string, string> = {
   T: 't',
   HUIHUI: 'huihui',
@@ -707,8 +717,6 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN },
   { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_HUIHUI_START' },
   { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_HUIHUI_AFTER' },
-  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_A_START' },
-  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_A_AFTER' },
   { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_CONGCONG_START' },
   { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_CONGCONG_AFTER' },
   { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_SUN_START' },
@@ -730,6 +738,8 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_061', eventId: 'EVT_CHAIN_3' },
   { kind: 'event', mapId: 'MAP_060', eventId: 'EVT_MASK_1' },
   { kind: 'event', mapId: 'MAP_062', eventId: 'EVT_FAKE_XIAOAI' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_A_START' },
+  { kind: 'event', mapId: 'MAP_002', eventId: 'SIDE_A_AFTER' },
   { kind: 'event', mapId: 'MAP_063', eventId: 'EVT_XIAOAI_FINAL' },
   { kind: 'event', mapId: 'MAP_063', eventId: 'EVT_PURIFICATION_TRUE' },
   { kind: 'event', mapId: 'MAP_070', eventId: 'EVT_ABYSS_ENTRY' },
@@ -764,6 +774,7 @@ export const MAINLINE_QA_REQUIRED_FINAL_FLAGS = [
   'xiaoai_purified',
   'released_four_seals',
   'fake_xiaoai_defeated',
+  A_RESCUED_FLAG,
   'dream_completed',
   'swamp_chains_resolved',
   'has_millennium_seed',

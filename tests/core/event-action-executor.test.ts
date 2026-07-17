@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import { applyStateEventAction, isStateEventAction } from '../../src/core/EventActionExecutor.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { QuestSystem } from '../../src/core/QuestSystem.ts'
+import { REINCARNATION_CORRECT_ANSWER_FLAGS } from '../../src/utils/constants.ts'
 
 describe('EventActionExecutor', () => {
   beforeEach(() => {
@@ -53,16 +54,20 @@ describe('EventActionExecutor', () => {
 
   test('resolves timed story flags against elapsed wall-clock time', () => {
     const gd = GameData.getInstance()
-    gd.setFlag('reincarnation_answers_complete', true)
     const resolveAction = {
       type: 'resolveTimer' as const,
       timerId: 'reincarnation',
       maxDurationMs: 60_000,
-      requiredFlag: 'reincarnation_answers_complete',
+      requiredFlags: REINCARNATION_CORRECT_ANSWER_FLAGS,
       successFlag: 'true_route_reincarnation',
     }
 
     applyStateEventAction({ type: 'startTimer', timerId: 'reincarnation' }, 1_000)
+    for (const flag of REINCARNATION_CORRECT_ANSWER_FLAGS.slice(0, -1)) gd.setFlag(flag, true)
+    applyStateEventAction(resolveAction, 60_999)
+    expect(gd.getFlag('true_route_reincarnation')).toBe(false)
+
+    gd.setFlag(REINCARNATION_CORRECT_ANSWER_FLAGS.at(-1)!, true)
     applyStateEventAction(resolveAction, 60_999)
     expect(gd.getFlag('true_route_reincarnation')).toBe(true)
 

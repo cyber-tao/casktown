@@ -12,7 +12,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -83,7 +83,7 @@ function validateAction(action: EventAction, source: string, errors: string[]): 
       if (!action.timerId) errors.push(`${source} starts a timer without an id`)
       break
     case 'resolveTimer':
-      if (!action.timerId || !action.requiredFlag || !action.successFlag || !Number.isFinite(action.maxDurationMs) || action.maxDurationMs <= 0) {
+      if (!action.timerId || action.requiredFlags.length === 0 || action.requiredFlags.some(flag => !flag) || !action.successFlag || !Number.isFinite(action.maxDurationMs) || action.maxDurationMs <= 0) {
         errors.push(`${source} resolves an invalid timer`)
       }
       break
@@ -517,6 +517,8 @@ describe('game content data', () => {
     const springGate = findEvent('MAP_050', 'EVT_SPRING_GATE')
     const springExit = findEvent('MAP_050', 'EXIT_NORTH_55')
     const capture = DIALOGUES['DIA_501_CAPTURED']
+    const rescue = DIALOGUES['DIA_520_RESCUE_A']
+    const sideA = findEvent('MAP_002', 'SIDE_A_START')
     const choice = DIALOGUES['DIA_530_CHOICE']?.lines.flatMap(line => line.choices ?? [])
       .find(option => option.next === 'DIA_530_CALL')
 
@@ -533,6 +535,8 @@ describe('game content data', () => {
     expect(DIALOGUES['DIA_420_GOD']?.onComplete).toContainEqual({ type: 'setFlag', flag: 'spring_gate_opened', value: true })
 
     expect(capture?.onComplete).toContainEqual({ type: 'setFlag', flag: 'a_captured', value: true })
+    expect(rescue?.onComplete).toContainEqual({ type: 'setFlag', flag: A_RESCUED_FLAG, value: true })
+    expectCondition(sideA, A_RESCUED_FLAG, true)
     expect(ENEMIES.xiaoai_true?.drops).not.toContainEqual({ itemId: 'xiaoai_light', rate: 1 })
     expect(DIALOGUES['DIA_530_PURIFY_SUCCESS']?.onComplete).toContainEqual({ type: 'addItem', itemId: 'xiaoai_light', quantity: 1 })
     expect(choice?.condition).toEqual({ flag: PARTNER_CALL_AVAILABLE_FLAG, value: true })
@@ -581,15 +585,36 @@ describe('game content data', () => {
     expectCondition(memory3, getFieldEventDoneFlag(memory2.id), true)
     expectCondition(memoryFinal, getFieldEventDoneFlag(memory3.id), true)
     expect(dreamStart.actions).toContainEqual({ type: 'startTimer', timerId: 'reincarnation' })
-    expect(memory3.actions.some(action => action.type === 'resolveTimer'
-      && action.timerId === 'reincarnation'
-      && action.successFlag === 'true_route_reincarnation')).toBe(true)
+    const resolveTimer = memory3.actions.find((action): action is Extract<EventAction, { type: 'resolveTimer' }> => action.type === 'resolveTimer')
+    expect(resolveTimer).toMatchObject({ timerId: 'reincarnation', successFlag: 'true_route_reincarnation' })
+    expect(resolveTimer?.requiredFlags).toEqual(REINCARNATION_CORRECT_ANSWER_FLAGS)
 
-    for (const dialogueId of ['DIA_552_MEMORY_1', 'DIA_553_MEMORY_2', 'DIA_554_MEMORY_3']) {
+    for (const [index, dialogueId] of ['DIA_552_MEMORY_1', 'DIA_553_MEMORY_2', 'DIA_554_MEMORY_3'].entries()) {
       const choices = DIALOGUES[dialogueId]!.lines.flatMap(line => line.choices ?? [])
       expect(choices.length).toBeGreaterThan(0)
       expect(choices.every(choice => choice.next === undefined)).toBe(true)
+      expect(choices[0]?.actions).toContainEqual({ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[index], value: true })
+      for (const choice of choices.slice(1)) {
+        expect(choice.actions).toContainEqual({ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[index], value: false })
+      }
     }
+
+    const dreamChest = findEvent('MAP_055', 'CHEST_DREAM_1')
+    expect(dreamChest.actions).toEqual([{ type: 'addItem', itemId: 'revive_feather', quantity: 1 }])
+    expect(dreamChest.actions).not.toContainEqual({ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 })
+  })
+
+  test('authored dialogue skill rewards set only their intended unlock flags', () => {
+    expect(DIALOGUES['DIA_SIDE_HH_01_SILENT']?.onComplete).toContainEqual({
+      type: 'setFlag', flag: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, value: true,
+    })
+    expect(DIALOGUES['DIA_SIDE_HH_01_COMFORT']?.onComplete).not.toContainEqual({
+      type: 'setFlag', flag: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, value: true,
+    })
+    expect(DIALOGUES['DIA_SIDE_HH_01_JOKE']?.onComplete).not.toContainEqual({
+      type: 'setFlag', flag: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, value: true,
+    })
+    expect(ENCOUNTERS.BTL_SIDE_SUN_01?.rewards).toContainEqual({ flag: STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, value: true })
   })
 
   test('the five authored memory sources can reach the fragment threshold', () => {

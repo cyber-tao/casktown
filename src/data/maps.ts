@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, REINCARNATION_TIME_LIMIT_MS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -634,7 +634,7 @@ function buildMap002(): MapData {
       { flag: 'side_huihui_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_A_START', 'abo_front_idle_01', 'DIA_SIDE_A_01', [
-      { flag: 'a_joined', value: true },
+      { flag: A_RESCUED_FLAG, value: true },
       { flag: 'side_a_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_A_AFTER', 'abo_front_idle_01', 'DIA_SIDE_A_01_AFTER', [
@@ -2189,7 +2189,7 @@ function buildMap055(): MapData {
       ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_554_MEMORY_3' },
-        { type: 'resolveTimer', timerId: 'reincarnation', maxDurationMs: REINCARNATION_TIME_LIMIT_MS, requiredFlag: 'reincarnation_answers_complete', successFlag: 'true_route_reincarnation' },
+        { type: 'resolveTimer', timerId: 'reincarnation', maxDurationMs: REINCARNATION_TIME_LIMIT_MS, requiredFlags: REINCARNATION_CORRECT_ANSWER_FLAGS, successFlag: 'true_route_reincarnation' },
       ],
     },
     {
@@ -2210,7 +2210,7 @@ function buildMap055(): MapData {
     {
       id: 'CHEST_DREAM_1', x: 14, y: 9, width: 1, height: 1,
       type: 'chest', trigger: 'action',
-      actions: [{ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }],
+      actions: [{ type: 'addItem', itemId: 'revive_feather', quantity: 1 }],
     },
   ]
 

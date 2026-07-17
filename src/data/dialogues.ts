@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, STORY_PROGRESS_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -1176,9 +1176,9 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '没有。但还有人在努力。', next: 'DIA_420_R2', actions: [{ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
-          { text: '你会变成魔头。', next: 'DIA_420_R2_HURT' },
-          { text: '我不能说。', next: 'DIA_420_R2_SLOW' },
+          { text: '没有。但还有人在努力。', next: 'DIA_420_R2', actions: [{ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[0], value: true }] },
+          { text: '你会变成魔头。', next: 'DIA_420_R2_HURT', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[0], value: false }] },
+          { text: '我不能说。', next: 'DIA_420_R2_SLOW', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[0], value: false }] },
         ],
       },
     ],
@@ -1191,9 +1191,9 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
-          { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }] },
-          { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE' },
+          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: true }] },
+          { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: false }] },
+          { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: false }] },
         ],
       },
     ],
@@ -1208,9 +1208,9 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
-          { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }] },
-          { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE' },
+          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: true }] },
+          { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: false }] },
+          { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: false }] },
         ],
       },
     ],
@@ -1225,9 +1225,9 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
-          { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }] },
-          { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE' },
+          { text: '恨说明你还在乎。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: true }] },
+          { text: '神不会恨。', next: 'DIA_420_R3', actions: [{ type: 'setFlag', flag: 'trust_sun', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: false }] },
+          { text: '不要相信神。', next: 'DIA_420_R3_UNSTABLE', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[1], value: false }] },
         ],
       },
     ],
@@ -1240,9 +1240,9 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'reincarnation_answers_complete', value: true }] },
-          { text: '千万不要变成魔头。', next: 'DIA_420_END' },
-          { text: '等我去救你。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
+          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[2], value: true }] },
+          { text: '千万不要变成魔头。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[2], value: false }] },
+          { text: '等我去救你。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[2], value: false }] },
         ],
       },
     ],
@@ -1256,9 +1256,9 @@ export const DIALOGUES: Record<string, DialogueData> = {
         speaker: 'T',
         text: '……',
         choices: [
-          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'reincarnation_answers_complete', value: true }] },
-          { text: '千万不要变成魔头。', next: 'DIA_420_END' },
-          { text: '等我去救你。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }] },
+          { text: '不要让黑暗替你回答。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[2], value: true }] },
+          { text: '千万不要变成魔头。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[2], value: false }] },
+          { text: '等我去救你。', next: 'DIA_420_END', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[2], value: false }] },
         ],
       },
     ],
@@ -1422,7 +1422,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '阿博', text: 'T！' },
       { speaker: '旁白', text: 'T落入地下魔宫，缺口关闭。' },
     ],
-    onComplete: [{ type: 'addParty', characterId: 'A' }],
+    onComplete: [{ type: 'setFlag', flag: A_RESCUED_FLAG, value: true }, { type: 'addParty', characterId: 'A' }],
   },
 
   // SCN_530 地下魔宫 xiaoai 真身
@@ -1797,7 +1797,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '旁白', text: '记忆小妖从暗处涌出，试图吞噬这段回忆。' },
       { speaker: '系统', text: '战斗开始！解锁连携【月下回旋】。' },
     ],
-    onComplete: [{ type: 'battle', encounterId: 'BTL_SIDE_HH_01' }],
+    onComplete: [{ type: 'setFlag', flag: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, value: true }, { type: 'battle', encounterId: 'BTL_SIDE_HH_01' }],
   },
   DIA_SIDE_HH_01_AFTER: {
     id: 'DIA_SIDE_HH_01_AFTER',

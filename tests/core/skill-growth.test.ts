@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { SkillGrowth } from '../../src/core/SkillGrowth.ts'
+import { STORY_SKILL_UNLOCK_FLAGS, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../../src/utils/constants.ts'
 
 describe('SkillGrowth', () => {
   beforeEach(() => {
@@ -98,5 +99,31 @@ describe('SkillGrowth', () => {
       })
       expect(sg.isConditionMet(questCond)).toBe(true)
     }
+  })
+
+  test('story skill rewards use their authored branch and fragment conditions', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+    const hero = gd.characters.get('T')!
+    const sun = gd.characters.get('SUN')!
+
+    gd.setFlag('has_sacred_water', true)
+    gd.setFlag('xiaoai_purified', true)
+    sg.checkUnlocksForCharacter('T')
+    expect(hero.skills).not.toContain('yuexiahuixuan')
+    expect(hero.skills).not.toContain('fengyuezhixi')
+
+    gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, true)
+    expect(sg.checkUnlocksForCharacter('T')).toContain('yuexiahuixuan')
+
+    gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS - 1)
+    expect(sg.checkUnlocksForCharacter('T')).not.toContain('fengyuezhixi')
+    gd.updateBranch('xiaoai_memory_fragments', TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS)
+    expect(sg.checkUnlocksForCharacter('T')).toContain('fengyuezhixi')
+
+    sg.checkUnlocksForCharacter('SUN')
+    expect(sun.skills).not.toContain('rendeqiyuan')
+    gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, true)
+    expect(sg.checkUnlocksForCharacter('SUN')).toContain('rendeqiyuan')
   })
 })
