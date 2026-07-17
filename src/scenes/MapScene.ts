@@ -138,6 +138,7 @@ export class MapScene extends Phaser.Scene {
   private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
+  private pendingMapRestartId = ''
   private restartingMap = false
   private inputResumeBlockedUntilMs = 0
   private animationTimeMs = 0
@@ -212,6 +213,10 @@ export class MapScene extends Phaser.Scene {
     const gd = GameData.getInstance()
     const nextMapId = value >= REBUILD_VISUAL_MAP_THRESHOLD ? REBUILT_TOWN_MAP_ID : RUINED_TOWN_MAP_ID
     gd.currentMap = nextMapId
+    if (this.scene.isPaused() && this.scene.isActive('RebuildOverlay')) {
+      this.pendingMapRestartId = nextMapId
+      return
+    }
     this.requestMapRestart(nextMapId)
   }
 
@@ -326,6 +331,7 @@ export class MapScene extends Phaser.Scene {
     this.npcTimers = []
     this.pendingActions = []
     this.pendingMapEventId = ''
+    this.pendingMapRestartId = ''
     this.restartingMap = false
     this.inputResumeBlockedUntilMs = 0
     this.feedbackToken = 0
@@ -860,7 +866,7 @@ export class MapScene extends Phaser.Scene {
       S: kb.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       D: kb.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     }
-    this.syncDirectionalActionKeys()
+    this.syncDirectionalActionKeys(true)
     kb.on('keydown', (event: KeyboardEvent) => {
       if (this.time.now < this.inputResumeBlockedUntilMs) return
       const input = InputManager.getInstance()
@@ -878,7 +884,7 @@ export class MapScene extends Phaser.Scene {
     this.scale.on(Phaser.Scale.Events.RESIZE, this.syncTouchControls, this)
   }
 
-  private syncDirectionalActionKeys(): void {
+  private syncDirectionalActionKeys(force = false): void {
     const kb = this.input.keyboard
     if (!kb) return
     const input = InputManager.getInstance()
@@ -889,7 +895,7 @@ export class MapScene extends Phaser.Scene {
       right: input.getPhaserKeyName('right'),
     }
     const signature = `${keyNames.up}:${keyNames.down}:${keyNames.left}:${keyNames.right}`
-    if (signature === this.actionKeySignature) return
+    if (!force && signature === this.actionKeySignature) return
     this.actionKeySignature = signature
     this.actionKeys = {
       up: kb.addKey(keyNames.up),
@@ -2033,6 +2039,13 @@ export class MapScene extends Phaser.Scene {
     this.scene.restart({ mapId, feedback })
   }
 
+  private flushPendingMapRestart(): void {
+    const mapId = this.pendingMapRestartId
+    if (!mapId) return
+    this.pendingMapRestartId = ''
+    this.requestMapRestart(mapId)
+  }
+
   private openMenu(): void {
     if (this.inEvent) return
     this.clearMapNameText()
@@ -2197,6 +2210,7 @@ export class MapScene extends Phaser.Scene {
     }
     this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
+    this.flushPendingMapRestart()
   }
 
 

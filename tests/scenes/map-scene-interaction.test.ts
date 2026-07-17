@@ -3,7 +3,7 @@ import type { EventAction, MapEvent } from '../../src/data/types.ts'
 import { MAPS } from '../../src/data/maps.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { InputManager } from '../../src/core/InputManager.ts'
-import { FIELD_ENTITY_BEHAVIOR, START_MAP_ID, TILE_SIZE, WORLD_MAP_BACKGROUND_LAYOUT } from '../../src/utils/constants.ts'
+import { FIELD_ENTITY_BEHAVIOR, REBUILT_TOWN_MAP_ID, START_MAP_ID, TILE_SIZE, WORLD_MAP_BACKGROUND_LAYOUT } from '../../src/utils/constants.ts'
 import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
 
 let MapSceneClass: typeof import('../../src/scenes/MapScene.ts').MapScene
@@ -41,7 +41,41 @@ type DirectionalKeysHarness = {
   actionKeys?: Record<string, unknown>
 }
 
-type SyncDirectionalActionKeys = (this: DirectionalKeysHarness) => void
+type SyncDirectionalActionKeys = (this: DirectionalKeysHarness, force?: boolean) => void
+
+type HandleFlagSetHarness = {
+  mapData: { id: string }
+  scene: {
+    isPaused: () => boolean
+    isActive: (sceneKey: string) => boolean
+  }
+  pendingMapRestartId: string
+  refreshMinimapStatic: () => void
+  isJoinFlag: (key: string) => boolean
+  removeSuppressedFieldEventSprites: () => void
+  refreshFollowers: () => void
+  createPartyHud: () => void
+  requestMapRestart: (mapId: string) => void
+}
+
+type FlushPendingMapRestartHarness = {
+  pendingMapRestartId: string
+  requestMapRestart: (mapId: string) => void
+}
+
+type MenuCloseHarness = FlushPendingMapRestartHarness & {
+  time: { now: number }
+  inputResumeBlockedUntilMs: number
+  promptText?: { setVisible: (visible: boolean) => void }
+  scene: { resume: () => void }
+  pendingActions: EventAction[]
+  pendingMapEventId: string
+  inEvent: boolean
+  markFieldEventCompleted: (eventId?: string) => void
+  executeActions: (actions: EventAction[], mapEventId?: string) => void
+}
+
+type OnMenuClose = (this: MenuCloseHarness) => void
 
 type CanInteractHarness = {
   npcs: Map<string, unknown>
@@ -361,6 +395,77 @@ describe('MapScene configured keyboard movement', () => {
 
     syncKeys.call(harness)
     expect(addedKeys).toHaveLength(8)
+  })
+
+  test('recreates configured direction keys for a new scene input lifecycle', () => {
+    const input = InputManager.getInstance()
+    GameData.getInstance().reset()
+    input.syncFromGameData()
+    const addedKeys: string[] = []
+    const harness: DirectionalKeysHarness = {
+      input: { keyboard: { addKey: keyName => {
+        addedKeys.push(keyName)
+        return { keyName }
+      } } },
+      actionKeySignature: '',
+    }
+    const syncKeys = MapSceneClass.prototype['syncDirectionalActionKeys'] as SyncDirectionalActionKeys
+
+    syncKeys.call(harness)
+    syncKeys.call(harness, true)
+
+    expect(addedKeys).toEqual(['UP', 'DOWN', 'LEFT', 'RIGHT', 'UP', 'DOWN', 'LEFT', 'RIGHT'])
+  })
+})
+
+describe('MapScene deferred visual restart', () => {
+  test('defers rebuild map restart while RebuildOverlay pauses the map', () => {
+    GameData.getInstance().reset()
+    const restartCalls: string[] = []
+    const harness: HandleFlagSetHarness = {
+      mapData: { id: START_MAP_ID },
+      scene: {
+        isPaused: () => true,
+        isActive: sceneKey => sceneKey === 'RebuildOverlay',
+      },
+      pendingMapRestartId: '',
+      refreshMinimapStatic: () => {},
+      isJoinFlag: () => false,
+      removeSuppressedFieldEventSprites: () => {},
+      refreshFollowers: () => {},
+      createPartyHud: () => {},
+      requestMapRestart: mapId => restartCalls.push(mapId),
+    }
+    const mapScene = Object.assign(new MapSceneClass(), harness)
+
+    mapScene['handleFlagSet']('rebuild_level', 3)
+
+    expect(restartCalls).toEqual([])
+    expect((mapScene as unknown as HandleFlagSetHarness).pendingMapRestartId).toBe(REBUILT_TOWN_MAP_ID)
+    expect(GameData.getInstance().currentMap).toBe(REBUILT_TOWN_MAP_ID)
+  })
+
+  test('restarts the deferred rebuild map after the overlay closes', () => {
+    const calls: string[] = []
+    const harness = Object.assign(Object.create(MapSceneClass.prototype), {
+      pendingMapRestartId: REBUILT_TOWN_MAP_ID,
+      requestMapRestart: (mapId: string) => calls.push(`restart:${mapId}`),
+      time: { now: 100 },
+      inputResumeBlockedUntilMs: 0,
+      scene: { resume: () => calls.push('resume') },
+      pendingActions: [],
+      pendingMapEventId: '',
+      inEvent: true,
+      markFieldEventCompleted: () => calls.push('complete'),
+      executeActions: () => {},
+    }) as MenuCloseHarness
+    const onMenuClose = MapSceneClass.prototype['onMenuClose'] as OnMenuClose
+
+    onMenuClose.call(harness)
+
+    expect(calls).toEqual(['resume', 'complete', `restart:${REBUILT_TOWN_MAP_ID}`])
+    expect(harness.pendingMapRestartId).toBe('')
+    expect(harness.inEvent).toBe(false)
   })
 })
 
