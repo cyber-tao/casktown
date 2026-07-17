@@ -711,7 +711,7 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_041', eventId: 'EXIT_NORTH_41' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'NPC_SUN' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'EVT_LAUREL' },
-  { kind: 'event', mapId: 'MAP_002', eventId: 'EVT_REBUILD_CEREMONY' },
+  { kind: 'event', mapId: 'MAP_001', eventId: 'EVT_REBUILD_CEREMONY' },
   { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.REQUEST },
   { kind: 'event', mapId: 'MAP_012', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.GATHER },
   { kind: 'event', mapId: 'MAP_002', eventId: BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN },
@@ -949,7 +949,7 @@ export const MAP_ACCESS_REQUIREMENTS: Record<
   MAP_063: { flag: 'fake_xiaoai_defeated', value: true, blockedDialogueId: 'DIA_LOCKED_DEEP_UNDERGROUND' },
   MAP_070: { flag: 'true_route_unlocked', value: true, blockedDialogueId: 'DIA_LOCKED_ABYSS' },
 } as const
-export const REBUILD_VISUAL_MAP_THRESHOLD = 1
+export const REBUILD_VISUAL_MAP_THRESHOLD = 3
 export const START_INVENTORY_ITEMS = [
   { itemId: 'heal_grass', quantity: 3 },
   { itemId: 'pineapple_rice', quantity: 1 },
@@ -2265,6 +2265,17 @@ export const FIELD_ENTITY_BEHAVIOR = {
 export const FIELD_EVENT_FLAGS = {
   DONE_PREFIX: 'event_done_',
   CHEST_OPENED_PREFIX: 'chest_opened_',
+} as const
+
+export const LEGACY_SAVE_PROGRESS = {
+  A_RESCUE_EVENT_DONE_FLAG: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_FAKE_XIAOAI`,
+  REINCARNATION_DREAM_START_DONE_FLAG: `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_DREAM_START`,
+  REINCARNATION_MEMORY_DONE_FLAGS: [
+    `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_1`,
+    `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_2`,
+    `${FIELD_EVENT_FLAGS.DONE_PREFIX}EVT_MEMORY_3`,
+  ],
+  REINCARNATION_TIMER_STARTED_FLAG: 'timer_reincarnation_started_at_ms',
 } as const
 
 export const MAP_EVENT_PLACEHOLDER_BOUNDS = {

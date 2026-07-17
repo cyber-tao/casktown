@@ -363,8 +363,20 @@ function buildMap001(): MapData {
     {
       id: 'NPC_PINEAPPLE_DONE', x: 11, y: 19, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: 2,
-      conditions: [{ flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true }],
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true }, { flag: 'facility_herb_shop', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_002_GARDEN_DONE' }],
+    },
+    {
+      id: 'NPC_PINEAPPLE_SHOP', x: 11, y: 19, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: 2,
+      conditions: [{ flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true }, { flag: 'facility_herb_shop', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_202_PINE' }],
+    },
+    {
+      id: 'SHOP_ITEM_EARLY', x: 18, y: 18, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'env_signpost', direction: 2,
+      conditions: [{ flag: 'facility_item_shop', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_205_SHOP' }],
     },
     {
       id: 'NPC_GARDEN_BARREL', x: 9, y: 17, width: 1, height: 1,
@@ -566,26 +578,31 @@ function buildMap002(): MapData {
     {
       id: 'NPC_PINE', x: 5, y: 8, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: 2,
+      conditions: [{ flag: 'facility_herb_shop', value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_202_PINE' }],
     },
     {
       id: 'NPC_MAYOR_2', x: 16, y: 5, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
+      conditions: [{ flag: 'facility_mayor', value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_203_MAYOR' }],
     },
     {
       id: 'NPC_BARREL_2', x: 15, y: 8, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_barrel_spirit', direction: 2,
+      conditions: [{ flag: 'facility_tower', value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_204_BARREL' }],
     },
     {
       id: 'SHOP_ITEM', x: 18, y: 18, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'env_signpost', direction: 2,
+      conditions: [{ flag: 'facility_item_shop', value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_205_SHOP' }],
     },
     {
       id: 'TRAIN_GROUND', x: 6, y: 18, width: 2, height: 1,
       type: 'npc', trigger: 'action', sprite: 'env_campfire', direction: 2,
+      conditions: [{ flag: 'facility_training', value: true }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_206_TRAIN' }],
     },
     {
@@ -593,6 +610,7 @@ function buildMap002(): MapData {
       ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
       type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
       conditions: [
+        { flag: 'facility_quest_board', value: true },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.REQUESTED, value: false },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: false },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: false },
@@ -604,6 +622,7 @@ function buildMap002(): MapData {
       ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
       type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
       conditions: [
+        { flag: 'facility_quest_board', value: true },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.REQUESTED, value: true },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: false },
       ],
@@ -614,6 +633,7 @@ function buildMap002(): MapData {
       ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
       type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
       conditions: [
+        { flag: 'facility_quest_board', value: true },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.GATHERED, value: true },
         { flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: false },
       ],
@@ -623,35 +643,43 @@ function buildMap002(): MapData {
       id: BLUE_MINT_SIDE_QUEST.EVENTS.DONE,
       ...BLUE_MINT_SIDE_QUEST.HERB_MERCHANT_BOUNDS,
       type: 'npc', trigger: 'action', sprite: BLUE_MINT_SIDE_QUEST.SPRITES.MERCHANT, direction: DIRECTION.DOWN,
-      conditions: [{ flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: true }],
+      conditions: [{ flag: 'facility_quest_board', value: true }, { flag: BLUE_MINT_SIDE_QUEST.FLAGS.DELIVERED, value: true }],
       actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.DONE }],
     },
     createStaticTriggerEvent('SIDE_HUIHUI_START', 'huihui_front_idle_01', 'DIA_SIDE_HH_01', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'huihui_joined', value: true },
       { flag: 'side_huihui_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_HUIHUI_AFTER', 'huihui_front_idle_01', 'DIA_SIDE_HH_01_AFTER', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'side_huihui_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_A_START', 'abo_front_idle_01', 'DIA_SIDE_A_01', [
+      { flag: 'facility_quest_board', value: true },
       { flag: A_RESCUED_FLAG, value: true },
       { flag: 'side_a_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_A_AFTER', 'abo_front_idle_01', 'DIA_SIDE_A_01_AFTER', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'side_a_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_CONGCONG_START', 'congcong_front_idle_01', 'DIA_SIDE_CC_01', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'congcong_joined', value: true },
       { flag: 'side_congcong_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_CONGCONG_AFTER', 'congcong_front_idle_01', 'DIA_SIDE_CC_01_AFTER', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'side_congcong_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_SUN_START', 'sun_front_idle_01', 'DIA_SIDE_SUN_01', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'sun_joined', value: true },
       { flag: 'side_sun_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_SUN_AFTER', 'sun_front_idle_01', 'DIA_SIDE_SUN_01_AFTER', [
+      { flag: 'facility_quest_board', value: true },
       { flag: 'side_sun_done', value: true },
     ]),
     {

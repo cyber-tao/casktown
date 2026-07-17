@@ -10,7 +10,9 @@ import {
 describe('MapAccess', () => {
   test('keeps rebuilt town canonical after later transfers', () => {
     expect(resolveCanonicalMapId(RUINED_TOWN_MAP_ID, REBUILD_VISUAL_MAP_THRESHOLD - 1)).toBe(RUINED_TOWN_MAP_ID)
+    expect(resolveCanonicalMapId(REBUILT_TOWN_MAP_ID, REBUILD_VISUAL_MAP_THRESHOLD - 1)).toBe(RUINED_TOWN_MAP_ID)
     expect(resolveCanonicalMapId(RUINED_TOWN_MAP_ID, REBUILD_VISUAL_MAP_THRESHOLD)).toBe(REBUILT_TOWN_MAP_ID)
+    expect(resolveCanonicalMapId(REBUILT_TOWN_MAP_ID, REBUILD_VISUAL_MAP_THRESHOLD)).toBe(REBUILT_TOWN_MAP_ID)
     expect(resolveCanonicalMapId('MAP_010', REBUILD_VISUAL_MAP_THRESHOLD)).toBe('MAP_010')
   })
 

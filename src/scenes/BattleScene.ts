@@ -9,6 +9,7 @@ import type { BarrelColor } from '../core/BarrelSystem'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { collectBattleImageKeys, queueImageAssets, resolveBattleBackgroundKey } from '../core/AssetLoader'
 import { getTriggeredMidBattleDialogue, getMidBattleDialoguePreview } from '../data/battleDialogues'
+import { COMBO_DEFINITIONS } from '../data/combos'
 import {
   BATTLE_COMMAND_LABELS,
   BATTLE_DEFAULT_ENEMY_SPRITE_FRAME,
@@ -50,6 +51,7 @@ import { showLoadingScreen } from '../utils/loadingScreen'
 import { getBattleResultFallbackScene } from '../utils/battleResult'
 import { resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
+import { isComboSkillId, isComboUnlocked } from '../utils/comboRules'
 import {
   advanceBattleTurn,
   advanceBreakGauge,
@@ -62,22 +64,6 @@ import {
 } from '../utils/battleRules'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
-
-interface ComboDef {
-  skillId: string
-  char1: string
-  char2: string
-  flag: string
-}
-
-const COMBO_DEFS: ComboDef[] = [
-  { skillId: 'fengleisanhua', char1: 'HUIHUI', char2: 'CONGCONG', flag: 'congcong_joined' },
-  { skillId: 'shouxiangshuangji', char1: 'T', char2: 'A', flag: 'defeated_baihu' },
-  { skillId: 'yuexiahuixuan', char1: 'HUIHUI', char2: 'T', flag: 'has_sacred_water' },
-  { skillId: 'shendunzhen', char1: 'A', char2: 'SUN', flag: 'has_millennium_seed' },
-  { skillId: 'yuyanzhiren', char1: 'T', char2: 'SUN', flag: 'temple_visited' },
-  { skillId: 'fengyuezhixi', char1: 'T', char2: TRUE_ENDING_SUPPORT_CHARACTER_ID, flag: TRUE_ENDING_SUPPORT_FLAG },
-]
 
 interface BattleUnit {
   id: string
@@ -1206,6 +1192,7 @@ export class BattleScene extends Phaser.Scene {
     const char = actor.data as CharacterData
     const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     return char.skills.filter(skillId => {
+      if (isComboSkillId(skillId)) return false
       const skill = skillDefs[skillId]
       return Boolean(skill && canUseBattleSkill(actor.stats.mp, actor.tp, skill))
     })
@@ -1449,9 +1436,9 @@ export class BattleScene extends Phaser.Scene {
     const skillDefs = GAME_CONFIG_DATABASE.getTable('skills')
     const results: { skillId: string; name: string; char1: string; char2: string }[] = []
 
-    for (const def of COMBO_DEFS) {
+    for (const def of COMBO_DEFINITIONS) {
       if (!playerIds.has(def.char1) || !playerIds.has(def.char2)) continue
-      if (gd.getFlag(def.flag) !== true) continue
+      if (!isComboUnlocked(def, characterId => gd.characters.get(characterId)?.skills)) continue
 
       const unit1 = this.units.find(u => u.isPlayer && u.id === def.char1)
       const unit2 = this.units.find(u => u.isPlayer && u.id === def.char2)

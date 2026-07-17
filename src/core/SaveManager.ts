@@ -1,5 +1,6 @@
 import { GameData } from './GameData'
 import { InputManager } from './InputManager'
+import { SkillGrowth } from './SkillGrowth'
 import { BATTLE_RULES, QUICK_SAVE_SLOT, SAVE_SLOT_MIN, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
 
 function isSaveImportObject(data: unknown): data is object {
@@ -272,6 +273,7 @@ export class SaveManager {
       if (!isGameSaveData(data)) return false
       previousGameData = this.gameData.serialize()
       this.gameData.deserialize(data)
+      SkillGrowth.getInstance().checkAllUnlocks()
       inputManager.syncFromGameData()
       return true
     } catch (e) {
@@ -414,6 +416,7 @@ export class SaveManager {
 
     try {
       this.gameData.deserialize(data)
+      SkillGrowth.getInstance().checkAllUnlocks()
       inputManager.syncFromGameData()
       if (this.save(slot)) return true
     } catch {

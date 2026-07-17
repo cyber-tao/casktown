@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { SkillGrowth } from '../../src/core/SkillGrowth.ts'
+import { COMBO_DEFINITIONS } from '../../src/data/combos.ts'
 import { STORY_SKILL_UNLOCK_FLAGS, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../../src/utils/constants.ts'
 
 describe('SkillGrowth', () => {
@@ -125,5 +126,19 @@ describe('SkillGrowth', () => {
     expect(sun.skills).not.toContain('rendeqiyuan')
     gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, true)
     expect(sg.checkUnlocksForCharacter('SUN')).toContain('rendeqiyuan')
+  })
+
+  test('combo definitions unlock through the shared skill growth source', () => {
+    const sg = SkillGrowth.getInstance()
+    const gd = GameData.getInstance()
+
+    for (const definition of COMBO_DEFINITIONS) {
+      if (definition.unlockCondition.type === 'flag') {
+        gd.setFlag(definition.unlockCondition.value, true)
+      } else {
+        gd.updateBranch('xiaoai_memory_fragments', definition.unlockCondition.threshold)
+      }
+      expect(sg.checkUnlocksForCharacter(definition.unlockCharacterId)).toContain(definition.skillId)
+    }
   })
 })

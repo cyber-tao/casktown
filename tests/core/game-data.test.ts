@@ -6,9 +6,12 @@ import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
 import { EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
 import type { CharacterData, CharacterStats } from '../../src/data/types.ts'
 import {
+  A_RESCUED_FLAG,
   INITIAL_GOLD,
+  LEGACY_SAVE_PROGRESS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
+  REINCARNATION_CORRECT_ANSWER_FLAGS,
   PARTY_RULES,
   PARTNER_CALL_AVAILABLE_FLAG,
   PARTNER_CALL_MIN_TRUST,
@@ -148,6 +151,63 @@ describe('GameData', () => {
     gd.deserialize(snapshot)
 
     expect(gd.characters.get('SUN')!.stats.matk).toBe(savedSunMagicAttack)
+  })
+
+  test('deserialize backfills rescued A only from the completed palace event', () => {
+    const gd = GameData.getInstance()
+    gd.addPartyMember('A')
+    const snapshot = gd.serialize() as { flags: Record<string, unknown> }
+    snapshot.flags[LEGACY_SAVE_PROGRESS.A_RESCUE_EVENT_DONE_FLAG] = true
+    delete snapshot.flags[A_RESCUED_FLAG]
+
+    gd.deserialize(snapshot)
+
+    expect(gd.getFlag(A_RESCUED_FLAG)).toBe(true)
+  })
+
+  test('deserialize reopens incomplete legacy reincarnation answers at the dream entrance', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { flags: Record<string, unknown>; branches: Record<string, unknown> }
+    snapshot.flags.dream_active = true
+    snapshot.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS[0]] = true
+    snapshot.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS[1]] = true
+    snapshot.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_DREAM_START_DONE_FLAG] = true
+    snapshot.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_TIMER_STARTED_FLAG] = 1
+    for (const flag of REINCARNATION_CORRECT_ANSWER_FLAGS) delete snapshot.flags[flag]
+    snapshot.branches.true_route_reincarnation = false
+    gd.deserialize(snapshot)
+
+    for (const flag of LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS) {
+      expect(gd.getFlag(flag)).toBeUndefined()
+    }
+    for (const flag of REINCARNATION_CORRECT_ANSWER_FLAGS) {
+      expect(gd.getFlag(flag)).toBeUndefined()
+    }
+    expect(gd.getFlag(LEGACY_SAVE_PROGRESS.REINCARNATION_DREAM_START_DONE_FLAG)).toBeUndefined()
+    expect(gd.getFlag(LEGACY_SAVE_PROGRESS.REINCARNATION_TIMER_STARTED_FLAG)).toBeUndefined()
+    expect(gd.getFlag('dream_active')).toBe(false)
+    expect(gd.getFlag('true_route_reincarnation')).toBe(false)
+
+    gd.deserialize(gd.serialize())
+    expect(gd.getFlag(LEGACY_SAVE_PROGRESS.REINCARNATION_DREAM_START_DONE_FLAG)).toBeUndefined()
+    expect(gd.getFlag(LEGACY_SAVE_PROGRESS.REINCARNATION_TIMER_STARTED_FLAG)).toBeUndefined()
+    expect(gd.getFlag('dream_active')).toBe(false)
+  })
+
+  test('deserialize preserves completed legacy reincarnation progress', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { flags: Record<string, unknown>; branches: Record<string, unknown> }
+    snapshot.flags.dream_active = true
+    for (const flag of LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS) snapshot.flags[flag] = true
+    for (const flag of REINCARNATION_CORRECT_ANSWER_FLAGS) delete snapshot.flags[flag]
+    snapshot.branches.true_route_reincarnation = true
+
+    gd.deserialize(snapshot)
+
+    for (const flag of LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS) {
+      expect(gd.getFlag(flag)).toBe(true)
+    }
+    expect(gd.getFlag('true_route_reincarnation')).toBe(true)
   })
 
   test('true route unlock syncs from branch and flag state', () => {

@@ -87,6 +87,20 @@ describe('SaveManager', () => {
     expect(gd.getFlag('test_save_flag')).toBe(true)
   })
 
+  test('load backfills unlocked combo skills from saved progression', () => {
+    const gd = GameData.getInstance()
+    gd.addPartyMember('HUIHUI')
+    gd.setFlag('congcong_joined', true)
+    gd.characters.get('HUIHUI')!.skills = gd.characters.get('HUIHUI')!.skills.filter(skill => skill !== 'fengleisanhua')
+
+    expect(sm.save(1)).toBe(true)
+    gd.reset()
+    expect(gd.characters.get('HUIHUI')!.skills).not.toContain('fengleisanhua')
+
+    expect(sm.load(1)).toBe(true)
+    expect(gd.characters.get('HUIHUI')!.skills).toContain('fengleisanhua')
+  })
+
   test('save validation preserves legitimate negative trust values', () => {
     const gd = GameData.getInstance()
     gd.updateBranch('trust_huihui', -20)

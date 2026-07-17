@@ -6,8 +6,10 @@ import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import { REBUILD_FACILITIES, REBUILD_MILESTONES } from '../data/rebuild'
 import { resolveCanonicalMapId } from './MapAccess'
 import {
+  A_RESCUED_FLAG,
   BARREL_UNLOCK_PROGRESS_FLAGS,
   INITIAL_GOLD,
+  LEGACY_SAVE_PROGRESS,
   LEVEL_GROWTH,
   CONTROL_MODE,
   DEFAULT_GAME_SETTINGS,
@@ -17,6 +19,7 @@ import {
   REBUILD_LEVEL_LIMITS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
+  REINCARNATION_CORRECT_ANSWER_FLAGS,
   START_MAP_ID,
   START_INVENTORY_ITEMS,
   START_PARTY,
@@ -338,6 +341,37 @@ export class GameData {
     this.syncRebuildMilestoneLevel()
     this.syncPresentBranchFlags()
     this.syncTrueRouteState()
+  }
+
+  private migrateLegacyProgressionFlags(): void {
+    const hasAInRoster = this.party.includes('A') || this.reserve.includes('A')
+    if (
+      this.flags[A_RESCUED_FLAG] !== true &&
+      this.flags[LEGACY_SAVE_PROGRESS.A_RESCUE_EVENT_DONE_FLAG] === true &&
+      hasAInRoster
+    ) {
+      this.flags[A_RESCUED_FLAG] = true
+    }
+
+    const hasNewAnswerState = REINCARNATION_CORRECT_ANSWER_FLAGS.some(flag =>
+      Object.prototype.hasOwnProperty.call(this.flags, flag),
+    )
+    const hasLegacyMemoryProgress = LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS.some(
+      flag => this.flags[flag] === true,
+    )
+    if (
+      this.flags.dream_active === true &&
+      !hasNewAnswerState &&
+      !this.branches.true_route_reincarnation &&
+      hasLegacyMemoryProgress
+    ) {
+      for (const flag of LEGACY_SAVE_PROGRESS.REINCARNATION_MEMORY_DONE_FLAGS) {
+        delete this.flags[flag]
+      }
+      delete this.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_DREAM_START_DONE_FLAG]
+      delete this.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_TIMER_STARTED_FLAG]
+      this.flags.dream_active = false
+    }
   }
 
   addItem(itemId: string, quantity: number = 1): void {
@@ -783,6 +817,7 @@ export class GameData {
     this.quests = new Map(Object.entries((d.quests as Record<string, QuestState>) ?? {}).map(([id, quest]) => [id, { ...quest }]))
     this.flags = { ...((d.flags as GameFlags) ?? {}) }
     this.branches = { ...createDefaultBranches(), ...((d.branches as Partial<BranchState>) ?? {}) }
+    this.migrateLegacyProgressionFlags()
     const serializedRebuildLevel = typeof d.rebuildLevel === 'number' ? d.rebuildLevel : this.branches.rebuild_level
     this.rebuildLevel = this.clampRebuildLevel(serializedRebuildLevel)
     this.branches.rebuild_level = this.rebuildLevel

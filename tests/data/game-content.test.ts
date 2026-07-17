@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
+import { COMBO_DEFINITIONS } from '../../src/data/combos.ts'
 import { DIALOGUES } from '../../src/data/dialogues.ts'
 import { ENCOUNTERS } from '../../src/data/encounters.ts'
 import { ENEMIES } from '../../src/data/enemies.ts'
@@ -12,7 +13,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { A_RESCUED_FLAG, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -417,6 +418,16 @@ describe('game content data', () => {
     expect(errors).toEqual([])
   })
 
+  test('combo definitions resolve skills, participants, and unlock owners', () => {
+    expect(new Set(COMBO_DEFINITIONS.map(definition => definition.skillId)).size).toBe(COMBO_DEFINITIONS.length)
+    for (const definition of COMBO_DEFINITIONS) {
+      expect(SKILLS[definition.skillId]).toBeDefined()
+      expect(INITIAL_CHARACTERS[definition.char1]).toBeDefined()
+      expect(INITIAL_CHARACTERS[definition.char2]).toBeDefined()
+      expect(INITIAL_CHARACTERS[definition.unlockCharacterId]).toBeDefined()
+    }
+  })
+
   test('world map points match implemented maps and valid screen bounds', () => {
     const errors: string[] = []
     const worldMapIds = new Set(Object.keys(WORLD_MAP_LOCATION_POINTS))
@@ -545,6 +556,28 @@ describe('game content data', () => {
     expect(MAPS.MAP_041?.events.some(event => event.id === 'EVT_PHOENIX_QILIN_BOSS')).toBe(false)
     expect(MAPS.MAP_062?.events.some(event => event.id === 'EVT_FAKE_XIAOAI_BOSS')).toBe(false)
     expect(findEvent('MAP_030', 'EVT_SHUIYAO_GATE').actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_202_SHUIYAO_AFTER' })
+  })
+
+  test('town services follow rebuild facility milestones', () => {
+    expect(REBUILD_VISUAL_MAP_THRESHOLD).toBe(3)
+    expectCondition(findEvent('MAP_001', 'NPC_PINEAPPLE_SHOP'), 'facility_herb_shop', true)
+    expectCondition(findEvent('MAP_001', 'SHOP_ITEM_EARLY'), 'facility_item_shop', true)
+    expectCondition(findEvent('MAP_002', 'SHOP_ITEM'), 'facility_item_shop', true)
+    expectCondition(findEvent('MAP_002', 'TRAIN_GROUND'), 'facility_training', true)
+
+    const questBoardEvents = [
+      BLUE_MINT_SIDE_QUEST.EVENTS.REQUEST,
+      BLUE_MINT_SIDE_QUEST.EVENTS.WAIT,
+      BLUE_MINT_SIDE_QUEST.EVENTS.TURN_IN,
+      BLUE_MINT_SIDE_QUEST.EVENTS.DONE,
+      'SIDE_HUIHUI_START',
+      'SIDE_A_START',
+      'SIDE_CONGCONG_START',
+      'SIDE_SUN_START',
+    ]
+    for (const eventId of questBoardEvents) {
+      expectCondition(findEvent('MAP_002', eventId), 'facility_quest_board', true)
+    }
   })
 
   test('terminal attack continues into the complete normal ending sequence', () => {

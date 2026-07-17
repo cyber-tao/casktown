@@ -1,5 +1,6 @@
 import { GameData } from './GameData'
-import { STORY_SKILL_UNLOCK_FLAGS, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../utils/constants'
+import { COMBO_DEFINITIONS } from '../data/combos'
+import { STORY_SKILL_UNLOCK_FLAGS } from '../utils/constants'
 
 interface SkillUnlockCondition {
   skillId: string
@@ -8,6 +9,12 @@ interface SkillUnlockCondition {
   value: number | string
   threshold?: number
 }
+
+const COMBO_SKILL_UNLOCKS: SkillUnlockCondition[] = COMBO_DEFINITIONS.map(definition => ({
+  skillId: definition.skillId,
+  characterId: definition.unlockCharacterId,
+  ...definition.unlockCondition,
+}))
 
 const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   // T skills
@@ -52,9 +59,7 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'jiezhang', characterId: 'SUN', type: 'flag', value: 'life_spring_visited' },
   { skillId: 'zhoushufengsha', characterId: 'SUN', type: 'flag', value: 'temple_visited' },
   { skillId: 'rendeqiyuan', characterId: 'SUN', type: 'flag', value: STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN },
-  // Combo skills
-  { skillId: 'yuexiahuixuan', characterId: 'T', type: 'flag', value: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN },
-  { skillId: 'fengyuezhixi', characterId: 'T', type: 'flagMinimum', value: 'xiaoai_memory_fragments', threshold: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS },
+  ...COMBO_SKILL_UNLOCKS,
 ]
 
 export class SkillGrowth {
