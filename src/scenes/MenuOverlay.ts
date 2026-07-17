@@ -34,6 +34,7 @@ import {
   MENU_OVERLAY_UI,
   MENU_SETTINGS_OPTION_LABELS,
   MENU_SETTINGS_OPTIONS,
+  PARTY_RULES,
   SAVE_LOAD_FEEDBACK_DELAY_MS,
   RUNTIME_UI_ASSET_KEYS,
   UI_FONT_FAMILY,
@@ -93,6 +94,7 @@ export class MenuOverlay extends Phaser.Scene {
   private skillCharIndex: number = 0
   private equipmentCharIndex: number = 0
   private equipmentSlotIndex: number = 0
+  private reserveIndex: number = 0
   private equipSlot: EquipmentSlot | null = null
   private equipList: string[] = []
   private equipListIndex: number = 0
@@ -126,6 +128,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.skillCharIndex = 0
     this.equipmentCharIndex = 0
     this.equipmentSlotIndex = 0
+    this.reserveIndex = 0
     this.equipSlot = null
     this.equipList = []
     this.equipListIndex = 0
@@ -456,7 +459,8 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'party') {
-      this.moveParty(-1)
+      if (this.isPartyFormationSelected()) this.moveReserve(-1)
+      else this.moveParty(-1)
       return
     }
     if (this.submenu === 'skills') {
@@ -478,7 +482,8 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'party') {
-      this.moveParty(1)
+      if (this.isPartyFormationSelected()) this.moveReserve(1)
+      else this.moveParty(1)
       return
     }
     if (this.submenu === 'skills') {
@@ -508,6 +513,10 @@ export class MenuOverlay extends Phaser.Scene {
       return
     }
     if (this.submenu === 'party') {
+      if (this.isPartyFormationSelected()) {
+        this.confirmPartyFormation()
+        return
+      }
       this.equipmentCharIndex = this.clampIndex(this.partyIndex, this.getPartyMembers().length)
       this.showEquipList()
       return
@@ -603,10 +612,12 @@ export class MenuOverlay extends Phaser.Scene {
   private showParty(): void {
     this.submenu = 'party'
     this.partyIndex = this.clampIndex(this.partyIndex, this.getPartyMembers().length)
+    this.normalizePartyDetailSelection()
     this.renderParty()
   }
 
   private renderParty(): void {
+    this.normalizePartyDetailSelection()
     this.clearContent()
     this.renderHeader('队伍', '角色状态与装备概览')
     this.renderPartyCards(true)
@@ -632,6 +643,7 @@ export class MenuOverlay extends Phaser.Scene {
         card.on('pointerdown', () => {
           this.partyIndex = i
           this.equipmentCharIndex = i
+          this.normalizePartyDetailSelection()
           this.renderParty()
         })
       }
@@ -665,7 +677,49 @@ export class MenuOverlay extends Phaser.Scene {
     this.addText(x + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.CARD_GAP, `${member.char.name} Lv.${member.char.stats.level}`, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 3)
     this.renderCharacterResources(member.char, x + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2, y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE - MENU_OVERLAY_UI.CARD_GAP * 3, false)
     this.renderCharacterStatCards(member.char, x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.CARD_GAP * 2)
-    this.renderEquipmentSlotRows(member.char, x + MENU_OVERLAY_UI.CARD_GAP, y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.STAT_CARD_HEIGHT * 2 + MENU_OVERLAY_UI.CARD_GAP * 3, MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2, true)
+    const equipmentY = y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE + MENU_OVERLAY_UI.STAT_CARD_HEIGHT * 2 + MENU_OVERLAY_UI.CARD_GAP * 3
+    const rowX = x + MENU_OVERLAY_UI.CARD_GAP
+    const rowWidth = MENU_OVERLAY_UI.PARTY_DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2
+    this.renderEquipmentSlotRows(member.char, rowX, equipmentY, rowWidth, true)
+    this.renderPartyFormationRow(member, rowX, equipmentY + EQUIPMENT_SLOTS.length * (MENU_OVERLAY_UI.EQUIPMENT_SLOT_CARD_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2), rowWidth)
+  }
+
+  private renderPartyFormationRow(member: PartyMemberView, x: number, y: number, width: number): void {
+    const gd = GameData.getInstance()
+    const canSwap = this.canSwapSelectedPartyMember()
+    const selected = canSwap && this.isPartyFormationSelected()
+    const row = this.addContentRect(x, y, width, MENU_OVERLAY_UI.PARTY_FORMATION_CARD_HEIGHT, selected ? MENU_OVERLAY_UI.COLORS.highlightDark : MENU_OVERLAY_UI.COLORS.panelAlt)
+    row.setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, selected ? MENU_OVERLAY_UI.COLORS.highlight : MENU_OVERLAY_UI.COLORS.borderMuted)
+    const textY = y + (MENU_OVERLAY_UI.PARTY_FORMATION_CARD_HEIGHT - MENU_OVERLAY_UI.CAPTION_FONT_SIZE) / 2
+
+    if (this.partyIndex === PARTY_RULES.LEADER_INDEX) {
+      this.addText(x + MENU_OVERLAY_UI.CARD_GAP, textY, `队首固定 · ${member.char.name}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.dim, width - MENU_OVERLAY_UI.CARD_GAP * 2)
+      return
+    }
+    if (!canSwap) {
+      this.addText(x + MENU_OVERLAY_UI.CARD_GAP, textY, '暂无后备成员', MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.dim, width - MENU_OVERLAY_UI.CARD_GAP * 2)
+      return
+    }
+
+    const reserveId = gd.reserve[this.reserveIndex]!
+    const reserveName = gd.characters.get(reserveId)?.name ?? reserveId
+    const arrowWidth = MENU_OVERLAY_UI.RESOURCE_LABEL_WIDTH
+    const color = selected ? MENU_OVERLAY_UI.COLORS.title : MENU_OVERLAY_UI.COLORS.text
+    const previous = this.addText(x + arrowWidth / 2, textY, '◀', MENU_OVERLAY_UI.CAPTION_FONT_SIZE, color, arrowWidth).setOrigin(0.5, 0)
+    const label = this.addText(x + width / 2, textY, `换入 ${reserveName}`, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, color, width - arrowWidth * 2).setOrigin(0.5, 0)
+    const next = this.addText(x + width - arrowWidth / 2, textY, '▶', MENU_OVERLAY_UI.CAPTION_FONT_SIZE, color, arrowWidth).setOrigin(0.5, 0)
+    bindTouchText(previous, () => {
+      this.equipmentSlotIndex = EQUIPMENT_SLOTS.length
+      this.moveReserve(-1)
+    })
+    bindTouchText(label, () => {
+      this.equipmentSlotIndex = EQUIPMENT_SLOTS.length
+      this.confirmPartyFormation()
+    })
+    bindTouchText(next, () => {
+      this.equipmentSlotIndex = EQUIPMENT_SLOTS.length
+      this.moveReserve(1)
+    })
   }
 
   private renderInventorySummary(): void {
@@ -1340,6 +1394,7 @@ export class MenuOverlay extends Phaser.Scene {
     if (count === 0) return
     this.partyIndex = (this.partyIndex + dir + count) % count
     this.equipmentCharIndex = this.partyIndex
+    this.normalizePartyDetailSelection()
     this.renderParty()
     AudioManager.getInstance().playSFX('cursor')
   }
@@ -1353,9 +1408,55 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private moveEquipmentSlot(dir: number): void {
-    this.equipmentSlotIndex = (this.equipmentSlotIndex + dir + EQUIPMENT_SLOTS.length) % EQUIPMENT_SLOTS.length
+    const count = this.getPartyDetailActionCount()
+    this.equipmentSlotIndex = (this.equipmentSlotIndex + dir + count) % count
     this.renderParty()
     AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private moveReserve(dir: number): void {
+    const count = GameData.getInstance().reserve.length
+    if (count === 0) return
+    this.reserveIndex = (this.reserveIndex + dir + count) % count
+    this.renderParty()
+    AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private confirmPartyFormation(): void {
+    const gd = GameData.getInstance()
+    const activeId = gd.party[this.partyIndex]
+    const reserveId = gd.reserve[this.reserveIndex]
+    if (!activeId || !reserveId || !gd.swapActiveWithReserve(activeId, reserveId)) {
+      this.setFeedback('当前成员不能调整编队')
+      this.renderParty()
+      AudioManager.getInstance().playSFX('cancel')
+      return
+    }
+
+    const activeName = gd.characters.get(activeId)?.name ?? activeId
+    const reserveName = gd.characters.get(reserveId)?.name ?? reserveId
+    this.reserveIndex = this.clampIndex(this.reserveIndex, gd.reserve.length)
+    this.setFeedback(`${reserveName} 换入队伍，${activeName} 转为后备`)
+    this.renderParty()
+    AudioManager.getInstance().playSFX('confirm')
+  }
+
+  private canSwapSelectedPartyMember(): boolean {
+    const gd = GameData.getInstance()
+    return this.partyIndex > PARTY_RULES.LEADER_INDEX && gd.reserve.length > 0
+  }
+
+  private isPartyFormationSelected(): boolean {
+    return this.canSwapSelectedPartyMember() && this.equipmentSlotIndex === EQUIPMENT_SLOTS.length
+  }
+
+  private getPartyDetailActionCount(): number {
+    return EQUIPMENT_SLOTS.length + (this.canSwapSelectedPartyMember() ? 1 : 0)
+  }
+
+  private normalizePartyDetailSelection(): void {
+    this.equipmentSlotIndex = this.clampIndex(this.equipmentSlotIndex, this.getPartyDetailActionCount())
+    this.reserveIndex = this.clampIndex(this.reserveIndex, GameData.getInstance().reserve.length)
   }
 
   private moveEquipList(dir: number): void {

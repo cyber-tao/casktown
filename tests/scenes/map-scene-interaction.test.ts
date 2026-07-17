@@ -112,6 +112,8 @@ type MenuCloseHarness = FlushPendingMapRestartHarness & {
   inEvent: boolean
   markFieldEventCompleted: (eventId?: string) => void
   executeActions: (actions: EventAction[], mapEventId?: string) => void
+  refreshFollowers: () => void
+  createPartyHud: () => void
 }
 
 type OnMenuClose = (this: MenuCloseHarness) => void
@@ -638,12 +640,14 @@ describe('MapScene deferred visual restart', () => {
       inEvent: true,
       markFieldEventCompleted: () => calls.push('complete'),
       executeActions: () => {},
+      refreshFollowers: () => calls.push('followers'),
+      createPartyHud: () => calls.push('hud'),
     }) as MenuCloseHarness
     const onMenuClose = MapSceneClass.prototype['onMenuClose'] as OnMenuClose
 
     onMenuClose.call(harness)
 
-    expect(calls).toEqual(['resume', 'complete', `restart:${REBUILT_TOWN_MAP_ID}`])
+    expect(calls).toEqual(['resume', 'followers', 'hud', 'complete', `restart:${REBUILT_TOWN_MAP_ID}`])
     expect(harness.pendingMapRestartId).toBe('')
     expect(harness.inEvent).toBe(false)
   })

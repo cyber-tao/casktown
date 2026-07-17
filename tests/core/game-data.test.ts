@@ -85,6 +85,34 @@ describe('GameData', () => {
     expect(gd.party).toEqual(['T', 'HUIHUI', 'CONGCONG', 'SUN'])
     expect(gd.reserve).toEqual([])
     expect(gd.removePartyMember('A')).toBe(false)
+    expect(gd.removePartyMember('T')).toBe(false)
+    expect(gd.party[PARTY_RULES.LEADER_INDEX]).toBe(PARTY_RULES.LEADER_ID)
+  })
+
+  test('active companions can swap with reserves while the leader stays fixed', () => {
+    const gd = GameData.getInstance()
+    gd.setFlag('huihui_joined', true)
+    gd.setFlag('a_joined', true)
+    gd.setFlag('congcong_joined', true)
+    gd.setFlag('sun_joined', true)
+
+    const originalParty = [...gd.party]
+    const originalReserve = [...gd.reserve]
+    expect(gd.swapActiveWithReserve('T', 'SUN')).toBe(false)
+    expect(gd.swapActiveWithReserve('A', 'MISSING')).toBe(false)
+    expect(gd.swapActiveWithReserve('HUIHUI', 'A')).toBe(false)
+    expect(gd.swapActiveWithReserve('SUN', 'SUN')).toBe(false)
+    expect(gd.party).toEqual(originalParty)
+    expect(gd.reserve).toEqual(originalReserve)
+    expect(gd.swapActiveWithReserve('CONGCONG', 'SUN')).toBe(true)
+    expect(gd.party).toEqual(['T', 'HUIHUI', 'A', 'SUN'])
+    expect(gd.reserve).toEqual(['CONGCONG'])
+
+    const snapshot = gd.serialize()
+    gd.reset()
+    gd.deserialize(snapshot)
+    expect(gd.party).toEqual(['T', 'HUIHUI', 'A', 'SUN'])
+    expect(gd.reserve).toEqual(['CONGCONG'])
   })
 
   test('serialize returns an isolated snapshot and deserialize restores maps', () => {
@@ -364,8 +392,8 @@ describe('GameData', () => {
 
     gd.deserialize({
       ...snapshot,
-      party: ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN', 'MISSING_CHARACTER'],
-      reserve: ['A', 'xiaoai', 'SUN'],
+      party: ['HUIHUI', 'A', 'CONGCONG', 'SUN', 'MISSING_CHARACTER'],
+      reserve: ['A', 'xiaoai', 'SUN', 'T'],
     })
 
     expect(gd.party).toHaveLength(PARTY_RULES.ACTIVE_MEMBER_LIMIT)

@@ -2260,6 +2260,8 @@ export class MapScene extends Phaser.Scene {
     this.promptText?.setVisible(true)
     this.scene.resume()
     AudioManager.getInstance().setScene(this)
+    this.refreshFollowers()
+    this.createPartyHud()
     const pending = this.pendingActions
     const mapEventId = this.pendingMapEventId
     this.pendingActions = []

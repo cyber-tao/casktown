@@ -239,6 +239,8 @@ export const DEFAULT_GAME_SETTINGS = {
 
 export const PARTY_RULES = {
   ACTIVE_MEMBER_LIMIT: 4,
+  LEADER_ID: 'T',
+  LEADER_INDEX: 0,
 } as const
 
 export const MENU_SETTINGS_OPTION_LABELS: Record<string, Record<string, string>> = {
@@ -328,6 +330,7 @@ export const MENU_OVERLAY_UI = {
   STAT_CARD_GAP: scalePx(8),
   EQUIPMENT_SLOT_CARD_HEIGHT: scalePx(28),
   EQUIPMENT_SLOT_ICON_SIZE: scalePx(22),
+  PARTY_FORMATION_CARD_HEIGHT: scalePx(22),
   EQUIPMENT_BONUS_Y: scalePx(310),
   PORTRAIT_SIZE: scalePx(54),
   PORTRAIT_LARGE_SIZE: scalePx(58),

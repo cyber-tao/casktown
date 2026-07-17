@@ -459,6 +459,7 @@ export class GameData {
   removePartyMember(charId: string): boolean {
     const partyIndex = this.party.indexOf(charId)
     if (partyIndex >= 0) {
+      if (partyIndex === PARTY_RULES.LEADER_INDEX || charId === PARTY_RULES.LEADER_ID) return false
       this.party.splice(partyIndex, 1)
       const promoted = this.reserve.shift()
       if (promoted && !this.party.includes(promoted)) {
@@ -474,6 +475,16 @@ export class GameData {
     }
 
     return false
+  }
+
+  swapActiveWithReserve(activeCharId: string, reserveCharId: string): boolean {
+    const partyIndex = this.party.indexOf(activeCharId)
+    const reserveIndex = this.reserve.indexOf(reserveCharId)
+    if (partyIndex <= PARTY_RULES.LEADER_INDEX || reserveIndex < 0) return false
+
+    this.party[partyIndex] = reserveCharId
+    this.reserve[reserveIndex] = activeCharId
+    return true
   }
 
   getEquipStats(charId: string): EquipStats {
@@ -738,6 +749,7 @@ export class GameData {
       }
     }
 
+    addMember(PARTY_RULES.LEADER_ID)
     for (const charId of [...this.party, ...this.reserve]) {
       addMember(charId)
     }

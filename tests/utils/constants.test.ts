@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { EQUIPMENT_SLOTS } from '../../src/data/equipment.ts'
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
@@ -321,6 +322,16 @@ describe('constants consistency', () => {
     expect(desktopRowHeight).toBe(MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT)
     expect(Math.floor(desktopAvailableHeight / desktopRowHeight)).toBe(MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS)
     expect(MENU_SETTINGS_OPTIONS.length).toBeGreaterThan(MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS)
+  })
+
+  test('party formation row fits inside the selected member panel', () => {
+    const equipmentY = MENU_OVERLAY_UI.DETAIL_Y + MENU_OVERLAY_UI.PORTRAIT_LARGE_SIZE +
+      MENU_OVERLAY_UI.STAT_CARD_HEIGHT * 2 + MENU_OVERLAY_UI.CARD_GAP * 3
+    const formationY = equipmentY + EQUIPMENT_SLOTS.length *
+      (MENU_OVERLAY_UI.EQUIPMENT_SLOT_CARD_HEIGHT + MENU_OVERLAY_UI.CARD_GAP / 2)
+
+    expect(formationY + MENU_OVERLAY_UI.PARTY_FORMATION_CARD_HEIGHT)
+      .toBeLessThanOrEqual(MENU_OVERLAY_UI.DETAIL_Y + MENU_OVERLAY_UI.PARTY_DETAIL_HEIGHT)
   })
 
   test('rebuild progress text stays inside the book pages', () => {
