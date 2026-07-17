@@ -148,7 +148,7 @@ export const ENEMIES: Record<string, EnemyData> = {
     stats: { hp: 1500, maxHp: 1500, mp: 300, maxMp: 300, atk: 40, def: 28, matk: 38, mdef: 30, speed: 24, level: 28, exp: 800, expToNext: 0 },
     skills: ['wind_moon_slash', 'dark_purge', 'soul_drain', 'fallen_angel'],
     element: 'dark', weakness: ['light'], resistance: ['dark', 'wind'],
-    drops: [{ itemId: 'xiaoai_light', rate: 1.0 }], exp: 800, gold: 400, isBoss: true, aiType: 'boss_xiaoai_true',
+    drops: [], exp: 800, gold: 400, isBoss: true, aiType: 'boss_xiaoai_true',
   },
 
   // 真结局最终 Boss

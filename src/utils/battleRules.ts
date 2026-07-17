@@ -1,5 +1,5 @@
 import type { EnemyData, SkillData } from '../data/types'
-import { ELEMENT_WEAKNESS } from './constants'
+import { BATTLE_SOLO_CHARACTER_ID, BATTLE_SOLO_ENCOUNTER_IDS, ELEMENT_WEAKNESS } from './constants'
 
 const WEAKNESS_DAMAGE_MULTIPLIER = 1.5
 const RESISTANCE_DAMAGE_MULTIPLIER = 0.5
@@ -9,6 +9,17 @@ export type ElementalHitResult = 'weak' | 'resisted' | 'neutral'
 export interface ElementalDamageModifier {
   multiplier: number
   result: ElementalHitResult
+}
+
+export function resolveEncounterPartyIds(party: readonly string[], encounterId: string): string[] {
+  if ((BATTLE_SOLO_ENCOUNTER_IDS as readonly string[]).includes(encounterId)) {
+    return [BATTLE_SOLO_CHARACTER_ID]
+  }
+  return [...party]
+}
+
+export function hasCompletedSurvivalRounds(completedRounds: number, requiredRounds: number): boolean {
+  return requiredRounds > 0 && completedRounds >= requiredRounds
 }
 
 export function resolveEnemyElementalDamageModifier(

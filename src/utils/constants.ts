@@ -533,6 +533,10 @@ export const START_PARTY = ['T'] as const
 export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
 export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
 export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
+export const BATTLE_SOLO_CHARACTER_ID = 'T'
+export const BATTLE_SOLO_ENCOUNTER_IDS = ['BTL_310', 'BTL_530', 'BTL_XIAOAI_TRUE'] as const
+export const PARTNER_CALL_AVAILABLE_FLAG = 'partner_call_available'
+export const PARTNER_CALL_MIN_TRUST = 4
 export const TRUE_ROUTE_MIN_MERCY = 5
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 5
 export const REINCARNATION_TIME_LIMIT_MS = 60_000
@@ -688,12 +692,12 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_001', eventId: 'EXIT_EAST_DOCK' },
   { kind: 'event', mapId: 'MAP_020', eventId: 'NPC_SAILOR' },
   { kind: 'event', mapId: 'MAP_020', eventId: 'EVT_SHIP_TO_HOLY' },
-  { kind: 'event', mapId: 'MAP_030', eventId: 'EVT_SHUIYAO_FENGCHI_BOSS' },
+  { kind: 'event', mapId: 'MAP_030', eventId: 'EVT_SHUIYAO_GATE' },
   { kind: 'event', mapId: 'MAP_030', eventId: 'EXIT_NORTH_30' },
   { kind: 'event', mapId: 'MAP_031', eventId: 'NPC_XIYUAN' },
   { kind: 'event', mapId: 'MAP_040', eventId: 'EVT_CONGCONG_ROCK' },
   { kind: 'event', mapId: 'MAP_040', eventId: 'EVT_XIAOAI_MEMORY_STAFF' },
-  { kind: 'event', mapId: 'MAP_041', eventId: 'EVT_PHOENIX_QILIN_BOSS' },
+  { kind: 'event', mapId: 'MAP_041', eventId: 'EVT_PHOENIX_GATE' },
   { kind: 'event', mapId: 'MAP_041', eventId: 'EXIT_NORTH_41' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'NPC_SUN' },
   { kind: 'event', mapId: 'MAP_042', eventId: 'EVT_LAUREL' },
@@ -937,10 +941,10 @@ export const MAP_ACCESS_REQUIREMENTS: Record<
   MAP_052: { flag: 'rebuild_level', minimum: 3, blockedDialogueId: 'DIA_LOCKED_LIFE_SPRING' },
   MAP_053: { flag: 'rebuild_level', minimum: 3, blockedDialogueId: 'DIA_LOCKED_LIFE_SPRING' },
   MAP_054: { flag: 'rebuild_level', minimum: 3, blockedDialogueId: 'DIA_LOCKED_LIFE_SPRING' },
-  MAP_055: { flag: 'released_four_seals', value: true, blockedDialogueId: 'DIA_LOCKED_REINCARNATION' },
+  MAP_055: { flag: 'spring_gate_opened', value: true, blockedDialogueId: 'DIA_LOCKED_REINCARNATION' },
   MAP_061: { flag: 'dream_completed', value: true, blockedDialogueId: 'DIA_LOCKED_SWAMP' },
   MAP_060: { flag: 'swamp_chains_resolved', value: true, blockedDialogueId: 'DIA_LOCKED_PALACE' },
-  MAP_062: { flag: 'swamp_chains_resolved', value: true, blockedDialogueId: 'DIA_LOCKED_UNDERGROUND' },
+  MAP_062: { flag: 'a_captured', value: true, blockedDialogueId: 'DIA_LOCKED_UNDERGROUND' },
   MAP_063: { flag: 'fake_xiaoai_defeated', value: true, blockedDialogueId: 'DIA_LOCKED_DEEP_UNDERGROUND' },
   MAP_070: { flag: 'true_route_unlocked', value: true, blockedDialogueId: 'DIA_LOCKED_ABYSS' },
 } as const
@@ -1243,7 +1247,7 @@ export const REDESIGNED_MAP_LAYOUTS = {
     ],
     objectClearRects: [{ x: 0, y: 14, width: 2, height: 6 }, { x: 18, y: 0, width: 5, height: 2 }],
     objects: [{ x: 20, y: 7, tile: MAP_TILE_KEYS.RUIN }, { x: 17, y: 10, tile: MAP_TILE_KEYS.LAMP }, { x: 24, y: 10, tile: MAP_TILE_KEYS.LAMP }, { x: 29, y: 21, tile: MAP_TILE_KEYS.BARREL }, { x: 7, y: 8, tile: MAP_TILE_KEYS.BARREL }],
-    eventPositions: { EVT_SHUIYAO_GATE: { x: 17, y: 7, width: 7, height: 4 }, EVT_SHUIYAO_FENGCHI_BOSS: { x: 19, y: 9, width: 3, height: 3 }, CHEST_HOLY_1: { x: 29, y: 21, width: 1, height: 1 }, CHEST_HOLY_2: { x: 7, y: 8, width: 1, height: 1 } },
+    eventPositions: { EVT_SHUIYAO_GATE: { x: 17, y: 7, width: 7, height: 4 }, CHEST_HOLY_1: { x: 29, y: 21, width: 1, height: 1 }, CHEST_HOLY_2: { x: 7, y: 8, width: 1, height: 1 } },
     transfers: [
       { id: 'EXIT_WEST_30', x: 0, y: 14, width: 1, height: 6, targetMap: 'MAP_020', targetX: 38, targetY: 13, direction: DIRECTION.LEFT },
       { id: 'EXIT_NORTH_30', x: 18, y: 0, width: 5, height: 1, targetMap: 'MAP_031', targetX: 16, targetY: 25, direction: DIRECTION.UP },
@@ -1964,6 +1968,7 @@ export const LEVEL_GROWTH = {
 export const COMBO_TP_COST = 25
 export const BATTLE_SPECIAL_ENCOUNTERS = {
   FESTIVAL_DEFENSE: 'BTL_002',
+  MIST_TRIAL: 'BTL_310',
   BAIHU_TRIAL: 'BTL_110',
   SHUIYAO_FENGCHI_DUO: 'BTL_201',
 } as const
@@ -2010,6 +2015,7 @@ export const BATTLE_RULES = {
   PHOENIX_REBIRTH_HP_RATIO: 0.3,
   FESTIVAL_DEFENSE_SURVIVE_TURNS: 3,
   FESTIVAL_DEFENSE_RECOVERY_HP_RATIO: 0.5,
+  MIST_TRIAL_SURVIVE_TURNS: 2,
   BAIHU_TRIAL_ENEMY_ID: 'baihu',
   BAIHU_TRIAL_SURVIVE_TURNS: 5,
   BAIHU_TRIAL_HP_RATIO: 0.6,

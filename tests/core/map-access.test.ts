@@ -62,6 +62,17 @@ describe('MapAccess', () => {
     expect(getBlockedMapDialogueId('MAP_070', trueRouteUnlocked)).toBeNull()
   })
 
+  test('requires mandatory story scenes before reincarnation and the palace', () => {
+    expect(MAP_ACCESS_REQUIREMENTS.MAP_055?.flag).toBe('spring_gate_opened')
+    expect(MAP_ACCESS_REQUIREMENTS.MAP_062?.flag).toBe('a_captured')
+
+    const sealsOnly = (flag: string) => flag === 'released_four_seals'
+    expect(getBlockedMapDialogueId('MAP_055', sealsOnly)).toBe(MAP_ACCESS_REQUIREMENTS.MAP_055?.blockedDialogueId)
+
+    const chainsOnly = (flag: string) => flag === 'swamp_chains_resolved'
+    expect(getBlockedMapDialogueId('MAP_062', chainsOnly)).toBe(MAP_ACCESS_REQUIREMENTS.MAP_062?.blockedDialogueId)
+  })
+
   test('all map access requirements reference valid dialogue ids', () => {
     for (const [mapId, req] of Object.entries(MAP_ACCESS_REQUIREMENTS)) {
       expect(req.blockedDialogueId).toBeTruthy()

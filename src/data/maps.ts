@@ -143,7 +143,7 @@ function createTransferEvent(transfer: EventBounds & { readonly id: string; read
     height: transfer.height,
     type: 'transfer',
     trigger: 'touch',
-    conditions: undefined,
+    conditions: existing?.conditions,
     actions: [{ type: 'transfer', targetMap: transfer.targetMap, targetX: transfer.targetX, targetY: transfer.targetY }],
   }
 }
@@ -388,7 +388,11 @@ function buildMap001(): MapData {
       id: 'EVT_FESTIVAL', x: 15, y: 5, width: 3, height: 2,
       type: 'trigger', trigger: 'touch',
       conditions: [{ flag: STORY_PROGRESS_FLAGS.GARDEN_REPORTED, value: true }, { flag: STORY_PROGRESS_FLAGS.FESTIVAL_DONE, value: false }],
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_006_FESTIVAL' }, { type: 'dialogue', dialogueId: 'DIA_004_FESTIVAL_MID' }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_003_DREAM' },
+        { type: 'dialogue', dialogueId: 'DIA_006_FESTIVAL' },
+        { type: 'dialogue', dialogueId: 'DIA_004_FESTIVAL_MID' },
+      ],
     },
     {
       id: 'EVT_REBUILD_CEREMONY', x: 14, y: 5, width: 4, height: 3,
@@ -1002,13 +1006,11 @@ function buildMap030(): MapData {
     {
       id: 'EVT_SHUIYAO_GATE', x: 14, y: 6, width: 4, height: 3,
       type: 'trigger', trigger: 'touch',
-      actions: [{ type: 'dialogue', dialogueId: 'DIA_201_SHUIYAO' }],
-    },
-    {
-      id: 'EVT_SHUIYAO_FENGCHI_BOSS', x: 15, y: 7, width: 2, height: 2,
-      type: 'battle', trigger: 'touch',
       conditions: [{ flag: 'shuiyao_fengchi_defeated', value: false }],
-      actions: [{ type: 'battle', encounterId: 'ENC_SHUIYAO_FENGCHI' }],
+      actions: [
+        { type: 'dialogue', dialogueId: 'DIA_201_SHUIYAO' },
+        { type: 'dialogue', dialogueId: 'DIA_202_SHUIYAO_AFTER' },
+      ],
     },
     {
       id: 'CHEST_HOLY_1', x: 26, y: 20, width: 1, height: 1,
@@ -1262,16 +1264,6 @@ function buildMap041(): MapData {
         { type: 'dialogue', dialogueId: 'DIA_303_SUN_APPEAR' },
       ],
     },
-    {
-      id: 'EVT_PHOENIX_QILIN_BOSS', x: 13, y: 5, width: 2, height: 2,
-      type: 'battle', trigger: 'touch',
-      conditions: [{ flag: 'phoenix_qilin_defeated', value: false }],
-      actions: [
-        { type: 'battle', encounterId: 'BTL_311B' },
-        { type: 'dialogue', dialogueId: 'DIA_303_PHOENIX_KILIN_AFTER' },
-        { type: 'dialogue', dialogueId: 'DIA_303_SUN_APPEAR' },
-      ],
-    },
   ]
 
   map.connections = [
@@ -1330,7 +1322,14 @@ function buildMap042(): MapData {
     {
       id: 'NPC_SUN', x: 15, y: 8, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'sun_front_idle_01', direction: 2,
+      conditions: [{ flag: 'temple_visited', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_304_TEMPLE' }],
+    },
+    {
+      id: 'NPC_SUN_AFTER', x: 15, y: 8, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'sun_front_idle_01', direction: 2,
+      conditions: [{ flag: 'temple_visited', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: 'DIA_304_TEMPLE_AFTER' }],
     },
     {
       id: 'EVT_LAUREL', x: 15, y: 5, width: 1, height: 1,
@@ -1417,7 +1416,7 @@ function buildMap050(): MapData {
     {
       id: 'EXIT_NORTH_55', x: 18, y: 0, width: 4, height: 1,
       type: 'transfer', trigger: 'touch',
-      conditions: [{ flag: 'released_four_seals', value: true }],
+      conditions: [{ flag: 'spring_gate_opened', value: true }],
       actions: [{ type: 'transfer', targetMap: 'MAP_055', targetX: 10, targetY: 13 }],
     },
     {
@@ -1432,7 +1431,10 @@ function buildMap050(): MapData {
     {
       id: 'EVT_SPRING_GATE', x: 16, y: 6, width: 4, height: 4,
       type: 'trigger', trigger: 'touch',
-      conditions: [{ flag: 'released_four_seals', value: true }],
+      conditions: [
+        { flag: 'released_four_seals', value: true },
+        { flag: 'spring_gate_opened', value: false },
+      ],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_420_GOD' }],
     },
   ]
@@ -1507,6 +1509,7 @@ function buildMap060(): MapData {
     {
       id: 'EVT_MASK_1', x: 8, y: 12, width: 2, height: 2,
       type: 'trigger', trigger: 'touch',
+      conditions: [{ flag: 'a_captured', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_501_MASK' }],
     },
   ]
@@ -1570,17 +1573,6 @@ function buildMap062(): MapData {
       conditions: [{ flag: 'fake_xiaoai_defeated', value: false }],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_520_PALACE' },
-        { type: 'dialogue', dialogueId: 'DIA_520_PALACE_AFTER' },
-        { type: 'dialogue', dialogueId: 'DIA_520_RESCUE_A' },
-        { type: 'transfer', targetMap: 'MAP_063', targetX: 12, targetY: 16 },
-      ],
-    },
-    {
-      id: 'EVT_FAKE_XIAOAI_BOSS', x: 13, y: 10, width: 2, height: 2,
-      type: 'battle', trigger: 'action',
-      conditions: [{ flag: 'fake_xiaoai_defeated', value: false }],
-      actions: [
-        { type: 'battle', encounterId: 'BTL_520' },
         { type: 'dialogue', dialogueId: 'DIA_520_PALACE_AFTER' },
         { type: 'dialogue', dialogueId: 'DIA_520_RESCUE_A' },
         { type: 'transfer', targetMap: 'MAP_063', targetX: 12, targetY: 16 },

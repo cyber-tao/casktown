@@ -12,7 +12,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -470,9 +470,11 @@ describe('game content data', () => {
       { flag: 'congcong_joined', value: true, maps: ['MAP_041'] },
       { flag: 'phoenix_qilin_defeated', value: true, maps: ['MAP_042'] },
       { flag: 'rebuild_level', value: 3, maps: ['MAP_050', 'MAP_051', 'MAP_052', 'MAP_053', 'MAP_054'] },
-      { flag: 'released_four_seals', value: true, maps: ['MAP_055'] },
+      { flag: 'released_four_seals', value: true, maps: [] },
+      { flag: 'spring_gate_opened', value: true, maps: ['MAP_055'] },
       { flag: 'dream_completed', value: true, maps: ['MAP_061'] },
-      { flag: 'swamp_chains_resolved', value: true, maps: ['MAP_060', 'MAP_062'] },
+      { flag: 'swamp_chains_resolved', value: true, maps: ['MAP_060'] },
+      { flag: 'a_captured', value: true, maps: ['MAP_062'] },
       { flag: 'fake_xiaoai_defeated', value: true, maps: ['MAP_063'] },
       { flag: 'true_route_unlocked', value: true, maps: ['MAP_070'] },
     ]
@@ -506,6 +508,39 @@ describe('game content data', () => {
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'setFlag', flag: 'normal_ending_seen', value: true })
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'questComplete', questId: 'QST_012' })
     expect(normalDialogue?.onComplete).toContainEqual({ type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID, targetX: 16, targetY: 12 })
+  })
+
+  test('story-critical rewards and scene gates cannot be bypassed or farmed', () => {
+    const festival = findEvent('MAP_001', 'EVT_FESTIVAL')
+    const sun = findEvent('MAP_042', 'NPC_SUN')
+    const sunAfter = findEvent('MAP_042', 'NPC_SUN_AFTER')
+    const springGate = findEvent('MAP_050', 'EVT_SPRING_GATE')
+    const springExit = findEvent('MAP_050', 'EXIT_NORTH_55')
+    const capture = DIALOGUES['DIA_501_CAPTURED']
+    const choice = DIALOGUES['DIA_530_CHOICE']?.lines.flatMap(line => line.choices ?? [])
+      .find(option => option.next === 'DIA_530_CALL')
+
+    expect(festival.actions[0]).toEqual({ type: 'dialogue', dialogueId: 'DIA_003_DREAM' })
+    expect(DIALOGUES['DIA_003_DREAM']?.onComplete).toContainEqual({ type: 'addItem', itemId: 'ring', quantity: 1 })
+
+    expectCondition(sun, 'temple_visited', false)
+    expectCondition(sunAfter, 'temple_visited', true)
+    expect(sunAfter.actions).toEqual([{ type: 'dialogue', dialogueId: 'DIA_304_TEMPLE_AFTER' }])
+
+    expectCondition(springGate, 'released_four_seals', true)
+    expectCondition(springGate, 'spring_gate_opened', false)
+    expectCondition(springExit, 'spring_gate_opened', true)
+    expect(DIALOGUES['DIA_420_GOD']?.onComplete).toContainEqual({ type: 'setFlag', flag: 'spring_gate_opened', value: true })
+
+    expect(capture?.onComplete).toContainEqual({ type: 'setFlag', flag: 'a_captured', value: true })
+    expect(ENEMIES.xiaoai_true?.drops).not.toContainEqual({ itemId: 'xiaoai_light', rate: 1 })
+    expect(DIALOGUES['DIA_530_PURIFY_SUCCESS']?.onComplete).toContainEqual({ type: 'addItem', itemId: 'xiaoai_light', quantity: 1 })
+    expect(choice?.condition).toEqual({ flag: PARTNER_CALL_AVAILABLE_FLAG, value: true })
+
+    expect(MAPS.MAP_030?.events.some(event => event.id === 'EVT_SHUIYAO_FENGCHI_BOSS')).toBe(false)
+    expect(MAPS.MAP_041?.events.some(event => event.id === 'EVT_PHOENIX_QILIN_BOSS')).toBe(false)
+    expect(MAPS.MAP_062?.events.some(event => event.id === 'EVT_FAKE_XIAOAI_BOSS')).toBe(false)
+    expect(findEvent('MAP_030', 'EVT_SHUIYAO_GATE').actions).toContainEqual({ type: 'dialogue', dialogueId: 'DIA_202_SHUIYAO_AFTER' })
   })
 
   test('terminal attack continues into the complete normal ending sequence', () => {

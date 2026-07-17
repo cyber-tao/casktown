@@ -12,6 +12,8 @@ import {
   CONTROL_MODE,
   DEFAULT_GAME_SETTINGS,
   PARTY_RULES,
+  PARTNER_CALL_AVAILABLE_FLAG,
+  PARTNER_CALL_MIN_TRUST,
   REBUILD_LEVEL_LIMITS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
@@ -186,6 +188,7 @@ export class GameData {
       this.inventory.items[item.itemId] = item.quantity
     }
     this.initializeCharacterState()
+    this.syncProgressionFlags()
   }
 
   setFlag(key: string, value: unknown): void {
@@ -282,6 +285,8 @@ export class GameData {
     if (this.flags.has_millennium_seed && this.flags.has_sacred_water && this.flags.has_divine_laurel) {
       this.flags.has_all_relics = true
     }
+    this.flags[PARTNER_CALL_AVAILABLE_FLAG] =
+      this.branches.trust_huihui + this.branches.trust_a + this.branches.trust_congcong >= PARTNER_CALL_MIN_TRUST
     if (this.flags.has_sacred_water) {
       this.flags.shuiyao_fengchi_defeated = true
     }

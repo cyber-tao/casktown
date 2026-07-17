@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { BLUE_MINT_SIDE_QUEST, REBUILT_TOWN_MAP_ID, STORY_PROGRESS_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, REBUILT_TOWN_MAP_ID, STORY_PROGRESS_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -76,6 +76,7 @@ const SIDE_CONGCONG_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> 
 ]
 
 const DARK_PALACE_CAPTURED_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
+  { type: 'setFlag', flag: 'a_captured', value: true },
   { type: 'questStart', questId: 'QST_012' },
   { type: 'removeParty', characterId: 'A' },
 ]
@@ -216,6 +217,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '系统', text: '获得关键道具【无名戒指】。' },
       { speaker: '旁白', text: '钟声响起。盛典开始了。' },
     ],
+    onComplete: [{ type: 'addItem', itemId: 'ring', quantity: 1 }],
   },
 
   // SCN_004 盛典与黑暗来袭
@@ -978,6 +980,13 @@ export const DIALOGUES: Record<string, DialogueData> = {
     ],
     onComplete: TEMPLE_VISITED_COMPLETION_ACTIONS,
   },
+  DIA_304_TEMPLE_AFTER: {
+    id: 'DIA_304_TEMPLE_AFTER',
+    lines: [
+      { speaker: 'sun', text: '神殿不会替你作答。带走桂冠之后，你要用自己的选择证明那场梦。' },
+      { speaker: 'T', text: '这次我会醒着走完。' },
+    ],
+  },
   DIA_304_GET_LAUREL: {
     id: 'DIA_304_GET_LAUREL',
     lines: [
@@ -1145,6 +1154,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '系统', text: '进入限时事件【轮回道 60 秒】。' },
     ],
     onComplete: [
+      { type: 'setFlag', flag: 'spring_gate_opened', value: true },
       { type: 'questComplete', questId: 'QST_009' },
       { type: 'questStart', questId: 'QST_011' },
     ],
@@ -1444,7 +1454,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         choices: [
           { text: '终结攻击', next: 'DIA_530_KILL', actions: [{ type: 'setFlag', flag: 'normal_ending_seen', value: true }] },
           { text: '戒光净化', next: 'DIA_530_PURIFY', actions: [{ type: 'setFlag', flag: 'xiaoai_purified', value: true }] },
-          { text: '防御并呼唤伙伴', next: 'DIA_530_CALL' },
+          { text: '防御并呼唤伙伴', next: 'DIA_530_CALL', condition: { flag: PARTNER_CALL_AVAILABLE_FLAG, value: true } },
         ],
       },
     ],
@@ -1488,8 +1498,8 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '慧慧', text: 'T！我们在这里！' },
       { speaker: '阿博', text: '撑住！' },
       { speaker: '葱葱', text: '别倒下啊！' },
-      { speaker: '旁白', text: '伙伴的声音化为力量。T的TP回满。' },
-      { speaker: '系统', text: 'TP回满。再次选择：终结攻击 或 戒光净化。' },
+      { speaker: '旁白', text: '伙伴的声音穿过石壁，无名戒指重新亮起。' },
+      { speaker: '系统', text: '羁绊回应成功。再次选择：终结攻击 或 戒光净化。' },
       {
         speaker: 'T',
         text: '……',
@@ -1508,6 +1518,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '木桶精灵', text: '预言还没有结束。' },
     ],
     onComplete: [
+      { type: 'addItem', itemId: 'xiaoai_light', quantity: 1 },
       { type: 'setFlag', flag: 'true_route_unlocked', value: true },
       { type: 'addParty', characterId: TRUE_ENDING_SUPPORT_CHARACTER_ID },
       { type: 'questComplete', questId: 'QST_012' },

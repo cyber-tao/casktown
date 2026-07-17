@@ -54,6 +54,8 @@ import {
   canGainBreakGauge,
   canEscapeBattle,
   canUseBattleSkill,
+  hasCompletedSurvivalRounds,
+  resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
 } from '../utils/battleRules'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
@@ -352,7 +354,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private getBattlePartyIds(party: readonly string[]): string[] {
-    const ids = [...party]
+    const ids = resolveEncounterPartyIds(party, this.encounterId)
     const hasTrueEndingSupport = TRUE_ENDING_SUPPORT_ENCOUNTER_IDS.includes(this.encounterId as typeof TRUE_ENDING_SUPPORT_ENCOUNTER_IDS[number]) &&
       GameData.getInstance().getFlag(TRUE_ENDING_SUPPORT_FLAG) === true
     if (hasTrueEndingSupport && !ids.includes(TRUE_ENDING_SUPPORT_CHARACTER_ID)) {
@@ -593,12 +595,16 @@ export class BattleScene extends Phaser.Scene {
     return this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.FESTIVAL_DEFENSE
   }
 
+  private isMistTrialEncounter(): boolean {
+    return this.encounterId === BATTLE_SPECIAL_ENCOUNTERS.MIST_TRIAL
+  }
+
   private canEscapeCurrentBattle(): boolean {
-    return canEscapeBattle(this.enemyData, this.isFestivalDefenseEncounter())
+    return canEscapeBattle(this.enemyData, this.isFestivalDefenseEncounter() || this.isMistTrialEncounter())
   }
 
   private hasFestivalDefenseSucceeded(): boolean {
-    return this.isFestivalDefenseEncounter() && this.completedRoundCount >= BATTLE_RULES.FESTIVAL_DEFENSE_SURVIVE_TURNS
+    return this.isFestivalDefenseEncounter() && hasCompletedSurvivalRounds(this.completedRoundCount, BATTLE_RULES.FESTIVAL_DEFENSE_SURVIVE_TURNS)
   }
 
   private completeFestivalDefense(message: string): boolean {
@@ -606,6 +612,19 @@ export class BattleScene extends Phaser.Scene {
     if (this.phase === 'victory' || this.phase === 'result') return true
     this.phase = 'victory'
     this.log(message)
+    this.time.delayedCall(Math.floor(1500 / this.speedMult), () => this.endBattle(true))
+    return true
+  }
+
+  private hasMistTrialSucceeded(): boolean {
+    return this.isMistTrialEncounter() && hasCompletedSurvivalRounds(this.completedRoundCount, BATTLE_RULES.MIST_TRIAL_SURVIVE_TURNS)
+  }
+
+  private completeMistTrial(): boolean {
+    if (!this.isMistTrialEncounter()) return false
+    if (this.phase === 'victory' || this.phase === 'result') return true
+    this.phase = 'victory'
+    this.log('葱葱的声音穿透迷雾，T 从迷惘界中醒来。')
     this.time.delayedCall(Math.floor(1500 / this.speedMult), () => this.endBattle(true))
     return true
   }
@@ -2035,6 +2054,11 @@ export class BattleScene extends Phaser.Scene {
       return
     }
 
+    if (this.hasMistTrialSucceeded()) {
+      this.completeMistTrial()
+      return
+    }
+
     if (this.hasBaihuTrialSucceeded()) {
       this.completeBaihuTrial('白虎停下了攻击……它终于愿意听你们解释。')
       return
@@ -2360,6 +2384,11 @@ export class BattleScene extends Phaser.Scene {
 
     if (this.hasFestivalDefenseSucceeded()) {
       this.completeFestivalDefense('无名戒指发出白光，黑暗小妖被迫退开。')
+      return
+    }
+
+    if (this.hasMistTrialSucceeded()) {
+      this.completeMistTrial()
       return
     }
 

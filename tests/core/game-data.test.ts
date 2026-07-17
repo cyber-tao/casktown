@@ -8,6 +8,8 @@ import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   PARTY_RULES,
+  PARTNER_CALL_AVAILABLE_FLAG,
+  PARTNER_CALL_MIN_TRUST,
   START_INVENTORY_ITEMS,
   START_MAP_ID,
   START_PARTY,
@@ -157,6 +159,17 @@ describe('GameData', () => {
     expect(gd.flags.mercy_score).toBe(TRUE_ROUTE_MIN_MERCY)
     expect(snapshot.flags.xiaoai_memory_fragments).toBe(snapshot.branches.xiaoai_memory_fragments)
     expect(snapshot.flags.mercy_score).toBe(snapshot.branches.mercy_score)
+  })
+
+  test('partner call unlocks only from the authored combined trust threshold', () => {
+    const gd = GameData.getInstance()
+
+    expect(gd.getFlag(PARTNER_CALL_AVAILABLE_FLAG)).toBe(false)
+    gd.updateBranch('trust_huihui', PARTNER_CALL_MIN_TRUST - 2)
+    gd.updateBranch('trust_a', 1)
+    expect(gd.getFlag(PARTNER_CALL_AVAILABLE_FLAG)).toBe(false)
+    gd.updateBranch('trust_congcong', 1)
+    expect(gd.getFlag(PARTNER_CALL_AVAILABLE_FLAG)).toBe(true)
   })
 
   test('deserialize realigns stale branch flag mirrors', () => {

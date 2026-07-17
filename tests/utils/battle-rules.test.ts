@@ -5,10 +5,26 @@ import {
   canGainBreakGauge,
   canEscapeBattle,
   canUseBattleSkill,
+  hasCompletedSurvivalRounds,
+  resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
 } from '../../src/utils/battleRules.ts'
 
 describe('battle rules', () => {
+  test('uses T alone for authored solo encounters', () => {
+    const party = ['T', 'HUIHUI', 'A', 'CONGCONG']
+
+    expect(resolveEncounterPartyIds(party, 'BTL_310')).toEqual(['T'])
+    expect(resolveEncounterPartyIds(party, 'BTL_530')).toEqual(['T'])
+    expect(resolveEncounterPartyIds(party, 'BTL_XIAOAI_TRUE')).toEqual(['T'])
+    expect(resolveEncounterPartyIds(party, 'BTL_520')).toEqual(party)
+  })
+
+  test('completes survival trials only after whole required rounds', () => {
+    expect(hasCompletedSurvivalRounds(1, 2)).toBe(false)
+    expect(hasCompletedSurvivalRounds(2, 2)).toBe(true)
+    expect(hasCompletedSurvivalRounds(3, 2)).toBe(true)
+  })
   test('prefers authored enemy weakness and resistance over elemental fallback', () => {
     const enemy = { element: 'water', weakness: ['earth'], resistance: ['fire'] }
 
