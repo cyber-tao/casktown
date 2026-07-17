@@ -135,7 +135,7 @@ export class MapScene extends Phaser.Scene {
   private fieldEntityBehaviors: Map<string, FieldEntityBehavior> = new Map()
   private fieldEntityOrigins: Map<string, { x: number; y: number }> = new Map()
   private fieldEntityDirections: Map<string, number> = new Map()
-  private enemyPatrolTimers: Phaser.Time.TimerEvent[] = []
+  private enemyPatrolTimers: Map<string, Phaser.Time.TimerEvent> = new Map()
   private battleEnemyReentryBlockedUntilMs: Map<string, number> = new Map()
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
@@ -200,6 +200,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private handleFlagSet = (key: string, value: unknown): void => {
+    this.syncConditionalBattleEnemies()
     this.refreshMinimapStatic()
 
     if (value === true && this.isJoinFlag(key)) {
@@ -328,7 +329,7 @@ export class MapScene extends Phaser.Scene {
     this.fieldEntityBehaviors = new Map()
     this.fieldEntityOrigins = new Map()
     this.fieldEntityDirections = new Map()
-    this.enemyPatrolTimers = []
+    this.enemyPatrolTimers = new Map()
     this.battleEnemyReentryBlockedUntilMs = new Map()
     this.npcTimers = []
     this.pendingActions = []
@@ -582,7 +583,23 @@ export class MapScene extends Phaser.Scene {
 
     const behavior = this.getBattleFieldBehavior(event)
     this.fieldEntityBehaviors.set(event.id, behavior)
-    this.scheduleFieldPatrol(event.id, enemySprite, behavior, this.enemyPatrolTimers)
+    const patrolTimer = this.scheduleFieldPatrol(event.id, enemySprite, behavior)
+    if (patrolTimer) this.enemyPatrolTimers.set(event.id, patrolTimer)
+  }
+
+  private syncConditionalBattleEnemies(): void {
+    for (const event of this.mapData.events) {
+      if (event.type !== 'battle') continue
+      const sprite = this.battleEnemies.get(event.id)
+      const shouldExist = !this.isBattleEventDefeated(event) && this.areEventConditionsMet(event)
+
+      if (sprite && (!shouldExist || !this.isSpriteUsable(sprite))) {
+        this.removeBattleEnemy(event.id, sprite)
+      }
+      if (shouldExist && !this.battleEnemies.has(event.id)) {
+        this.spawnBattleEnemy(event)
+      }
+    }
   }
 
   private spawnRoamingBattleEnemies(): void {
@@ -697,8 +714,8 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-  private scheduleFieldPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior, timers: Phaser.Time.TimerEvent[]): void {
-    if (behavior.patrolRangeTiles <= 0 || behavior.idleMaxMs <= 0) return
+  private scheduleFieldPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior): Phaser.Time.TimerEvent | undefined {
+    if (behavior.patrolRangeTiles <= 0 || behavior.idleMaxMs <= 0) return undefined
     const timer = this.time.addEvent({
       delay: Phaser.Math.Between(behavior.idleMinMs, behavior.idleMaxMs),
       loop: true,
@@ -709,7 +726,7 @@ export class MapScene extends Phaser.Scene {
         this.moveFieldEntityWithinPatrol(id, sprite, behavior)
       },
     })
-    timers.push(timer)
+    return timer
   }
 
   private moveFieldEntityWithinPatrol(id: string, sprite: Phaser.GameObjects.Sprite, behavior: FieldEntityBehavior): void {
@@ -809,6 +826,8 @@ export class MapScene extends Phaser.Scene {
   private removeBattleEnemy(eventId: string, sprite: Phaser.GameObjects.Sprite): void {
     this.tweens.killTweensOf(sprite)
     sprite.destroy()
+    this.enemyPatrolTimers.get(eventId)?.remove(false)
+    this.enemyPatrolTimers.delete(eventId)
     this.battleEnemies.delete(eventId)
     this.battleEnemyEvents.delete(eventId)
     this.fieldEntityBehaviors.delete(eventId)
@@ -2267,7 +2286,8 @@ export class MapScene extends Phaser.Scene {
       const npc = this.npcs.get(event.id)
       if (!npc) continue
       const behavior = this.fieldEntityBehaviors.get(event.id) ?? this.getNpcFieldBehavior(event)
-      this.scheduleFieldPatrol(event.id, npc, behavior, this.npcTimers)
+      const patrolTimer = this.scheduleFieldPatrol(event.id, npc, behavior)
+      if (patrolTimer) this.npcTimers.push(patrolTimer)
     }
   }
 
@@ -2349,9 +2369,9 @@ export class MapScene extends Phaser.Scene {
     this.mapFeedbackText?.destroy()
     this.mapFeedbackText = undefined
     this.promptText = undefined
-    for (const timer of this.enemyPatrolTimers) timer.remove(false)
+    for (const timer of this.enemyPatrolTimers.values()) timer.remove(false)
     for (const timer of this.npcTimers) timer.remove(false)
-    this.enemyPatrolTimers = []
+    this.enemyPatrolTimers.clear()
     this.npcTimers = []
   }
 }

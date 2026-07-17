@@ -50,6 +50,7 @@ type HandleFlagSetHarness = {
     isActive: (sceneKey: string) => boolean
   }
   pendingMapRestartId: string
+  syncConditionalBattleEnemies: () => void
   refreshMinimapStatic: () => void
   isJoinFlag: (key: string) => boolean
   removeSuppressedFieldEventSprites: () => void
@@ -57,6 +58,35 @@ type HandleFlagSetHarness = {
   createPartyHud: () => void
   requestMapRestart: (mapId: string) => void
 }
+
+type SyncConditionalBattleEnemiesHarness = {
+  mapData: { events: MapEvent[] }
+  battleEnemies: Map<string, unknown>
+  isBattleEventDefeated: (event: MapEvent) => boolean
+  areEventConditionsMet: (event: MapEvent) => boolean
+  isSpriteUsable: (sprite: unknown) => boolean
+  spawnBattleEnemy: (event: MapEvent) => void
+  removeBattleEnemy: (eventId: string, sprite: unknown) => void
+}
+
+type SyncConditionalBattleEnemies = (this: SyncConditionalBattleEnemiesHarness) => void
+
+type RemoveBattleEnemyHarness = {
+  tweens: { killTweensOf: (sprite: unknown) => void }
+  enemyPatrolTimers: Map<string, { remove: (dispatchCallback: boolean) => void }>
+  battleEnemies: Map<string, unknown>
+  battleEnemyEvents: Map<string, MapEvent>
+  fieldEntityBehaviors: Map<string, unknown>
+  fieldEntityOrigins: Map<string, unknown>
+  fieldEntityDirections: Map<string, unknown>
+  battleEnemyReentryBlockedUntilMs: Map<string, number>
+}
+
+type RemoveBattleEnemy = (
+  this: RemoveBattleEnemyHarness,
+  eventId: string,
+  sprite: { destroy: () => void },
+) => void
 
 type FlushPendingMapRestartHarness = {
   pendingMapRestartId: string
@@ -512,6 +542,30 @@ describe('MapScene configured keyboard movement', () => {
 })
 
 describe('MapScene deferred visual restart', () => {
+  test('syncs conditional battle enemies before refreshing the minimap after a flag update', () => {
+    const calls: string[] = []
+    const harness: HandleFlagSetHarness = {
+      mapData: { id: START_MAP_ID },
+      scene: {
+        isPaused: () => false,
+        isActive: () => false,
+      },
+      pendingMapRestartId: '',
+      syncConditionalBattleEnemies: () => calls.push('sync-battles'),
+      refreshMinimapStatic: () => calls.push('refresh-minimap'),
+      isJoinFlag: () => false,
+      removeSuppressedFieldEventSprites: () => {},
+      refreshFollowers: () => {},
+      createPartyHud: () => {},
+      requestMapRestart: () => {},
+    }
+    const mapScene = Object.assign(new MapSceneClass(), harness)
+
+    mapScene['handleFlagSet']('puzzle_trees_solved', true)
+
+    expect(calls).toEqual(['sync-battles', 'refresh-minimap'])
+  })
+
   test('defers rebuild map restart while RebuildOverlay pauses the map', () => {
     GameData.getInstance().reset()
     const restartCalls: string[] = []
@@ -522,6 +576,7 @@ describe('MapScene deferred visual restart', () => {
         isActive: sceneKey => sceneKey === 'RebuildOverlay',
       },
       pendingMapRestartId: '',
+      syncConditionalBattleEnemies: () => {},
       refreshMinimapStatic: () => {},
       isJoinFlag: () => false,
       removeSuppressedFieldEventSprites: () => {},
@@ -559,6 +614,101 @@ describe('MapScene deferred visual restart', () => {
     expect(calls).toEqual(['resume', 'complete', `restart:${REBUILT_TOWN_MAP_ID}`])
     expect(harness.pendingMapRestartId).toBe('')
     expect(harness.inEvent).toBe(false)
+  })
+})
+
+describe('MapScene conditional battle enemy sync', () => {
+  test('spawns an eligible touch battle once and removes it when invalidated or defeated', () => {
+    GameData.getInstance().reset()
+    const event: MapEvent = {
+      id: 'EVT_CONDITIONAL_TOUCH_BATTLE',
+      x: 4,
+      y: 5,
+      width: 1,
+      height: 1,
+      type: 'battle',
+      trigger: 'touch',
+      conditions: [{ flag: 'conditional_touch_battle_unlocked', value: true }],
+      actions: [{ type: 'battle', encounterId: 'ENC_TEST' }],
+    }
+    const roamingSprite = { id: 'roaming' }
+    const spawnedIds: string[] = []
+    const removedIds: string[] = []
+    let defeated = false
+    const harness = Object.assign(Object.create(MapSceneClass.prototype), {
+      mapData: { events: [event] },
+      battleEnemies: new Map<string, unknown>([['ROAM_KEEP', roamingSprite]]),
+      isBattleEventDefeated: () => defeated,
+      isSpriteUsable: () => true,
+    }) as SyncConditionalBattleEnemiesHarness
+    harness.spawnBattleEnemy = candidate => {
+      spawnedIds.push(candidate.id)
+      harness.battleEnemies.set(candidate.id, { id: candidate.id })
+    }
+    harness.removeBattleEnemy = (eventId) => {
+      removedIds.push(eventId)
+      harness.battleEnemies.delete(eventId)
+    }
+    const sync = MapSceneClass.prototype['syncConditionalBattleEnemies'] as SyncConditionalBattleEnemies
+
+    GameData.getInstance().setFlag('conditional_touch_battle_unlocked', false)
+    sync.call(harness)
+    expect(spawnedIds).toEqual([])
+
+    GameData.getInstance().setFlag('conditional_touch_battle_unlocked', true)
+    sync.call(harness)
+    sync.call(harness)
+    expect(spawnedIds).toEqual([event.id])
+    expect(harness.battleEnemies.get('ROAM_KEEP')).toBe(roamingSprite)
+
+    GameData.getInstance().setFlag('conditional_touch_battle_unlocked', false)
+    sync.call(harness)
+    expect(removedIds).toEqual([event.id])
+
+    GameData.getInstance().setFlag('conditional_touch_battle_unlocked', true)
+    sync.call(harness)
+    defeated = true
+    sync.call(harness)
+    expect(spawnedIds).toEqual([event.id, event.id])
+    expect(removedIds).toEqual([event.id, event.id])
+  })
+
+  test('removing a battle enemy also removes its patrol timer and runtime state', () => {
+    const calls: string[] = []
+    const eventId = 'EVT_REMOVED_BATTLE'
+    const sprite = { destroy: () => calls.push('destroy') }
+    const event = {
+      id: eventId,
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      type: 'battle',
+      trigger: 'touch',
+      actions: [],
+    } satisfies MapEvent
+    const harness: RemoveBattleEnemyHarness = {
+      tweens: { killTweensOf: () => calls.push('kill-tweens') },
+      enemyPatrolTimers: new Map([[eventId, { remove: () => calls.push('remove-timer') }]]),
+      battleEnemies: new Map([[eventId, sprite]]),
+      battleEnemyEvents: new Map([[eventId, event]]),
+      fieldEntityBehaviors: new Map([[eventId, {}]]),
+      fieldEntityOrigins: new Map([[eventId, {}]]),
+      fieldEntityDirections: new Map([[eventId, 0]]),
+      battleEnemyReentryBlockedUntilMs: new Map([[eventId, 1000]]),
+    }
+    const remove = MapSceneClass.prototype['removeBattleEnemy'] as RemoveBattleEnemy
+
+    remove.call(harness, eventId, sprite)
+
+    expect(calls).toEqual(['kill-tweens', 'destroy', 'remove-timer'])
+    expect(harness.enemyPatrolTimers.has(eventId)).toBe(false)
+    expect(harness.battleEnemies.has(eventId)).toBe(false)
+    expect(harness.battleEnemyEvents.has(eventId)).toBe(false)
+    expect(harness.fieldEntityBehaviors.has(eventId)).toBe(false)
+    expect(harness.fieldEntityOrigins.has(eventId)).toBe(false)
+    expect(harness.fieldEntityDirections.has(eventId)).toBe(false)
+    expect(harness.battleEnemyReentryBlockedUntilMs.has(eventId)).toBe(false)
   })
 })
 
