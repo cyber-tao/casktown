@@ -257,7 +257,10 @@ describe('constants consistency', () => {
   test('rebuild progress text stays inside the book pages', () => {
     const panelTop = GAME_HEIGHT / 2 - REBUILD_MENU.PANEL_HEIGHT / 2
     const panelRight = GAME_WIDTH / 2 + REBUILD_MENU.PANEL_WIDTH / 2
+    const panelBottom = GAME_HEIGHT / 2 + REBUILD_MENU.PANEL_HEIGHT / 2
     const descriptionRight = REBUILD_MENU.DESC_X + REBUILD_MENU.DESC_WRAP_WIDTH
+    const finalMilestoneY = REBUILD_MENU.OPTION_START_Y + REBUILD_MENU.OPTION_GAP_Y * 4
+    const landscapeScale = Math.min(844 / GAME_WIDTH, 390 / GAME_HEIGHT)
 
     expect(REBUILD_MENU.TITLE_Y).toBeGreaterThan(panelTop + 60 * GAME_SCALE)
     expect(REBUILD_MENU.PROGRESS_Y).toBe(REBUILD_MENU.TITLE_Y)
@@ -265,6 +268,10 @@ describe('constants consistency', () => {
       .toBeGreaterThan(REBUILD_MENU.TITLE_FONT_SIZE * GAME_SCALE)
     expect(REBUILD_MENU.DESC_X).toBeGreaterThan(GAME_WIDTH / 2)
     expect(descriptionRight).toBeLessThan(panelRight - 30 * GAME_SCALE)
+    expect(REBUILD_MENU.BACK_Y).toBeGreaterThan(finalMilestoneY + 20 * GAME_SCALE)
+    expect(REBUILD_MENU.BACK_Y).toBeLessThan(panelBottom - 20 * GAME_SCALE)
+    expect(REBUILD_MENU.OPTION_FONT_SIZE * GAME_SCALE * landscapeScale).toBeGreaterThanOrEqual(13)
+    expect(REBUILD_MENU.DESC_FONT_SIZE * GAME_SCALE * landscapeScale).toBeGreaterThanOrEqual(11)
   })
 
   test('MAP_HUD party layout constants are defined', () => {
