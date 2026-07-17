@@ -1844,7 +1844,6 @@ export const MAP_HUD = {
   LABEL_FONT_SIZE: scalePx(10),
   LABEL_OFFSET_X: scalePx(8),
   LABEL_OFFSET_Y: scalePx(10),
-  PROMPT_TEXT: 'Enter/Space 调查/对话 | M 地图 | Esc 菜单',
   TOUCH_PROMPT_TEXT: '轻触小地图',
   PROMPT_CONFIRM_FALLBACK: 'Space',
   PROMPT_CONFIRM_PREFIX_SUFFIX: ' ',

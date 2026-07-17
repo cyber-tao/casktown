@@ -49,6 +49,63 @@ const KEY_DISPLAY_NAMES: Record<string, string> = {
   'KeyD': 'D',
 }
 
+const DOM_CODE_TO_PHASER_KEY_NAME: Record<string, string> = {
+  ArrowUp: 'UP',
+  ArrowDown: 'DOWN',
+  ArrowLeft: 'LEFT',
+  ArrowRight: 'RIGHT',
+  Enter: 'ENTER',
+  Space: 'SPACE',
+  Escape: 'ESC',
+  Backspace: 'BACKSPACE',
+  Tab: 'TAB',
+  ShiftLeft: 'SHIFT',
+  ShiftRight: 'SHIFT',
+  ControlLeft: 'CTRL',
+  ControlRight: 'CTRL',
+  AltLeft: 'ALT',
+  AltRight: 'ALT',
+  PageUp: 'PAGE_UP',
+  PageDown: 'PAGE_DOWN',
+  Home: 'HOME',
+  End: 'END',
+  Insert: 'INSERT',
+  Delete: 'DELETE',
+  Semicolon: 'SEMICOLON',
+  Equal: 'PLUS',
+  Comma: 'COMMA',
+  Minus: 'MINUS',
+  Period: 'PERIOD',
+  Slash: 'FORWARD_SLASH',
+  Backslash: 'BACK_SLASH',
+  Quote: 'QUOTES',
+  Backquote: 'BACKTICK',
+  BracketLeft: 'OPEN_BRACKET',
+  BracketRight: 'CLOSED_BRACKET',
+}
+
+const NUMBER_KEY_NAMES = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'] as const
+
+export function toPhaserKeyName(code: string): string | null {
+  const mapped = DOM_CODE_TO_PHASER_KEY_NAME[code]
+  if (mapped) return mapped
+
+  const letter = /^Key([A-Z])$/.exec(code)
+  if (letter?.[1]) return letter[1]
+
+  const digit = /^Digit([0-9])$/.exec(code)
+  if (digit?.[1]) return NUMBER_KEY_NAMES[Number(digit[1])] ?? null
+
+  const numpadDigit = /^Numpad([0-9])$/.exec(code)
+  if (numpadDigit?.[1]) {
+    const name = NUMBER_KEY_NAMES[Number(numpadDigit[1])]
+    return name ? `NUMPAD_${name}` : null
+  }
+
+  if (/^F(?:[1-9]|1[0-2])$/.test(code)) return code
+  return null
+}
+
 export class InputManager {
   private static instance: InputManager
   private bindings: KeyBindings
@@ -72,7 +129,10 @@ export class InputManager {
     this.useGamepad = gd.settings.gamepad
     const saved = gd.getFlag('keyBindings')
     if (saved && typeof saved === 'object') {
-      Object.assign(this.bindings, saved)
+      for (const action of Object.keys(this.bindings) as (keyof KeyBindings)[]) {
+        const code = (saved as Partial<KeyBindings>)[action]
+        if (typeof code === 'string' && code.length > 0) this.bindings[action] = code
+      }
     }
   }
 
@@ -107,7 +167,7 @@ export class InputManager {
   }
 
   isWASDMode(): boolean {
-    return this.bindings.up === 'KeyW'
+    return GameData.getInstance().settings.controlMode === CONTROL_MODE.WASD
   }
 
   private saveBindings(): void {
@@ -115,15 +175,15 @@ export class InputManager {
   }
 
   isConfirm(code: string): boolean {
-    return code === this.bindings.confirm || code === 'Space'
+    return code === this.bindings.confirm || code === 'Space' || code === 'Enter' || code === 'KeyE'
   }
 
   isCancel(code: string): boolean {
-    return code === this.bindings.cancel || code === 'Escape'
+    return code === this.bindings.cancel || code === 'Escape' || code === 'KeyX' || code === 'Backspace'
   }
 
   isMenu(code: string): boolean {
-    return code !== 'Tab' && code === this.bindings.menu
+    return code === this.bindings.menu || code === 'Tab'
   }
 
   isDirection(code: string): 'up' | 'down' | 'left' | 'right' | null {
@@ -132,6 +192,10 @@ export class InputManager {
     if (code === this.bindings.left || code === 'ArrowLeft' || code === 'KeyA') return 'left'
     if (code === this.bindings.right || code === 'ArrowRight' || code === 'KeyD') return 'right'
     return null
+  }
+
+  getPhaserKeyName(action: keyof KeyBindings): string {
+    return toPhaserKeyName(this.bindings[action]) ?? toPhaserKeyName(DEFAULT_BINDINGS[action])!
   }
 
   setGamepadEnabled(enabled: boolean): void {

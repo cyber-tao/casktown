@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { EventAction, MapEvent } from '../../src/data/types.ts'
 import { MAPS } from '../../src/data/maps.ts'
 import { GameData } from '../../src/core/GameData.ts'
+import { InputManager } from '../../src/core/InputManager.ts'
 import { FIELD_ENTITY_BEHAVIOR, START_MAP_ID, TILE_SIZE, WORLD_MAP_BACKGROUND_LAYOUT } from '../../src/utils/constants.ts'
 import { isTileInsideSpriteBounds } from '../../src/utils/fieldGeometry.ts'
 
@@ -33,6 +34,14 @@ type TouchLayoutHarness = {
 }
 
 type SyncTouchControls = (this: TouchLayoutHarness) => void
+
+type DirectionalKeysHarness = {
+  input: { keyboard: { addKey: (keyName: string) => unknown } | null }
+  actionKeySignature: string
+  actionKeys?: Record<string, unknown>
+}
+
+type SyncDirectionalActionKeys = (this: DirectionalKeysHarness) => void
 
 type CanInteractHarness = {
   npcs: Map<string, unknown>
@@ -325,6 +334,33 @@ describe('MapScene responsive touch layout', () => {
 
     expect(harness.touchLayoutActive).toBe(true)
     expect(calls).toEqual(['destroy-touch', 'create-touch'])
+  })
+})
+
+describe('MapScene configured keyboard movement', () => {
+  test('rebinds polled direction keys when the control preset changes', () => {
+    const input = InputManager.getInstance()
+    GameData.getInstance().reset()
+    input.syncFromGameData()
+    const addedKeys: string[] = []
+    const harness: DirectionalKeysHarness = {
+      input: { keyboard: { addKey: keyName => {
+        addedKeys.push(keyName)
+        return { keyName }
+      } } },
+      actionKeySignature: '',
+    }
+    const syncKeys = MapSceneClass.prototype['syncDirectionalActionKeys'] as SyncDirectionalActionKeys
+
+    syncKeys.call(harness)
+    expect(addedKeys).toEqual(['UP', 'DOWN', 'LEFT', 'RIGHT'])
+
+    input.setWASD()
+    syncKeys.call(harness)
+    expect(addedKeys.slice(-4)).toEqual(['W', 'S', 'A', 'D'])
+
+    syncKeys.call(harness)
+    expect(addedKeys).toHaveLength(8)
   })
 })
 

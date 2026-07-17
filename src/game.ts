@@ -12,10 +12,13 @@ import { TrainingOverlay } from './scenes/TrainingOverlay'
 import { RebuildOverlay } from './scenes/RebuildOverlay'
 import { CodexOverlay } from './scenes/CodexOverlay'
 import { WorldMapOverlay } from './scenes/WorldMapOverlay'
+import { GameData } from './core/GameData'
 import { GAME_CANVAS_BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH, TOUCH_INPUT } from './utils/constants'
+import { applyPixelSharp } from './utils/displaySettings'
 
 export class CaskTownGame extends Phaser.Game {
   private scaleSyncRaf = 0
+  private appliedPixelSharp: boolean | null = null
 
   constructor() {
     const config: Phaser.Types.Core.GameConfig = {
@@ -52,6 +55,29 @@ export class CaskTownGame extends Phaser.Game {
     }
     super(config)
     this.bindContainerScaleSync()
+    this.bindDisplaySettings()
+  }
+
+  private bindDisplaySettings(): void {
+    this.textures.on(Phaser.Textures.Events.ADD, this.handleTextureAdded, this)
+    this.events.on(Phaser.Core.Events.PRE_STEP, this.syncDisplaySettings, this)
+    this.syncDisplaySettings()
+    this.events.once(Phaser.Core.Events.DESTROY, () => {
+      this.textures.off(Phaser.Textures.Events.ADD, this.handleTextureAdded, this)
+      this.events.off(Phaser.Core.Events.PRE_STEP, this.syncDisplaySettings, this)
+    })
+  }
+
+  private syncDisplaySettings(): void {
+    const enabled = GameData.getInstance().settings.pixelSharp
+    if (enabled === this.appliedPixelSharp) return
+    this.appliedPixelSharp = enabled
+    applyPixelSharp(this, enabled, enabled ? Phaser.Textures.FilterMode.NEAREST : Phaser.Textures.FilterMode.LINEAR)
+  }
+
+  private handleTextureAdded(_key: string, texture: Phaser.Textures.Texture): void {
+    const enabled = this.appliedPixelSharp ?? GameData.getInstance().settings.pixelSharp
+    texture.setFilter(enabled ? Phaser.Textures.FilterMode.NEAREST : Phaser.Textures.FilterMode.LINEAR)
   }
 
   private bindContainerScaleSync(): void {

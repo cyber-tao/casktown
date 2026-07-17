@@ -99,6 +99,7 @@ export class MapScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key }
   private actionKeys!: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key }
+  private actionKeySignature = ''
   private isMoving = false
   private moveStart = { x: 0, y: 0 }
   private moveTarget = { x: 0, y: 0 }
@@ -378,6 +379,7 @@ export class MapScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     this.animationTimeMs = time
+    this.syncDirectionalActionKeys()
     this.updatePartyHud()
     if (this.inEvent) {
       this.updateMinimapPlayerMarker()
@@ -851,7 +853,6 @@ export class MapScene extends Phaser.Scene {
   private setupInput(): void {
     cleanupKeyboardOnShutdown(this)
     const kb = this.input.keyboard!
-    const bindings = InputManager.getInstance().getBindings()
     this.cursors = kb.createCursorKeys()
     this.wasd = {
       W: kb.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -859,13 +860,7 @@ export class MapScene extends Phaser.Scene {
       S: kb.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       D: kb.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     }
-    this.actionKeys = {
-      up: kb.addKey(bindings.up),
-      down: kb.addKey(bindings.down),
-      left: kb.addKey(bindings.left),
-      right: kb.addKey(bindings.right),
-    }
-
+    this.syncDirectionalActionKeys()
     kb.on('keydown', (event: KeyboardEvent) => {
       if (this.time.now < this.inputResumeBlockedUntilMs) return
       const input = InputManager.getInstance()
@@ -881,6 +876,27 @@ export class MapScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.POINTER_UP, this.clearTouchDirectionForPointer, this)
     this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.clearTouchDirectionForPointer, this)
     this.scale.on(Phaser.Scale.Events.RESIZE, this.syncTouchControls, this)
+  }
+
+  private syncDirectionalActionKeys(): void {
+    const kb = this.input.keyboard
+    if (!kb) return
+    const input = InputManager.getInstance()
+    const keyNames = {
+      up: input.getPhaserKeyName('up'),
+      down: input.getPhaserKeyName('down'),
+      left: input.getPhaserKeyName('left'),
+      right: input.getPhaserKeyName('right'),
+    }
+    const signature = `${keyNames.up}:${keyNames.down}:${keyNames.left}:${keyNames.right}`
+    if (signature === this.actionKeySignature) return
+    this.actionKeySignature = signature
+    this.actionKeys = {
+      up: kb.addKey(keyNames.up),
+      down: kb.addKey(keyNames.down),
+      left: kb.addKey(keyNames.left),
+      right: kb.addKey(keyNames.right),
+    }
   }
 
   private shouldShowTouchControls(): boolean {
@@ -1077,7 +1093,7 @@ export class MapScene extends Phaser.Scene {
       : MAP_HUD.PROMPT_FONT_SIZE
     const promptPaddingX = touchControls ? MAP_HUD.TOUCH_PROMPT_PADDING_X : MAP_HUD.PROMPT_PADDING_X
     const promptPaddingY = touchControls ? MAP_HUD.TOUCH_PROMPT_PADDING_Y : MAP_HUD.PROMPT_PADDING_Y
-    const promptText = touchControls ? MAP_HUD.TOUCH_PROMPT_TEXT : MAP_HUD.PROMPT_TEXT
+    const promptText = touchControls ? MAP_HUD.TOUCH_PROMPT_TEXT : this.formatDefaultPrompt()
     const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - promptYOffset, promptText, {
       fontSize: `${promptFontSize}px`,
       color: MAP_HUD.PROMPT_COLOR,
