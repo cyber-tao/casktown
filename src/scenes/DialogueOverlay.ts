@@ -77,6 +77,7 @@ export class DialogueOverlay extends Phaser.Scene {
   private dialogueId = ''
   private continuations: DialogueContinuation[] = []
   private completionQueue = new DialogueCompletionQueue()
+  private closing = false
 
   constructor() {
     super({ key: 'DialogueOverlay', active: false })
@@ -132,6 +133,7 @@ export class DialogueOverlay extends Phaser.Scene {
     this.visibleChoices = []
     this.continuations = []
     this.completionQueue = new DialogueCompletionQueue()
+    this.closing = false
 
     const dialogues = GAME_CONFIG_DATABASE.getTable('dialogues')
     const script = dialogues[data.dialogueId]
@@ -365,6 +367,7 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   private advance(): void {
+    if (this.closing) return
     if (this.isTyping) {
       // Skip to end
       this.typeTimer?.remove()
@@ -420,6 +423,7 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   private closeDialogue(): void {
+    if (this.closing) return
     this.typeTimer?.remove()
     this.completionQueue.completeScript(this.currentScript)
     const continuation = this.continuations.pop()
@@ -429,6 +433,9 @@ export class DialogueOverlay extends Phaser.Scene {
       this.showLine()
       return
     }
+    this.closing = true
+    this.canAdvance = false
+    this.inChoice = false
     const actions = this.completionQueue.finalize()
     AudioManager.getInstance().stopVoice()
     this.scene.stop()
@@ -440,6 +447,9 @@ export class DialogueOverlay extends Phaser.Scene {
   }
 
   private closeMissingDialogue(): void {
+    if (this.closing) return
+    this.closing = true
+    this.canAdvance = false
     this.typeTimer?.remove()
     AudioManager.getInstance().stopVoice()
     this.scene.stop()

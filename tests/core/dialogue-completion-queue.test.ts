@@ -42,6 +42,18 @@ describe('DialogueCompletionQueue', () => {
 
     expect(queue.finalize()).toEqual([action])
   })
+
+  test('drains completion actions only once', () => {
+    const queue = new DialogueCompletionQueue()
+    const dialogue = script('DIA_ONCE', [{ type: 'adjustMercy', amount: 1 }])
+
+    queue.completeScript(dialogue)
+
+    expect(queue.finalize()).toEqual([{ type: 'adjustMercy', amount: 1 }])
+    expect(queue.finalize()).toEqual([])
+    queue.completeScript(dialogue)
+    expect(queue.finalize()).toEqual([])
+  })
 })
 
 describe('getUniqueEventActions', () => {

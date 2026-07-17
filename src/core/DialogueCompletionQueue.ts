@@ -16,21 +16,28 @@ export class DialogueCompletionQueue {
   private readonly actions: EventAction[] = []
   private readonly completedDialogueIds = new Set<string>()
   private readonly terminalParentScripts: DialogueData[] = []
+  private finalized = false
 
   deferTerminalParent(script: DialogueData): void {
+    if (this.finalized) return
     this.terminalParentScripts.push(script)
   }
 
   completeScript(script: DialogueData | undefined): void {
+    if (this.finalized) return
     if (!script?.onComplete?.length || this.completedDialogueIds.has(script.id)) return
     this.completedDialogueIds.add(script.id)
     this.actions.push(...script.onComplete)
   }
 
   finalize(): EventAction[] {
+    if (this.finalized) return []
     while (this.terminalParentScripts.length > 0) {
       this.completeScript(this.terminalParentScripts.pop())
     }
-    return getUniqueEventActions(this.actions)
+    const actions = getUniqueEventActions(this.actions)
+    this.actions.length = 0
+    this.finalized = true
+    return actions
   }
 }
