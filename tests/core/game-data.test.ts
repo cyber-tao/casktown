@@ -4,6 +4,7 @@ import { RebuildSystem } from '../../src/core/RebuildSystem.ts'
 import { GAME_CONFIG_DATABASE, cloneConfigData } from '../../src/data/configDatabase.ts'
 import { INITIAL_CHARACTERS } from '../../src/data/characters.ts'
 import {
+  INITIAL_GOLD,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   PARTY_RULES,
@@ -35,6 +36,19 @@ describe('GameData', () => {
     const hero = gd.characters.get('T')
     expect(hero).toBeDefined()
     expect(hero!.stats.atk).toBeGreaterThanOrEqual(INITIAL_CHARACTERS.T!.stats.atk)
+  })
+
+  test('new-game reset can preserve user settings', () => {
+    const gd = GameData.getInstance()
+    gd.settings.masterVolume = 0.4
+    gd.settings.textSpeed = 'fast'
+    gd.addGold(500)
+
+    gd.reset({ preserveSettings: true })
+
+    expect(gd.settings.masterVolume).toBe(0.4)
+    expect(gd.settings.textSpeed).toBe('fast')
+    expect(gd.gold).toBe(INITIAL_GOLD)
   })
 
   test('join flags add initialized companions to party or reserve', () => {

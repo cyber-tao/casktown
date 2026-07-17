@@ -300,7 +300,7 @@ export class TitleScene extends Phaser.Scene {
 
   private startNewGame(): void {
     const gd = GameData.getInstance()
-    gd.reset()
+    gd.reset({ preserveSettings: true })
     InputManager.getInstance().syncFromGameData()
     this.startSceneAfterFade('MapScene', { mapId: START_MAP_ID })
   }

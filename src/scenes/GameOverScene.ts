@@ -112,7 +112,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   private startNewGame(): void {
-    GameData.getInstance().reset()
+    GameData.getInstance().reset({ preserveSettings: true })
     InputManager.getInstance().syncFromGameData()
     this.scene.start('MapScene', { mapId: START_MAP_ID })
   }

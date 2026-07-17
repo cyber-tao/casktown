@@ -160,7 +160,8 @@ export class GameData {
     }
   }
 
-  reset(): void {
+  reset(options: { preserveSettings?: boolean } = {}): void {
+    const preservedSettings = options.preserveSettings ? { ...this.settings } : null
     this.playTime = 0
     this.playTimeSyncedAtMs = Date.now()
     this.currentMap = START_MAP_ID
@@ -178,7 +179,7 @@ export class GameData {
     this.rebuildLevel = REBUILD_LEVEL_LIMITS.MIN
     this.gold = INITIAL_GOLD
     this.unlockedCodex = []
-    this.settings = { ...DEFAULT_GAME_SETTINGS }
+    this.settings = preservedSettings ?? { ...DEFAULT_GAME_SETTINGS }
     for (const item of START_INVENTORY_ITEMS) {
       this.inventory.items[item.itemId] = item.quantity
     }
