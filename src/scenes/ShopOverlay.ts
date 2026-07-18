@@ -10,6 +10,7 @@ import { bindTouchText } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
+import { getFacilityControlHints } from '../utils/controlHints'
 
 interface ShopItem {
   id: string
@@ -68,8 +69,13 @@ export class ShopOverlay extends Phaser.Scene {
       fontSize: scaleFont(FACILITY_OVERLAY_UI.MESSAGE_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title, wordWrap: { width: FACILITY_OVERLAY_UI.MESSAGE_WRAP_WIDTH },
     }).setOrigin(0.5).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
 
-    bindTouchText(this.add.text(FACILITY_OVERLAY_UI.FOOTER_X, FACILITY_OVERLAY_UI.FOOTER_Y, '↑↓ 选择 | Enter 购买 | Esc 返回', {
+    const input = InputManager.getInstance()
+    const hints = getFacilityControlHints(action => input.getActionName(action), '购买')
+    this.add.text(FACILITY_OVERLAY_UI.FOOTER_X, FACILITY_OVERLAY_UI.FOOTER_Y, hints.action, {
       fontSize: scaleFont(FACILITY_OVERLAY_UI.FOOTER_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.text,
+    }).setOrigin(0.5).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0)
+    bindTouchText(this.add.text(FACILITY_OVERLAY_UI.GOLD_X, FACILITY_OVERLAY_UI.FOOTER_Y, hints.back, {
+      fontSize: scaleFont(FACILITY_OVERLAY_UI.FOOTER_FONT_SIZE), color: MENU_OVERLAY_UI.COLORS.title,
     }).setOrigin(0.5).setDepth(FACILITY_OVERLAY_UI.CONTENT_DEPTH).setScrollFactor(0), () => this.close())
 
     this.renderList()
