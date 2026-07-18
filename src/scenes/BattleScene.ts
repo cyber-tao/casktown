@@ -1134,18 +1134,29 @@ export class BattleScene extends Phaser.Scene {
     this.hideTargetIndicator()
     if (actionConsumed) {
       if (action === 'skill') {
-        this.lastPlayerAction = { type: 'skill', skillId: this.actionStack[1]! }
+        this.completeSuccessfulPlayerSkillAction(actor, this.actionStack[1]!, selectedSkill, opponentsBefore)
+        return
       } else if (action === 'attack' || action === 'item') {
         this.lastPlayerAction = { type: action }
       }
-      const opponentsAfter = action === 'skill' ? this.getLiveOpponents(actor).length : opponentsBefore
-      if (shouldGrantExtraTurnOnKill(selectedSkill, opponentsBefore, opponentsAfter)) {
-        this.actionStack = []
-        this.log(`${actor.name} 击破敌阵，获得再次行动！`)
-        return
-      }
       this.nextTurn()
     }
+  }
+
+  private completeSuccessfulPlayerSkillAction(
+    actor: BattleUnit,
+    skillId: string,
+    skill: SkillData | undefined,
+    opponentsBefore: number,
+  ): void {
+    this.lastPlayerAction = { type: 'skill', skillId }
+    const opponentsAfter = this.getLiveOpponents(actor).length
+    if (shouldGrantExtraTurnOnKill(skill, opponentsBefore, opponentsAfter)) {
+      this.actionStack = []
+      this.log(`${actor.name} 击破敌阵，获得再次行动！`)
+      return
+    }
+    this.nextTurn()
   }
 
   private setCommandMenuVisible(visible: boolean): void {
@@ -1297,8 +1308,9 @@ export class BattleScene extends Phaser.Scene {
     this.actionStack = ['skill', skillId]
     const sk = skillDefs[skillId]
     if (sk && (sk.target === 'self' || sk.target === 'all' || sk.target === 'random')) {
+      const opponentsBefore = this.getLiveOpponents(actor).length
       if (this.performSkill(actor, actor, skillId)) {
-        this.nextTurn()
+        this.completeSuccessfulPlayerSkillAction(actor, skillId, sk, opponentsBefore)
       }
       return
     }
