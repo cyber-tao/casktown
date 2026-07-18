@@ -2288,8 +2288,17 @@ export const SETTINGS_PANEL = {
   backOffsetY: 0,
   backFontSize: scalePx(15),
   cursorX: scalePx(266),
-  cursorOffsetY: scalePx(6),
   cursorSize: scalePx(10),
+  minCursorCssSize: 8,
+  minCssFontSize: 12,
+  rowGapCss: 8,
+  minVisibleRows: 4,
+  compactRowsPerPage: 7,
+  contentBottomY: scalePx(420),
+  pageFooterHeight: scalePx(24),
+  pagePreviousX: scalePx(350),
+  pageTextX: scalePx(480),
+  pageNextX: scalePx(610),
   fadeMs: 300,
 } as const
 

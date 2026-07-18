@@ -18,17 +18,23 @@ import {
   UI_TITLE_FONT_FAMILY,
   scalePx,
 } from '../utils/constants'
-import { bindTouchText } from '../utils/touch'
+import { bindTouchText, getCssToGameScale } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { addRuntimePanel } from '../utils/runtimePanels'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
+import { resolveSettingsSceneLayout } from '../utils/settingsLayout'
 
 type SettingOption = typeof MENU_SETTINGS_OPTIONS[number]
 
 export class SettingsScene extends Phaser.Scene {
   private menuIndex = 0
-  private menuItems: Phaser.GameObjects.Container[] = []
+  private menuItems: Array<Phaser.GameObjects.Container | undefined> = []
   private cursor!: Phaser.GameObjects.Rectangle
+  private settingsContent?: Phaser.GameObjects.Container
+  private settingsPage = 0
+  private settingsFontSize = SETTINGS_PANEL.labelFontSize
+  private settingsRowHeight = SETTINGS_PANEL.rowHeight
+  private settingsVisibleRows: number = MENU_SETTINGS_OPTIONS.length
   private returnTo: string = 'TitleScene'
   private overlay!: Phaser.GameObjects.Rectangle
   private panel!: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image
@@ -47,12 +53,17 @@ export class SettingsScene extends Phaser.Scene {
     this.returnTo = data.returnTo || 'TitleScene'
     this.menuIndex = 0
     this.menuItems = []
+    this.settingsPage = 0
     this.closing = false
     this.gamepadNavigation.reset()
 
     this.createBackground()
     this.createSettingsUI()
     this.setupInput()
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this)
+    })
 
     this.cameras.main.fadeIn(SETTINGS_PANEL.fadeMs)
   }
@@ -105,46 +116,83 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private createSettingsUI(): void {
+    this.settingsContent?.destroy(true)
+    this.settingsContent = this.add.container(0, 0).setDepth(502).setScrollFactor(0)
+    this.menuItems = new Array(MENU_SETTINGS_OPTIONS.length + 1)
     const gd = GameData.getInstance()
+    const layout = resolveSettingsSceneLayout(getCssToGameScale(this), MENU_SETTINGS_OPTIONS.length)
+    this.settingsFontSize = layout.fontSize
+    this.settingsRowHeight = layout.rowHeight
+    this.settingsVisibleRows = layout.visibleRows
+    const pageCount = Math.ceil(MENU_SETTINGS_OPTIONS.length / layout.visibleRows)
+    if (this.menuIndex < MENU_SETTINGS_OPTIONS.length) {
+      this.settingsPage = Math.floor(this.menuIndex / layout.visibleRows)
+    }
+    this.settingsPage = Phaser.Math.Clamp(this.settingsPage, 0, Math.max(0, pageCount - 1))
+    const pageStart = this.settingsPage * layout.visibleRows
+    const pageEnd = Math.min(MENU_SETTINGS_OPTIONS.length, pageStart + layout.visibleRows)
 
-    for (let i = 0; i < MENU_SETTINGS_OPTIONS.length; i++) {
+    for (let i = pageStart; i < pageEnd; i++) {
       const config = MENU_SETTINGS_OPTIONS[i]!
-      const container = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + i * SETTINGS_PANEL.rowHeight)
+      const rowIndex = i - pageStart
+      const container = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + rowIndex * layout.rowHeight)
       container.setDepth(502)
       container.setScrollFactor(0)
 
       const label = this.add.text(0, 0, config.label, {
-        fontSize: `${SETTINGS_PANEL.labelFontSize}px`,
+        fontSize: `${layout.fontSize}px`,
         color: MENU_OVERLAY_UI.COLORS.text,
         fontFamily: UI_FONT_FAMILY,
       }).setDepth(502)
       bindTouchText(label, () => this.selectTouchMenuItem(i))
       container.add(label)
 
-      const valueText = this.createValueText(config, gd)
+      const valueText = this.createValueText(config, gd, layout.fontSize)
       valueText.setX(SETTINGS_PANEL.valueX)
       valueText.setDepth(502)
       bindTouchText(valueText, () => this.selectTouchMenuItem(i))
       container.add(valueText)
 
-      this.menuItems.push(container)
+      this.menuItems[i] = container
+      this.settingsContent.add(container)
     }
 
-    const backContainer = this.add.container(SETTINGS_PANEL.rowX, SETTINGS_PANEL.rowStartY + MENU_SETTINGS_OPTIONS.length * SETTINGS_PANEL.rowHeight + SETTINGS_PANEL.backOffsetY)
+    const footerY = SETTINGS_PANEL.rowStartY + layout.visibleRows * layout.rowHeight
+    if (pageCount > 1) {
+      const previous = this.add.text(SETTINGS_PANEL.pagePreviousX, footerY, '‹', {
+        fontSize: `${layout.fontSize}px`, color: MENU_OVERLAY_UI.COLORS.accent, fontFamily: UI_FONT_FAMILY,
+      }).setOrigin(0.5, 0)
+      const pageText = this.add.text(SETTINGS_PANEL.pageTextX, footerY, `${pageStart + 1}–${pageEnd}/${MENU_SETTINGS_OPTIONS.length}`, {
+        fontSize: `${layout.fontSize}px`, color: MENU_OVERLAY_UI.COLORS.dim, fontFamily: UI_FONT_FAMILY,
+      }).setOrigin(0.5, 0)
+      const next = this.add.text(SETTINGS_PANEL.pageNextX, footerY, '›', {
+        fontSize: `${layout.fontSize}px`, color: MENU_OVERLAY_UI.COLORS.accent, fontFamily: UI_FONT_FAMILY,
+      }).setOrigin(0.5, 0)
+      bindTouchText(previous, () => this.movePage(-1))
+      bindTouchText(next, () => this.movePage(1))
+      this.settingsContent.add([previous, pageText, next])
+    }
+
+    const backY = footerY + (pageCount > 1 ? SETTINGS_PANEL.pageFooterHeight : 0) + SETTINGS_PANEL.backOffsetY
+    const backContainer = this.add.container(SETTINGS_PANEL.rowX, backY)
     backContainer.setDepth(502)
     backContainer.setScrollFactor(0)
-    const backText = this.add.text(0, 0, '返回', { fontSize: `${SETTINGS_PANEL.backFontSize}px`, color: MENU_OVERLAY_UI.COLORS.danger, fontFamily: UI_FONT_FAMILY })
+    const backText = this.add.text(0, 0, '返回', { fontSize: `${Math.max(SETTINGS_PANEL.backFontSize, layout.fontSize)}px`, color: MENU_OVERLAY_UI.COLORS.danger, fontFamily: UI_FONT_FAMILY })
     backText.setDepth(502)
     bindTouchText(backText, () => this.selectTouchMenuItem(MENU_SETTINGS_OPTIONS.length))
     backContainer.add(backText)
-    this.menuItems.push(backContainer)
+    this.menuItems[MENU_SETTINGS_OPTIONS.length] = backContainer
+    this.settingsContent.add(backContainer)
 
-    this.cursor = this.add.rectangle(SETTINGS_PANEL.cursorX, SETTINGS_PANEL.rowStartY + SETTINGS_PANEL.cursorOffsetY, SETTINGS_PANEL.cursorSize, SETTINGS_PANEL.cursorSize, SETTINGS_PANEL.cursorColor)
+    const cursorSize = Math.max(SETTINGS_PANEL.cursorSize, Math.round(SETTINGS_PANEL.minCursorCssSize * getCssToGameScale(this)))
+    this.cursor = this.add.rectangle(SETTINGS_PANEL.cursorX, SETTINGS_PANEL.rowStartY + layout.rowHeight / 2, cursorSize, cursorSize, SETTINGS_PANEL.cursorColor)
     this.cursor.setDepth(503)
     this.cursor.setScrollFactor(0)
+    this.settingsContent.add(this.cursor)
+    this.updateCursor()
   }
 
-  private createValueText(config: SettingOption, gd: GameData): Phaser.GameObjects.Text {
+  private createValueText(config: SettingOption, gd: GameData, fontSize = this.settingsFontSize): Phaser.GameObjects.Text {
     let displayText = ''
 
     if (config.key === 'controlMode') {
@@ -166,7 +214,7 @@ export class SettingsScene extends Phaser.Scene {
     }
 
     return this.add.text(0, 0, displayText, {
-      fontSize: `${SETTINGS_PANEL.valueFontSize}px`,
+      fontSize: `${Math.max(SETTINGS_PANEL.valueFontSize, fontSize)}px`,
       color: MENU_OVERLAY_UI.COLORS.title,
       fontFamily: UI_FONT_FAMILY,
     })
@@ -203,9 +251,32 @@ export class SettingsScene extends Phaser.Scene {
 
   private moveMenu(dir: number): void {
     AudioManager.getInstance().playSFX('cursor')
-    this.menuIndex = (this.menuIndex + dir + this.menuItems.length) % this.menuItems.length
-    const target = this.menuItems[this.menuIndex]!
-    this.cursor.setY(target.y + SETTINGS_PANEL.cursorOffsetY)
+    const itemCount = MENU_SETTINGS_OPTIONS.length + 1
+    this.menuIndex = (this.menuIndex + dir + itemCount) % itemCount
+    if (this.menuIndex < MENU_SETTINGS_OPTIONS.length) {
+      const nextPage = Math.floor(this.menuIndex / this.settingsVisibleRows)
+      if (nextPage !== this.settingsPage) {
+        this.settingsPage = nextPage
+        this.createSettingsUI()
+        return
+      }
+    }
+    this.updateCursor()
+  }
+
+  private movePage(dir: number): void {
+    const pageCount = Math.ceil(MENU_SETTINGS_OPTIONS.length / this.settingsVisibleRows)
+    if (pageCount <= 1) return
+    this.settingsPage = (this.settingsPage + dir + pageCount) % pageCount
+    this.menuIndex = Math.min(this.settingsPage * this.settingsVisibleRows, MENU_SETTINGS_OPTIONS.length - 1)
+    this.createSettingsUI()
+    AudioManager.getInstance().playSFX('cursor')
+  }
+
+  private updateCursor(): void {
+    const target = this.menuItems[this.menuIndex]
+    if (!target) return
+    this.cursor.setY(target.y + this.settingsRowHeight / 2)
   }
 
   private changeValue(dir: number): void {
@@ -281,11 +352,10 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private selectTouchMenuItem(index: number): void {
-    if (index < 0 || index >= this.menuItems.length) return
-    const cursorOffsetY = this.cursor.y - this.menuItems[this.menuIndex]!.y
+    if (index < 0 || index > MENU_SETTINGS_OPTIONS.length) return
     this.menuIndex = index
     const target = this.menuItems[this.menuIndex]!
-    this.cursor.setY(target.y + cursorOffsetY)
+    this.cursor.setY(target.y + this.settingsRowHeight / 2)
 
     const config = MENU_SETTINGS_OPTIONS[this.menuIndex]
     if (config?.type === 'slider') {
@@ -293,6 +363,11 @@ export class SettingsScene extends Phaser.Scene {
       return
     }
     this.selectMenu()
+  }
+
+  private handleResize(): void {
+    if (!this.scene.isActive()) return
+    this.createSettingsUI()
   }
 
   private goBack(): void {

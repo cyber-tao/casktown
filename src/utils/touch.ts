@@ -29,11 +29,18 @@ function updateTouchTextHitArea(text: Phaser.GameObjects.Text): void {
 }
 
 export function bindTouchText(text: Phaser.GameObjects.Text, onPress: () => void): Phaser.GameObjects.Text {
-  const updateHitArea = (): void => updateTouchTextHitArea(text)
+  const scale = text.scene.scale
+  const updateHitArea = (): void => {
+    if (!text.scene) {
+      scale.off(Phaser.Scale.Events.RESIZE, updateHitArea)
+      return
+    }
+    updateTouchTextHitArea(text)
+  }
   updateHitArea()
-  text.scene.scale.on(Phaser.Scale.Events.RESIZE, updateHitArea)
+  scale.on(Phaser.Scale.Events.RESIZE, updateHitArea)
   text.once(Phaser.GameObjects.Events.DESTROY, () => {
-    text.scene.scale.off(Phaser.Scale.Events.RESIZE, updateHitArea)
+    scale.off(Phaser.Scale.Events.RESIZE, updateHitArea)
   })
   text.input!.cursor = 'pointer'
   text.on(Phaser.Input.Events.POINTER_DOWN, onPress)
