@@ -111,6 +111,12 @@ interface BattleSubmenuLayout {
   itemStartY: number
 }
 
+interface SkillDamageOptions {
+  sourceStat?: number
+  grantTp?: boolean
+  actionLabel?: string
+}
+
 export class BattleScene extends Phaser.Scene {
   private units: BattleUnit[] = []
   private turnOrder: number[] = []
@@ -1601,8 +1607,6 @@ export class BattleScene extends Phaser.Scene {
     this.markComboUnitActed(unit1)
     this.markComboUnitActed(unit2)
 
-    AudioManager.getInstance().playSFX('magic_cast')
-
     const comboText = this.add.text(GAME_WIDTH / 2, scalePx(200), '连携！', {
       fontSize: scaleFont(32),
       color: BATTLE_LAYOUT.COMBO_TEXT_COLOR,
@@ -1622,6 +1626,7 @@ export class BattleScene extends Phaser.Scene {
     })
 
     if (skill.type === 'buff') {
+      AudioManager.getInstance().playSFX('magic_cast')
       const party = this.getLivePlayers()
       for (const u of party) {
         if (!this.applyConfiguredSkillStatuses(u, skill)) this.addStatus(u, skill.id)
@@ -1637,28 +1642,17 @@ export class BattleScene extends Phaser.Scene {
     const combinedMatk = char1.stats.matk + char2.stats.matk
 
     const targets = this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
-    const isMagic = skill.type === 'magic'
-    const stat = isMagic ? combinedMatk : combinedAtk
+    const isMagic = skill.type === 'magic' || (skill.type === 'special' && skill.element !== 'none')
+    const sourceStat = isMagic ? combinedMatk : combinedAtk
+    const actionLabel = `${unit1.name} 与 ${unit2.name} 发动 ${skill.name}`
+    const resolvedTargets = skill.target === 'all' ? targets : targets.slice(0, 1)
 
-    if (skill.target === 'all') {
-      for (const t of targets) {
-        const def = isMagic ? (t.data as EnemyData).stats.mdef : (t.data as EnemyData).stats.def
-        let damage = Math.max(1, Math.floor(skill.power * stat / 10 / Math.max(1, def * 0.5)))
-        damage = this.applyDamageModifiers(unit1, t, damage, isMagic)
-        damage = this.applyDamageVariance(damage)
-        this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}，对 ${t.name} 造成 ${damage} 点伤害！`)
-        this.dealDamage(t, damage, unit1, isMagic)
-      }
-    } else {
-      const target = targets.length > 0 ? targets[0]! : targets[0]
-      if (target) {
-        const def = isMagic ? (target.data as EnemyData).stats.mdef : (target.data as EnemyData).stats.def
-        let damage = Math.max(1, Math.floor(skill.power * stat / 10 / Math.max(1, def * 0.5)))
-        damage = this.applyDamageModifiers(unit1, target, damage, isMagic)
-        damage = this.applyDamageVariance(damage)
-        this.log(`${unit1.name} 与 ${unit2.name} 发动 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`)
-        this.dealDamage(target, damage, unit1, isMagic)
-      }
+    for (const target of resolvedTargets) {
+      this.calculateAndDealSkillDamage(unit1, target, skill, {
+        sourceStat,
+        grantTp: false,
+        actionLabel,
+      })
     }
   }
 
@@ -2040,16 +2034,23 @@ export class BattleScene extends Phaser.Scene {
     return false
   }
 
-  private calculateAndDealSkillDamage(actor: BattleUnit, target: BattleUnit, skill: SkillData): void {
+  private calculateAndDealSkillDamage(
+    actor: BattleUnit,
+    target: BattleUnit,
+    skill: SkillData,
+    options: SkillDamageOptions = {},
+  ): void {
     const isPlayer = actor.isPlayer
     const char = actor.data as CharacterData
     const enemy = actor.data as EnemyData
 
-    let stat = 0
-    if (skill.type === 'attack') {
-      stat = isPlayer ? char.stats.atk : enemy.stats.atk
-    } else {
-      stat = isPlayer ? char.stats.matk : enemy.stats.matk
+    let stat = options.sourceStat
+    if (stat === undefined) {
+      if (skill.type === 'attack') {
+        stat = isPlayer ? char.stats.atk : enemy.stats.atk
+      } else {
+        stat = isPlayer ? char.stats.matk : enemy.stats.matk
+      }
     }
 
     const isMagic = skill.type === 'magic' || (skill.type === 'special' && skill.element !== 'none')
@@ -2070,12 +2071,14 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // TP generation for player
-    if (actor.isPlayer) {
+    if (actor.isPlayer && options.grantTp !== false) {
       this.addTp(actor, BATTLE_RULES.PLAYER_SKILL_TP_GAIN)
     }
 
     if (this.tryEvadeAttack(target, actor, skill.id)) {
-      this.log(`${target.name} 闪避了 ${actor.name} 的${skill.name}！`)
+      this.log(options.actionLabel
+        ? `${target.name} 闪避了 ${options.actionLabel}！`
+        : `${target.name} 闪避了 ${actor.name} 的${skill.name}！`)
       return
     }
 
@@ -2097,7 +2100,7 @@ export class BattleScene extends Phaser.Scene {
     this.applyBreakGauge(target, breakGain)
 
     AudioManager.getInstance().playSFX(skill.type === 'magic' ? 'magic_cast' : 'attack_slash')
-    this.log(`${actor.name} 使用 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`)
+    this.log(`${options.actionLabel ?? `${actor.name} 使用 ${skill.name}`}，对 ${target.name} 造成 ${damage} 点伤害！`)
     const damageDealt = this.dealDamage(target, damage, actor, isMagic)
     if (skill.id === 'soul_drain' && damageDealt > 0 && actor.stats.hp > 0) {
       const healed = this.healUnit(actor, damageDealt * BATTLE_RULES.SOUL_DRAIN_HEAL_RATIO)
