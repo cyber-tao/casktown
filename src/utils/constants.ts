@@ -565,9 +565,17 @@ export const TRUE_ROUTE_MIN_MERCY = 5
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 5
 export const REINCARNATION_TIME_LIMIT_MS = 60_000
 export const A_RESCUED_FLAG = 'a_rescued'
+export const STORY_BATTLE_FLAGS = {
+  NEXT_ATTACK_UP: 'story_next_battle_attack_up',
+} as const
+export const SIDE_SUN_FLAGS = {
+  COMPLETED: 'side_sun_done',
+  RESOLVED: 'side_sun_resolved',
+  DECLINED: 'side_sun_declined',
+} as const
 export const STORY_SKILL_UNLOCK_FLAGS = {
   YUEXIAHUIXUAN: 'yuexiahuixuan_unlocked',
-  RENDEQIYUAN: 'side_sun_done',
+  RENDEQIYUAN: SIDE_SUN_FLAGS.COMPLETED,
 } as const
 export const REINCARNATION_CORRECT_ANSWER_FLAGS = [
   'reincarnation_answer_1_correct',
@@ -1191,7 +1199,8 @@ export const REDESIGNED_MAP_LAYOUTS = {
       SIDE_HUIHUI_START: { x: 26, y: 17, width: 1, height: 1 }, SIDE_HUIHUI_AFTER: { x: 26, y: 17, width: 1, height: 1 },
       SIDE_A_START: { x: 20, y: 17, width: 1, height: 1 }, SIDE_A_AFTER: { x: 20, y: 17, width: 1, height: 1 },
       SIDE_CONGCONG_START: { x: 25, y: 22, width: 1, height: 1 }, SIDE_CONGCONG_AFTER: { x: 25, y: 22, width: 1, height: 1 },
-      SIDE_SUN_START: { x: 30, y: 24, width: 1, height: 1 }, SIDE_SUN_AFTER: { x: 30, y: 24, width: 1, height: 1 },
+      SIDE_SUN_START: { x: 30, y: 24, width: 1, height: 1 }, SIDE_SUN_DECLINED: { x: 30, y: 24, width: 1, height: 1 },
+      SIDE_SUN_AFTER: { x: 30, y: 24, width: 1, height: 1 },
     },
     transfers: [
       { id: 'EXIT_EAST_2', x: 43, y: 14, width: 1, height: 5, targetMap: 'MAP_010', targetX: 2, targetY: 16, direction: DIRECTION.RIGHT },

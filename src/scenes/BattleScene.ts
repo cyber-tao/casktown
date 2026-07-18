@@ -40,6 +40,7 @@ import {
   RUNTIME_UI_ASSET_KEYS,
   scaleFont,
   scalePx,
+  STORY_BATTLE_FLAGS,
   TRUE_ENDING_SUPPORT_CHARACTER_ID,
   TRUE_ENDING_SUPPORT_ENCOUNTER_IDS,
   TRUE_ENDING_SUPPORT_FLAG,
@@ -222,6 +223,7 @@ export class BattleScene extends Phaser.Scene {
     this.playEncounterBGM(isBoss)
 
     this.createUI()
+    this.applyStoryBattleBonuses()
     this.setupInput()
 
     // Calculate turn order
@@ -353,6 +355,18 @@ export class BattleScene extends Phaser.Scene {
       this.enemyData.push(ed)
       this.createUnitUI(unit, x, y - this.getBattleUnitUiOffset(spriteSize))
     }
+  }
+
+  private applyStoryBattleBonuses(): void {
+    const gd = GameData.getInstance()
+    if (gd.getFlag(STORY_BATTLE_FLAGS.NEXT_ATTACK_UP) !== true) return
+
+    const target = this.units.find(unit => unit.isPlayer && unit.id === 'T')
+    if (!target) return
+
+    gd.setFlag(STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, false)
+    this.addStatus(target, BATTLE_STATUS.ATTACK_UP, undefined, false)
+    this.log('T 的决意化为力量，本场攻击提升！')
   }
 
   private getBattleUnitSpriteSize(isBoss: boolean): number {

@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -676,11 +676,15 @@ function buildMap002(): MapData {
     createStaticTriggerEvent('SIDE_SUN_START', 'sun_front_idle_01', 'DIA_SIDE_SUN_01', [
       { flag: 'facility_quest_board', value: true },
       { flag: 'sun_joined', value: true },
-      { flag: 'side_sun_done', value: false },
+      { flag: SIDE_SUN_FLAGS.RESOLVED, value: false },
+    ]),
+    createStaticTriggerEvent('SIDE_SUN_DECLINED', 'sun_front_idle_01', 'DIA_SIDE_SUN_01_END', [
+      { flag: 'facility_quest_board', value: true },
+      { flag: SIDE_SUN_FLAGS.DECLINED, value: true },
     ]),
     createStaticTriggerEvent('SIDE_SUN_AFTER', 'sun_front_idle_01', 'DIA_SIDE_SUN_01_AFTER', [
       { flag: 'facility_quest_board', value: true },
-      { flag: 'side_sun_done', value: true },
+      { flag: SIDE_SUN_FLAGS.COMPLETED, value: true },
     ]),
     {
       id: POST_NORMAL_RECOLLECTION.EVENT_ID, x: 16, y: 11, width: 1, height: 1,

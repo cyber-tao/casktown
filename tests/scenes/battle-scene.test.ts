@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { GameData } from '../../src/core/GameData.ts'
 import { getBattleResultFallbackScene } from '../../src/utils/battleResult.ts'
+import { BATTLE_STATUS, STORY_BATTLE_FLAGS } from '../../src/utils/constants.ts'
 
 let BattleSceneClass: typeof import('../../src/scenes/BattleScene.ts').BattleScene
 let originalWindow: unknown
@@ -41,6 +43,14 @@ type TargetedSkillHarness = {
 }
 
 type ExecuteAction = (this: TargetedSkillHarness) => void
+
+type StoryBattleBonusHarness = {
+  units: Array<{ id: string; name: string; isPlayer: boolean; status: string[] }>
+  addStatus: (unit: { status: string[] }, status: string) => boolean
+  log: (message: string) => void
+}
+
+type ApplyStoryBattleBonuses = (this: StoryBattleBonusHarness) => void
 
 beforeAll(async () => {
   const runtime = globalThis as unknown as Record<string, unknown>
@@ -102,6 +112,50 @@ describe('BattleScene result fallback', () => {
 
   test('opens game over when a standalone battle is lost', () => {
     expect(getBattleResultFallbackScene(false, false)).toBe('GameOverScene')
+  })
+})
+
+describe('BattleScene authored battle bonuses', () => {
+  test('consumes the next-battle attack bonus only after applying it to T', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+    gd.setFlag(STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, true)
+    const logs: string[] = []
+    const target = { id: 'T', name: 'T', isPlayer: true, status: [] as string[] }
+    const applyBonus = BattleSceneClass.prototype['applyStoryBattleBonuses'] as ApplyStoryBattleBonuses
+    const harness = Object.assign(Object.create(BattleSceneClass.prototype), {
+      units: [target],
+      addStatus: (unit: { status: string[] }, status: string) => {
+        unit.status.push(status)
+        return true
+      },
+      log: (message: string) => logs.push(message),
+    }) as StoryBattleBonusHarness
+
+    applyBonus.call(harness)
+
+    expect(target.status).toEqual([BATTLE_STATUS.ATTACK_UP])
+    expect(gd.getFlag(STORY_BATTLE_FLAGS.NEXT_ATTACK_UP)).toBe(false)
+    expect(logs).toEqual(['T 的决意化为力量，本场攻击提升！'])
+
+    applyBonus.call(harness)
+    expect(target.status).toEqual([BATTLE_STATUS.ATTACK_UP])
+  })
+
+  test('keeps the bonus pending if T is not present', () => {
+    const gd = GameData.getInstance()
+    gd.reset()
+    gd.setFlag(STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, true)
+    const applyBonus = BattleSceneClass.prototype['applyStoryBattleBonuses'] as ApplyStoryBattleBonuses
+    const harness = Object.assign(Object.create(BattleSceneClass.prototype), {
+      units: [],
+      addStatus: () => true,
+      log: () => {},
+    }) as StoryBattleBonusHarness
+
+    applyBonus.call(harness)
+
+    expect(gd.getFlag(STORY_BATTLE_FLAGS.NEXT_ATTACK_UP)).toBe(true)
   })
 })
 

@@ -22,6 +22,7 @@ import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   REINCARNATION_CORRECT_ANSWER_FLAGS,
+  SIDE_SUN_FLAGS,
   START_MAP_ID,
   START_INVENTORY_ITEMS,
   START_PARTY,
@@ -374,6 +375,9 @@ export class GameData {
     }
     if (this.flags.game_cleared) {
       this.flags.defeated_wuxiang = true
+    }
+    if (this.flags[SIDE_SUN_FLAGS.COMPLETED] === true) {
+      this.flags[SIDE_SUN_FLAGS.RESOLVED] = true
     }
     this.syncCodexUnlocks()
     this.syncRebuildMilestoneLevel()

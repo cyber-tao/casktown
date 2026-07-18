@@ -13,7 +13,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, START_MAP_ID, START_PLAYER_POSITION, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, SIDE_SUN_FLAGS, START_MAP_ID, START_PLAYER_POSITION, STORY_BATTLE_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -728,6 +728,26 @@ describe('game content data', () => {
       type: 'setFlag', flag: STORY_SKILL_UNLOCK_FLAGS.YUEXIAHUIXUAN, value: true,
     })
     expect(ENCOUNTERS.BTL_SIDE_SUN_01?.rewards).toContainEqual({ flag: STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, value: true })
+  })
+
+  test('optional combat choices and the sun side story have persistent outcomes', () => {
+    expect(DIALOGUES.DIA_103_REVENGE?.onComplete).toContainEqual({
+      type: 'setFlag', flag: STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, value: true,
+    })
+    const templeAttackChoice = DIALOGUES.DIA_304_TEMPLE?.lines
+      .flatMap(line => line.choices ?? [])
+      .find(choice => choice.text === '我会打倒她。')
+    expect(templeAttackChoice?.actions).toContainEqual({
+      type: 'setFlag', flag: STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, value: true,
+    })
+
+    expect(DIALOGUES.DIA_SIDE_SUN_01_END?.onComplete).toEqual([
+      { type: 'setFlag', flag: SIDE_SUN_FLAGS.RESOLVED, value: true },
+      { type: 'setFlag', flag: SIDE_SUN_FLAGS.DECLINED, value: true },
+    ])
+    expectCondition(findEvent('MAP_002', 'SIDE_SUN_START'), SIDE_SUN_FLAGS.RESOLVED, false)
+    expectCondition(findEvent('MAP_002', 'SIDE_SUN_DECLINED'), SIDE_SUN_FLAGS.DECLINED, true)
+    expect(ENCOUNTERS.BTL_SIDE_SUN_01?.rewards).toContainEqual({ flag: SIDE_SUN_FLAGS.RESOLVED, value: true })
   })
 
   test('companion skill data exposes its authored battle mechanics', () => {

@@ -14,6 +14,7 @@ import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   REINCARNATION_CORRECT_ANSWER_FLAGS,
+  SIDE_SUN_FLAGS,
   PARTY_RULES,
   PARTNER_CALL_AVAILABLE_FLAG,
   PARTNER_CALL_MIN_TRUST,
@@ -147,6 +148,17 @@ describe('GameData', () => {
     expect(gd.characters.get('T')!.stats.atk).toBe(savedHeroAttack)
     const normalized = gd.serialize() as { baseStats: Record<string, CharacterStats> }
     expect(normalized.baseStats.T!.atk).toBe(INITIAL_CHARACTERS.T!.stats.atk)
+  })
+
+  test('deserialize marks completed legacy sun stories as resolved', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as { flags: Record<string, unknown> }
+    snapshot.flags[SIDE_SUN_FLAGS.COMPLETED] = true
+    delete snapshot.flags[SIDE_SUN_FLAGS.RESOLVED]
+
+    gd.deserialize(snapshot)
+
+    expect(gd.getFlag(SIDE_SUN_FLAGS.RESOLVED)).toBe(true)
   })
 
   test('deserialize fills partial base stats before later equipment changes', () => {

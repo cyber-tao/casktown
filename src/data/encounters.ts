@@ -1,4 +1,4 @@
-import { BATTLE_BACKGROUND_KEYS } from '../utils/constants'
+import { BATTLE_BACKGROUND_KEYS, SIDE_SUN_FLAGS } from '../utils/constants'
 import type { EncounterData } from './types'
 
 export const ENCOUNTERS: Record<string, EncounterData> = {
@@ -61,5 +61,11 @@ export const ENCOUNTERS: Record<string, EncounterData> = {
   BTL_SIDE_HH_01: { id: 'BTL_SIDE_HH_01', enemies: ['miwang_ying', 'miwang_ying', 'miwang_ying'], bgm: 'battle_normal', rewards: [{ flag: 'side_huihui_done', value: true }, { itemId: 'pink_chime', itemQty: 1 }] },
   BTL_SIDE_A_01: { id: 'BTL_SIDE_A_01', enemies: ['barrel_fake'], bgm: 'battle_normal', rewards: [{ flag: 'side_a_done', value: true }] },
   BTL_SIDE_CC_01: { id: 'BTL_SIDE_CC_01', enemies: ['feng_defender'], bgm: 'battle_normal', rewards: [{ flag: 'side_congcong_done', value: true }] },
-  BTL_SIDE_SUN_01: { id: 'BTL_SIDE_SUN_01', enemies: ['miwang_ying'], bgm: 'battle_normal', rewards: [{ flag: 'side_sun_done', value: true }] },
+  BTL_SIDE_SUN_01: {
+    id: 'BTL_SIDE_SUN_01', enemies: ['miwang_ying'], bgm: 'battle_normal',
+    rewards: [
+      { flag: SIDE_SUN_FLAGS.COMPLETED, value: true },
+      { flag: SIDE_SUN_FLAGS.RESOLVED, value: true },
+    ],
+  },
 }

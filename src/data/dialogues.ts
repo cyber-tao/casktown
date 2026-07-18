@@ -1,5 +1,5 @@
 import type { DialogueData } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID, TRUE_ROUTE_MIN_MERCY, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, SIDE_SUN_FLAGS, STORY_BATTLE_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_SUPPORT_CHARACTER_ID, TRUE_ROUTE_MIN_MERCY, TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS } from '../utils/constants'
 
 const MAYOR_STORY_COMPLETION_ACTIONS: NonNullable<DialogueData['onComplete']> = [
   { type: 'setFlag', flag: STORY_PROGRESS_FLAGS.MET_MAYOR, value: true },
@@ -491,6 +491,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
       { speaker: '系统', text: 'T获得临时攻击加成。' },
       { speaker: '慧慧', text: '白虎……一路走好。' },
     ],
+    onComplete: [{ type: 'setFlag', flag: STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, value: true }],
   },
   DIA_103_SECRET: {
     id: 'DIA_103_SECRET',
@@ -971,7 +972,7 @@ export const DIALOGUES: Record<string, DialogueData> = {
         text: '……',
         choices: [
           { text: '我想救她。', actions: [{ type: 'setFlag', flag: 'mercy_score', value: 1 }, { type: 'setFlag', flag: 'trust_sun', value: 1 }] },
-          { text: '我会打倒她。', actions: [{ type: 'setFlag', flag: 'atk_bonus', value: true }] },
+          { text: '我会打倒她。', actions: [{ type: 'setFlag', flag: STORY_BATTLE_FLAGS.NEXT_ATTACK_UP, value: true }] },
           { text: '我还不知道。', actions: [{ type: 'setFlag', flag: 'xiaoai_memory_fragments', value: 1 }] },
         ],
       },
@@ -1957,6 +1958,10 @@ export const DIALOGUES: Record<string, DialogueData> = {
     lines: [
       { speaker: 'sun', text: '……也是。' },
       { speaker: '旁白', text: 'sun转身离去。这次对话没有结论。' },
+    ],
+    onComplete: [
+      { type: 'setFlag', flag: SIDE_SUN_FLAGS.RESOLVED, value: true },
+      { type: 'setFlag', flag: SIDE_SUN_FLAGS.DECLINED, value: true },
     ],
   },
   DIA_SIDE_SUN_01_AFTER: {
