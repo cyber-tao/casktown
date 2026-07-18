@@ -130,6 +130,10 @@ describe('data type integrity', () => {
       expect(quest.id).toBe(id)
       expect(quest.name).toBeTruthy()
       expect(quest.objectives.length).toBeGreaterThan(0)
+      if (quest.objectiveFlags) {
+        expect(quest.objectiveFlags.length).toBe(quest.objectives.length)
+        expect(new Set(quest.objectiveFlags).size).toBe(quest.objectiveFlags.length)
+      }
     }
   })
 

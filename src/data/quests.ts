@@ -70,6 +70,7 @@ export const QUESTS: Record<string, QuestDef> = {
     name: '四封印',
     description: '击败魑魅魍魉，释放祀神四体。',
     objectives: ['击败魑（青龙潭）', '击败魅（白虎穴）', '击败魍（朱雀林）', '击败魉（玄武殿）'],
+    objectiveFlags: ['seal_qinglong_released', 'seal_baihu_released', 'seal_zhuque_released', 'seal_xuanwu_released'],
     rewards: [{ exp: 500 }],
   },
   QST_011: {

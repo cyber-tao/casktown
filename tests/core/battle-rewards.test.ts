@@ -6,7 +6,9 @@ import { QuestSystem } from '../../src/core/QuestSystem.ts'
 import { DIALOGUES } from '../../src/data/dialogues.ts'
 import { ENCOUNTERS } from '../../src/data/encounters.ts'
 import { ENEMIES } from '../../src/data/enemies.ts'
+import { QUESTS } from '../../src/data/quests.ts'
 import { INITIAL_GOLD, ROAMING_ENCOUNTER_RESPAWN } from '../../src/utils/constants.ts'
+import { resolveQuestProgressDisplay } from '../../src/utils/questProgress.ts'
 
 const SEAL_BATTLES = [
   { encounterId: 'BTL_CHI', afterDialogueId: 'DIA_411_CHI_AFTER' },
@@ -102,8 +104,13 @@ describe('BattleRewards', () => {
         applyDialogueCompletionActions(afterDialogueId)
 
         const allGuardiansDefeated = index === encounterOrder.length - 1
+        const state = QuestSystem.getInstance().getQuestState('QST_010')!
+        const display = resolveQuestProgressDisplay(QUESTS.QST_010!, state, flag => gd.getFlag(flag))
+        const nextObjectiveIndex = QUESTS.QST_010!.objectiveFlags!.findIndex(flag => gd.getFlag(flag) !== true)
         expect(gd.getFlag('released_four_seals')).toBe(allGuardiansDefeated)
         expect(QuestSystem.getInstance().isQuestCompleted('QST_010')).toBe(allGuardiansDefeated)
+        expect(display.progress).toBe(index + 1)
+        expect(display.objective).toBe(QUESTS.QST_010!.objectives[nextObjectiveIndex < 0 ? 3 : nextObjectiveIndex])
       }
 
       expect(gd.getFlag('seal_qinglong_released')).toBe(true)

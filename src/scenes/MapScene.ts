@@ -66,6 +66,7 @@ import { showLoadingScreen } from '../utils/loadingScreen'
 import { cssToGamePx } from '../utils/touch'
 import { getEscapeRetreatTiles, isTileInsideSpriteBounds } from '../utils/fieldGeometry'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
+import { resolveQuestProgressDisplay } from '../utils/questProgress'
 
 type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
 
@@ -1463,7 +1464,9 @@ export class MapScene extends Phaser.Scene {
 
     const state = states[MAP_HUD.QUEST_FALLBACK_OBJECTIVE_INDEX]!
     const quest = GAME_CONFIG_DATABASE.getTable('quests')[state.id]
-    const objective = quest?.objectives[state.progress] ?? quest?.objectives[MAP_HUD.QUEST_FALLBACK_OBJECTIVE_INDEX] ?? quest?.description ?? state.id
+    const display = quest
+      ? resolveQuestProgressDisplay(quest, state, flag => GameData.getInstance().getFlag(flag))
+      : { objective: state.id, progress: state.progress, maxProgress: state.maxProgress }
 
     const name = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_NAME_Y, quest?.name ?? state.id, {
       fontSize: `${nameFontSize}px`,
@@ -1474,7 +1477,7 @@ export class MapScene extends Phaser.Scene {
     })
     this.addQuestHudObject(name)
 
-    const body = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_OBJECTIVE_Y, objective, {
+    const body = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_OBJECTIVE_Y, display.objective, {
       fontSize: `${bodyFontSize}px`,
       color: MAP_HUD.QUEST_TEXT_COLOR,
       fontFamily: UI_FONT_FAMILY,
@@ -1484,7 +1487,7 @@ export class MapScene extends Phaser.Scene {
     })
     this.addQuestHudObject(body)
 
-    const progress = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_PROGRESS_Y, `${MAP_HUD.QUEST_PROGRESS_PREFIX} ${state.progress}/${state.maxProgress}`, {
+    const progress = this.add.text(MAP_HUD.QUEST_X + MAP_HUD.QUEST_PADDING_X, MAP_HUD.QUEST_Y + MAP_HUD.QUEST_PROGRESS_Y, `${MAP_HUD.QUEST_PROGRESS_PREFIX} ${display.progress}/${display.maxProgress}`, {
       fontSize: `${progressFontSize}px`,
       color: MAP_HUD.QUEST_PROGRESS_COLOR,
       fontFamily: UI_FONT_FAMILY,

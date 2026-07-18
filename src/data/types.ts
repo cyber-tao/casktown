@@ -188,6 +188,7 @@ export interface QuestDef {
   name: string
   description: string
   objectives: string[]
+  objectiveFlags?: string[]
   rewards?: { exp?: number; itemId?: string; itemQty?: number; flag?: string; value?: unknown; rebuild?: number }[]
 }
 

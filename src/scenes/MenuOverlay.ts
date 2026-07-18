@@ -49,6 +49,7 @@ import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../ut
 import { completeLoadedSaveTransition, type SaveLoadTransitionState } from '../utils/saveTransition'
 import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
+import { resolveQuestProgressDisplay } from '../utils/questProgress'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
 
@@ -584,8 +585,9 @@ export class MenuOverlay extends Phaser.Scene {
       const def = GAME_CONFIG_DATABASE.getTable('quests')[q.id]
       this.addText(0, MENU_OVERLAY_UI.LIST_Y, def?.name ?? q.id, MENU_OVERLAY_UI.TITLE_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.PAGE_LEFT_WIDTH)
       this.addText(0, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, def?.description ?? '', MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.PAGE_LEFT_WIDTH)
-      if (def && q.progress < def.objectives.length) {
-        this.addText(0, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 5, def.objectives[q.progress]!, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.PAGE_LEFT_WIDTH)
+      if (def) {
+        const display = resolveQuestProgressDisplay(def, q, flag => gd.getFlag(flag))
+        this.addText(0, MENU_OVERLAY_UI.LIST_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 5, `${display.objective}（${display.progress}/${display.maxProgress}）`, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.PAGE_LEFT_WIDTH)
       }
     } else {
       this.addText(0, MENU_OVERLAY_UI.LIST_Y, '烟容丝淡，凌寒旧时雨。', MENU_OVERLAY_UI.TITLE_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.PAGE_LEFT_WIDTH)
