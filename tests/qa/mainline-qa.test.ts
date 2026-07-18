@@ -22,6 +22,7 @@ import {
   ROAMING_ENCOUNTER_RESPAWN,
   START_MAP_ID,
   START_PLAYER_POSITION,
+  TRUE_ENDING_EPILOGUE,
 } from '../../src/utils/constants.ts'
 
 function runMainlineQaSilently(): ReturnType<typeof runMainlineQa> {
@@ -162,6 +163,17 @@ describe('MainlineQaRunner', () => {
     expect(rescueIndex).toBeGreaterThanOrEqual(0)
     expect(sideStartIndex).toBeGreaterThan(rescueIndex)
     expect(sideAfterIndex).toBeGreaterThan(sideStartIndex)
+  })
+
+  test('continues from Wuxiang into the town epilogue and postgame conversations', () => {
+    const finalBattleIndex = MAINLINE_QA_ROUTE.findIndex(step => step.kind === 'event' && step.eventId === 'EVT_WUXIANG')
+    const endingIndex = MAINLINE_QA_ROUTE.findIndex(step => step.kind === 'event' && step.eventId === TRUE_ENDING_EPILOGUE.EVENT_ID)
+    const postgameIndexes = Object.values(TRUE_ENDING_EPILOGUE.POSTGAME).map(postgame =>
+      MAINLINE_QA_ROUTE.findIndex(step => step.kind === 'event' && step.eventId === postgame.EVENT_ID),
+    )
+
+    expect(endingIndex).toBeGreaterThan(finalBattleIndex)
+    expect(postgameIndexes.every(index => index > endingIndex)).toBe(true)
   })
 
   test('keeps browser QA summary away from mobile map titles and touch controls', () => {

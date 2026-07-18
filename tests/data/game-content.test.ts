@@ -13,7 +13,7 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, SIDE_SUN_FLAGS, START_MAP_ID, START_PLAYER_POSITION, STORY_BATTLE_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, SIDE_SUN_FLAGS, START_MAP_ID, START_PLAYER_POSITION, STORY_BATTLE_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_EPILOGUE, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -809,6 +809,38 @@ describe('game content data', () => {
     expect(ENCOUNTERS['BTL_705']?.questId).toBe('QST_013')
     expect(ENCOUNTERS['BTL_705']?.questProgress).toBe('advance')
     expect(ENCOUNTERS['BTL_720']?.questProgress).toBe('complete')
+  })
+
+  test('the true ending returns to rebuilt town and exposes every authored postgame scene', () => {
+    const wuxiang = findEvent('MAP_070', 'EVT_WUXIANG')
+    const ending = findEvent(REBUILT_TOWN_MAP_ID, TRUE_ENDING_EPILOGUE.EVENT_ID)
+
+    expectCondition(wuxiang, 'game_cleared', false)
+    expect(wuxiang.actions).not.toContainEqual({ type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.DIALOGUE_ID })
+    expect(wuxiang.actions.at(-1)).toEqual({
+      type: 'transfer',
+      targetMap: REBUILT_TOWN_MAP_ID,
+      targetX: TRUE_ENDING_EPILOGUE.TOWN_SPAWN.x,
+      targetY: TRUE_ENDING_EPILOGUE.TOWN_SPAWN.y,
+    })
+    expect(ending.trigger).toBe('autorun')
+    expectCondition(ending, 'game_cleared', true)
+    expectCondition(ending, TRUE_ENDING_EPILOGUE.SEEN_FLAG, false)
+    expect(ending.actions).toEqual([
+      { type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.DIALOGUE_ID },
+      { type: 'setFlag', flag: TRUE_ENDING_EPILOGUE.SEEN_FLAG, value: true },
+    ])
+
+    for (const postgame of Object.values(TRUE_ENDING_EPILOGUE.POSTGAME)) {
+      const event = findEvent(REBUILT_TOWN_MAP_ID, postgame.EVENT_ID)
+      expect(event.type).toBe('npc')
+      expectCondition(event, 'game_cleared', true)
+      expect(event.actions).toEqual([{ type: 'dialogue', dialogueId: postgame.DIALOGUE_ID }])
+      expect(DIALOGUES[postgame.DIALOGUE_ID]).toBeDefined()
+    }
+
+    expectCondition(findEvent(REBUILT_TOWN_MAP_ID, 'NPC_PINE'), 'game_cleared', false)
+    expectCondition(findEvent(REBUILT_TOWN_MAP_ID, 'NPC_MAYOR_2'), 'game_cleared', false)
   })
 
   test('critical story npcs switch to follow-up dialogue after completion flags', () => {

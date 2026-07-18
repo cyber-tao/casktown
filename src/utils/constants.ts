@@ -546,6 +546,19 @@ export const START_PARTY = ['T'] as const
 export const TRUE_ENDING_SUPPORT_CHARACTER_ID = 'xiaoai'
 export const TRUE_ENDING_SUPPORT_FLAG = 'xiaoai_purified'
 export const TRUE_ENDING_SUPPORT_ENCOUNTER_IDS = ['BTL_720', 'BTL_WUXIANG'] as const
+export const TRUE_ENDING_EPILOGUE = {
+  EVENT_ID: 'EVT_TRUE_ENDING_EPILOGUE',
+  DIALOGUE_ID: 'DIA_730_TRUE_END',
+  SEEN_FLAG: 'true_ending_seen',
+  TOWN_SPAWN: { x: 22, y: 14 },
+  POSTGAME: {
+    PINE: { EVENT_ID: 'NPC_REBUILD5_PINE', DIALOGUE_ID: 'DIA_NPC_REBUILD5_PINE' },
+    MAYOR: { EVENT_ID: 'NPC_REBUILD5_MAYOR', DIALOGUE_ID: 'DIA_NPC_REBUILD5_MAYOR' },
+    CONGCONG_HUIHUI: { EVENT_ID: 'NPC_REBUILD5_CONGCONG_HH', DIALOGUE_ID: 'DIA_NPC_REBUILD5_CONGCONG_HH' },
+    A: { EVENT_ID: 'NPC_REBUILD5_A', DIALOGUE_ID: 'DIA_NPC_REBUILD5_A' },
+    SUN: { EVENT_ID: 'NPC_REBUILD5_SUN', DIALOGUE_ID: 'DIA_NPC_REBUILD5_SUN' },
+  },
+} as const
 export const POST_NORMAL_RECOLLECTION = {
   QUEST_ID: 'QST_015',
   EVENT_ID: 'EVT_POST_NORMAL_RECOLLECTION',
@@ -783,6 +796,12 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: 'MAP_070', eventId: 'EVT_HEART_SHADOW_CONGCONG' },
   { kind: 'event', mapId: 'MAP_070', eventId: 'EVT_HEART_SHADOW_SUN' },
   { kind: 'event', mapId: 'MAP_070', eventId: 'EVT_WUXIANG' },
+  { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.EVENT_ID },
+  { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.PINE.EVENT_ID },
+  { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.MAYOR.EVENT_ID },
+  { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.CONGCONG_HUIHUI.EVENT_ID },
+  { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.A.EVENT_ID },
+  { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.SUN.EVENT_ID },
 ] as const
 export const MAINLINE_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number[]> = {
   DIA_001_START: [0],
@@ -803,6 +822,7 @@ export const MAINLINE_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number
 } as const
 export const MAINLINE_QA_REQUIRED_FINAL_FLAGS = [
   'game_cleared',
+  TRUE_ENDING_EPILOGUE.SEEN_FLAG,
   'true_route_unlocked',
   'true_route_reincarnation',
   'xiaoai_purified',
@@ -847,7 +867,7 @@ export const REBUILD_LEVEL_LIMITS = {
   MIN: 0,
   MAX: 5,
 } as const
-export const MAINLINE_QA_REQUIRED_FINAL_MAP = 'MAP_070'
+export const MAINLINE_QA_REQUIRED_FINAL_MAP = REBUILT_TOWN_MAP_ID
 export const MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL = REBUILD_LEVEL_LIMITS.MAX
 export const MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS = true
 export const REBUILD_MENU = {
@@ -1203,6 +1223,12 @@ export const REDESIGNED_MAP_LAYOUTS = {
       SIDE_CONGCONG_START: { x: 25, y: 22, width: 1, height: 1 }, SIDE_CONGCONG_AFTER: { x: 25, y: 22, width: 1, height: 1 },
       SIDE_SUN_START: { x: 30, y: 24, width: 1, height: 1 }, SIDE_SUN_DECLINED: { x: 30, y: 24, width: 1, height: 1 },
       SIDE_SUN_AFTER: { x: 30, y: 24, width: 1, height: 1 },
+      [TRUE_ENDING_EPILOGUE.EVENT_ID]: { x: 19, y: 13, width: 7, height: 6 },
+      [TRUE_ENDING_EPILOGUE.POSTGAME.PINE.EVENT_ID]: { x: 17, y: 23, width: 1, height: 1 },
+      [TRUE_ENDING_EPILOGUE.POSTGAME.MAYOR.EVENT_ID]: { x: 25, y: 10, width: 1, height: 1 },
+      [TRUE_ENDING_EPILOGUE.POSTGAME.CONGCONG_HUIHUI.EVENT_ID]: { x: 26, y: 17, width: 1, height: 1 },
+      [TRUE_ENDING_EPILOGUE.POSTGAME.A.EVENT_ID]: { x: 20, y: 17, width: 1, height: 1 },
+      [TRUE_ENDING_EPILOGUE.POSTGAME.SUN.EVENT_ID]: { x: 30, y: 24, width: 1, height: 1 },
     },
     transfers: [
       { id: 'EXIT_EAST_2', x: 43, y: 14, width: 1, height: 5, targetMap: 'MAP_010', targetX: 2, targetY: 16, direction: DIRECTION.RIGHT },

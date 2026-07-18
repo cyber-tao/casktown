@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_EPILOGUE, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -578,13 +578,13 @@ function buildMap002(): MapData {
     {
       id: 'NPC_PINE', x: 5, y: 8, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: 2,
-      conditions: [{ flag: 'facility_herb_shop', value: true }],
+      conditions: [{ flag: 'facility_herb_shop', value: true }, { flag: 'game_cleared', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_202_PINE' }],
     },
     {
       id: 'NPC_MAYOR_2', x: 16, y: 5, width: 1, height: 1,
       type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: 2,
-      conditions: [{ flag: 'facility_mayor', value: true }],
+      conditions: [{ flag: 'facility_mayor', value: true }, { flag: 'game_cleared', value: false }],
       actions: [{ type: 'dialogue', dialogueId: 'DIA_203_MAYOR' }],
     },
     {
@@ -647,42 +647,51 @@ function buildMap002(): MapData {
       actions: [{ type: 'dialogue', dialogueId: BLUE_MINT_SIDE_QUEST.DIALOGUES.DONE }],
     },
     createStaticTriggerEvent('SIDE_HUIHUI_START', 'huihui_front_idle_01', 'DIA_SIDE_HH_01', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: 'huihui_joined', value: true },
       { flag: 'side_huihui_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_HUIHUI_AFTER', 'huihui_front_idle_01', 'DIA_SIDE_HH_01_AFTER', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: 'side_huihui_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_A_START', 'abo_front_idle_01', 'DIA_SIDE_A_01', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: A_RESCUED_FLAG, value: true },
       { flag: 'side_a_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_A_AFTER', 'abo_front_idle_01', 'DIA_SIDE_A_01_AFTER', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: 'side_a_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_CONGCONG_START', 'congcong_front_idle_01', 'DIA_SIDE_CC_01', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: 'congcong_joined', value: true },
       { flag: 'side_congcong_done', value: false },
     ]),
     createStaticTriggerEvent('SIDE_CONGCONG_AFTER', 'congcong_front_idle_01', 'DIA_SIDE_CC_01_AFTER', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: 'side_congcong_done', value: true },
     ]),
     createStaticTriggerEvent('SIDE_SUN_START', 'sun_front_idle_01', 'DIA_SIDE_SUN_01', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: 'sun_joined', value: true },
       { flag: SIDE_SUN_FLAGS.RESOLVED, value: false },
     ]),
     createStaticTriggerEvent('SIDE_SUN_DECLINED', 'sun_front_idle_01', 'DIA_SIDE_SUN_01_END', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: SIDE_SUN_FLAGS.DECLINED, value: true },
     ]),
     createStaticTriggerEvent('SIDE_SUN_AFTER', 'sun_front_idle_01', 'DIA_SIDE_SUN_01_AFTER', [
+      { flag: 'game_cleared', value: false },
       { flag: 'facility_quest_board', value: true },
       { flag: SIDE_SUN_FLAGS.COMPLETED, value: true },
     ]),
@@ -720,6 +729,48 @@ function buildMap002(): MapData {
       type: 'trigger', trigger: 'action',
       conditions: [{ flag: 'rebuild_ceremony_done', value: true }],
       actions: [{ type: 'rebuildMenu' }],
+    },
+    {
+      id: TRUE_ENDING_EPILOGUE.EVENT_ID, x: 14, y: 9, width: 5, height: 5,
+      type: 'trigger', trigger: 'autorun',
+      conditions: [
+        { flag: 'game_cleared', value: true },
+        { flag: TRUE_ENDING_EPILOGUE.SEEN_FLAG, value: false },
+      ],
+      actions: [
+        { type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.DIALOGUE_ID },
+        { type: 'setFlag', flag: TRUE_ENDING_EPILOGUE.SEEN_FLAG, value: true },
+      ],
+    },
+    {
+      id: TRUE_ENDING_EPILOGUE.POSTGAME.PINE.EVENT_ID, x: 5, y: 8, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'npc_uncle_boluo', direction: DIRECTION.DOWN,
+      conditions: [{ flag: 'game_cleared', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.POSTGAME.PINE.DIALOGUE_ID }],
+    },
+    {
+      id: TRUE_ENDING_EPILOGUE.POSTGAME.MAYOR.EVENT_ID, x: 16, y: 5, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'npc_mayor', direction: DIRECTION.DOWN,
+      conditions: [{ flag: 'game_cleared', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.POSTGAME.MAYOR.DIALOGUE_ID }],
+    },
+    {
+      id: TRUE_ENDING_EPILOGUE.POSTGAME.CONGCONG_HUIHUI.EVENT_ID, x: 20, y: 12, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'congcong_front_idle_01', direction: DIRECTION.DOWN,
+      conditions: [{ flag: 'game_cleared', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.POSTGAME.CONGCONG_HUIHUI.DIALOGUE_ID }],
+    },
+    {
+      id: TRUE_ENDING_EPILOGUE.POSTGAME.A.EVENT_ID, x: 12, y: 12, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'abo_front_idle_01', direction: DIRECTION.DOWN,
+      conditions: [{ flag: 'game_cleared', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.POSTGAME.A.DIALOGUE_ID }],
+    },
+    {
+      id: TRUE_ENDING_EPILOGUE.POSTGAME.SUN.EVENT_ID, x: 24, y: 18, width: 1, height: 1,
+      type: 'npc', trigger: 'action', sprite: 'sun_front_idle_01', direction: DIRECTION.DOWN,
+      conditions: [{ flag: 'game_cleared', value: true }],
+      actions: [{ type: 'dialogue', dialogueId: TRUE_ENDING_EPILOGUE.POSTGAME.SUN.DIALOGUE_ID }],
     },
   ]
 
@@ -1761,11 +1812,15 @@ function buildMap070(): MapData {
         { flag: 'heart_shadow_a_defeated', value: true },
         { flag: 'heart_shadow_congcong_defeated', value: true },
         { flag: 'heart_shadow_sun_defeated', value: true },
+        { flag: 'game_cleared', value: false },
       ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_720_WUXIANG' },
         { type: 'dialogue', dialogueId: 'DIA_720_WUXIANG_END' },
-        { type: 'dialogue', dialogueId: 'DIA_730_TRUE_END' },
+        {
+          type: 'transfer', targetMap: REBUILT_TOWN_MAP_ID,
+          targetX: TRUE_ENDING_EPILOGUE.TOWN_SPAWN.x, targetY: TRUE_ENDING_EPILOGUE.TOWN_SPAWN.y,
+        },
       ],
     },
   ]
