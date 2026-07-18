@@ -114,6 +114,41 @@ type CalculateAndDealSkillDamage = (
   options?: ComboDamageOptions,
 ) => void
 
+type StatusUnit = {
+  name: string
+  status: string[]
+  breakGauge: number
+}
+
+type StatusRefreshHarness = {
+  updateUnitStatus: (unit: StatusUnit) => void
+  updateUnitBars: (unit: StatusUnit) => void
+  log: (message: string) => void
+}
+
+type AddStatus = (
+  this: StatusRefreshHarness,
+  unit: StatusUnit,
+  status: string,
+  duration?: number,
+  announce?: boolean,
+) => boolean
+
+type RemoveStatus = (this: StatusRefreshHarness, unit: StatusUnit, status: string) => void
+type TickStatusDurations = (this: StatusRefreshHarness, unit: StatusUnit) => void
+
+type StatusBarUnit = StatusUnit & {
+  isPlayer: boolean
+  stats: { hp: number; maxHp: number; mp: number; maxMp: number }
+  tp: number
+  breakMax: number
+  hpBar: { setScale: (x: number, y: number) => void }
+  mpBar?: { setScale: (x: number, y: number) => void }
+  tpBar?: { setScale: (x: number, y: number) => void }
+}
+
+type UpdateUnitBars = (this: StatusRefreshHarness, unit: StatusBarUnit) => void
+
 beforeAll(async () => {
   const runtime = globalThis as unknown as Record<string, unknown>
   originalWindow = runtime.window
@@ -397,5 +432,55 @@ describe('BattleScene player skill action recording', () => {
 
     expect(harness.lastPlayerAction).toEqual({ type: 'skill', skillId: 'qizhijian' })
     expect(nextTurnCount).toBe(1)
+  })
+})
+
+describe('BattleScene status display refresh', () => {
+  test('refreshes immediately after status add, countdown, and removal', () => {
+    const addStatus = BattleSceneClass.prototype['addStatus'] as unknown as AddStatus
+    const removeStatus = BattleSceneClass.prototype['removeStatus'] as unknown as RemoveStatus
+    const tickStatusDurations = BattleSceneClass.prototype['tickStatusDurations'] as unknown as TickStatusDurations
+    const refreshedStatuses: string[][] = []
+    const unit: StatusUnit = { name: 'T', status: [], breakGauge: 0 }
+    const harness = Object.assign(Object.create(BattleSceneClass.prototype), {
+      updateUnitStatus: (currentUnit: StatusUnit) => refreshedStatuses.push([...currentUnit.status]),
+      updateUnitBars: () => {},
+      log: () => {},
+    }) as StatusRefreshHarness
+
+    addStatus.call(harness, unit, BATTLE_STATUS.ATTACK_UP, 2, false)
+    expect(refreshedStatuses.at(-1)).toEqual([`${BATTLE_STATUS.ATTACK_UP}_2`])
+
+    tickStatusDurations.call(harness, unit)
+    expect(refreshedStatuses.at(-1)).toEqual([`${BATTLE_STATUS.ATTACK_UP}_1`])
+
+    removeStatus.call(harness, unit, BATTLE_STATUS.ATTACK_UP)
+    expect(refreshedStatuses.at(-1)).toEqual([])
+  })
+
+  test('keeps the status row synchronized with ordinary resource bar updates', () => {
+    const updateUnitBars = BattleSceneClass.prototype['updateUnitBars'] as unknown as UpdateUnitBars
+    const scales: number[] = []
+    let statusRefreshes = 0
+    const unit: StatusBarUnit = {
+      name: 'T',
+      status: [`${BATTLE_STATUS.SHIELD}_2`],
+      breakGauge: 0,
+      breakMax: 100,
+      isPlayer: true,
+      stats: { hp: 75, maxHp: 100, mp: 20, maxMp: 40 },
+      tp: 50,
+      hpBar: { setScale: x => { scales.push(x) } },
+    }
+    const harness = Object.assign(Object.create(BattleSceneClass.prototype), {
+      updateUnitStatus: () => { statusRefreshes++ },
+      updateUnitBars: () => {},
+      log: () => {},
+    }) as StatusRefreshHarness
+
+    updateUnitBars.call(harness, unit)
+
+    expect(scales).toEqual([0.75])
+    expect(statusRefreshes).toBe(1)
   })
 })

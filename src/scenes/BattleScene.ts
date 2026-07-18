@@ -53,6 +53,7 @@ import { getBattleResultFallbackScene } from '../utils/battleResult'
 import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import { canUseComboAtTp, isComboSkillId, isComboUnlocked, shouldQueueComboTurnSkip } from '../utils/comboRules'
+import { formatBattleStatusDisplay, parseBattleStatus } from '../utils/battleStatusDisplay'
 import {
   advanceBattleTurn,
   advanceBreakGauge,
@@ -89,6 +90,7 @@ interface BattleUnit {
   hpBar?: Phaser.GameObjects.Rectangle
   mpBar?: Phaser.GameObjects.Rectangle
   tpBar?: Phaser.GameObjects.Rectangle
+  statusText?: Phaser.GameObjects.Text
   breakGauge: number
   breakMax: number
   tp: number
@@ -466,11 +468,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private parseStatus(status: string): { base: string; duration: number | null } {
-    const separatorIndex = status.lastIndexOf(BATTLE_RULES.STATUS_DURATION_SEPARATOR)
-    if (separatorIndex < 0) return { base: status, duration: null }
-    const duration = Number(status.slice(separatorIndex + 1))
-    if (!Number.isInteger(duration)) return { base: status, duration: null }
-    return { base: status.slice(0, separatorIndex), duration }
+    const parsed = parseBattleStatus(status)
+    return { base: parsed.id, duration: parsed.duration }
   }
 
   private formatTimedStatus(status: string, duration: number): string {
@@ -482,7 +481,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private removeStatus(unit: BattleUnit, status: string): void {
-    unit.status = unit.status.filter(current => current !== status && this.parseStatus(current).base !== status)
+    const nextStatuses = unit.status.filter(current => current !== status && this.parseStatus(current).base !== status)
+    if (nextStatuses.length === unit.status.length) return
+    unit.status = nextStatuses
+    this.updateUnitStatus(unit)
   }
 
   private isNegativeStatus(status: string): boolean {
@@ -505,6 +507,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.removeStatus(unit, status)
     unit.status.push(duration ? this.formatTimedStatus(status, duration) : status)
+    this.updateUnitStatus(unit)
     if (announce) this.log(`${unit.name} 获得${label}。`)
     return true
   }
@@ -540,6 +543,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     unit.status = breakExpired ? nextStatuses.filter(status => status !== BATTLE_STATUS.BREAK) : nextStatuses
+    this.updateUnitStatus(unit)
     if (breakExpired) {
       unit.breakGauge = 0
       this.updateUnitBars(unit)
@@ -816,8 +820,36 @@ export class BattleScene extends Phaser.Scene {
       breakBar.setDepth(307)
       breakBar.setScrollFactor(0)
       unit.tpBar = breakBar
+      cy += barHeight + BATTLE_LAYOUT.UNIT_BAR_GAP_Y
     }
+
+    const statusText = this.add.text(x, cy + BATTLE_LAYOUT.UNIT_STATUS_OFFSET_Y, '', {
+      fontSize: `${BATTLE_LAYOUT.UNIT_STATUS_FONT_SIZE}px`,
+      color: BATTLE_LAYOUT.UNIT_STATUS_COLOR,
+      fontFamily: BATTLE_LAYOUT.UNIT_NAME_FONT_FAMILY,
+      stroke: BATTLE_LAYOUT.UNIT_STATUS_STROKE_COLOR,
+      strokeThickness: BATTLE_LAYOUT.UNIT_STATUS_STROKE_THICKNESS,
+    })
+    statusText.setOrigin(0.5, 0)
+    statusText.setDepth(307)
+    statusText.setScrollFactor(0)
+    unit.statusText = statusText
     this.updateUnitBars(unit)
+  }
+
+  private updateUnitStatus(unit: BattleUnit): void {
+    if (!unit.statusText) return
+
+    const skills = GAME_CONFIG_DATABASE.getTable('skills')
+    const summary = formatBattleStatusDisplay(unit.status, {
+      maxVisible: BATTLE_LAYOUT.UNIT_STATUS_MAX_VISIBLE,
+      resolveLabel: statusId => skills[statusId]?.name,
+    })
+    unit.statusText.setText(summary)
+    unit.statusText.setScale(1)
+    if (unit.statusText.width > BATTLE_LAYOUT.UNIT_STATUS_MAX_WIDTH) {
+      unit.statusText.setScale(BATTLE_LAYOUT.UNIT_STATUS_MAX_WIDTH / unit.statusText.width)
+    }
   }
 
   private updateUnitBars(unit: BattleUnit): void {
@@ -834,6 +866,7 @@ export class BattleScene extends Phaser.Scene {
         unit.tpBar.setScale(this.getBarRatio(unit.breakGauge, unit.breakMax), 1)
       }
     }
+    this.updateUnitStatus(unit)
   }
 
   private getBarRatio(current: number, max: number): number {
