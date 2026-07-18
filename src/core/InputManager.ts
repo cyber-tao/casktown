@@ -1,4 +1,5 @@
 import { GameData } from './GameData'
+import { SettingsManager } from './SettingsManager'
 import { CONTROL_MODE } from '../utils/constants'
 import type { GamepadNavigationAction } from '../utils/gamepadNavigation'
 
@@ -173,6 +174,7 @@ export class InputManager {
 
   private saveBindings(): void {
     GameData.getInstance().setFlag('keyBindings', { ...this.bindings })
+    SettingsManager.getInstance().save()
   }
 
   isConfirm(code: string): boolean {
@@ -211,6 +213,7 @@ export class InputManager {
   setGamepadEnabled(enabled: boolean): void {
     this.useGamepad = enabled
     GameData.getInstance().settings.gamepad = enabled
+    SettingsManager.getInstance().save()
   }
 
   isGamepadEnabled(): boolean {

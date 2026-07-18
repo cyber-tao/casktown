@@ -7,6 +7,7 @@ import { isProphecyConditionMet } from '../core/ProphecyConditions'
 import { SaveManager } from '../core/SaveManager'
 import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
+import { SettingsManager } from '../core/SettingsManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS } from '../data/equipment'
 import {
@@ -1225,7 +1226,10 @@ export class MenuOverlay extends Phaser.Scene {
         row.setStrokeStyle(MENU_OVERLAY_UI.THIN_BORDER_WIDTH, selected ? MENU_OVERLAY_UI.COLORS.highlight : MENU_OVERLAY_UI.COLORS.borderMuted)
         if (interactive) {
           row.setInteractive()
-          row.on('pointerdown', () => {
+          const activationEvent = config.key === 'fullscreen'
+            ? Phaser.Input.Events.POINTER_UP
+            : Phaser.Input.Events.POINTER_DOWN
+          row.on(activationEvent, () => {
             this.settingsIndex = i
             this.renderSettings()
             this.confirmSetting()
@@ -1514,6 +1518,7 @@ export class MenuOverlay extends Phaser.Scene {
       const currentIndex = options.indexOf(settings[config.key] as string)
       const nextIndex = (currentIndex + dir + options.length) % options.length
       settings[config.key] = options[nextIndex]!
+      SettingsManager.getInstance().save()
       this.renderSettings()
       AudioManager.getInstance().playSFX('cursor')
       return
@@ -1522,6 +1527,7 @@ export class MenuOverlay extends Phaser.Scene {
       const current = typeof settings[config.key] === 'number' ? settings[config.key] as number : config.min
       const next = Phaser.Math.Clamp(current + dir * config.step, config.min, config.max)
       settings[config.key] = Math.round(next * MENU_OVERLAY_UI.SETTINGS_SLIDER_DECIMAL_FACTOR) / MENU_OVERLAY_UI.SETTINGS_SLIDER_DECIMAL_FACTOR
+      SettingsManager.getInstance().save()
       AudioManager.getInstance().updateVolume()
       this.renderSettings()
       AudioManager.getInstance().playSFX('cursor')
@@ -1559,6 +1565,7 @@ export class MenuOverlay extends Phaser.Scene {
       const settings = GameData.getInstance().settings as Record<string, unknown>
       const enabled = !settings[config.key]
       settings[config.key] = enabled
+      SettingsManager.getInstance().save()
       if (config.key === 'fullscreen') {
         if (enabled) {
           this.scale.startFullscreen()

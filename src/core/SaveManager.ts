@@ -73,29 +73,6 @@ function hasValidOptionalField(
   return !(key in data) || predicate(data[key])
 }
 
-function isGameSettings(data: unknown): boolean {
-  if (!isSaveImportObject(data)) return false
-  const settings = data as Record<string, unknown>
-  const optionValues: Record<string, readonly string[]> = {
-    textSpeed: ['slow', 'normal', 'fast', 'instant'],
-    battleSpeed: ['normal', 'fast', 'fastest'],
-    encounterRate: ['default', 'reduced', 'none'],
-    difficulty: ['story', 'standard', 'hard'],
-    prophecyHint: ['poem', 'light', 'clear'],
-    controlMode: ['arrows', 'wasd'],
-  }
-  for (const [key, values] of Object.entries(optionValues)) {
-    if (!hasValidOptionalField(settings, key, value => typeof value === 'string' && values.includes(value))) return false
-  }
-  for (const key of ['masterVolume', 'musicVolume', 'sfxVolume', 'uiVolume']) {
-    if (!hasValidOptionalField(settings, key, value => isFiniteNonNegativeNumber(value) && value <= 1)) return false
-  }
-  for (const key of ['pixelSharp', 'fullscreen', 'gamepad']) {
-    if (!hasValidOptionalField(settings, key, value => typeof value === 'boolean')) return false
-  }
-  return true
-}
-
 function isGameSaveData(data: unknown): data is object {
   if (!isSaveImportObject(data)) return false
   const save = data as Record<string, unknown>
@@ -113,7 +90,6 @@ function isGameSaveData(data: unknown): data is object {
   if (!hasValidOptionalField(save, 'gold', isFiniteNonNegativeNumber)) return false
   if (!hasValidOptionalField(save, 'rebuildLevel', isFiniteNonNegativeNumber)) return false
   if (!hasValidOptionalField(save, 'unlockedCodex', isStringArray)) return false
-  if (!hasValidOptionalField(save, 'settings', isGameSettings)) return false
   if (!hasValidOptionalField(save, 'playerPosition', value => {
     if (!isSaveImportObject(value)) return false
     const position = value as Record<string, unknown>
@@ -226,6 +202,25 @@ export class SaveManager {
       .join(', ')
   }
 
+  private deserializePreservingGlobalSettings(data: object): void {
+    const settings = { ...this.gameData.settings }
+    const hasKeyBindings = Object.prototype.hasOwnProperty.call(this.gameData.flags, 'keyBindings')
+    const currentKeyBindings = this.gameData.flags.keyBindings
+    const keyBindings = isSaveImportObject(currentKeyBindings)
+      ? { ...currentKeyBindings as Record<string, unknown> }
+      : currentKeyBindings
+    try {
+      this.gameData.deserialize(data)
+    } finally {
+      this.gameData.settings = settings
+      if (hasKeyBindings) {
+        this.gameData.flags.keyBindings = keyBindings
+      } else {
+        delete this.gameData.flags.keyBindings
+      }
+    }
+  }
+
   save(slot: number): boolean {
     if (!this.isValidSlot(slot)) return false
     const storage = this.getStorage()
@@ -233,7 +228,9 @@ export class SaveManager {
     try {
       const dataKey = `${SAVE_STORAGE_KEY}_data_${slot}`
       const metaKey = `${SAVE_STORAGE_KEY}_meta_${slot}`
-      const data = this.gameData.serialize()
+      const data = this.gameData.serialize() as Record<string, unknown>
+      delete data.settings
+      if (isSaveImportObject(data.flags)) delete (data.flags as Record<string, unknown>).keyBindings
       const meta: SaveMeta = {
         slot,
         timestamp: Date.now(),
@@ -272,14 +269,14 @@ export class SaveManager {
       const data: unknown = JSON.parse(raw)
       if (!isGameSaveData(data)) return false
       previousGameData = this.gameData.serialize()
-      this.gameData.deserialize(data)
+      this.deserializePreservingGlobalSettings(data)
       SkillGrowth.getInstance().checkAllUnlocks()
       inputManager.syncFromGameData()
       return true
     } catch (e) {
       if (previousGameData) {
         try {
-          this.gameData.deserialize(previousGameData)
+          this.deserializePreservingGlobalSettings(previousGameData)
           inputManager.syncFromGameData()
         } catch (rollbackError) {
           console.error('Load rollback failed:', rollbackError)
@@ -415,7 +412,7 @@ export class SaveManager {
     const inputManager = InputManager.getInstance()
 
     try {
-      this.gameData.deserialize(data)
+      this.deserializePreservingGlobalSettings(data)
       SkillGrowth.getInstance().checkAllUnlocks()
       inputManager.syncFromGameData()
       if (this.save(slot)) return true
@@ -423,7 +420,7 @@ export class SaveManager {
       // Fall through to restore the current play session below.
     }
 
-    this.gameData.deserialize(previousGameData)
+    this.deserializePreservingGlobalSettings(previousGameData)
     inputManager.syncFromGameData()
     this.restoreSlot(storage, slot, previousSlotData, previousSlotMeta)
     return false

@@ -94,4 +94,32 @@ describe('touch text lifecycle', () => {
     expect(() => destroyListener?.()).not.toThrow()
     expect(removedListener).toBe(resizeListener)
   })
+
+  test('allows fullscreen controls to activate on pointer release', () => {
+    let activationEvent = ''
+    const scale = {
+      gameSize: { width: 1920, height: 1080 },
+      width: 1920,
+      height: 1080,
+      displaySize: { width: 960, height: 540 },
+      on: () => {},
+      off: () => {},
+    }
+    const text = {
+      scene: { scale },
+      width: 120,
+      height: 28,
+      input: {},
+      setInteractive() { return this },
+      once: () => {},
+      on(event: string) {
+        activationEvent = event
+        return text
+      },
+    } as unknown as Phaser.GameObjects.Text
+
+    bindTouchText(text, () => {}, 'pointerup')
+
+    expect(activationEvent).toBe('pointerup')
+  })
 })

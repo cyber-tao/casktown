@@ -1,5 +1,7 @@
 import Phaser from 'phaser'
 import { GameData } from '../core/GameData'
+import { InputManager } from '../core/InputManager'
+import { SettingsManager } from '../core/SettingsManager'
 import { queueImageAsset } from '../core/AssetLoader'
 import { AudioManager } from '../core/AudioManager'
 import { LOADING_SCREEN, TITLE_BACKGROUND } from '../utils/constants'
@@ -25,6 +27,8 @@ export class BootScene extends Phaser.Scene {
     if (gd.characters.size === 0) {
       gd.reset()
     }
+    SettingsManager.getInstance().load()
+    InputManager.getInstance().syncFromGameData()
 
     if (isMainlineQaRequested()) {
       runMainlineQa()

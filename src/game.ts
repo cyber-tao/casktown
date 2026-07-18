@@ -56,6 +56,25 @@ export class CaskTownGame extends Phaser.Game {
     super(config)
     this.bindContainerScaleSync()
     this.bindDisplaySettings()
+    this.bindFullscreenState()
+  }
+
+  private bindFullscreenState(): void {
+    const events = [
+      Phaser.Scale.Events.ENTER_FULLSCREEN,
+      Phaser.Scale.Events.LEAVE_FULLSCREEN,
+      Phaser.Scale.Events.FULLSCREEN_FAILED,
+      Phaser.Scale.Events.FULLSCREEN_UNSUPPORTED,
+    ]
+    for (const event of events) this.scale.on(event, this.syncFullscreenState, this)
+    this.syncFullscreenState()
+    this.events.once(Phaser.Core.Events.DESTROY, () => {
+      for (const event of events) this.scale.off(event, this.syncFullscreenState, this)
+    })
+  }
+
+  private syncFullscreenState(): void {
+    GameData.getInstance().settings.fullscreen = this.scale.isFullscreen
   }
 
   private bindDisplaySettings(): void {

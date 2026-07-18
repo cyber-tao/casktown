@@ -183,7 +183,6 @@ describe('SaveManager', () => {
     const corruptSaves = [
       { ...validSave, gold: 'corrupt' },
       { ...validSave, playTime: 'corrupt' },
-      { ...validSave, settings: { ...(validSave.settings as object), difficulty: 'nightmare' } },
       { ...validSave, inventory: { items: { heal_grass: 'many' }, equipment: {} } },
       {
         ...validSave,
@@ -385,21 +384,56 @@ describe('SaveManager', () => {
     expect(gd.gold).toBe(savedGold)
   })
 
-  test('importSave syncs input bindings from imported settings', () => {
+  test('load ignores legacy settings and key bindings while restoring progress', () => {
     const gd = GameData.getInstance()
     const input = InputManager.getInstance()
+    const legacySave = gd.serialize() as Record<string, unknown>
+    legacySave.gold = INITIAL_GOLD + 999
+    legacySave.settings = { difficulty: 'nightmare', masterVolume: 0.1, fullscreen: true }
+    legacySave.flags = {
+      ...(legacySave.flags as Record<string, unknown>),
+      keyBindings: { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', confirm: 'Space' },
+    }
+    mockStorage.setItem(`${SAVE_KEY}_data_1`, JSON.stringify(legacySave))
+
+    gd.settings.masterVolume = 0.8
+    gd.settings.fullscreen = true
     input.setWASD()
-    sm.save(1)
-    const exported = sm.exportSave(1)!
+    input.setBinding('confirm', 'KeyE')
+
+    expect(sm.load(1)).toBe(true)
+    expect(gd.gold).toBe(INITIAL_GOLD + 999)
+    expect(gd.settings.masterVolume).toBe(0.8)
+    expect(gd.settings.fullscreen).toBe(true)
+    expect(gd.settings.controlMode).toBe(CONTROL_MODE.WASD)
+    expect(input.getBindings().confirm).toBe('KeyE')
+  })
+
+  test('importSave preserves current global settings and bindings', () => {
+    const gd = GameData.getInstance()
+    const input = InputManager.getInstance()
+    gd.addGold(999)
+    input.setWASD()
+    input.setBinding('confirm', 'Space')
+    gd.settings.masterVolume = 0.2
+    const exported = JSON.stringify(gd.serialize())
 
     gd.reset()
     input.resetToDefault()
+    input.setBinding('confirm', 'KeyE')
+    gd.settings.masterVolume = 0.8
     expect(input.isWASDMode()).toBe(false)
 
     expect(sm.importSave(2, exported)).toBe(true)
-    expect(gd.settings.controlMode).toBe(CONTROL_MODE.WASD)
-    expect(input.isWASDMode()).toBe(true)
-    expect(input.getBindings().confirm).toBe('Space')
+    expect(gd.gold).toBe(INITIAL_GOLD + 999)
+    expect(gd.settings.masterVolume).toBe(0.8)
+    expect(gd.settings.controlMode).toBe(CONTROL_MODE.ARROWS)
+    expect(input.isWASDMode()).toBe(false)
+    expect(input.getBindings().confirm).toBe('KeyE')
+
+    const importedSlot = JSON.parse(sm.exportSave(2)!) as Record<string, unknown>
+    expect(importedSlot.settings).toBeUndefined()
+    expect((importedSlot.flags as Record<string, unknown>).keyBindings).toBeUndefined()
   })
 
   test('importSave rejects invalid JSON', () => {

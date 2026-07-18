@@ -28,7 +28,11 @@ function updateTouchTextHitArea(text: Phaser.GameObjects.Text): void {
   text.setInteractive(new Phaser.Geom.Rectangle(x, y, width, height), Phaser.Geom.Rectangle.Contains)
 }
 
-export function bindTouchText(text: Phaser.GameObjects.Text, onPress: () => void): Phaser.GameObjects.Text {
+export function bindTouchText(
+  text: Phaser.GameObjects.Text,
+  onPress: () => void,
+  activationEvent: string = Phaser.Input.Events.POINTER_DOWN,
+): Phaser.GameObjects.Text {
   const scale = text.scene.scale
   const updateHitArea = (): void => {
     if (!text.scene) {
@@ -43,6 +47,6 @@ export function bindTouchText(text: Phaser.GameObjects.Text, onPress: () => void
     scale.off(Phaser.Scale.Events.RESIZE, updateHitArea)
   })
   text.input!.cursor = 'pointer'
-  text.on(Phaser.Input.Events.POINTER_DOWN, onPress)
+  text.on(activationEvent, onPress)
   return text
 }

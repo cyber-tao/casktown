@@ -3,6 +3,7 @@ import { GameData } from '../core/GameData'
 import { AudioManager } from '../core/AudioManager'
 import { EventBus, GameEvents } from '../core/EventBus'
 import { InputManager } from '../core/InputManager'
+import { SettingsManager } from '../core/SettingsManager'
 import { queueImageAssets } from '../core/AssetLoader'
 import {
   GAME_WIDTH,
@@ -144,13 +145,16 @@ export class SettingsScene extends Phaser.Scene {
         color: MENU_OVERLAY_UI.COLORS.text,
         fontFamily: UI_FONT_FAMILY,
       }).setDepth(502)
-      bindTouchText(label, () => this.selectTouchMenuItem(i))
+      const activationEvent = config.key === 'fullscreen'
+        ? Phaser.Input.Events.POINTER_UP
+        : Phaser.Input.Events.POINTER_DOWN
+      bindTouchText(label, () => this.selectTouchMenuItem(i), activationEvent)
       container.add(label)
 
       const valueText = this.createValueText(config, gd, layout.fontSize)
       valueText.setX(SETTINGS_PANEL.valueX)
       valueText.setDepth(502)
-      bindTouchText(valueText, () => this.selectTouchMenuItem(i))
+      bindTouchText(valueText, () => this.selectTouchMenuItem(i), activationEvent)
       container.add(valueText)
 
       this.menuItems[i] = container
@@ -234,7 +238,11 @@ export class SettingsScene extends Phaser.Scene {
       newText.setX(oldText.x)
       newText.setY(oldText.y)
       newText.setDepth(502)
-      bindTouchText(newText, () => this.selectTouchMenuItem(index))
+      bindTouchText(
+        newText,
+        () => this.selectTouchMenuItem(index),
+        config.key === 'fullscreen' ? Phaser.Input.Events.POINTER_UP : Phaser.Input.Events.POINTER_DOWN,
+      )
       container.remove(oldText)
       oldText.destroy()
       container.add(newText)
@@ -293,6 +301,7 @@ export class SettingsScene extends Phaser.Scene {
       const currentIdx = options.indexOf(settings[config.key] as string)
       const newIdx = (currentIdx + dir + options.length) % options.length
       settings[config.key] = options[newIdx]!
+      SettingsManager.getInstance().save()
       this.updateValueText(this.menuIndex)
       AudioManager.getInstance().playSFX('cursor')
     } else if (config.type === 'slider') {
@@ -300,6 +309,7 @@ export class SettingsScene extends Phaser.Scene {
       const step = config.step || 0.1
       const newValue = Math.max(config.min || 0, Math.min(config.max || 1, current + dir * step))
       settings[config.key] = Math.round(newValue * 10) / 10
+      SettingsManager.getInstance().save()
       this.updateValueText(this.menuIndex)
       AudioManager.getInstance().updateVolume()
       AudioManager.getInstance().playSFX('cursor')
@@ -336,6 +346,7 @@ export class SettingsScene extends Phaser.Scene {
       AudioManager.getInstance().playSFX('confirm')
     } else if (config.type === 'toggle') {
       settings[config.key] = !settings[config.key]
+      SettingsManager.getInstance().save()
       this.updateValueText(this.menuIndex)
       AudioManager.getInstance().playSFX('confirm')
 
