@@ -9,6 +9,7 @@ import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { SettingsManager } from '../core/SettingsManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { STORY_CODEX_CATEGORY_LABELS, getUnlockedStoryCodexEntries } from '../data/codex'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS } from '../data/equipment'
 import {
   BATTLE_RULES,
@@ -1174,7 +1175,16 @@ export class MenuOverlay extends Phaser.Scene {
       this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, '这里记录旅途选择对信任、慈悲与结局路线的影响。', MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
       return
     }
-    const prophecy = prophecies[this.codexIndex - CODEX_STORY_BRANCH_COUNT]
+    const codexEntries = getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex)
+    const codexEntryIndex = this.codexIndex - CODEX_STORY_BRANCH_COUNT
+    const codexEntry = codexEntries[codexEntryIndex]
+    if (codexEntry) {
+      this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.CARD_GAP, codexEntry.title, MENU_OVERLAY_UI.BODY_FONT_SIZE, MENU_OVERLAY_UI.COLORS.title, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+      this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 2, STORY_CODEX_CATEGORY_LABELS[codexEntry.category], MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.accent, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+      this.addText(MENU_OVERLAY_UI.DETAIL_X + MENU_OVERLAY_UI.CARD_GAP, MENU_OVERLAY_UI.CODEX_DETAIL_Y + MENU_OVERLAY_UI.LINE_HEIGHT * 4, codexEntry.description, MENU_OVERLAY_UI.CAPTION_FONT_SIZE, MENU_OVERLAY_UI.COLORS.text, MENU_OVERLAY_UI.DETAIL_WIDTH - MENU_OVERLAY_UI.CARD_GAP * 2)
+      return
+    }
+    const prophecy = prophecies[codexEntryIndex - codexEntries.length]
     if (!prophecy) return
     const gd = GameData.getInstance()
     const conditionMet = isProphecyConditionMet(prophecy.condition)
@@ -1628,7 +1638,7 @@ export class MenuOverlay extends Phaser.Scene {
     const tab = this.getCodexTab()
     if (tab === 'monsters') return Math.max(1, this.getDiscoveredEnemies().length)
     if (tab === 'items') return Math.max(1, this.getDiscoveredItems().length)
-    return CODEX_STORY_BRANCH_COUNT + GAME_CONFIG_DATABASE.getTable('prophecies').length
+    return CODEX_STORY_BRANCH_COUNT + getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex).length + GAME_CONFIG_DATABASE.getTable('prophecies').length
   }
 
   private getDiscoveredEnemies(): string[] {
@@ -1669,7 +1679,13 @@ export class MenuOverlay extends Phaser.Scene {
     if (index < CODEX_STORY_BRANCH_COUNT) {
       return this.getStoryBranchRows()[index] ?? ''
     }
-    const prophecy = GAME_CONFIG_DATABASE.getTable('prophecies')[index - CODEX_STORY_BRANCH_COUNT]
+    const codexEntries = getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex)
+    const codexEntryIndex = index - CODEX_STORY_BRANCH_COUNT
+    const codexEntry = codexEntries[codexEntryIndex]
+    if (codexEntry) {
+      return `${STORY_CODEX_CATEGORY_LABELS[codexEntry.category]} · ${codexEntry.title}`
+    }
+    const prophecy = GAME_CONFIG_DATABASE.getTable('prophecies')[codexEntryIndex - codexEntries.length]
     return prophecy ? prophecy.chapter : ''
   }
 

@@ -330,6 +330,31 @@ describe('GameData', () => {
     expect(snapshot.flags.mercy_score).toBe(snapshot.branches.mercy_score)
   })
 
+  test('choice reward flags unlock their codex entries idempotently', () => {
+    const gd = GameData.getInstance()
+    gd.setFlag('achieve_late', true)
+    gd.setFlag('memory_robes', true)
+    gd.setFlag('info_tianjiange', true)
+    gd.setFlag('achieve_late', true)
+
+    expect(gd.unlockedCodex).toEqual([
+      'achievement_almost_late',
+      'memory_parent_robes',
+      'lore_tianjian_pavilion',
+    ])
+  })
+
+  test('deserialize backfills codex rewards from legacy choice flags', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as Record<string, any>
+    snapshot.flags = { ...snapshot.flags, achieve_late: true, memory_robes: true }
+    delete snapshot.unlockedCodex
+
+    gd.deserialize(snapshot)
+
+    expect(gd.unlockedCodex).toEqual(['achievement_almost_late', 'memory_parent_robes'])
+  })
+
   test('numeric branch mutations stay within save-compatible authored bounds', () => {
     const gd = GameData.getInstance()
 

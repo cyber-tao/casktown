@@ -11,6 +11,7 @@ import { DIALOGUES } from '../../src/data/dialogues.ts'
 import { QUESTS } from '../../src/data/quests.ts'
 import { PROPHECIES } from '../../src/data/prophecies.ts'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES } from '../../src/data/equipment.ts'
+import { STORY_CODEX_ENTRIES } from '../../src/data/codex.ts'
 import { IMAGE_ASSETS } from '../../src/data/assets.ts'
 import { TILE_SPRITES, TILESET_TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.ts'
 import { BGM_TRACKS, SFX_TRACKS } from '../../src/data/audio.ts'
@@ -129,6 +130,17 @@ describe('data type integrity', () => {
       expect(quest.id).toBe(id)
       expect(quest.name).toBeTruthy()
       expect(quest.objectives.length).toBeGreaterThan(0)
+    }
+  })
+
+  test('story codex entries have unique ids and unlock flags', () => {
+    expect(new Set(STORY_CODEX_ENTRIES.map(entry => entry.id)).size).toBe(STORY_CODEX_ENTRIES.length)
+    expect(new Set(STORY_CODEX_ENTRIES.map(entry => entry.unlockFlag)).size).toBe(STORY_CODEX_ENTRIES.length)
+    for (const entry of STORY_CODEX_ENTRIES) {
+      expect(entry.id.length).toBeGreaterThan(0)
+      expect(entry.title.length).toBeGreaterThan(0)
+      expect(entry.description.length).toBeGreaterThan(0)
+      expect(entry.unlockFlag.length).toBeGreaterThan(0)
     }
   })
 

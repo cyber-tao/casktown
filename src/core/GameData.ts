@@ -4,6 +4,7 @@ import { GAME_CONFIG_DATABASE, cloneConfigData } from '../data/configDatabase'
 import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS, createEmptyEquipStats } from '../data/equipment'
 import type { EquipStats, EquipmentSlot } from '../data/equipment'
 import { REBUILD_FACILITIES, REBUILD_MILESTONES } from '../data/rebuild'
+import { STORY_CODEX_ENTRY_ID_BY_FLAG } from '../data/codex'
 import { resolveCanonicalMapId } from './MapAccess'
 import {
   A_RESCUED_FLAG,
@@ -213,6 +214,14 @@ export class GameData {
     }
   }
 
+  private syncCodexUnlocks(): void {
+    for (const [flag, entryId] of Object.entries(STORY_CODEX_ENTRY_ID_BY_FLAG)) {
+      if (this.flags[flag] === true && !this.unlockedCodex.includes(entryId)) {
+        this.unlockedCodex.push(entryId)
+      }
+    }
+  }
+
   reset(options: { preserveSettings?: boolean } = {}): void {
     const preservedSettings = options.preserveSettings ? { ...this.settings } : null
     this.playTime = 0
@@ -366,6 +375,7 @@ export class GameData {
     if (this.flags.game_cleared) {
       this.flags.defeated_wuxiang = true
     }
+    this.syncCodexUnlocks()
     this.syncRebuildMilestoneLevel()
     this.syncPresentBranchFlags()
     this.syncTrueRouteState()

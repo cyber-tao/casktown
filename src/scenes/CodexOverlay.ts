@@ -5,6 +5,7 @@ import { AudioManager } from '../core/AudioManager'
 import { InputManager } from '../core/InputManager'
 import { isProphecyConditionMet } from '../core/ProphecyConditions'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
+import { STORY_CODEX_CATEGORY_LABELS, getUnlockedStoryCodexEntries } from '../data/codex'
 import { queueImageAssets } from '../core/AssetLoader'
 import {
   CODEX_OVERLAY_UI,
@@ -199,7 +200,7 @@ export class CodexOverlay extends Phaser.Scene {
   private getListCount(): number {
     if (this.tab === 'monsters') return Math.max(1, this.discoveredEnemies.length)
     if (this.tab === 'items') return Math.max(1, this.discoveredItems.length)
-    return CODEX_STORY_BRANCH_COUNT + GAME_CONFIG_DATABASE.getTable('prophecies').length
+    return CODEX_STORY_BRANCH_COUNT + getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex).length + GAME_CONFIG_DATABASE.getTable('prophecies').length
   }
 
   private syncListWindow(): void {
@@ -275,6 +276,7 @@ export class CodexOverlay extends Phaser.Scene {
       }
     } else {
       const gd = GameData.getInstance()
+      const codexEntries = getUnlockedStoryCodexEntries(gd.unlockedCodex)
       const storyEntries = [
         `信任-慧慧: ${gd.branches.trust_huihui}`,
         `信任-A: ${gd.branches.trust_a}`,
@@ -287,13 +289,18 @@ export class CodexOverlay extends Phaser.Scene {
         `四封印解放: ${gd.branches.released_four_seals ? '是' : '否'}`,
         `xiaoai净化: ${gd.branches.xiaoai_purified ? '是' : '否'}`,
       ]
-      const total = storyEntries.length + prophecies.length
+      const total = storyEntries.length + codexEntries.length + prophecies.length
       for (let i = this.listTopIndex; i < Math.min(total, this.listTopIndex + CODEX_OVERLAY_UI.VISIBLE_ROWS); i++) {
         if (i < storyEntries.length) {
           addListText(i, storyEntries[i]!, MENU_OVERLAY_UI.COLORS.text)
           continue
         }
-        const prophecy = prophecies[i - storyEntries.length]
+        const codexEntry = codexEntries[i - storyEntries.length]
+        if (codexEntry) {
+          addListText(i, `${STORY_CODEX_CATEGORY_LABELS[codexEntry.category]} · ${codexEntry.title}`, MENU_OVERLAY_UI.COLORS.accent)
+          continue
+        }
+        const prophecy = prophecies[i - storyEntries.length - codexEntries.length]
         if (!prophecy) continue
         const conditionMet = isProphecyConditionMet(prophecy.condition)
         const label = conditionMet ? `预言 ${prophecy.chapter}` : `??? ${prophecy.chapter}`
@@ -358,7 +365,19 @@ export class CodexOverlay extends Phaser.Scene {
           '不同的选择会影响结局走向。',
         ].join('\n'))
       } else {
-        const prophecyIndex = this.cursorIndex - CODEX_STORY_BRANCH_COUNT
+        const codexEntries = getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex)
+        const codexEntryIndex = this.cursorIndex - CODEX_STORY_BRANCH_COUNT
+        const codexEntry = codexEntries[codexEntryIndex]
+        if (codexEntry) {
+          this.detailText.setText([
+            `【${codexEntry.title}】`,
+            STORY_CODEX_CATEGORY_LABELS[codexEntry.category],
+            '',
+            codexEntry.description,
+          ].join('\n'))
+          return
+        }
+        const prophecyIndex = codexEntryIndex - codexEntries.length
         const prophecy = prophecies[prophecyIndex]
         if (!prophecy) {
           this.detailText.setText('')
