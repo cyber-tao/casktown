@@ -1,11 +1,12 @@
 import { GameData } from './GameData'
 import { COMBO_DEFINITIONS } from '../data/combos'
+import { STORY_SKILL_UNLOCK_FLAGS } from '../utils/constants'
 
 interface SkillUnlockCondition {
   skillId: string
   characterId: string
-  type: 'level' | 'flag' | 'flagMinimum' | 'rebuild' | 'trust' | 'quest'
-  value: number | string
+  type: 'level' | 'flag' | 'flagAny' | 'flagMinimum' | 'rebuild' | 'trust' | 'quest'
+  value: number | string | readonly string[]
   threshold?: number
 }
 
@@ -62,7 +63,12 @@ const SKILL_UNLOCKS: SkillUnlockCondition[] = [
   { skillId: 'wushenzhaohuan_zhu', characterId: 'SUN', type: 'flag', value: 'seal_zhuque_released' },
   { skillId: 'wushenzhaohuan_xuan', characterId: 'SUN', type: 'flag', value: 'seal_xuanwu_released' },
   { skillId: 'wushenzhaohuan_si', characterId: 'SUN', type: 'flag', value: 'true_route_unlocked' },
-  { skillId: 'rendeqiyuan', characterId: 'SUN', type: 'flag', value: 'heart_shadow_sun_defeated' },
+  {
+    skillId: 'rendeqiyuan',
+    characterId: 'SUN',
+    type: 'flagAny',
+    value: [STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, 'heart_shadow_sun_defeated'],
+  },
   ...COMBO_SKILL_UNLOCKS,
 ]
 
@@ -115,6 +121,8 @@ export class SkillGrowth {
         return (charData?.stats.level || 0) >= (cond.value as number)
       case 'flag':
         return gd.getFlag(cond.value as string) === true
+      case 'flagAny':
+        return (cond.value as readonly string[]).some(flag => gd.getFlag(flag) === true)
       case 'flagMinimum': {
         const value = gd.getFlag(cond.value as string)
         return typeof value === 'number' && value >= (cond.threshold ?? 0)

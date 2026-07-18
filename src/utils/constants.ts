@@ -813,6 +813,7 @@ export const MAINLINE_QA_REQUIRED_FINAL_SKILLS = [
   { characterId: 'HUIHUI', skillId: 'qingxinling' },
   { characterId: 'A', skillId: 'shanbeng' },
   { characterId: 'CONGCONG', skillId: 'pozhankan' },
+  { characterId: 'SUN', skillId: 'rendeqiyuan' },
 ] as const
 export const MAINLINE_QA_REQUIRED_FINAL_ITEMS = ['pink_chime'] as const
 export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [

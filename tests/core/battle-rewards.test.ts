@@ -1,10 +1,34 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { applyEncounterVictoryRewards } from '../../src/core/BattleRewards.ts'
+import { applyStateEventAction } from '../../src/core/EventActionExecutor.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { QuestSystem } from '../../src/core/QuestSystem.ts'
+import { DIALOGUES } from '../../src/data/dialogues.ts'
 import { ENCOUNTERS } from '../../src/data/encounters.ts'
 import { ENEMIES } from '../../src/data/enemies.ts'
 import { INITIAL_GOLD, ROAMING_ENCOUNTER_RESPAWN } from '../../src/utils/constants.ts'
+
+const SEAL_BATTLES = [
+  { encounterId: 'BTL_CHI', afterDialogueId: 'DIA_411_CHI_AFTER' },
+  { encounterId: 'BTL_MEI', afterDialogueId: 'DIA_412_MEI_AFTER' },
+  { encounterId: 'BTL_WANG', afterDialogueId: 'DIA_413_WANG_AFTER' },
+  { encounterId: 'BTL_LIANG', afterDialogueId: 'DIA_414_LIANG_AFTER' },
+] as const
+
+function permutations<T>(values: readonly T[]): T[][] {
+  if (values.length <= 1) return [[...values]]
+  return values.flatMap((value, index) =>
+    permutations([...values.slice(0, index), ...values.slice(index + 1)]).map(rest => [value, ...rest]),
+  )
+}
+
+function applyDialogueCompletionActions(dialogueId: string): void {
+  const dialogue = DIALOGUES[dialogueId]
+  expect(dialogue).toBeDefined()
+  for (const action of dialogue?.onComplete ?? []) {
+    expect(applyStateEventAction(action).handled).toBe(true)
+  }
+}
 
 describe('BattleRewards', () => {
   beforeEach(() => {
@@ -67,22 +91,20 @@ describe('BattleRewards', () => {
   })
 
   test('releases all four seals only after every guardian in any order', () => {
-    const encounterOrders = [
-      ['BTL_LIANG', 'BTL_CHI', 'BTL_MEI', 'BTL_WANG'],
-      ['BTL_WANG', 'BTL_MEI', 'BTL_LIANG', 'BTL_CHI'],
-    ] as const
-
-    for (const encounterOrder of encounterOrders) {
+    for (const encounterOrder of permutations(SEAL_BATTLES)) {
       const gd = GameData.getInstance()
       gd.reset()
+      applyDialogueCompletionActions('DIA_402_BARRIER')
+      expect(QuestSystem.getInstance().isQuestActive('QST_010')).toBe(true)
 
-      for (const encounterId of encounterOrder.slice(0, -1)) {
+      for (const [index, { encounterId, afterDialogueId }] of encounterOrder.entries()) {
         applyEncounterVictoryRewards({ encounterId, rollDrop: () => false })
-        expect(gd.getFlag('released_four_seals')).not.toBe(true)
-        expect(QuestSystem.getInstance().isQuestCompleted('QST_010')).toBe(false)
-      }
+        applyDialogueCompletionActions(afterDialogueId)
 
-      applyEncounterVictoryRewards({ encounterId: encounterOrder.at(-1)!, rollDrop: () => false })
+        const allGuardiansDefeated = index === encounterOrder.length - 1
+        expect(gd.getFlag('released_four_seals')).toBe(allGuardiansDefeated)
+        expect(QuestSystem.getInstance().isQuestCompleted('QST_010')).toBe(allGuardiansDefeated)
+      }
 
       expect(gd.getFlag('seal_qinglong_released')).toBe(true)
       expect(gd.getFlag('seal_baihu_released')).toBe(true)

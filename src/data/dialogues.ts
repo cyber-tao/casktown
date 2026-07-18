@@ -1137,9 +1137,8 @@ export const DIALOGUES: Record<string, DialogueData> = {
     id: 'DIA_414_LIANG_AFTER',
     lines: [
       { speaker: '系统', text: '获得【玄武碑牌】。sun解锁【五神召唤·玄】。' },
-      { speaker: '系统', text: '四封印全部解除！' },
+      { speaker: '系统', text: '玄武封印已解除。' },
     ],
-    onComplete: [{ type: 'setFlag', flag: 'released_four_seals', value: true }],
   },
 
   // SCN_420 祀神与轮回道

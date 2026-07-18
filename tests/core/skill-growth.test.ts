@@ -125,8 +125,6 @@ describe('SkillGrowth', () => {
     sg.checkUnlocksForCharacter('SUN')
     expect(sun.skills).not.toContain('rendeqiyuan')
     gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, true)
-    expect(sg.checkUnlocksForCharacter('SUN')).not.toContain('rendeqiyuan')
-    gd.setFlag('heart_shadow_sun_defeated', true)
     expect(sg.checkUnlocksForCharacter('SUN')).toContain('rendeqiyuan')
   })
 
@@ -142,7 +140,6 @@ describe('SkillGrowth', () => {
     ] as const
 
     gd.setFlag('true_route_unlocked', true)
-    gd.setFlag(STORY_SKILL_UNLOCK_FLAGS.RENDEQIYUAN, true)
     for (const unlock of unlocks) {
       sg.checkUnlocksForCharacter(unlock.characterId)
       expect(gd.characters.get(unlock.characterId)?.skills).not.toContain(unlock.skillId)
