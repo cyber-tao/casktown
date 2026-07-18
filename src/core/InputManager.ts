@@ -1,6 +1,6 @@
 import { GameData } from './GameData'
 import { SettingsManager } from './SettingsManager'
-import { CONTROL_MODE } from '../utils/constants'
+import { CONTROL_MODE, KEY_BINDINGS_FLAG } from '../utils/constants'
 import type { GamepadNavigationAction } from '../utils/gamepadNavigation'
 
 export interface KeyBindings {
@@ -129,7 +129,7 @@ export class InputManager {
     const gd = GameData.getInstance()
     this.bindings = gd.settings.controlMode === CONTROL_MODE.WASD ? { ...WASD_BINDINGS } : { ...DEFAULT_BINDINGS }
     this.useGamepad = gd.settings.gamepad
-    const saved = gd.getFlag('keyBindings')
+    const saved = gd.getFlag(KEY_BINDINGS_FLAG)
     if (saved && typeof saved === 'object') {
       for (const action of Object.keys(this.bindings) as (keyof KeyBindings)[]) {
         const code = (saved as Partial<KeyBindings>)[action]
@@ -173,7 +173,7 @@ export class InputManager {
   }
 
   private saveBindings(): void {
-    GameData.getInstance().setFlag('keyBindings', { ...this.bindings })
+    GameData.getInstance().setFlag(KEY_BINDINGS_FLAG, { ...this.bindings })
     SettingsManager.getInstance().save()
   }
 

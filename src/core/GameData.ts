@@ -11,6 +11,7 @@ import {
   BARREL_UNLOCK_PROGRESS_FLAGS,
   BRANCH_VALUE_LIMITS,
   INITIAL_GOLD,
+  KEY_BINDINGS_FLAG,
   LEGACY_SAVE_PROGRESS,
   LEVEL_GROWTH,
   CONTROL_MODE,
@@ -225,6 +226,13 @@ export class GameData {
 
   reset(options: { preserveSettings?: boolean } = {}): void {
     const preservedSettings = options.preserveSettings ? { ...this.settings } : null
+    const currentKeyBindings = this.flags[KEY_BINDINGS_FLAG]
+    const preservedKeyBindings = options.preserveSettings
+      && typeof currentKeyBindings === 'object'
+      && currentKeyBindings !== null
+      && !Array.isArray(currentKeyBindings)
+      ? { ...currentKeyBindings as Record<string, unknown> }
+      : null
     this.playTime = 0
     this.playTimeSyncedAtMs = Date.now()
     this.currentMap = START_MAP_ID
@@ -237,7 +245,7 @@ export class GameData {
     this.inventory = { items: {}, equipment: {} }
     this.equipment = {}
     this.quests = new Map()
-    this.flags = {}
+    this.flags = preservedKeyBindings ? { [KEY_BINDINGS_FLAG]: preservedKeyBindings } : {}
     this.branches = createDefaultBranches()
     this.rebuildLevel = REBUILD_LEVEL_LIMITS.MIN
     this.gold = INITIAL_GOLD

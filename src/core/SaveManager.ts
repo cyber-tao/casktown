@@ -1,7 +1,7 @@
 import { GameData } from './GameData'
 import { InputManager } from './InputManager'
 import { SkillGrowth } from './SkillGrowth'
-import { BATTLE_RULES, QUICK_SAVE_SLOT, SAVE_SLOT_MIN, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
+import { BATTLE_RULES, KEY_BINDINGS_FLAG, QUICK_SAVE_SLOT, SAVE_SLOT_MIN, SAVE_SLOTS, SAVE_STORAGE_KEY } from '../utils/constants'
 
 function isSaveImportObject(data: unknown): data is object {
   return typeof data === 'object' && data !== null && !Array.isArray(data)
@@ -204,8 +204,8 @@ export class SaveManager {
 
   private deserializePreservingGlobalSettings(data: object): void {
     const settings = { ...this.gameData.settings }
-    const hasKeyBindings = Object.prototype.hasOwnProperty.call(this.gameData.flags, 'keyBindings')
-    const currentKeyBindings = this.gameData.flags.keyBindings
+    const hasKeyBindings = Object.prototype.hasOwnProperty.call(this.gameData.flags, KEY_BINDINGS_FLAG)
+    const currentKeyBindings = this.gameData.flags[KEY_BINDINGS_FLAG]
     const keyBindings = isSaveImportObject(currentKeyBindings)
       ? { ...currentKeyBindings as Record<string, unknown> }
       : currentKeyBindings
@@ -214,9 +214,9 @@ export class SaveManager {
     } finally {
       this.gameData.settings = settings
       if (hasKeyBindings) {
-        this.gameData.flags.keyBindings = keyBindings
+        this.gameData.flags[KEY_BINDINGS_FLAG] = keyBindings
       } else {
-        delete this.gameData.flags.keyBindings
+        delete this.gameData.flags[KEY_BINDINGS_FLAG]
       }
     }
   }

@@ -46,6 +46,18 @@ describe('InputManager', () => {
     expect(input.isCancel('KeyX')).toBe(true)
   })
 
+  test('keeps custom bindings through a settings-preserving new-game reset', () => {
+    const gameData = GameData.getInstance()
+    input.setBindings({ up: 'KeyI', confirm: 'KeyE', cancel: 'Backspace' })
+
+    gameData.reset({ preserveSettings: true })
+    input.syncFromGameData()
+
+    expect(input.getBindings().up).toBe('KeyI')
+    expect(input.getBindings().confirm).toBe('KeyE')
+    expect(input.getBindings().cancel).toBe('Backspace')
+  })
+
   test('resolves keyboard input through the same navigation actions as gamepads', () => {
     input.setWASD()
 

@@ -10,6 +10,7 @@ import {
   A_RESCUED_FLAG,
   BRANCH_VALUE_LIMITS,
   INITIAL_GOLD,
+  KEY_BINDINGS_FLAG,
   LEGACY_SAVE_PROGRESS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
@@ -52,12 +53,16 @@ describe('GameData', () => {
     const gd = GameData.getInstance()
     gd.settings.masterVolume = 0.4
     gd.settings.textSpeed = 'fast'
+    gd.setFlag(KEY_BINDINGS_FLAG, { up: 'KeyI', confirm: 'KeyE' })
+    gd.setFlag('current_run_only', true)
     gd.addGold(500)
 
     gd.reset({ preserveSettings: true })
 
     expect(gd.settings.masterVolume).toBe(0.4)
     expect(gd.settings.textSpeed).toBe('fast')
+    expect(gd.getFlag(KEY_BINDINGS_FLAG)).toEqual({ up: 'KeyI', confirm: 'KeyE' })
+    expect(gd.getFlag('current_run_only')).toBeUndefined()
     expect(gd.gold).toBe(INITIAL_GOLD)
   })
 

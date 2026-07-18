@@ -1,5 +1,5 @@
 import { GameData } from './GameData'
-import { DEFAULT_GAME_SETTINGS } from '../utils/constants'
+import { DEFAULT_GAME_SETTINGS, KEY_BINDINGS_FLAG } from '../utils/constants'
 
 export const SETTINGS_STORAGE_KEY = 'casktown_settings'
 export const SETTINGS_STORAGE_VERSION = 1
@@ -87,9 +87,9 @@ function normalizeKeyBindings(value: unknown): PersistedKeyBindings | undefined 
 function applyKeyBindings(gameData: GameData, value: unknown): void {
   const bindings = normalizeKeyBindings(value)
   if (bindings) {
-    gameData.flags.keyBindings = bindings
+    gameData.flags[KEY_BINDINGS_FLAG] = bindings
   } else {
-    delete gameData.flags.keyBindings
+    delete gameData.flags[KEY_BINDINGS_FLAG]
   }
 }
 
@@ -112,7 +112,7 @@ function createPayload(gameData: GameData): SettingsStoragePayload {
       gamepad: normalized.gamepad,
     },
   }
-  const keyBindings = normalizeKeyBindings(gameData.getFlag('keyBindings'))
+  const keyBindings = normalizeKeyBindings(gameData.getFlag(KEY_BINDINGS_FLAG))
   if (keyBindings) payload.keyBindings = keyBindings
   return payload
 }

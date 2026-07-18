@@ -221,6 +221,8 @@ export const CONTROL_MODE = {
   WASD: 'wasd',
 } as const
 
+export const KEY_BINDINGS_FLAG = 'keyBindings'
+
 export const DEFAULT_GAME_SETTINGS = {
   textSpeed: 'normal',
   battleSpeed: 'normal',
