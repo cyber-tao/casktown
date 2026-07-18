@@ -139,8 +139,9 @@ describe('constants consistency', () => {
     const bossUiOffset = bossSpriteSize / 2 + BATTLE_LAYOUT.UNIT_UI_SPRITE_GAP_Y
     const bossTop = BATTLE_LAYOUT.ENEMY_START_Y - bossSpriteSize / 2
     const bossUiBottom = BATTLE_LAYOUT.ENEMY_START_Y - bossUiOffset +
-      BATTLE_LAYOUT.UNIT_BAR_HEIGHT * 2 +
-      BATTLE_LAYOUT.UNIT_BAR_GAP_Y
+      (BATTLE_LAYOUT.UNIT_BAR_HEIGHT + BATTLE_LAYOUT.UNIT_BAR_GAP_Y) * 2 +
+      BATTLE_LAYOUT.UNIT_STATUS_OFFSET_Y +
+      BATTLE_LAYOUT.UNIT_STATUS_FONT_SIZE
 
     expect(BATTLE_LAYOUT.BOSS_SPRITE_SCALE).toBeGreaterThan(1)
     expect(defaultUiOffset).toBe(BATTLE_LAYOUT.UNIT_UI_OFFSET_Y)
