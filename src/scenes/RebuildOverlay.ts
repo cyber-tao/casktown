@@ -32,7 +32,10 @@ export class RebuildOverlay extends Phaser.Scene {
     this.cursorIndex = 0
     this.items = []
     this.gamepadNavigation.reset()
-    AudioManager.getInstance().setScene(this)
+    AudioManager.getInstance().pushScene(this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      AudioManager.getInstance().popScene(this)
+    })
 
     const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.black, REBUILD_MENU.OVERLAY_ALPHA)
     overlay.setDepth(REBUILD_MENU.PANEL_DEPTH)

@@ -482,6 +482,6 @@ export class DialogueOverlay extends Phaser.Scene {
     this.typeTimer?.remove()
     AudioManager.getInstance().stopVoice()
     this.scene.stop()
-    EventBus.emit(GameEvents.DIALOGUE_END)
+    EventBus.emit(GameEvents.DIALOGUE_END, { missing: true })
   }
 }

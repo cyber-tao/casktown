@@ -627,6 +627,32 @@ describe('MapScene deferred visual restart', () => {
     expect(GameData.getInstance().currentMap).toBe(REBUILT_TOWN_MAP_ID)
   })
 
+  test('defers rebuild map restart while dialogue overlay pauses the map', () => {
+    GameData.getInstance().reset()
+    const restartCalls: string[] = []
+    const harness: HandleFlagSetHarness = {
+      mapData: { id: START_MAP_ID },
+      scene: {
+        isPaused: () => true,
+        isActive: sceneKey => sceneKey === 'DialogueOverlay',
+      },
+      pendingMapRestartId: '',
+      syncConditionalBattleEnemies: () => {},
+      refreshMinimapStatic: () => {},
+      isJoinFlag: () => false,
+      removeSuppressedFieldEventSprites: () => {},
+      refreshFollowers: () => {},
+      createPartyHud: () => {},
+      requestMapRestart: mapId => restartCalls.push(mapId),
+    }
+    const mapScene = Object.assign(new MapSceneClass(), harness)
+
+    mapScene['handleFlagSet']('rebuild_level', 3)
+
+    expect(restartCalls).toEqual([])
+    expect((mapScene as unknown as HandleFlagSetHarness).pendingMapRestartId).toBe(REBUILT_TOWN_MAP_ID)
+  })
+
   test('restarts the deferred rebuild map after the overlay closes', () => {
     const calls: string[] = []
     const harness = Object.assign(Object.create(MapSceneClass.prototype), {

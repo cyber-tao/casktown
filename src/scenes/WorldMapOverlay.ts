@@ -41,7 +41,10 @@ export class WorldMapOverlay extends Phaser.Scene {
   create(): void {
     this.closing = false
     this.gamepadNavigation.reset()
-    AudioManager.getInstance().setScene(this)
+    AudioManager.getInstance().pushScene(this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      AudioManager.getInstance().popScene(this)
+    })
 
     const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_COLOR, WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_ALPHA)
     bg.setDepth(WORLD_MAP_BACKGROUND_LAYOUT.BACKDROP_DEPTH).setScrollFactor(0)

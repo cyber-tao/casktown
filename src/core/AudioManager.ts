@@ -3,6 +3,7 @@ import { GameData } from './GameData'
 import { SFXSynth } from './SFXSynth'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { BGM_FADE_DURATIONS, VOICE_AUDIO_PATH } from '../utils/constants'
+import { isSceneAudioHostUsable } from '../utils/sceneLifecycle'
 
 type VolumeControlledSound = Phaser.Sound.BaseSound & {
   setVolume(value: number): Phaser.Sound.BaseSound
@@ -11,6 +12,7 @@ type VolumeControlledSound = Phaser.Sound.BaseSound & {
 export class AudioManager {
   private static instance: AudioManager
   private scene: Phaser.Scene | null = null
+  private sceneStack: Phaser.Scene[] = []
   private currentBgm: Phaser.Sound.BaseSound | null = null
   private currentBgmKey: string = ''
   private bgmSounds: Set<Phaser.Sound.BaseSound> = new Set()
@@ -36,7 +38,24 @@ export class AudioManager {
   }
 
   setScene(scene: Phaser.Scene): void {
+    this.sceneStack = []
     this.scene = scene
+  }
+
+  pushScene(scene: Phaser.Scene): void {
+    if (this.scene && this.scene !== scene) {
+      this.sceneStack.push(this.scene)
+    }
+    this.scene = scene
+  }
+
+  popScene(expectedScene?: Phaser.Scene): void {
+    if (expectedScene && this.scene !== expectedScene) return
+    this.scene = this.sceneStack.pop() ?? null
+  }
+
+  private hasUsableScene(): boolean {
+    return isSceneAudioHostUsable(this.scene)
   }
 
   preload(loader: Phaser.Loader.LoaderPlugin): void {
@@ -50,7 +69,7 @@ export class AudioManager {
   }
 
   playBGM(bgmId: string, fadeDuration: number = BGM_FADE_DURATIONS.DEFAULT_MS): void {
-    if (!this.scene) return
+    if (!this.hasUsableScene() || !this.scene) return
     const config = GAME_CONFIG_DATABASE.getTable('bgmTracks')[bgmId]
     if (!config) {
       console.warn(`BGM ${bgmId} not found`)
@@ -71,12 +90,12 @@ export class AudioManager {
     if (!this.scene.cache.audio.exists(config.key)) {
       if (this.requestedBgmId === bgmId) return
       this.requestedBgmId = bgmId
+      const hostScene = this.scene
       this.scene.load.audio(config.key, config.path)
       this.scene.load.once(`filecomplete-audio-${config.key}`, () => {
-        if (this.scene && this.requestedBgmId === bgmId) {
-          this.requestedBgmId = ''
-          this.playBGM(bgmId, fadeDuration)
-        }
+        if (!isSceneAudioHostUsable(hostScene) || this.scene !== hostScene || this.requestedBgmId !== bgmId) return
+        this.requestedBgmId = ''
+        this.playBGM(bgmId, fadeDuration)
       })
       this.scene.load.once(`loaderror-audio-${config.key}`, () => {
         if (this.requestedBgmId === bgmId) this.requestedBgmId = ''
@@ -221,7 +240,7 @@ export class AudioManager {
   }
 
   playVoice(voiceKey: string, _text: string): void {
-    if (!this.scene || this.voiceMuted) return
+    if (!this.hasUsableScene() || !this.scene || this.voiceMuted) return
     this.stopVoice()
 
     const path = `${VOICE_AUDIO_PATH.DIRECTORY}/${voiceKey}${VOICE_AUDIO_PATH.EXTENSION}`
@@ -229,12 +248,12 @@ export class AudioManager {
     this.requestedVoiceKey = key
 
     if (!this.scene.cache.audio.exists(key)) {
+      const hostScene = this.scene
       this.scene.load.audio(key, path)
       this.scene.load.once(`filecomplete-audio-${key}`, () => {
-        if (this.scene && this.requestedVoiceKey === key) {
-          this.requestedVoiceKey = ''
-          this.playLoadedVoice(key)
-        }
+        if (!isSceneAudioHostUsable(hostScene) || this.scene !== hostScene || this.requestedVoiceKey !== key) return
+        this.requestedVoiceKey = ''
+        this.playLoadedVoice(key)
       })
       this.scene.load.once(`loaderror-audio-${key}`, () => {
         if (this.requestedVoiceKey === key) this.requestedVoiceKey = ''
@@ -252,7 +271,7 @@ export class AudioManager {
   }
 
   private playLoadedVoice(key: string): void {
-    if (!this.scene) return
+    if (!this.hasUsableScene() || !this.scene) return
     const voice = this.scene.sound.add(key, { volume: this.getVoiceVolume(), loop: false })
     this.currentVoice = voice
     voice.once('complete', () => {

@@ -304,6 +304,43 @@ export function collectBattleImageKeys(encounterId: string, partyIds: readonly s
   return keys
 }
 
+function collectPersistentImageKeys(partyIds: readonly string[]): Set<string> {
+  const keys = new Set<string>()
+  addRuntimeUiImageKeys(keys)
+  addConfiguredKey(keys, WORLD_MAP_BACKGROUND_LAYOUT.KEY)
+  addConfiguredKey(keys, DEFAULT_CHARACTER_SPRITE_KEY)
+  addConfiguredKey(keys, DEFAULT_ENEMY_SPRITE_KEY)
+  addConfiguredKey(keys, 'env_dirt_plain')
+  addConfiguredKey(keys, 'env_barrel')
+  addPlayableCharacterImageKeys(keys)
+  for (const characterId of partyIds) {
+    addCharacterImageKeys(keys, characterId)
+  }
+  return keys
+}
+
+export function unloadUnusedMapTextures(
+  scene: Phaser.Scene,
+  previousKeys: Iterable<string>,
+  nextRetainKeys: Iterable<string>,
+  partyIds: readonly string[] = [],
+): void {
+  const retain = new Set(nextRetainKeys)
+  for (const key of collectPersistentImageKeys(partyIds)) {
+    retain.add(key)
+  }
+
+  const processedTiles = getProcessedTileSet(scene)
+  const processedCrops = getProcessedSpriteCropMap(scene)
+  for (const key of new Set(previousKeys)) {
+    if (retain.has(key) || !scene.textures.exists(key)) continue
+    if (key.startsWith('__')) continue
+    scene.textures.remove(key)
+    processedTiles.delete(key)
+    processedCrops.delete(key)
+  }
+}
+
 export function processTileTextures(scene: Phaser.Scene, keys: Iterable<string>): void {
   const processed = getProcessedTileSet(scene)
   const groundTiles = new Set<string>(CONTINUOUS_TERRAIN_TEXTURE_KEYS)

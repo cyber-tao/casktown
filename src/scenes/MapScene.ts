@@ -11,7 +11,7 @@ import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent, isMap
 import { applyStateEventAction } from '../core/EventActionExecutor'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
-import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets } from '../core/AssetLoader'
+import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets, unloadUnusedMapTextures } from '../core/AssetLoader'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
   CHARACTER_DIRECTION_FRAME_STEMS,
@@ -142,6 +142,7 @@ export class MapScene extends Phaser.Scene {
   private pendingMapEventId = ''
   private pendingMapRestartId = ''
   private restartingMap = false
+  private loadedImageKeys = new Set<string>()
   private inputResumeBlockedUntilMs = 0
   private animationTimeMs = 0
   private touchDirection: { dx: number; dy: number; dir: number; pointerId: number } | null = null
@@ -216,7 +217,7 @@ export class MapScene extends Phaser.Scene {
     const gd = GameData.getInstance()
     const nextMapId = value >= REBUILD_VISUAL_MAP_THRESHOLD ? REBUILT_TOWN_MAP_ID : RUINED_TOWN_MAP_ID
     gd.currentMap = nextMapId
-    if (this.scene.isPaused() && this.scene.isActive('RebuildOverlay')) {
+    if (this.shouldDeferMapRestart()) {
       this.pendingMapRestartId = nextMapId
       return
     }
@@ -290,8 +291,29 @@ export class MapScene extends Phaser.Scene {
   private markFieldEventCompleted(eventId?: string): void {
     if (!eventId) return
     const event = this.mapData.events.find(candidate => candidate.id === eventId)
+      ?? this.battleEnemyEvents.get(eventId)
     if (!event || !this.isCompletableFieldEvent(event)) return
-    GameData.getInstance().setFlag(this.getFieldEventDoneFlag(event.id), true)
+    const gd = GameData.getInstance()
+    if (event.type === 'chest') {
+      gd.setFlag(this.getChestOpenedFlag(event.id), true)
+    }
+    gd.setFlag(this.getFieldEventDoneFlag(event.id), true)
+  }
+
+  private shouldDeferMapRestart(): boolean {
+    if (this.scene.isPaused()) return true
+    const blockingScenes = [
+      'DialogueOverlay',
+      'BattleScene',
+      'MenuOverlay',
+      'ShopOverlay',
+      'TrainingOverlay',
+      'RebuildOverlay',
+      'WorldMapOverlay',
+      'CodexOverlay',
+      'SettingsScene',
+    ] as const
+    return blockingScenes.some(sceneKey => this.scene.isActive(sceneKey))
   }
 
   private isSpriteUsable(sprite: Phaser.GameObjects.Sprite): boolean {
@@ -309,7 +331,13 @@ export class MapScene extends Phaser.Scene {
 
   preload(): void {
     showLoadingScreen(this, LOADING_SCREEN.MAP_LABEL)
-    queueImageAssets(this, collectMapImageKeys(this.mapData, GameData.getInstance().party))
+    const party = GameData.getInstance().party
+    const nextKeys = collectMapImageKeys(this.mapData, party)
+    if (this.loadedImageKeys.size > 0) {
+      unloadUnusedMapTextures(this, this.loadedImageKeys, nextKeys, party)
+    }
+    this.loadedImageKeys = nextKeys
+    queueImageAssets(this, nextKeys)
   }
 
   create(): void {
@@ -2039,16 +2067,14 @@ export class MapScene extends Phaser.Scene {
     const completionEventId = this.isCompletableFieldEvent(event) ? event.id : undefined
 
     if (event.type === 'chest') {
-      const flag = this.getChestOpenedFlag(event.id)
-      if (gd.getFlag(flag) === true) {
+      if (gd.getFlag(this.getChestOpenedFlag(event.id)) === true) {
         this.inEvent = false
         return
       }
-      gd.setFlag(flag, true)
     }
 
     if (completionEventId) {
-      if (gd.getFlag(this.getFieldEventDoneFlag(completionEventId)) === true) {
+      if (this.isFieldEventCompleted(event)) {
         this.inEvent = false
         return
       }
@@ -2132,10 +2158,21 @@ export class MapScene extends Phaser.Scene {
     this.scene.pause()
   }
 
-  private onDialogueEnd(data?: { actions?: EventAction[] }): void {
+  private onDialogueEnd(data?: { actions?: EventAction[]; missing?: boolean }): void {
     this.scene.resume()
-    const pending = [...(data?.actions || []), ...this.pendingActions]
     const mapEventId = this.pendingMapEventId
+
+    if (data?.missing) {
+      this.pendingActions = []
+      this.pendingMapEventId = ''
+      this.inEvent = false
+      AudioManager.getInstance().playSFX('cancel')
+      this.showMapFeedback(MAP_HUD.DIALOGUE_MISSING_TEXT, false)
+      this.flushPendingMapRestart()
+      return
+    }
+
+    const pending = [...(data?.actions || []), ...this.pendingActions]
     this.pendingActions = []
     this.pendingMapEventId = ''
 
@@ -2146,6 +2183,7 @@ export class MapScene extends Phaser.Scene {
     }
     this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
+    this.flushPendingMapRestart()
   }
 
   private executeActions(actions: EventAction[], mapEventId = ''): void {
@@ -2256,6 +2294,7 @@ export class MapScene extends Phaser.Scene {
     }
     if (victory) this.markFieldEventCompleted(mapEventId)
     this.inEvent = false
+    this.flushPendingMapRestart()
   }
 
   private onMenuClose(): void {

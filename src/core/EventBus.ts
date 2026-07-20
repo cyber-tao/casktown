@@ -26,7 +26,7 @@ interface GameEventPayloads {
   [GameEvents.SAVE_REQUEST]: []
   [GameEvents.LOAD_REQUEST]: []
   [GameEvents.DIALOGUE_START]: [dialogueId: string]
-  [GameEvents.DIALOGUE_END]: [data?: { actions?: EventAction[] }]
+  [GameEvents.DIALOGUE_END]: [data?: { actions?: EventAction[]; missing?: boolean }]
   [GameEvents.BATTLE_START]: [encounterId: string]
   [GameEvents.BATTLE_END]: [victory: boolean, result?: { escaped?: boolean }]
   [GameEvents.MENU_OPEN]: []

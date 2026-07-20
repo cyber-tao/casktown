@@ -48,7 +48,10 @@ export class CodexOverlay extends Phaser.Scene {
   }
 
   create(): void {
-    AudioManager.getInstance().setScene(this)
+    AudioManager.getInstance().pushScene(this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      AudioManager.getInstance().popScene(this)
+    })
     this.cursorIndex = 0
     this.listTopIndex = 0
     this.listItems = []

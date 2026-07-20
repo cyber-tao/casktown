@@ -206,7 +206,10 @@ export class BattleScene extends Phaser.Scene {
     const bspd = gd.settings.battleSpeed as keyof typeof BATTLE_SPEED
     this.speedMult = BATTLE_SPEED[bspd] ?? BATTLE_SPEED.normal
 
-    AudioManager.getInstance().setScene(this)
+    AudioManager.getInstance().pushScene(this)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      AudioManager.getInstance().popScene(this)
+    })
 
     // Background image
     const bgImg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, resolveBattleBackgroundKey(this.encounterId, this.mapId))
