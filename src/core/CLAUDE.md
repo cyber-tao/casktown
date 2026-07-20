@@ -21,8 +21,9 @@
 - `getInstance()` -- 获取全局实例
 - `reset()` -- 重置所有游戏状态（含初始装备、初始物品）
 - `playTime` / `syncPlayTime(nowMs?)` -- 游玩时间追踪（秒），序列化时自动同步
-- `setFlag(key, value)` / `getFlag(key)` / `hasFlag(key)` -- 游戏标志管理
-- `updateBranch(key, value)` -- 分支剧情状态更新
+- `setFlag(key, value)` / `getFlag(key)` / `hasFlag(key)` -- 游戏标志管理（数值分支走 `addBranch`；`rebuild_level` 取 max）
+- `addBranch(key, amount)` / `setBranch(key, value)` / `updateBranch(key, value)` -- 分支写入（`updateBranch` 即 `setBranch`）
+- `setRebuildLevel(level)` -- 重建等级唯一真相源（同步 branches/flags/设施）
 - `addItem(itemId, quantity?)` / `removeItem(itemId, quantity?)` / `hasItem(itemId, quantity?)` -- 物品管理
 - `addGold(amount)` / `spendGold(amount)` -- 金币管理
 - `addPartyMember(charId)` -- 队伍管理（上限4人，超出进reserve）
@@ -37,24 +38,17 @@
 ### EventBus (单例)
 
 - `on(event, handler, context?)` / `off(event, handler, context?)` / `emit(event, ...args)` -- 事件订阅/发布
-- 事件常量定义在 `GameEvents` 对象中，包含 **18** 种事件：
+- 事件常量定义在 `GameEvents` 中，当前为 **7** 种存活事件（开 Overlay/战斗用 `scene.launch`，不靠空 emit）：
 
 | 事件 | 载荷 |
 |------|------|
-| `SAVE_REQUEST` / `LOAD_REQUEST` | 无 |
-| `DIALOGUE_START` | dialogueId: string |
-| `DIALOGUE_END` | data?: { actions?: EventAction[] } |
-| `BATTLE_START` | encounterId: string |
+| `DIALOGUE_END` | data?: { actions?: EventAction[]; missing?: boolean } |
 | `BATTLE_END` | victory: boolean, result?: { escaped?: boolean } |
-| `MENU_OPEN` / `MENU_CLOSE` | 无 |
-| `MAP_CHANGE` | mapId: string |
+| `MENU_CLOSE` | 无 |
 | `FLAG_SET` | key: string, value: unknown |
 | `QUEST_UPDATE` | questId: string, state: QuestState |
-| `ITEM_GET` | itemId: string, quantity: number |
-| `LEVEL_UP` | { charId: string; level: number } |
-| `GAME_OVER` / `GAME_CLEARED` | 无 |
+| `GAME_OVER` | 无 |
 | `SAVE_LOADED` | 无 |
-| `BARREL_UNLOCKED` | color: string |
 
 ### AssetLoader
 
@@ -64,6 +58,12 @@
 - `collectBattleImageKeys(encounterId, partyIds, mapId?)` -- 收集战斗图片键
 - `processTileTextures(scene, keys)` -- 处理瓦片纹理
 - `resolveBattleBackgroundKey(encounterId, mapId?)` -- 解析战斗背景键
+- `unloadUnusedMapTextures(scene, previousKeys, nextKeys, retainKeys?)` -- 切图时卸载上一张地图专属纹理
+
+### MapEventRuntime
+
+- 地图场事件运行时：暂停原因、pending restart、两阶段 commit（成功后再写 chest/field-done）
+- 由 `MapScene` 通过 host 回调驱动；缺对话/战斗失败不错误完成事件
 
 ### InputManager
 
@@ -73,7 +73,8 @@
 
 ### AudioManager
 
-- BGM/SFX 播放管理
+- BGM/SFX/语音播放管理
+- `pushScene` / `popScene` -- scene 音频所有权栈；BGM load 回调校验宿主 scene 仍可用
 
 ### SaveManager
 
@@ -86,14 +87,14 @@
 ### QuestSystem
 
 - 任务状态管理（inactive/active/completed/failed）
-- `startQuest(questId)` / `advanceQuest(questId, amount?)` / `completeQuest(questId)` / `failQuest(questId)`
+- `startQuest` / `advanceQuest` / `completeQuest` / `failQuest` 返回 `QuestMutationResult`；非法状态 `console.warn`（英文）并失败可观测
 - `getQuestState(questId)` / `isQuestActive(questId)` / `getActiveQuests()`
 
 ### BarrelSystem
 
 - 木桶能力系统，8 种颜色: green/blue/gold/cyan/white/vermillion/black/rainbow
 - 每种颜色对应不同能力效果（mapEffect + battleEffect）
-- `unlock(color)` -- 解锁并发射 `BARREL_UNLOCKED` 事件
+- `unlock(color)` -- 解锁（写 flag；不再发射已删除的 `BARREL_UNLOCKED`）
 - `getUnlockedColors()` / `isUnlocked(color)` / `getAbility(color)` / `getAllAbilities()`
 - `useBattleBarrel(color)` -- 战斗中使用木桶能力
 
@@ -139,38 +140,50 @@
 
 ## 测试与质量
 
-7 个测试文件覆盖本模块：
+核心相关测试（节选）：
 
 | 测试文件 | 覆盖内容 |
 |---------|---------|
-| `tests/core/game-data.test.ts` | 重置状态、队伍加入、序列化/反序列化、真结局解锁、装备/经验 |
-| `tests/core/event-bus.test.ts` | 注册/触发/移除监听器、上下文绑定、多监听器 |
-| `tests/core/quest-system.test.ts` | 开始/推进/完成任务、事件发射、重复启动保护 |
-| `tests/core/barrel-system.test.ts` | 解锁/能力查询/战斗使用/事件发射 |
-| `tests/core/save-manager.test.ts` | 存读档往返、槽位校验、快速存档、元数据 |
-| `tests/core/skill-growth.test.ts` | 解锁条件判定、防重复学习、等级/标志触发 |
-| `tests/core/map-access.test.ts` | 无限制地图、布尔标志限制、数值阈值限制、对话 ID 有效性 |
+| `tests/core/game-data.test.ts` | 重置、队伍、序列化、真结局解锁、分支边界 |
+| `tests/core/event-bus.test.ts` | 注册/触发/移除、存活事件契约 |
+| `tests/core/quest-system.test.ts` | 开始/推进/完成、非法状态结果 |
+| `tests/core/barrel-system.test.ts` | 解锁/能力查询/战斗使用 |
+| `tests/core/audio-manager.test.ts` | BGM 解锁、scene 宿主、音量 |
+| `tests/core/event-action-executor.test.ts` | 状态动作执行与失败原因 |
+| `tests/core/map-event-state.test.ts` | chest/field 完成标志 |
+| `tests/core/save-manager.test.ts` | 存读档、快速存档 |
+| `tests/core/skill-growth.test.ts` | 解锁条件 |
+| `tests/core/map-access.test.ts` | 地图访问限制 |
 
 ## 相关文件清单
 
 | 文件 | 说明 |
 |------|------|
-| `src/core/GameData.ts` | 全局游戏状态单例 (612 行) |
-| `src/core/EventBus.ts` | 事件总线 (18 种事件) |
-| `src/core/AssetLoader.ts` | 资源加载辅助 |
-| `src/core/InputManager.ts` | 输入管理 (双键位) |
-| `src/core/AudioManager.ts` | 音频管理 |
-| `src/core/SaveManager.ts` | 存档管理 (含快速存档) |
+| `src/core/GameData.ts` | 全局游戏状态单例 |
+| `src/core/EventBus.ts` | 事件总线（7 种存活事件） |
+| `src/core/MapEventRuntime.ts` | 地图事件运行时 |
+| `src/core/MapEventState.ts` | 场事件完成标志 |
+| `src/core/EventActionExecutor.ts` | 状态类事件动作 |
+| `src/core/EventConditions.ts` | 事件条件判定 |
+| `src/core/DialogueCompletionQueue.ts` | 对话完成动作队列 |
+| `src/core/BattleRewards.ts` | 战斗奖励结算 |
+| `src/core/AssetLoader.ts` | 资源加载与纹理卸载 |
+| `src/core/InputManager.ts` | 输入管理 |
+| `src/core/AudioManager.ts` | 音频管理（scene 栈） |
+| `src/core/SettingsManager.ts` | 设置持久化 |
+| `src/core/SaveManager.ts` | 存档管理 |
 | `src/core/QuestSystem.ts` | 任务系统 |
-| `src/core/BarrelSystem.ts` | 木桶能力系统 (8 色) |
-| `src/core/SkillGrowth.ts` | 技能成长系统 (5 种触发) |
-| `src/core/RebuildSystem.ts` | 城镇重建系统 (12 设施) |
+| `src/core/BarrelSystem.ts` | 木桶能力系统 |
+| `src/core/SkillGrowth.ts` | 技能成长系统 |
+| `src/core/RebuildSystem.ts` | 城镇重建系统 |
 | `src/core/MapAccess.ts` | 地图访问控制 |
-| `src/core/SFXSynth.ts` | 音效合成器 (17 种音效) |
+| `src/core/ProphecyConditions.ts` | 预言之书解锁条件 |
+| `src/core/SFXSynth.ts` | 音效合成器 |
 
 ## 变更记录 (Changelog)
 
 | 时间 | 操作 | 说明 |
 |------|------|------|
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
-| 2026-05-22 15:52:17 | 增量更新 | 补充 GameEvents 完整18事件表、SaveManager 快速存档、SkillGrowth 5种触发、BarrelSystem 战斗使用、RebuildSystem 12设施、SFXSynth 17音效、GameData playTime/syncPlayTime/初始装备、7个测试文件覆盖说明 |
+| 2026-05-22 15:52:17 | 增量更新 | 补充 GameEvents、SaveManager、SkillGrowth、BarrelSystem、RebuildSystem、SFXSynth、GameData playTime |
+| 2026-07-20 | 同步架构 | EventBus 精简为 7 事件；补充 branch/rebuild API、MapEventRuntime、纹理卸载、Audio scene 栈、QuestMutationResult |

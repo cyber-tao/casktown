@@ -52,5 +52,5 @@
 - 新角色：更新角色数据、角色 sprite、BootScene 预加载，以及地图/战斗中需要引用的 ID。
 - 新任务：更新任务数据，在对话或地图事件中通过 `QuestSystem` 推进任务，并确保奖励与重建/分支状态一致。
 - 新地图：更新地图数据、资源加载、进入条件和地图切换事件，地图 ID 需与剧情脚本保持一致。
-- 新战斗：更新敌人与 encounter 数据，通过 `GameEvents.BATTLE_START` 触发，并检查战斗结束后的任务、分支和掉落处理。
-- 新 UI Overlay：保持 Phaser Scene 生命周期清晰，输入焦点、打开/关闭事件和音效反馈要与现有 Overlay 风格一致。
+- 新战斗：更新敌人与 encounter 数据，由 MapScene（或 QA）`scene.launch('BattleScene', …)` 开战，结束后消费 `GameEvents.BATTLE_END`，并检查任务、分支和掉落处理。
+- 新 UI Overlay：保持 Phaser Scene 生命周期清晰，输入焦点、打开/关闭事件和音效反馈要与现有 Overlay 风格一致；图鉴走 `MenuOverlay`（无独立 CodexOverlay）。
