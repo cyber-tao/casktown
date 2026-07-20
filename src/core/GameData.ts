@@ -259,35 +259,26 @@ export class GameData {
   }
 
   setFlag(key: string, value: unknown): void {
-    const previousRebuildLevel = this.rebuildLevel
-    const normalizedValue = key === 'rebuild_level' && typeof value === 'number' ? this.clampRebuildLevel(value) : value
-    if (!BRANCH_KEYS.has(key as keyof BranchState)) {
-      this.flags[key] = normalizedValue
-    }
-    if (normalizedValue === true && JOIN_FLAG_TO_CHARACTER[key]) {
+    if (value === true && JOIN_FLAG_TO_CHARACTER[key]) {
       this.addPartyMember(JOIN_FLAG_TO_CHARACTER[key])
     }
+
     if (BRANCH_KEYS.has(key as keyof BranchState)) {
-      if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
-        this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
-        this.branches.rebuild_level = this.rebuildLevel
-        this.flags.rebuild_level = this.rebuildLevel
-      } else {
-        this.applyBranchValue(key as keyof BranchState, normalizedValue)
-        this.syncFlagFromBranch(key as keyof BranchState)
+      const branchKey = key as keyof BranchState
+      if (BRANCH_NUMBER_KEYS.has(branchKey) && typeof value === 'number') {
+        if (branchKey === 'rebuild_level') {
+          this.setRebuildLevel(Math.max(this.rebuildLevel, value))
+        } else {
+          this.addBranch(branchKey, value)
+        }
+        return
       }
+      this.setBranch(branchKey, value)
+      return
     }
-    if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
-      this.syncFlagFromBranch('rebuild_level')
-      this.syncRebuildFacilityFlags()
-      if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
-        this.currentMap = REBUILT_TOWN_MAP_ID
-      }
-    }
+
+    this.flags[key] = value
     this.syncProgressionFlags()
-    if (key !== 'rebuild_level' && this.rebuildLevel !== previousRebuildLevel) {
-      EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', this.rebuildLevel)
-    }
     EventBus.emit(GameEvents.FLAG_SET, key, this.getFlag(key))
   }
 
@@ -302,38 +293,51 @@ export class GameData {
     return key in this.flags || BRANCH_KEYS.has(key as keyof BranchState)
   }
 
-  updateBranch(key: keyof BranchState, value: unknown): void {
-    const normalizedValue = typeof value === 'number' ? this.clampBranchNumber(key, value) : value
-    if (key === 'rebuild_level' && typeof normalizedValue === 'number') {
-      this.rebuildLevel = Math.max(this.rebuildLevel, normalizedValue)
-      this.branches.rebuild_level = this.rebuildLevel
-      this.syncRebuildFacilityFlags()
-    } else {
-      ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
+  addBranch(key: keyof BranchState, amount: number): void {
+    if (!BRANCH_NUMBER_KEYS.has(key) || !Number.isFinite(amount)) {
+      console.warn(`Cannot addBranch for ${String(key)} with amount ${amount}`)
+      return
     }
+    if (key === 'rebuild_level') {
+      this.setRebuildLevel(this.rebuildLevel + amount)
+      return
+    }
+    const current = this.branches[key]
+    const next = typeof current === 'number' ? current + amount : amount
+    this.setBranch(key, next)
+  }
+
+  setBranch(key: keyof BranchState, value: unknown): void {
+    if (key === 'rebuild_level' && typeof value === 'number') {
+      this.setRebuildLevel(Math.max(this.rebuildLevel, value))
+      return
+    }
+    const normalizedValue = typeof value === 'number' ? this.clampBranchNumber(key, value) : value
+    ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
     this.syncFlagFromBranch(key)
     this.syncTrueRouteState()
     this.syncProgressionFlags()
+    EventBus.emit(GameEvents.FLAG_SET, key, this.getFlag(key))
   }
 
-  private applyBranchValue(key: keyof BranchState, value: unknown): void {
-    if (BRANCH_NUMBER_KEYS.has(key)) {
-      const current = this.branches[key]
-      let next = key === 'rebuild_level'
-        ? (typeof value === 'number' ? this.clampRebuildLevel(value) : current)
-        : typeof value === 'number' && typeof current === 'number' ? current + value : value
-      if (typeof next === 'number') {
-        next = this.clampBranchNumber(key, next)
-      }
-      ;(this.branches as unknown as Record<string, unknown>)[key] = next
-      if (key === 'rebuild_level' && typeof next === 'number') {
-        this.rebuildLevel = next
-        this.flags.rebuild_level = next
-      }
-    } else {
-      ;(this.branches as unknown as Record<string, unknown>)[key] = value
+  setRebuildLevel(level: number): void {
+    const previousRebuildLevel = this.rebuildLevel
+    const next = this.clampRebuildLevel(level)
+    this.rebuildLevel = next
+    this.branches.rebuild_level = next
+    this.flags.rebuild_level = next
+    this.syncRebuildFacilityFlags()
+    if (this.rebuildLevel >= REBUILD_VISUAL_MAP_THRESHOLD && this.currentMap === START_MAP_ID) {
+      this.currentMap = REBUILT_TOWN_MAP_ID
     }
-    this.syncTrueRouteState()
+    this.syncProgressionFlags()
+    if (this.rebuildLevel !== previousRebuildLevel) {
+      EventBus.emit(GameEvents.FLAG_SET, 'rebuild_level', this.rebuildLevel)
+    }
+  }
+
+  updateBranch(key: keyof BranchState, value: unknown): void {
+    this.setBranch(key, value)
   }
 
   private syncTrueRouteState(): void {
@@ -430,7 +434,6 @@ export class GameData {
     const bag = item?.type === 'equipment' ? this.inventory.equipment : this.inventory.items
     const current = bag[itemId] || 0
     bag[itemId] = current + quantity
-    EventBus.emit(GameEvents.ITEM_GET, itemId, quantity)
   }
 
   getItemQuantity(itemId: string): number {
@@ -648,7 +651,6 @@ export class GameData {
     if (levelUps.length > 0) {
       char.stats.hp = char.stats.maxHp
       char.stats.mp = char.stats.maxMp
-      EventBus.emit(GameEvents.LEVEL_UP, { charId, level: char.stats.level })
     } else {
       char.stats.hp = Math.min(currentHp, char.stats.maxHp)
       char.stats.mp = Math.min(currentMp, char.stats.maxMp)
@@ -718,8 +720,7 @@ export class GameData {
     }
     const key = trustMap[charId]
     if (!key) return
-    const current = this.branches[key] as number
-    this.updateBranch(key, current + amount)
+    this.addBranch(key, amount)
   }
 
   getTrustLevel(charId: string): number {
@@ -739,9 +740,7 @@ export class GameData {
   }
 
   adjustMercy(amount: number): void {
-    this.branches.mercy_score = this.clampBranchNumber('mercy_score', this.branches.mercy_score + amount)
-    this.syncFlagFromBranch('mercy_score')
-    this.syncTrueRouteState()
+    this.addBranch('mercy_score', amount)
   }
 
   private cloneCharacter(char: CharacterData): CharacterData {

@@ -64,7 +64,7 @@ export function applyStateEventAction(action: EventAction, nowMs = Date.now()): 
       SkillGrowth.getInstance().checkAllUnlocks()
       break
     case 'setBranch':
-      gd.updateBranch(action.branch, action.value)
+      gd.setBranch(action.branch, action.value)
       SkillGrowth.getInstance().checkAllUnlocks()
       break
     case 'startTimer':

@@ -1,5 +1,4 @@
 import { GameData } from './GameData'
-import { EventBus, GameEvents } from './EventBus'
 import { BARREL_DUNGEON_ENTRANCES, BARREL_NO_ESCAPE_MAP_IDS } from '../utils/constants'
 
 export type BarrelColor = 'green' | 'blue' | 'gold' | 'cyan' | 'white' | 'vermillion' | 'black' | 'rainbow'
@@ -45,7 +44,6 @@ export class BarrelSystem {
 
   unlock(color: BarrelColor): void {
     GameData.getInstance().setFlag(`barrel_${color}`, true)
-    EventBus.emit(GameEvents.BARREL_UNLOCKED, color)
   }
 
   getAbility(color: BarrelColor): BarrelAbility | undefined {

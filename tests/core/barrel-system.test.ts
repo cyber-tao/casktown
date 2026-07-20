@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { GameData } from '../../src/core/GameData.ts'
 import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
-import { EventBus, GameEvents } from '../../src/core/EventBus.ts'
 
 describe('BarrelSystem', () => {
   beforeEach(() => {
@@ -20,13 +19,10 @@ describe('BarrelSystem', () => {
     expect(bs.isUnlocked('green')).toBe(true)
   })
 
-  test('unlock emits BARREL_UNLOCKED event', () => {
-    let emittedColor: string | undefined
-    const handler = (color: string) => { emittedColor = color }
-    EventBus.on(GameEvents.BARREL_UNLOCKED, handler)
+  test('unlock sets the barrel flag', () => {
     BarrelSystem.getInstance().unlock('blue')
-    expect(emittedColor).toBe('blue')
-    EventBus.off(GameEvents.BARREL_UNLOCKED, handler)
+    expect(GameData.getInstance().getFlag('barrel_blue')).toBe(true)
+    expect(BarrelSystem.getInstance().isUnlocked('blue')).toBe(true)
   })
 
   test('isUnlocked returns false for locked color', () => {

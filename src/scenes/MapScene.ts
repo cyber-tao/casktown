@@ -2083,7 +2083,6 @@ export class MapScene extends Phaser.Scene {
 
   private startBattle(encounterId: string, mapEventId?: string): void {
     this.clearMapNameText()
-    EventBus.emit(GameEvents.BATTLE_START, encounterId)
     this.scene.launch('BattleScene', { encounterId, mapId: this.mapData.id, mapEventId })
     this.scene.pause()
   }

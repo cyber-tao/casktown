@@ -6,6 +6,10 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import type { QuestState } from '../data/types'
 import { DEFAULT_ITEM_QUANTITY } from '../utils/constants'
 
+export type QuestMutationResult =
+  | { ok: true; questId: string; state?: QuestState }
+  | { ok: false; questId: string; reason: string }
+
 export class QuestSystem {
   private static instance: QuestSystem
 
@@ -16,16 +20,18 @@ export class QuestSystem {
     return QuestSystem.instance
   }
 
-  startQuest(questId: string): void {
+  startQuest(questId: string): QuestMutationResult {
     const gd = GameData.getInstance()
     const def = GAME_CONFIG_DATABASE.getTable('quests')[questId]
     if (!def) {
       console.warn(`Quest ${questId} not found`)
-      return
+      return { ok: false, questId, reason: 'Quest definition not found' }
     }
     if (gd.quests.has(questId)) {
       const state = gd.quests.get(questId)!
-      if (state.status === 'active' || state.status === 'completed') return
+      if (state.status === 'active' || state.status === 'completed') {
+        return { ok: true, questId, state }
+      }
     }
     const state: QuestState = {
       id: questId,
@@ -35,26 +41,38 @@ export class QuestSystem {
     }
     gd.quests.set(questId, state)
     EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
+    return { ok: true, questId, state }
   }
 
-  advanceQuest(questId: string, amount = 1): void {
-    if (!Number.isFinite(amount) || amount <= 0) return
+  advanceQuest(questId: string, amount = 1): QuestMutationResult {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      console.warn(`Cannot advance quest ${questId}: invalid amount ${amount}`)
+      return { ok: false, questId, reason: 'Invalid advance amount' }
+    }
     const gd = GameData.getInstance()
     const state = gd.quests.get(questId)
-    if (!state || state.status !== 'active') return
+    if (!state || state.status !== 'active') {
+      console.warn(`Cannot advance quest ${questId}: not active`)
+      return { ok: false, questId, reason: 'Quest is not active' }
+    }
     state.progress = Math.min(state.maxProgress, state.progress + amount)
     if (state.progress >= state.maxProgress) {
-      this.completeQuest(questId)
-    } else {
-      EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
+      return this.completeQuest(questId)
     }
+    EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
+    return { ok: true, questId, state }
   }
 
-  completeQuest(questId: string): void {
+  completeQuest(questId: string): QuestMutationResult {
     const gd = GameData.getInstance()
     const state = gd.quests.get(questId)
-    if (!state) return
-    if (state.status === 'completed') return
+    if (!state) {
+      console.warn(`Cannot complete quest ${questId}: missing state`)
+      return { ok: false, questId, reason: 'Quest state missing' }
+    }
+    if (state.status === 'completed') {
+      return { ok: true, questId, state }
+    }
     state.status = 'completed'
     state.progress = state.maxProgress
 
@@ -77,14 +95,19 @@ export class QuestSystem {
     }
     SkillGrowth.getInstance().checkAllUnlocks()
     EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
+    return { ok: true, questId, state }
   }
 
-  failQuest(questId: string): void {
+  failQuest(questId: string): QuestMutationResult {
     const gd = GameData.getInstance()
     const state = gd.quests.get(questId)
-    if (!state || state.status !== 'active') return
+    if (!state || state.status !== 'active') {
+      console.warn(`Cannot fail quest ${questId}: not active`)
+      return { ok: false, questId, reason: 'Quest is not active' }
+    }
     state.status = 'failed'
     EventBus.emit(GameEvents.QUEST_UPDATE, questId, state)
+    return { ok: true, questId, state }
   }
 
   getActiveQuests(): QuestState[] {
