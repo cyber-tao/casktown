@@ -10,7 +10,6 @@ import { SettingsScene } from './scenes/SettingsScene'
 import { ShopOverlay } from './scenes/ShopOverlay'
 import { TrainingOverlay } from './scenes/TrainingOverlay'
 import { RebuildOverlay } from './scenes/RebuildOverlay'
-import { CodexOverlay } from './scenes/CodexOverlay'
 import { WorldMapOverlay } from './scenes/WorldMapOverlay'
 import { GameData } from './core/GameData'
 import { GAME_CANVAS_BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH, TOUCH_INPUT } from './utils/constants'
@@ -43,7 +42,7 @@ export class CaskTownGame extends Phaser.Game {
           debug: false,
         },
       },
-      scene: [BootScene, TitleScene, MapScene, BattleScene, GameOverScene, DialogueOverlay, MenuOverlay, SettingsScene, ShopOverlay, TrainingOverlay, RebuildOverlay, CodexOverlay, WorldMapOverlay],
+      scene: [BootScene, TitleScene, MapScene, BattleScene, GameOverScene, DialogueOverlay, MenuOverlay, SettingsScene, ShopOverlay, TrainingOverlay, RebuildOverlay, WorldMapOverlay],
       input: {
         keyboard: true,
         mouse: true,

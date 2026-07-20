@@ -9,6 +9,7 @@ import { getBlockedMapDialogueId, resolveCanonicalMapId } from '../core/MapAcces
 import { areEventConditionsMet as areConditionsMet } from '../core/EventConditions'
 import { getChestOpenedFlag, getFieldEventDoneFlag, isCompletableMapEvent, isMapEventCompleted } from '../core/MapEventState'
 import { applyStateEventAction } from '../core/EventActionExecutor'
+import { MapEventRuntime, type MapEventRuntimeHost } from '../core/MapEventRuntime'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets, unloadUnusedMapTextures } from '../core/AssetLoader'
@@ -67,32 +68,8 @@ import { cssToGamePx } from '../utils/touch'
 import { getEscapeRetreatTiles, isTileInsideSpriteBounds } from '../utils/fieldGeometry'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import { resolveQuestProgressDisplay } from '../utils/questProgress'
-
-type PartyHudObject = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image | Phaser.GameObjects.Text
-
-interface PartyHudRow {
-  charId: string
-  hpBar: Phaser.GameObjects.Rectangle
-  mpBar: Phaser.GameObjects.Rectangle
-  hpText: Phaser.GameObjects.Text
-  mpText: Phaser.GameObjects.Text
-  levelText: Phaser.GameObjects.Text
-  lastHp?: number
-  lastMaxHp?: number
-  lastMp?: number
-  lastMaxMp?: number
-  lastLevel?: number
-}
-
-interface MapSceneFeedback {
-  text: string
-  success: boolean
-}
-
-interface MapSceneStartData {
-  mapId?: string
-  feedback?: MapSceneFeedback
-}
+import { shouldShowMapTouchControls } from './map/MapTouchControls'
+import type { MapSceneFeedback, MapSceneStartData, PartyHudObject, PartyHudRow } from './map/MapPartyHud'
 
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
@@ -138,6 +115,7 @@ export class MapScene extends Phaser.Scene {
   private fieldEntityDirections: Map<string, number> = new Map()
   private enemyPatrolTimers: Map<string, Phaser.Time.TimerEvent> = new Map()
   private battleEnemyReentryBlockedUntilMs: Map<string, number> = new Map()
+  private readonly eventRuntime = new MapEventRuntime()
   private pendingActions: EventAction[] = []
   private pendingMapEventId = ''
   private pendingMapRestartId = ''
@@ -289,15 +267,41 @@ export class MapScene extends Phaser.Scene {
   }
 
   private markFieldEventCompleted(eventId?: string): void {
-    if (!eventId) return
-    const event = this.mapData.events.find(candidate => candidate.id === eventId)
-      ?? this.battleEnemyEvents.get(eventId)
-    if (!event || !this.isCompletableFieldEvent(event)) return
-    const gd = GameData.getInstance()
-    if (event.type === 'chest') {
-      gd.setFlag(this.getChestOpenedFlag(event.id), true)
+    this.eventRuntime.markFieldEventCompleted(this.createEventHost(), eventId)
+  }
+
+  private createEventHost(): MapEventRuntimeHost {
+    return {
+      getMapEvent: eventId => this.mapData.events.find(candidate => candidate.id === eventId)
+        ?? this.battleEnemyEvents.get(eventId),
+      getFlag: key => GameData.getInstance().getFlag(key),
+      setFlag: (key, value) => GameData.getInstance().setFlag(key, value),
+      areEventConditionsMet: event => this.areEventConditionsMet(event),
+      isSuppressedFieldEvent: event => this.isSuppressedFieldEvent(event),
+      isBattleEventDefeated: event => this.isBattleEventDefeated(event),
+      onStateActionApplied: result => {
+        if (!result.partyChanged) return
+        this.removeSuppressedFieldEventSprites()
+        this.refreshFollowers()
+        this.createPartyHud()
+      },
+      onStateActionFailed: reason => this.handleStateActionFailure(reason),
+      startDialogue: dialogueId => this.startDialogue(dialogueId),
+      startBattle: (encounterId, mapEventId) => this.startBattle(encounterId, mapEventId),
+      startShop: () => {
+        this.scene.launch('ShopOverlay')
+        this.scene.pause()
+      },
+      startTraining: () => {
+        this.scene.launch('TrainingOverlay')
+        this.scene.pause()
+      },
+      startRebuildMenu: () => {
+        this.scene.launch('RebuildOverlay')
+        this.scene.pause()
+      },
+      transferMap: (mapId, x, y, onSuccess) => this.transferMap(mapId, x, y, onSuccess),
     }
-    gd.setFlag(this.getFieldEventDoneFlag(event.id), true)
   }
 
   private shouldDeferMapRestart(): boolean {
@@ -310,7 +314,6 @@ export class MapScene extends Phaser.Scene {
       'TrainingOverlay',
       'RebuildOverlay',
       'WorldMapOverlay',
-      'CodexOverlay',
       'SettingsScene',
     ] as const
     return blockingScenes.some(sceneKey => this.scene.isActive(sceneKey))
@@ -999,10 +1002,12 @@ export class MapScene extends Phaser.Scene {
   }
 
   private shouldShowTouchControls(): boolean {
-    return this.sys.game.device.input.touch
-      || navigator.maxTouchPoints > 0
-      || window.matchMedia(TOUCH_INPUT.DEVICE_MEDIA_QUERY).matches
-      || window.innerWidth <= TOUCH_INPUT.MOBILE_VIEWPORT_MAX_WIDTH
+    return shouldShowMapTouchControls(
+      this.sys.game.device.input.touch,
+      navigator.maxTouchPoints,
+      query => window.matchMedia(query).matches,
+      window.innerWidth,
+    )
   }
 
   private createTouchControls(): void {
@@ -2061,38 +2066,13 @@ export class MapScene extends Phaser.Scene {
   }
 
   private triggerEvent(event: MapEvent): void {
-    if (this.isSuppressedFieldEvent(event)) return
-    this.inEvent = true
-    const gd = GameData.getInstance()
-    const completionEventId = this.isCompletableFieldEvent(event) ? event.id : undefined
-
-    if (event.type === 'chest') {
-      if (gd.getFlag(this.getChestOpenedFlag(event.id)) === true) {
-        this.inEvent = false
-        return
-      }
-    }
-
-    if (completionEventId) {
-      if (this.isFieldEventCompleted(event)) {
-        this.inEvent = false
-        return
-      }
-    }
-
-    if (event.type === 'battle') {
-      if (this.isBattleEventDefeated(event)) {
-        this.inEvent = false
-        return
-      }
-    }
-
-    if (!this.areEventConditionsMet(event)) {
-      this.inEvent = false
-      return
-    }
-
-    this.executeActions(event.actions, event.type === 'battle' ? event.id : completionEventId)
+    this.eventRuntime.inEvent = this.inEvent
+    this.eventRuntime.pendingActions = this.pendingActions
+    this.eventRuntime.pendingMapEventId = this.pendingMapEventId
+    this.eventRuntime.beginEvent(this.createEventHost(), event)
+    this.inEvent = this.eventRuntime.inEvent
+    this.pendingActions = this.eventRuntime.pendingActions
+    this.pendingMapEventId = this.eventRuntime.pendingMapEventId
   }
 
   private startDialogue(dialogueId: string): void {

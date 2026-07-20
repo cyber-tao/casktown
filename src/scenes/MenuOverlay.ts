@@ -10,31 +10,24 @@ import { InputManager } from '../core/InputManager'
 import { SettingsManager } from '../core/SettingsManager'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { STORY_CODEX_CATEGORY_LABELS, getUnlockedStoryCodexEntries } from '../data/codex'
-import { EQUIP_SLOT_MAP, EQUIP_STAT_BONUSES, EQUIPMENT_SLOTS } from '../data/equipment'
+import { EQUIP_SLOT_MAP, EQUIPMENT_SLOTS } from '../data/equipment'
 import {
   BATTLE_RULES,
   CHARACTER_SPRITE_BASE_KEYS,
   CHARACTER_STAT_LABELS,
-  CODEX_BOSS_DISCOVERY_FLAGS,
   CODEX_STORY_BRANCH_COUNT,
   DEFAULT_ENEMY_SPRITE_KEY,
-  ENEMY_ICON_DEFAULT_FRAME,
-  ENEMY_ICON_KEY_PREFIX,
-  EQUIPMENT_STAT_LABELS,
   EQUIPMENT_SLOT_LABELS,
   GAME_HEIGHT,
   GAME_WIDTH,
   INVENTORY_CATEGORY_KEYS,
   INVENTORY_CATEGORY_LABELS,
-  INVENTORY_TYPE_ORDER,
-  ITEM_ICON_KEY_PREFIX,
   LOADING_SCREEN,
   MENU_CODEX_TAB_KEYS,
   MENU_CODEX_TAB_LABELS,
   MENU_NAV_INDEX,
   MENU_NAV_LABELS,
   MENU_OVERLAY_UI,
-  MENU_SETTINGS_OPTION_LABELS,
   MENU_SETTINGS_OPTIONS,
   PARTY_RULES,
   SAVE_LOAD_FEEDBACK_DELAY_MS,
@@ -45,42 +38,49 @@ import {
 import { bindTouchText, cssToGamePx } from '../utils/touch'
 import { cleanupKeyboardOnShutdown } from '../utils/sceneLifecycle'
 import { showLoadingScreen } from '../utils/loadingScreen'
-import { formatSaveSlotLabel, getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
+import { getLoadSaveSlots, getManualSaveSlots } from '../utils/saveSlots'
 import { completeLoadedSaveTransition, type SaveLoadTransitionState } from '../utils/saveTransition'
 import { canApplyConsumableEffect, resolveItemRecoveryAmount } from '../utils/itemEffects'
 import { GamepadNavigationController, type GamepadNavigationAction } from '../utils/gamepadNavigation'
 import { resolveQuestProgressDisplay } from '../utils/questProgress'
 import type { CharacterData, ItemData } from '../data/types'
 import type { EquipmentSlot } from '../data/equipment'
+import {
+  getCodexImageKeys as buildCodexImageKeys,
+  getCodexListCount as buildCodexListCount,
+  getCodexRowColor as resolveCodexRowColor,
+  getCodexRowLabel as resolveCodexRowLabel,
+  getCodexTab as resolveCodexTab,
+  getDiscoveredEnemies as listDiscoveredEnemies,
+  getDiscoveredItems as listDiscoveredItems,
+  getEnemyIconKey as resolveEnemyIconKey,
+} from './menu/codexHelpers'
+import {
+  buildInventoryEntries,
+  formatEquipmentBonuses as formatItemEquipmentBonuses,
+  getEquipmentCandidates as listEquipmentCandidates,
+  getInventoryCategory,
+  getInventoryEntryImageKeys,
+  getItemIconKey as resolveItemIconKey,
+  getItemName as resolveItemName,
+  getItemTypeLabel as resolveItemTypeLabel,
+  getOwnedItemQuantity as resolveOwnedItemQuantity,
+  isEquipmentItem as checkIsEquipmentItem,
+} from './menu/inventoryHelpers'
+import { getPartyMembers as listPartyMembers } from './menu/partyHelpers'
+import { buildSaveRows } from './menu/saveHelpers'
+import {
+  getSettingValueText as resolveSettingValueText,
+  getSettingsLayout as resolveSettingsLayout,
+} from './menu/settingsHelpers'
+import type {
+  InventoryEntry,
+  MenuSubmenu,
+  PendingInventoryAction,
+  PartyMemberView,
+} from './menu/types'
 
-type MenuSubmenu = 'main' | 'prophecy' | 'party' | 'inventory' | 'inventory-target' | 'skills' | 'equip-list' | 'codex' | 'save' | 'settings'
-type InventoryCategory = typeof INVENTORY_CATEGORY_KEYS[number]
-type DisplayItemType = Exclude<InventoryCategory, 'all'>
-type CodexTab = typeof MENU_CODEX_TAB_KEYS[number]
 type CharacterStatKey = keyof typeof CHARACTER_STAT_LABELS
-type EquipmentStatKey = keyof typeof EQUIPMENT_STAT_LABELS
-
-interface PartyMemberView {
-  charId: string
-  char: CharacterData
-}
-
-interface InventoryEntry {
-  itemId: string
-  item: ItemData
-  quantity: number
-}
-
-interface PendingInventoryAction {
-  itemId: string
-  kind: 'use' | 'equip'
-}
-
-interface SettingsLayout {
-  fontSize: number
-  rowHeight: number
-  visibleRows: number
-}
 
 export class MenuOverlay extends Phaser.Scene {
   private navIndex: number = MENU_NAV_INDEX.PROPHECY
@@ -170,15 +170,14 @@ export class MenuOverlay extends Phaser.Scene {
     return [...gd.party, ...gd.reserve].map(charId => `${CHARACTER_SPRITE_BASE_KEYS[charId] ?? charId.toLowerCase()}_front_idle_01`)
   }
 
-  private getInventoryEntryImageKeys(entries: readonly InventoryEntry[]): string[] {
-    return entries.map(entry => this.getItemIconKey(entry.itemId))
-  }
-
   private getCodexImageKeys(): string[] {
-    const tab = this.getCodexTab()
-    if (tab === 'items') return this.getDiscoveredItems().map(itemId => this.getItemIconKey(itemId))
-    if (tab === 'monsters') return this.getDiscoveredEnemies().map(enemyId => this.getEnemyIconKey(enemyId))
-    return []
+    const gd = GameData.getInstance()
+    const tab = resolveCodexTab(this.codexTabIndex)
+    return buildCodexImageKeys(
+      tab,
+      listDiscoveredItems(gd, this.getItems(), listPartyMembers(gd)),
+      listDiscoveredEnemies(gd),
+    )
   }
 
   private queueDynamicImageAssets(keys: Iterable<string>): void {
@@ -729,7 +728,7 @@ export class MenuOverlay extends Phaser.Scene {
   private renderInventorySummary(): void {
     this.renderHeader('背包', '物品与装备')
     this.inventoryEntries = this.getInventoryEntries()
-    this.queueDynamicImageAssets(this.getInventoryEntryImageKeys(this.inventoryEntries))
+    this.queueDynamicImageAssets(getInventoryEntryImageKeys(this.inventoryEntries))
     this.renderInventoryList(false)
     this.renderFeedback()
   }
@@ -745,7 +744,7 @@ export class MenuOverlay extends Phaser.Scene {
     this.renderHeader('背包', '物品 / 装备 / 材料')
     this.renderInventoryTabs()
     this.inventoryEntries = this.getInventoryEntries()
-    this.queueDynamicImageAssets(this.getInventoryEntryImageKeys(this.inventoryEntries))
+    this.queueDynamicImageAssets(getInventoryEntryImageKeys(this.inventoryEntries))
     this.inventoryIndex = this.clampIndex(this.inventoryIndex, this.inventoryEntries.length)
     this.renderInventoryList(true)
     this.renderInventoryDetail()
@@ -1370,17 +1369,7 @@ export class MenuOverlay extends Phaser.Scene {
 
   private getSaveRows(): string[] {
     const sm = SaveManager.getInstance()
-    if (this.loadMode) {
-      return [
-        ...getLoadSaveSlots(true).map(slot => formatSaveSlotLabel(slot, sm.getMeta(slot), 'load')),
-        '返回',
-      ]
-    }
-    return [
-      ...getManualSaveSlots().map(slot => formatSaveSlotLabel(slot, sm.getMeta(slot), 'save')),
-      '读取存档',
-      '返回',
-    ]
+    return buildSaveRows(this.loadMode, slot => sm.getMeta(slot))
   }
 
   private moveInventory(dir: number): void {
@@ -1593,136 +1582,67 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private getPartyMembers(): PartyMemberView[] {
-    const gd = GameData.getInstance()
-    return gd.party.flatMap(charId => {
-      const char = gd.characters.get(charId)
-      return char ? [{ charId, char }] : []
-    })
+    return listPartyMembers(GameData.getInstance())
   }
 
   private getInventoryEntries(): InventoryEntry[] {
-    const gd = GameData.getInstance()
-    const items = this.getItems()
-    const category = INVENTORY_CATEGORY_KEYS[this.inventoryCategoryIndex]!
-    const entries = new Map<string, InventoryEntry>()
-    const addEntry = (itemId: string, quantity: number): void => {
-      if (quantity <= 0) return
-      const item = items[itemId]
-      if (!item) return
-      const displayType = this.getDisplayItemType(itemId, item)
-      if (category !== 'all' && displayType !== category) return
-      const current = entries.get(itemId)
-      if (current) {
-        current.quantity += quantity
-      } else {
-        entries.set(itemId, { itemId, item, quantity })
-      }
-    }
-
-    for (const [itemId, quantity] of Object.entries(gd.inventory.items)) addEntry(itemId, quantity)
-    for (const [itemId, quantity] of Object.entries(gd.inventory.equipment)) addEntry(itemId, quantity)
-
-    return [...entries.values()].sort((a, b) => {
-      const typeA = this.getDisplayItemType(a.itemId, a.item)
-      const typeB = this.getDisplayItemType(b.itemId, b.item)
-      const orderA = INVENTORY_TYPE_ORDER[typeA]
-      const orderB = INVENTORY_TYPE_ORDER[typeB]
-      if (orderA !== orderB) return orderA - orderB
-      return a.item.name.localeCompare(b.item.name, 'zh-Hans-CN')
-    })
+    return buildInventoryEntries(
+      GameData.getInstance(),
+      this.getItems(),
+      getInventoryCategory(this.inventoryCategoryIndex),
+    )
   }
 
-  private getCodexTab(): CodexTab {
-    return MENU_CODEX_TAB_KEYS[this.codexTabIndex] ?? MENU_CODEX_TAB_KEYS[0]
+  private getCodexTab() {
+    return resolveCodexTab(this.codexTabIndex)
   }
 
   private getCodexListCount(): number {
-    const tab = this.getCodexTab()
-    if (tab === 'monsters') return Math.max(1, this.getDiscoveredEnemies().length)
-    if (tab === 'items') return Math.max(1, this.getDiscoveredItems().length)
-    return CODEX_STORY_BRANCH_COUNT + getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex).length + GAME_CONFIG_DATABASE.getTable('prophecies').length
+    const gd = GameData.getInstance()
+    return buildCodexListCount(
+      gd,
+      this.getCodexTab(),
+      this.getDiscoveredEnemies(),
+      this.getDiscoveredItems(),
+    )
   }
 
   private getDiscoveredEnemies(): string[] {
-    const gd = GameData.getInstance()
-    const enemies = GAME_CONFIG_DATABASE.getTable('enemies')
-    const discovered = Object.keys(enemies).filter(id => gd.getFlag(`discovered_${id}`) === true || gd.getFlag(`defeated_${id}`) === true)
-    for (const [enemyId, flag] of Object.entries(CODEX_BOSS_DISCOVERY_FLAGS)) {
-      if (enemies[enemyId] && !discovered.includes(enemyId) && gd.getFlag(`defeated_${flag}`) === true) {
-        discovered.push(enemyId)
-      }
-    }
-    return discovered
+    return listDiscoveredEnemies(GameData.getInstance())
   }
 
   private getDiscoveredItems(): string[] {
     const gd = GameData.getInstance()
-    return Object.keys(this.getItems()).filter(id => {
-      const stored = gd.getItemQuantity(id)
-      const equipped = this.getPartyMembers().some(member => EQUIPMENT_SLOTS.some(slot => member.char.equipment[slot] === id))
-      return stored > 0 || equipped || gd.getFlag(`found_${id}`) === true
-    })
+    return listDiscoveredItems(gd, this.getItems(), listPartyMembers(gd))
   }
 
   private getCodexRowLabel(index: number): string {
-    const tab = this.getCodexTab()
-    if (tab === 'monsters') {
-      const enemyId = this.getDiscoveredEnemies()[index]
-      const enemy = enemyId ? GAME_CONFIG_DATABASE.getTable('enemies')[enemyId] : undefined
-      if (!enemy) return '尚未发现任何怪物'
-      return `${enemy.isBoss ? 'BOSS' : '怪物'} · ${enemy.name}`
-    }
-    if (tab === 'items') {
-      const itemId = this.getDiscoveredItems()[index]
-      const item = itemId ? this.getItems()[itemId] : undefined
-      if (!item || !itemId) return '尚未获得任何物品'
-      return `${item.name} x${this.getOwnedItemQuantity(itemId)}`
-    }
-    if (index < CODEX_STORY_BRANCH_COUNT) {
-      return this.getStoryBranchRows()[index] ?? ''
-    }
-    const codexEntries = getUnlockedStoryCodexEntries(GameData.getInstance().unlockedCodex)
-    const codexEntryIndex = index - CODEX_STORY_BRANCH_COUNT
-    const codexEntry = codexEntries[codexEntryIndex]
-    if (codexEntry) {
-      return `${STORY_CODEX_CATEGORY_LABELS[codexEntry.category]} · ${codexEntry.title}`
-    }
-    const prophecy = GAME_CONFIG_DATABASE.getTable('prophecies')[codexEntryIndex - codexEntries.length]
-    return prophecy ? prophecy.chapter : ''
+    const gd = GameData.getInstance()
+    return resolveCodexRowLabel({
+      gd,
+      tab: this.getCodexTab(),
+      index,
+      discoveredEnemies: this.getDiscoveredEnemies(),
+      discoveredItems: this.getDiscoveredItems(),
+      items: this.getItems(),
+      partyMembers: listPartyMembers(gd),
+    })
   }
 
   private getCodexRowColor(index: number): string {
-    if (this.getCodexTab() !== 'monsters') return MENU_OVERLAY_UI.COLORS.text
-    const enemyId = this.getDiscoveredEnemies()[index]
-    const enemy = enemyId ? GAME_CONFIG_DATABASE.getTable('enemies')[enemyId] : undefined
-    return enemy?.isBoss ? MENU_OVERLAY_UI.COLORS.danger : MENU_OVERLAY_UI.COLORS.text
-  }
-
-  private getStoryBranchRows(): string[] {
-    const gd = GameData.getInstance()
-    return [
-      `信任-慧慧 ${gd.branches.trust_huihui}`,
-      `信任-A ${gd.branches.trust_a}`,
-      `信任-葱葱 ${gd.branches.trust_congcong}`,
-      `信任-sun ${gd.branches.trust_sun}`,
-      `慈悲值 ${gd.branches.mercy_score}`,
-      `重建等级 ${gd.branches.rebuild_level}`,
-      `记忆碎片 ${gd.branches.xiaoai_memory_fragments}`,
-      `白虎尊重 ${gd.branches.white_tiger_respected ? '是' : '否'}`,
-      `四封印解放 ${gd.branches.released_four_seals ? '是' : '否'}`,
-      `xiaoai净化 ${gd.branches.xiaoai_purified ? '是' : '否'}`,
-    ]
+    return resolveCodexRowColor(this.getCodexTab(), index, this.getDiscoveredEnemies())
   }
 
   private getOwnedItemQuantity(itemId: string): number {
-    const equipped = this.getPartyMembers().filter(member => EQUIPMENT_SLOTS.some(slot => member.char.equipment[slot] === itemId)).length
-    return this.getStoredQuantity(itemId) + equipped
+    return resolveOwnedItemQuantity(GameData.getInstance(), this.getPartyMembers(), itemId)
   }
 
   private getEquipmentCandidates(slot: EquipmentSlot): string[] {
-    return this.getInventoryEntries()
-      .filter(entry => EQUIP_SLOT_MAP[entry.itemId] === slot && this.getStoredQuantity(entry.itemId) > 0)
-      .map(entry => entry.itemId)
+    return listEquipmentCandidates(
+      this.getInventoryEntries(),
+      itemId => this.getStoredQuantity(itemId),
+      slot,
+    )
   }
 
   private getStoredQuantity(itemId: string): number {
@@ -1850,18 +1770,15 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private getSettingValueText(config: typeof MENU_SETTINGS_OPTIONS[number]): string {
-    if (config.key === 'controlMode') return InputManager.getInstance().isWASDMode() ? 'WASD' : '方向键'
-    if (config.key === 'gamepad') return InputManager.getInstance().isGamepadEnabled() ? '开' : '关'
-    if (config.key === 'resetKeys') return '--'
-    const value = (GameData.getInstance().settings as Record<string, unknown>)[config.key]
-    if (config.type === 'select') {
-      const labels = MENU_SETTINGS_OPTION_LABELS[config.key]
-      return labels?.[value as string] ?? String(value)
-    }
-    if (config.type === 'slider') {
-      return `${Math.round((value as number) * BATTLE_RULES.PERCENT_DIVISOR)}%`
-    }
-    return value ? '开' : '关'
+    const input = InputManager.getInstance()
+    return resolveSettingValueText(
+      config,
+      GameData.getInstance().settings as Record<string, unknown>,
+      {
+        isWASDMode: input.isWASDMode(),
+        isGamepadEnabled: input.isGamepadEnabled(),
+      },
+    )
   }
 
   private renderSettingSlider(configKey: string, y: number, rowHeight: number, fontSize: number): void {
@@ -2013,24 +1930,8 @@ export class MenuOverlay extends Phaser.Scene {
     else if (this.submenu === 'settings') this.renderSettings()
   }
 
-  private getSettingsLayout(): SettingsLayout {
-    const fontSize = Math.max(
-      MENU_OVERLAY_UI.CAPTION_FONT_SIZE,
-      cssToGamePx(this, MENU_OVERLAY_UI.SETTINGS_MIN_CSS_FONT_SIZE),
-    )
-    const rowHeight = Math.max(
-      MENU_OVERLAY_UI.SETTINGS_ROW_HEIGHT,
-      fontSize + cssToGamePx(this, MENU_OVERLAY_UI.SETTINGS_ROW_GAP_CSS),
-    )
-    const availableHeight = MENU_OVERLAY_UI.FOOTER_Y
-      - MENU_OVERLAY_UI.SETTINGS_FOOTER_GAP
-      - MENU_OVERLAY_UI.SETTINGS_ROW_Y
-    const visibleRows = Phaser.Math.Clamp(
-      Math.floor(availableHeight / rowHeight),
-      MENU_OVERLAY_UI.SETTINGS_MIN_VISIBLE_ROWS,
-      MENU_OVERLAY_UI.SETTINGS_VISIBLE_ROWS,
-    )
-    return { fontSize, rowHeight, visibleRows }
+  private getSettingsLayout() {
+    return resolveSettingsLayout(cssPx => cssToGamePx(this, cssPx))
   }
 
   private handleSettingsResize(): void {
@@ -2050,38 +1951,27 @@ export class MenuOverlay extends Phaser.Scene {
   }
 
   private getItemIconKey(itemId: string): string {
-    return `${ITEM_ICON_KEY_PREFIX}${itemId}`
+    return resolveItemIconKey(itemId)
   }
 
   private getEnemyIconKey(enemyId: string): string {
-    return `${ENEMY_ICON_KEY_PREFIX}${enemyId}_${ENEMY_ICON_DEFAULT_FRAME}`
+    return resolveEnemyIconKey(enemyId)
   }
 
   private getItemName(itemId: string): string {
-    return this.getItems()[itemId]?.name ?? itemId
+    return resolveItemName(this.getItems(), itemId)
   }
 
   private getItemTypeLabel(itemId: string, item: ItemData): string {
-    return INVENTORY_CATEGORY_LABELS[this.getDisplayItemType(itemId, item)]
-  }
-
-  private getDisplayItemType(itemId: string, item: ItemData): DisplayItemType {
-    return this.isEquipmentItem(itemId, item) ? 'equipment' : item.type
+    return resolveItemTypeLabel(itemId, item)
   }
 
   private isEquipmentItem(itemId: string, item: ItemData): boolean {
-    return item.type === 'equipment' || Boolean(EQUIP_SLOT_MAP[itemId])
+    return checkIsEquipmentItem(itemId, item)
   }
 
   private formatEquipmentBonuses(itemId: string): string {
-    const bonuses = EQUIP_STAT_BONUSES[itemId]
-    if (!bonuses) return ''
-    return (Object.entries(EQUIPMENT_STAT_LABELS) as [EquipmentStatKey, string][])
-      .flatMap(([key, label]) => {
-        const value = bonuses[key]
-        return value ? [`${label} +${value}`] : []
-      })
-      .join('  ')
+    return formatItemEquipmentBonuses(itemId)
   }
 
   private clampIndex(index: number, length: number): number {

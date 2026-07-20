@@ -70,47 +70,22 @@ import {
   resolveEncounterPartyIds,
   resolveEnemyElementalDamageModifier,
   resolveHeartShadowBreakMax,
-  resolveHeartShadowCopyAction,
-  resolveHeartShadowHuihuiSkill,
   resolveLimitedSkillTargets,
   resolveEscapeAttempt,
-  shouldHeartShadowSunCastShield,
   shouldEvadeBattleAttack,
   shouldGrantExtraTurnOnKill,
 } from '../utils/battleRules'
 import { addRuntimePanel as createRuntimePanel } from '../utils/runtimePanels'
 import type { CharacterData, EnemyData, ItemData, SkillData } from '../data/types'
-
-interface BattleUnit {
-  id: string
-  name: string
-  isPlayer: boolean
-  stats: { hp: number; maxHp: number; mp: number; maxMp: number; speed: number }
-  sprite?: Phaser.GameObjects.Sprite
-  hpBar?: Phaser.GameObjects.Rectangle
-  mpBar?: Phaser.GameObjects.Rectangle
-  tpBar?: Phaser.GameObjects.Rectangle
-  statusText?: Phaser.GameObjects.Text
-  breakGauge: number
-  breakMax: number
-  tp: number
-  status: string[]
-  data: CharacterData | EnemyData
-}
+import type { BattleUnit } from './battle/BattleUnit'
+import { runEnemyAi } from './battle/enemyAi'
+import { resolveBattleSubmenuLayout, type BattleSubmenuLayout } from './battle/BattleCommandUI'
 
 interface BattleResultSummary {
   victory: boolean
   escaped: boolean
   title: string
   lines: string[]
-}
-
-interface BattleSubmenuLayout {
-  panelX: number
-  panelY: number
-  panelWidth: number
-  panelHeight: number
-  itemStartY: number
 }
 
 interface SkillDamageOptions {
@@ -1231,23 +1206,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private getBattleSubmenuLayout(rowCount: number): BattleSubmenuLayout {
-    const rows = Math.max(1, rowCount)
-    const contentHeight = BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING * 2 +
-      BATTLE_LAYOUT.SUBMENU_ITEM_FONT_SIZE +
-      (rows - 1) * BATTLE_LAYOUT.SUBMENU_ITEM_GAP_Y
-    const panelHeight = Math.max(BATTLE_LAYOUT.SUBMENU_PANEL_MIN_HEIGHT, contentHeight)
-    const maxTop = GAME_HEIGHT - BATTLE_LAYOUT.SUBMENU_MARGIN_BOTTOM - panelHeight
-    const top = maxTop < BATTLE_LAYOUT.SUBMENU_MIN_TOP
-      ? Math.max(0, maxTop)
-      : Phaser.Math.Clamp(BATTLE_LAYOUT.SUBMENU_PREFERRED_TOP, BATTLE_LAYOUT.SUBMENU_MIN_TOP, maxTop)
-
-    return {
-      panelX: BATTLE_LAYOUT.SUBMENU_PANEL_X,
-      panelY: top + panelHeight / 2,
-      panelWidth: BATTLE_LAYOUT.SUBMENU_PANEL_WIDTH,
-      panelHeight,
-      itemStartY: top + BATTLE_LAYOUT.SUBMENU_VERTICAL_PADDING,
-    }
+    return resolveBattleSubmenuLayout(rowCount, (value, min, max) => Phaser.Math.Clamp(value, min, max))
   }
 
   private addBattleSubmenuPanel(rowCount: number): { layout: BattleSubmenuLayout; panel: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image } {
@@ -2319,323 +2278,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private enemyAI(unit: BattleUnit): void {
-    const aiType = (unit.data as EnemyData).aiType
-    switch (aiType) {
-      case 'defensive': this.defensiveAI(unit); break
-      case 'mage': this.mageAI(unit); break
-      case 'boss_baihu': this.bossBaihuAI(unit); break
-      case 'boss_shuiyao': this.bossShuiyaoAI(unit); break
-      case 'boss_fengchi': this.bossFengchiAI(unit); break
-      case 'boss_phoenix': this.bossPhoenixAI(unit); break
-      case 'boss_qilin': this.bossQilinAI(unit); break
-      case 'boss_chi': this.bossChiAI(unit); break
-      case 'boss_mei': this.bossMeiAI(unit); break
-      case 'boss_wang': this.bossWangAI(unit); break
-      case 'boss_liang': this.bossLiangAI(unit); break
-      case 'boss_fake_xiaoai': this.bossFakeXiaoaiAI(unit); break
-      case 'boss_xiaoai_true': this.bossXiaoaiTrueAI(unit); break
-      case 'boss_wuxiang': this.bossWuxiangAI(unit); break
-      case 'heart_shadow_t': this.heartShadowTAI(unit); break
-      case 'heart_shadow_huihui': this.heartShadowHuihuiAI(unit); break
-      case 'heart_shadow_congcong': this.heartShadowCongcongAI(unit); break
-      case 'heart_shadow_sun': this.heartShadowSunAI(unit); break
-      default: this.basicAI(unit); break
-    }
-  }
-
-  private basicAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const target = this.pickRandomTarget(targets)!
-    const enemy = unit.data as EnemyData
-    if (enemy.skills.length > 1 && Math.random() < BATTLE_RULES.BASIC_AI_SKILL_CHANCE) {
-      const skillId = enemy.skills[Math.floor(Math.random() * enemy.skills.length)]!
-      if (skillId !== 'normal_attack') {
-        this.performSkill(unit, target, skillId)
-        this.nextTurn()
-        return
-      }
-    }
-    this.performAttack(unit, target)
-    this.nextTurn()
-  }
-
-  private defensiveAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const target = this.pickRandomTarget(targets)!
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.DEFENSIVE_AI_COUNTER_CHANCE && !this.hasStatus(unit, BATTLE_STATUS.COUNTER)) {
-      this.performSkill(unit, unit, 'counter')
-    } else if (roll < BATTLE_RULES.DEFENSIVE_AI_SHIELD_BASH_CHANCE) {
-      this.performSkill(unit, target, 'shield_bash')
-    } else {
-      this.performAttack(unit, target)
-    }
-    this.nextTurn()
-  }
-
-  private mageAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const target = this.pickRandomTarget(targets)!
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.MAGE_AI_MAGIC_ATTACK_CHANCE) {
-      this.performSkill(unit, target, 'magic_attack')
-    } else if (roll < BATTLE_RULES.MAGE_AI_SPECIAL_SKILL_CHANCE) {
-      const skillId = (unit.data as EnemyData).skills.find(s => s !== 'magic_attack' && s !== 'normal_attack') || 'magic_attack'
-      this.performSkill(unit, target, skillId)
-    } else {
-      this.performAttack(unit, target)
-    }
-    this.nextTurn()
-  }
-
-  private heartShadowTAI(unit: BattleUnit): void {
-    const target = this.pickRandomTarget(this.getLivePlayers())
-    if (!target) return
-    const action = resolveHeartShadowCopyAction(this.lastPlayerAction, GAME_CONFIG_DATABASE.getTable('skills'))
-    if (action.type === 'attack') {
-      this.performAttack(unit, target)
-    } else if (action.type === 'defend') {
-      this.addStatus(unit, BATTLE_STATUS.DEFEND)
-      this.log(`${unit.name} 复制了防御姿态。`)
-    } else {
-      const skill = GAME_CONFIG_DATABASE.getTable('skills')[action.skillId]
-      const skillTarget = skill && (skill.target === 'self' || skill.type === 'heal' || skill.type === 'buff') ? unit : target
-      this.log(`${unit.name} 映照了上一项行动。`)
-      this.performSkill(unit, skillTarget, action.skillId)
-    }
-    this.nextTurn()
-  }
-
-  private heartShadowHuihuiAI(unit: BattleUnit): void {
-    const chain = this.getLiveEnemies().find(enemy => (enemy.data as EnemyData).id === HEART_SHADOW_ENEMY_IDS.WORRY_CHAIN)
-    const skillId = resolveHeartShadowHuihuiSkill(Boolean(chain))
-    const target = chain ?? this.pickRandomTarget(this.getLivePlayers())
-    if (!target) return
-    this.performSkill(unit, target, skillId)
-    this.nextTurn()
-  }
-
-  private heartShadowCongcongAI(unit: BattleUnit): void {
-    const target = this.pickRandomTarget(this.getLivePlayers())
-    if (!target) return
-    if (!this.hasStatus(unit, BATTLE_STATUS.EVASION_UP)) {
-      this.performSkill(unit, unit, 'tiefengbu')
-    } else {
-      this.performSkill(unit, target, 'jingyuezhan')
-    }
-    this.nextTurn()
-  }
-
-  private heartShadowSunAI(unit: BattleUnit): void {
-    const target = this.pickRandomTarget(this.getLivePlayers())
-    if (!target) return
-    if (shouldHeartShadowSunCastShield(this.completedRoundCount, this.hasStatus(unit, BATTLE_STATUS.SHIELD))) {
-      this.performSkill(unit, unit, 'shengdun')
-    } else {
-      this.performSkill(unit, target, 'illusion_strike')
-    }
-    this.nextTurn()
-  }
-
-  private bossBaihuAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-
-    const target = this.pickRandomTarget(targets)!
-    const hpRatio = unit.stats.hp / unit.stats.maxHp
-    const roll = Math.random()
-    if (hpRatio < BATTLE_RULES.BAIHU_LOW_HP_RATIO && roll < BATTLE_RULES.BAIHU_HEAVENLY_STRIKE_CHANCE) {
-      this.performSkill(unit, target, 'heavenly_strike')
-    } else if (!this.hasStatus(unit, BATTLE_STATUS.ROAR) && roll < BATTLE_RULES.BAIHU_ROAR_CHANCE) {
-      this.performSkill(unit, unit, 'roar')
-    } else {
-      this.performSkill(unit, target, 'tiger_claw')
-    }
-    this.nextTurn()
-  }
-
-  private bossShuiyaoAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const allies = this.units.filter(u => !u.isPlayer && u.stats.hp > 0)
-    const woundedAlly = allies.find(u => u.stats.hp / u.stats.maxHp < BATTLE_RULES.SHUIYAO_WOUNDED_ALLY_HP_RATIO)
-    const roll = Math.random()
-    if (woundedAlly && roll < BATTLE_RULES.SHUIYAO_HEAL_CHANCE) {
-      this.performSkill(unit, woundedAlly, 'heal')
-    } else if (roll < BATTLE_RULES.SHUIYAO_WATER_CURTAIN_CHANCE && !this.hasStatus(unit, BATTLE_STATUS.WATER_CURTAIN)) {
-      this.performSkill(unit, unit, 'water_curtain')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'ice_shard')
-    }
-    this.nextTurn()
-  }
-
-  private bossFengchiAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (!this.hasStatus(unit, BATTLE_STATUS.WIND_WALL) && roll < BATTLE_RULES.FENGCHI_WIND_WALL_CHANCE) {
-      this.performSkill(unit, unit, 'wind_wall')
-    } else if (roll < BATTLE_RULES.FENGCHI_GALE_SLASH_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'gale_slash')
-    } else {
-      this.performSkill(unit, targets[0]!, 'feather_storm')
-    }
-    this.nextTurn()
-  }
-
-  private bossPhoenixAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.PHOENIX_FIRE_BREATH_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'fire_breath')
-    } else if (roll < BATTLE_RULES.PHOENIX_WIND_PRESSURE_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'wind_pressure')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performAttack(unit, target)
-    }
-    this.nextTurn()
-  }
-
-  private bossQilinAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (!this.hasStatus(unit, BATTLE_STATUS.ARMOR_UP) && roll < BATTLE_RULES.QILIN_ARMOR_UP_CHANCE) {
-      this.performSkill(unit, unit, 'armor_up')
-    } else if (roll < BATTLE_RULES.QILIN_EARTHQUAKE_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'earthquake')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'flame_charge')
-    }
-    this.nextTurn()
-  }
-
-  private bossChiAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.CHI_POISON_MIST_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'poison_mist')
-    } else if (roll < BATTLE_RULES.CHI_VENOM_FANG_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'venom_fang')
-    } else {
-      this.performSkill(unit, targets[0]!, 'toxic_burst')
-    }
-    this.nextTurn()
-  }
-
-  private bossMeiAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.MEI_CHARM_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'charm')
-    } else if (roll < BATTLE_RULES.MEI_ILLUSION_STRIKE_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'illusion_strike')
-    } else {
-      this.performSkill(unit, targets[0]!, 'shadow_dance')
-    }
-    this.nextTurn()
-  }
-
-  private bossWangAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.WANG_WIND_POISON_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'wind_poison')
-    } else if (roll < BATTLE_RULES.WANG_FEATHER_DART_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'feather_dart')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'aerial_dive')
-    }
-    this.nextTurn()
-  }
-
-  private bossLiangAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const hpRatio = unit.stats.hp / unit.stats.maxHp
-    const roll = Math.random()
-    if (hpRatio < BATTLE_RULES.LIANG_LOW_HP_RATIO && roll < BATTLE_RULES.LIANG_FLAME_STOMP_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'flame_stomp')
-    } else if (roll < BATTLE_RULES.LIANG_ROCK_SMASH_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'rock_smash')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'armor_pierce')
-    }
-    this.nextTurn()
-  }
-
-  private bossFakeXiaoaiAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const roll = Math.random()
-    if (roll < BATTLE_RULES.FAKE_XIAOAI_DARK_MIRROR_CHANCE && !this.hasStatus(unit, BATTLE_STATUS.DARK_MIRROR)) {
-      this.performSkill(unit, unit, 'dark_mirror')
-    } else if (roll < BATTLE_RULES.FAKE_XIAOAI_SHADOW_BLADE_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'shadow_blade')
-    } else {
-      this.performSkill(unit, unit, 'afternoon_tea')
-    }
-    this.nextTurn()
-  }
-
-  private bossXiaoaiTrueAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const hpRatio = unit.stats.hp / unit.stats.maxHp
-    const roll = Math.random()
-    if (hpRatio < BATTLE_RULES.XIAOAI_TRUE_LOW_HP_RATIO && roll < BATTLE_RULES.XIAOAI_TRUE_FALLEN_ANGEL_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'fallen_angel')
-    } else if (roll < BATTLE_RULES.XIAOAI_TRUE_DARK_PURGE_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'dark_purge')
-    } else if (roll < BATTLE_RULES.XIAOAI_TRUE_SOUL_DRAIN_CHANCE) {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'soul_drain')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performSkill(unit, target, 'wind_moon_slash')
-    }
-    this.nextTurn()
-  }
-
-  private bossWuxiangAI(unit: BattleUnit): void {
-    const targets = this.getLivePlayers()
-    if (targets.length === 0) return
-    const hpRatio = unit.stats.hp / unit.stats.maxHp
-    const roll = Math.random()
-    if (hpRatio < BATTLE_RULES.WUXIANG_LOW_HP_RATIO && roll < BATTLE_RULES.WUXIANG_DARK_NOVA_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'dark_nova')
-    } else if (roll < BATTLE_RULES.WUXIANG_COPY_PARTY_CHANCE) {
-      this.performSkill(unit, unit, 'copy_party')
-    } else if (roll < BATTLE_RULES.WUXIANG_DEVOUR_PROPHECY_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'devour_prophecy')
-    } else if (roll < BATTLE_RULES.WUXIANG_HEART_VOID_CHANCE) {
-      this.performSkill(unit, targets[0]!, 'heart_void')
-    } else {
-      const target = this.pickRandomTarget(targets)!
-      this.performAttack(unit, target)
-    }
-    this.nextTurn()
+    runEnemyAi({
+      units: this.units,
+      completedRoundCount: this.completedRoundCount,
+      lastPlayerAction: this.lastPlayerAction,
+      getLivePlayers: () => this.getLivePlayers(),
+      getLiveEnemies: () => this.getLiveEnemies(),
+      pickRandomTarget: targets => this.pickRandomTarget(targets),
+      hasStatus: (candidate, status) => this.hasStatus(candidate, status),
+      addStatus: (candidate, status) => this.addStatus(candidate, status),
+      performAttack: (attacker, target) => this.performAttack(attacker, target),
+      performSkill: (caster, target, skillId) => this.performSkill(caster, target, skillId),
+      log: message => this.log(message),
+      nextTurn: () => this.nextTurn(),
+    }, unit)
   }
 
   private nextTurn(): void {
