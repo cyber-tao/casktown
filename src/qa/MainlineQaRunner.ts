@@ -23,6 +23,13 @@ import {
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
+  NORMAL_ENDING_QA_DIALOGUE_CHOICE_INDEXES,
+  NORMAL_ENDING_QA_REQUIRED_COMPLETED_QUESTS,
+  NORMAL_ENDING_QA_REQUIRED_FINAL_FLAGS,
+  NORMAL_ENDING_QA_REQUIRED_FINAL_ITEMS,
+  NORMAL_ENDING_QA_REQUIRED_FINAL_REBUILD_LEVEL,
+  NORMAL_ENDING_QA_REQUIRED_PARTY,
+  NORMAL_ENDING_QA_ROUTE,
   TOUCH_INPUT,
 } from '../utils/constants'
 
@@ -32,6 +39,48 @@ type MainlineQaRouteStep =
 type MainlineQaStatus = typeof MAINLINE_QA.STATUS_PASSED | typeof MAINLINE_QA.STATUS_FAILED
 type MainlineQaSummaryElement = Pick<HTMLElement, 'setAttribute'>
 type BranchValueType = 'boolean' | 'number' | 'string'
+export type StoryQaProfileId = 'mainline' | 'normal'
+
+export interface StoryQaProfile {
+  id: StoryQaProfileId
+  label: string
+  route: readonly MainlineQaRouteStep[]
+  choiceIndexes: Record<string, readonly number[]>
+  requiredFinalFlags: readonly string[]
+  requiredCompletedQuests: readonly string[]
+  requiredFinalItems: readonly string[]
+  requiredParty: readonly string[]
+  requiredRebuildLevel: number
+}
+
+function isStoryQaProfile(value: readonly MainlineQaRouteStep[] | StoryQaProfile): value is StoryQaProfile {
+  return !Array.isArray(value) && typeof value === 'object' && value !== null && 'route' in value
+}
+
+export const STORY_QA_PROFILES: Record<StoryQaProfileId, StoryQaProfile> = {
+  mainline: {
+    id: 'mainline',
+    label: 'Mainline QA',
+    route: MAINLINE_QA_ROUTE,
+    choiceIndexes: MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
+    requiredFinalFlags: MAINLINE_QA_REQUIRED_FINAL_FLAGS,
+    requiredCompletedQuests: MAINLINE_QA_REQUIRED_COMPLETED_QUESTS,
+    requiredFinalItems: MAINLINE_QA_REQUIRED_FINAL_ITEMS,
+    requiredParty: MAINLINE_QA_REQUIRED_PARTY,
+    requiredRebuildLevel: MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL,
+  },
+  normal: {
+    id: 'normal',
+    label: 'Normal Ending QA',
+    route: NORMAL_ENDING_QA_ROUTE,
+    choiceIndexes: NORMAL_ENDING_QA_DIALOGUE_CHOICE_INDEXES,
+    requiredFinalFlags: NORMAL_ENDING_QA_REQUIRED_FINAL_FLAGS,
+    requiredCompletedQuests: NORMAL_ENDING_QA_REQUIRED_COMPLETED_QUESTS,
+    requiredFinalItems: NORMAL_ENDING_QA_REQUIRED_FINAL_ITEMS,
+    requiredParty: NORMAL_ENDING_QA_REQUIRED_PARTY,
+    requiredRebuildLevel: NORMAL_ENDING_QA_REQUIRED_FINAL_REBUILD_LEVEL,
+  },
+}
 
 let removeMainlineQaSummaryViewportListeners: (() => void) | null = null
 
@@ -87,8 +136,19 @@ export class MainlineQaRunner {
   private readonly triggeredMapEvents = new Set<string>()
   private readonly completedDialogueIds = new Set<string>()
   private readonly completedEncounterIds = new Set<string>()
+  private readonly profile: StoryQaProfile
+  private readonly route: readonly MainlineQaRouteStep[]
 
-  constructor(private readonly route: readonly MainlineQaRouteStep[] = MAINLINE_QA_ROUTE) {}
+  constructor(routeOrProfile?: readonly MainlineQaRouteStep[] | StoryQaProfile) {
+    const input = routeOrProfile ?? STORY_QA_PROFILES.mainline
+    if (isStoryQaProfile(input)) {
+      this.profile = input
+      this.route = input.route
+      return
+    }
+    this.profile = { ...STORY_QA_PROFILES.mainline, route: input }
+    this.route = input
+  }
 
   run(): MainlineQaReport {
     const gd = GameData.getInstance()
@@ -215,7 +275,7 @@ export class MainlineQaRunner {
       return null
     }
 
-    const configuredChoices = MAINLINE_QA_DIALOGUE_CHOICE_INDEXES[dialogueId] ?? []
+    const configuredChoices = this.profile.choiceIndexes[dialogueId] ?? []
     const usedCount = this.choiceUseCounts.get(dialogueId) ?? 0
     this.choiceUseCounts.set(dialogueId, usedCount + 1)
     const configuredIndex = configuredChoices[usedCount] ?? configuredChoices[configuredChoices.length - 1] ?? 0
@@ -562,11 +622,11 @@ export class MainlineQaRunner {
     if (gd.currentMap !== MAINLINE_QA_REQUIRED_FINAL_MAP) {
       this.addError(`final: Current map ${gd.currentMap} does not match ${MAINLINE_QA_REQUIRED_FINAL_MAP}`)
     }
-    if (gd.rebuildLevel < MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL) {
-      this.addError(`final: Rebuild level ${gd.rebuildLevel} is below ${MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL}`)
+    if (gd.rebuildLevel < this.profile.requiredRebuildLevel) {
+      this.addError(`final: Rebuild level ${gd.rebuildLevel} is below ${this.profile.requiredRebuildLevel}`)
     }
     if (MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS && questSystem.getActiveQuests().length > 0) {
-      this.addError('final: Active quests remain after mainline route')
+      this.addError(`final: Active quests remain after ${this.profile.id} route`)
     }
     for (const { branch, min } of MAINLINE_QA_REQUIRED_BRANCH_THRESHOLDS) {
       const value = gd.branches[branch]
@@ -574,24 +634,24 @@ export class MainlineQaRunner {
         this.addError(`final: Branch ${branch} is below required threshold ${min}`)
       }
     }
-    for (const flag of MAINLINE_QA_REQUIRED_FINAL_FLAGS) {
+    for (const flag of this.profile.requiredFinalFlags) {
       if (gd.getFlag(flag) !== true) this.addError(`final: Required flag ${flag} is not true`)
     }
     for (const { characterId, skillId } of MAINLINE_QA_REQUIRED_FINAL_SKILLS) {
       const skills = gd.characters.get(characterId)?.skills ?? []
       if (!skills.includes(skillId)) this.addError(`final: Character ${characterId} does not know ${skillId}`)
     }
-    for (const itemId of MAINLINE_QA_REQUIRED_FINAL_ITEMS) {
+    for (const itemId of this.profile.requiredFinalItems) {
       if (!gd.hasItem(itemId)) this.addError(`final: Required item ${itemId} is missing`)
     }
-    for (const questId of MAINLINE_QA_REQUIRED_COMPLETED_QUESTS) {
+    for (const questId of this.profile.requiredCompletedQuests) {
       if (!questSystem.isQuestCompleted(questId)) {
         this.addError(`final: Quest ${questId} is not completed`)
       } else if (!this.completedQuestSources.has(questId)) {
         this.addError(`final: Quest ${questId} completed without a QA route completion source`)
       }
     }
-    for (const characterId of MAINLINE_QA_REQUIRED_PARTY) {
+    for (const characterId of this.profile.requiredParty) {
       if (!gd.party.includes(characterId) && !gd.reserve.includes(characterId)) {
         this.addError(`final: Party member ${characterId} is missing`)
       }
@@ -644,9 +704,16 @@ export class MainlineQaRunner {
   }
 }
 
+export function getRequestedStoryQaProfileId(): StoryQaProfileId | null {
+  if (typeof window === 'undefined' || typeof window.location?.search !== 'string') return null
+  const queryValue = new URLSearchParams(window.location.search).get(MAINLINE_QA.QUERY_PARAM)
+  if (queryValue === MAINLINE_QA.QUERY_VALUE) return 'mainline'
+  if (queryValue === MAINLINE_QA.NORMAL_QUERY_VALUE) return 'normal'
+  return null
+}
+
 export function isMainlineQaRequested(): boolean {
-  if (typeof window === 'undefined') return false
-  return new URLSearchParams(window.location.search).get(MAINLINE_QA.QUERY_PARAM) === MAINLINE_QA.QUERY_VALUE
+  return getRequestedStoryQaProfileId() !== null
 }
 
 export function isBattleVisualQaRequested(): boolean {
@@ -707,7 +774,7 @@ export function prepareBattleVisualQa(config: BattleVisualQaConfig = getBattleVi
   SkillGrowth.getInstance().checkAllUnlocks()
 }
 
-function publishMainlineQaReport(report: MainlineQaReport): void {
+function publishMainlineQaReport(report: MainlineQaReport, label = 'Mainline QA'): void {
   ;(globalThis as unknown as Record<string, unknown>)[MAINLINE_QA.REPORT_GLOBAL_KEY] = report
 
   if (typeof document === 'undefined') return
@@ -733,7 +800,7 @@ function publishMainlineQaReport(report: MainlineQaReport): void {
   }
   summaryElement.setAttribute('data-status', report.status)
   summaryElement.textContent = [
-    `Mainline QA ${report.status.toUpperCase()}`,
+    `${label} ${report.status.toUpperCase()}`,
     `Steps ${report.steps.length}`,
     `Maps ${report.coverage.mapIds.length}`,
     `Battles ${report.coverage.encounterIds.length}`,
@@ -803,16 +870,18 @@ export function getMainlineQaSummaryStyle(compactViewport: boolean): string {
   ].join(';')
 }
 
-export function runMainlineQa(): MainlineQaReport {
-  const report = new MainlineQaRunner().run()
-  publishMainlineQaReport(report)
-  if (typeof window !== 'undefined') {
+export function runMainlineQa(profileId?: StoryQaProfileId): MainlineQaReport {
+  const resolvedProfileId = profileId ?? getRequestedStoryQaProfileId() ?? 'mainline'
+  const profile = STORY_QA_PROFILES[resolvedProfileId]
+  const report = new MainlineQaRunner(profile).run()
+  publishMainlineQaReport(report, profile.label)
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new CustomEvent(MAINLINE_QA.REPORT_EVENT, { detail: report }))
   }
   if (report.status === MAINLINE_QA.STATUS_FAILED) {
-    console.error('CaskTown mainline QA failed', report)
+    console.error(`CaskTown ${profile.label} failed`, report)
   } else {
-    console.info('CaskTown mainline QA passed', report)
+    console.info(`CaskTown ${profile.label} passed`, report)
   }
   return report
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { GAME_CONFIG_DATABASE } from '../../src/data/configDatabase.ts'
-import { MainlineQaRunner, getBattleVisualQaConfig, getMainlineQaSummaryStyle, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
+import { MainlineQaRunner, STORY_QA_PROFILES, getBattleVisualQaConfig, getMainlineQaSummaryStyle, prepareBattleVisualQa, runMainlineQa } from '../../src/qa/MainlineQaRunner.ts'
 import { BarrelSystem } from '../../src/core/BarrelSystem.ts'
 import { GameData } from '../../src/core/GameData.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
@@ -19,19 +19,26 @@ import {
   MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS,
   MAINLINE_QA_REQUIRED_PARTY,
   MAINLINE_QA_ROUTE,
+  NORMAL_ENDING_QA_REQUIRED_COMPLETED_QUESTS,
+  NORMAL_ENDING_QA_REQUIRED_FINAL_FLAGS,
+  NORMAL_ENDING_QA_REQUIRED_FINAL_ITEMS,
+  NORMAL_ENDING_QA_REQUIRED_PARTY,
+  NORMAL_ENDING_QA_ROUTE,
+  POST_NORMAL_RECOLLECTION,
   ROAMING_ENCOUNTER_RESPAWN,
   START_MAP_ID,
   START_PLAYER_POSITION,
   TRUE_ENDING_EPILOGUE,
 } from '../../src/utils/constants.ts'
+import type { StoryQaProfileId } from '../../src/qa/MainlineQaRunner.ts'
 
-function runMainlineQaSilently(): ReturnType<typeof runMainlineQa> {
+function runMainlineQaSilently(profileId: StoryQaProfileId = 'mainline'): ReturnType<typeof runMainlineQa> {
   const originalInfo = console.info
   const originalError = console.error
   console.info = () => {}
   console.error = () => {}
   try {
-    return runMainlineQa()
+    return runMainlineQa(profileId)
   } finally {
     console.info = originalInfo
     console.error = originalError
@@ -404,5 +411,53 @@ describe('MainlineQaRunner', () => {
     expect(gd.getFlag('a_joined')).toBe(true)
     expect([...gd.party, ...gd.reserve]).toContain('A')
     expect(BarrelSystem.getInstance().getUnlockedColors()).toHaveLength(8)
+  })
+
+  test('completes the normal ending route and post-normal recollection', () => {
+    const report = runMainlineQaSilently('normal')
+
+    expect(report.status).toBe(MAINLINE_QA.STATUS_PASSED)
+    expect(report.errors).toEqual([])
+    expect(report.finalState.currentMap).toBe(MAINLINE_QA_REQUIRED_FINAL_MAP)
+    expect(report.finalState.flags.normal_ending_seen).toBe(true)
+    expect(report.finalState.flags[POST_NORMAL_RECOLLECTION.COMPLETED_FLAG]).toBe(true)
+    expect(report.finalState.flags.true_route_unlocked).toBe(true)
+    expect(report.finalState.flags.game_cleared).not.toBe(true)
+    expect(report.coverage.mapEvents).toContain(`${MAINLINE_QA_REQUIRED_FINAL_MAP}:${POST_NORMAL_RECOLLECTION.EVENT_ID}`)
+    expect(report.coverage.mapEvents).not.toContain(`MAP_070:EVT_WUXIANG`)
+    expect(report.coverage.encounterIds).toContain('BTL_XIAOAI_SHADOW')
+    for (const flag of NORMAL_ENDING_QA_REQUIRED_FINAL_FLAGS) {
+      expect(report.finalState.flags[flag] ?? report.finalState.branches[flag]).toBe(true)
+    }
+    for (const itemId of NORMAL_ENDING_QA_REQUIRED_FINAL_ITEMS) {
+      expect(report.finalState.items[itemId] ?? report.finalState.equipment[itemId]).toBeGreaterThan(0)
+    }
+    for (const questId of NORMAL_ENDING_QA_REQUIRED_COMPLETED_QUESTS) {
+      expect(report.finalState.completedQuests).toContain(questId)
+      expect(report.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
+    }
+    for (const characterId of NORMAL_ENDING_QA_REQUIRED_PARTY) {
+      expect([...report.finalState.party, ...report.finalState.reserve]).toContain(characterId)
+    }
+    expect(report.finalState.party).not.toContain('xiaoai')
+    expect(report.finalState.reserve).not.toContain('xiaoai')
+    for (const step of NORMAL_ENDING_QA_ROUTE) {
+      if (step.kind === 'event') {
+        expect(report.coverage.mapEvents).toContain(`${step.mapId}:${step.eventId}`)
+      }
+    }
+    expect(STORY_QA_PROFILES.normal.choiceIndexes.DIA_530_CHOICE).toEqual([0])
+  })
+
+  test('prepares heart-shadow battle visual QA', () => {
+    const config = getBattleVisualQaConfig(MAINLINE_QA.BATTLE_HEART_QUERY_VALUE)
+    expect(config).toEqual({
+      encounterId: MAINLINE_QA.BATTLE_HEART_ENCOUNTER_ID,
+      mapId: MAINLINE_QA.BATTLE_HEART_VISUAL_MAP_ID,
+      flags: MAINLINE_QA.BATTLE_HEART_VISUAL_FLAGS,
+      branches: MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES,
+    })
+    prepareBattleVisualQa(config!)
+    expect(GameData.getInstance().currentMap).toBe(MAINLINE_QA.BATTLE_HEART_VISUAL_MAP_ID)
   })
 })

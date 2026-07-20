@@ -673,6 +673,7 @@ export const RUNTIME_IMAGE_ASSET_PATHS = {
 export const MAINLINE_QA = {
   QUERY_PARAM: 'qa',
   QUERY_VALUE: 'mainline',
+  NORMAL_QUERY_VALUE: 'normal',
   BATTLE_QUERY_VALUE: 'battle',
   BATTLE_FINAL_QUERY_VALUE: 'battle-final',
   BATTLE_HEART_QUERY_VALUE: 'battle-heart',
@@ -807,6 +808,23 @@ export const MAINLINE_QA_ROUTE = [
   { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.A.EVENT_ID },
   { kind: 'event', mapId: REBUILT_TOWN_MAP_ID, eventId: TRUE_ENDING_EPILOGUE.POSTGAME.SUN.EVENT_ID },
 ] as const
+const TRUE_ENDING_QA_EVENT_IDS = new Set<string>([
+  'EVT_PURIFICATION_TRUE',
+  TRUE_ENDING_EPILOGUE.EVENT_ID,
+  TRUE_ENDING_EPILOGUE.POSTGAME.PINE.EVENT_ID,
+  TRUE_ENDING_EPILOGUE.POSTGAME.MAYOR.EVENT_ID,
+  TRUE_ENDING_EPILOGUE.POSTGAME.CONGCONG_HUIHUI.EVENT_ID,
+  TRUE_ENDING_EPILOGUE.POSTGAME.A.EVENT_ID,
+  TRUE_ENDING_EPILOGUE.POSTGAME.SUN.EVENT_ID,
+])
+export const NORMAL_ENDING_QA_ROUTE = [
+  ...MAINLINE_QA_ROUTE.filter(step =>
+    step.kind === 'event'
+    && step.mapId !== 'MAP_070'
+    && !TRUE_ENDING_QA_EVENT_IDS.has(step.eventId),
+  ),
+  { kind: 'event' as const, mapId: REBUILT_TOWN_MAP_ID, eventId: POST_NORMAL_RECOLLECTION.EVENT_ID },
+] as const
 export const MAINLINE_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number[]> = {
   DIA_001_START: [0],
   DIA_005_MAYOR: [0],
@@ -824,9 +842,32 @@ export const MAINLINE_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number
   DIA_530_CHOICE: [1],
   DIA_530_CALL: [1],
 } as const
+export const NORMAL_ENDING_QA_DIALOGUE_CHOICE_INDEXES: Record<string, readonly number[]> = {
+  ...MAINLINE_QA_DIALOGUE_CHOICE_INDEXES,
+  DIA_530_CHOICE: [0],
+}
 export const MAINLINE_QA_REQUIRED_FINAL_FLAGS = [
   'game_cleared',
   TRUE_ENDING_EPILOGUE.SEEN_FLAG,
+  'true_route_unlocked',
+  'true_route_reincarnation',
+  'xiaoai_purified',
+  'released_four_seals',
+  'fake_xiaoai_defeated',
+  A_RESCUED_FLAG,
+  'dream_completed',
+  'swamp_chains_resolved',
+  'has_millennium_seed',
+  'has_sacred_water',
+  'has_divine_laurel',
+  'side_huihui_done',
+  'side_a_done',
+  'side_congcong_done',
+  'side_sun_done',
+] as const
+export const NORMAL_ENDING_QA_REQUIRED_FINAL_FLAGS = [
+  'normal_ending_seen',
+  POST_NORMAL_RECOLLECTION.COMPLETED_FLAG,
   'true_route_unlocked',
   'true_route_reincarnation',
   'xiaoai_purified',
@@ -850,6 +891,7 @@ export const MAINLINE_QA_REQUIRED_FINAL_SKILLS = [
   { characterId: 'SUN', skillId: 'rendeqiyuan' },
 ] as const
 export const MAINLINE_QA_REQUIRED_FINAL_ITEMS = ['pink_chime'] as const
+export const NORMAL_ENDING_QA_REQUIRED_FINAL_ITEMS = ['pink_chime', 'xiaoai_light'] as const
 export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [
   'QST_001',
   'QST_002',
@@ -866,13 +908,31 @@ export const MAINLINE_QA_REQUIRED_COMPLETED_QUESTS = [
   'QST_013',
   BLUE_MINT_SIDE_QUEST.QUEST_ID,
 ] as const
+export const NORMAL_ENDING_QA_REQUIRED_COMPLETED_QUESTS = [
+  'QST_001',
+  'QST_002',
+  'QST_003',
+  'QST_004',
+  'QST_005',
+  'QST_006',
+  'QST_007',
+  'QST_008',
+  'QST_009',
+  'QST_010',
+  'QST_011',
+  'QST_012',
+  BLUE_MINT_SIDE_QUEST.QUEST_ID,
+  POST_NORMAL_RECOLLECTION.QUEST_ID,
+] as const
 export const MAINLINE_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN', TRUE_ENDING_SUPPORT_CHARACTER_ID] as const
+export const NORMAL_ENDING_QA_REQUIRED_PARTY = ['T', 'HUIHUI', 'A', 'CONGCONG', 'SUN'] as const
 export const REBUILD_LEVEL_LIMITS = {
   MIN: 0,
   MAX: 5,
 } as const
 export const MAINLINE_QA_REQUIRED_FINAL_MAP = REBUILT_TOWN_MAP_ID
 export const MAINLINE_QA_REQUIRED_FINAL_REBUILD_LEVEL = REBUILD_LEVEL_LIMITS.MAX
+export const NORMAL_ENDING_QA_REQUIRED_FINAL_REBUILD_LEVEL = 4
 export const MAINLINE_QA_REQUIRED_NO_ACTIVE_QUESTS = true
 export const REBUILD_MENU = {
   PANEL_WIDTH: scalePx(600),
