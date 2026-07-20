@@ -24,15 +24,16 @@ describe('heart-shadow battles', () => {
   })
 
   test('heart shadows render as dark counterparts instead of the default rock', () => {
-    const characterPaths = {
-      [HEART_SHADOW_ENEMY_IDS.T]: 'characters/T/front_idle_01.png',
-      [HEART_SHADOW_ENEMY_IDS.HUIHUI]: 'characters/huihui/front_idle_01.png',
-      [HEART_SHADOW_ENEMY_IDS.A]: 'characters/abo/front_idle_01.png',
-      [HEART_SHADOW_ENEMY_IDS.CONGCONG]: 'characters/congcong/front_idle_01.png',
-      [HEART_SHADOW_ENEMY_IDS.SUN]: 'characters/sun/front_idle_01.png',
+    const shadowPaths = {
+      [HEART_SHADOW_ENEMY_IDS.T]: 'enemies/heart_shadows/heart_shadow_t.png',
+      [HEART_SHADOW_ENEMY_IDS.HUIHUI]: 'enemies/heart_shadows/heart_shadow_huihui.png',
+      [HEART_SHADOW_ENEMY_IDS.A]: 'enemies/heart_shadows/heart_shadow_a.png',
+      [HEART_SHADOW_ENEMY_IDS.CONGCONG]: 'enemies/heart_shadows/heart_shadow_congcong.png',
+      [HEART_SHADOW_ENEMY_IDS.SUN]: 'enemies/heart_shadows/heart_shadow_sun.png',
     }
-    for (const [enemyId, path] of Object.entries(characterPaths)) {
+    for (const [enemyId, path] of Object.entries(shadowPaths)) {
       expect(IMAGE_ASSETS[`mon_${enemyId}_01`]).toBe(path)
+      expect(IMAGE_ASSETS[`mon_${enemyId}_01`]).not.toContain('characters/')
       expect(isHeartShadowDoppelganger(enemyId)).toBe(true)
     }
     expect(IMAGE_ASSETS[`mon_${HEART_SHADOW_ENEMY_IDS.WORRY_CHAIN}_01`]).toBe('dark_fantasy/misc/chain_hook.png')

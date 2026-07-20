@@ -675,14 +675,18 @@ export const MAINLINE_QA = {
   QUERY_VALUE: 'mainline',
   BATTLE_QUERY_VALUE: 'battle',
   BATTLE_FINAL_QUERY_VALUE: 'battle-final',
+  BATTLE_HEART_QUERY_VALUE: 'battle-heart',
   COMPACT_VIEWPORT_MAX_HEIGHT: 480,
   BATTLE_FINAL_ENCOUNTER_ID: 'BTL_720',
   BATTLE_VISUAL_ENCOUNTER_ID: 'BTL_520',
+  BATTLE_HEART_ENCOUNTER_ID: 'BTL_701',
   BATTLE_VISUAL_MAP_ID: 'MAP_063',
   BATTLE_FINAL_VISUAL_MAP_ID: 'MAP_070',
+  BATTLE_HEART_VISUAL_MAP_ID: 'MAP_070',
   BATTLE_VISUAL_PARTY: ['T', 'HUIHUI', 'CONGCONG', 'SUN'],
   BATTLE_VISUAL_FLAGS: ['huihui_joined', 'congcong_joined', 'sun_joined', 'has_sacred_water', 'temple_visited', 'barrel_green', 'barrel_blue', 'barrel_gold', 'barrel_cyan', 'barrel_white', 'barrel_vermillion', 'barrel_black', 'barrel_rainbow'],
   BATTLE_FINAL_VISUAL_FLAGS: ['huihui_joined', 'a_joined', 'congcong_joined', 'sun_joined', 'has_millennium_seed', 'has_sacred_water', 'has_divine_laurel', 'released_four_seals', 'xiaoai_purified', 'barrel_green', 'barrel_blue', 'barrel_gold', 'barrel_cyan', 'barrel_white', 'barrel_vermillion', 'barrel_black', 'barrel_rainbow'],
+  BATTLE_HEART_VISUAL_FLAGS: ['huihui_joined', 'a_joined', 'congcong_joined', 'sun_joined', 'xiaoai_purified', 'true_route_unlocked', 'barrel_green', 'barrel_blue', 'barrel_gold', 'barrel_cyan', 'barrel_white', 'barrel_vermillion', 'barrel_black', 'barrel_rainbow'],
   BATTLE_FINAL_VISUAL_BRANCHES: {
     mercy_score: TRUE_ROUTE_MIN_MERCY,
     xiaoai_memory_fragments: TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS,
@@ -2630,7 +2634,7 @@ export const CODEX_OVERLAY_UI = {
 } as const
 
 export const CONFIG_DATABASE_STORAGE_KEY = 'casktown.config.database.v2'
-export const PUBLIC_ASSET_CACHE_VERSION = 'visual-redesign-v3'
+export const PUBLIC_ASSET_CACHE_VERSION = 'visual-redesign-v4'
 export const CONFIG_EDITOR_ID_FALLBACK_PREFIX = 'record'
 export const CONFIG_EDITOR_JSON_INDENT = 2
 export const CONFIG_EDITOR_PREVIEW = {

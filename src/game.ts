@@ -128,6 +128,7 @@ export class CaskTownGame extends Phaser.Game {
   }
 
   private syncScaleToContainer(parent: HTMLElement): void {
+    if (typeof parent?.getBoundingClientRect !== 'function') return
     const bounds = parent.getBoundingClientRect()
     const width = Math.round(bounds.width)
     const height = Math.round(bounds.height)

@@ -668,6 +668,13 @@ export function getBattleVisualQaConfig(queryValue: string | null): BattleVisual
         flags: MAINLINE_QA.BATTLE_FINAL_VISUAL_FLAGS,
         branches: MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES,
       }
+    case MAINLINE_QA.BATTLE_HEART_QUERY_VALUE:
+      return {
+        encounterId: MAINLINE_QA.BATTLE_HEART_ENCOUNTER_ID,
+        mapId: MAINLINE_QA.BATTLE_HEART_VISUAL_MAP_ID,
+        flags: MAINLINE_QA.BATTLE_HEART_VISUAL_FLAGS,
+        branches: MAINLINE_QA.BATTLE_FINAL_VISUAL_BRANCHES,
+      }
     default:
       return null
   }

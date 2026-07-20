@@ -19,4 +19,6 @@ export const DIALOGUE_SPEAKER_FACE_MAP: Record<string, string> = {
   无相: 'mon_wuxiang_01',
   风之防御人: 'mon_feng_defender_01',
   预言: 'npc_priestess_sun',
+  UNKNOWN: 'mon_wuxiang_01',
+  神秘声音: 'mon_wuxiang_01',
 }
