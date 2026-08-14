@@ -2505,7 +2505,6 @@ export class BattleScene extends Phaser.Scene {
 
     const fallbackScene = getBattleResultFallbackScene(summary.victory, summary.escaped)
     if (fallbackScene === 'GameOverScene') {
-      EventBus.emit(GameEvents.GAME_OVER)
       this.scene.start(fallbackScene)
       return
     }

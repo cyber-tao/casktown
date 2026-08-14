@@ -14,7 +14,7 @@ describe('EventEmitter', () => {
   })
 
   test('emit returns false when no listeners', () => {
-    const result = EventBus.emit(GameEvents.GAME_OVER)
+    const result = EventBus.emit(GameEvents.SAVE_LOADED)
     expect(result).toBe(false)
   })
 

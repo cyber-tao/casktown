@@ -6,7 +6,6 @@ export const GameEvents = {
   MENU_CLOSE: 'menu-close',
   FLAG_SET: 'flag-set',
   QUEST_UPDATE: 'quest-update',
-  GAME_OVER: 'game-over',
   SAVE_LOADED: 'save-loaded',
 } as const
 
@@ -18,7 +17,6 @@ interface GameEventPayloads {
   [GameEvents.MENU_CLOSE]: []
   [GameEvents.FLAG_SET]: [key: string, value: unknown]
   [GameEvents.QUEST_UPDATE]: [questId: string, state: QuestState]
-  [GameEvents.GAME_OVER]: []
   [GameEvents.SAVE_LOADED]: []
 }
 

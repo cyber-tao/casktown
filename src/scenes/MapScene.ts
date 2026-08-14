@@ -2239,7 +2239,6 @@ export class MapScene extends Phaser.Scene {
       this.pendingActions = []
       this.pendingMapEventId = ''
       this.inEvent = false
-      EventBus.emit(GameEvents.GAME_OVER)
       this.scene.start('GameOverScene')
       return
     }
