@@ -38,7 +38,7 @@
 ### EventBus (单例)
 
 - `on(event, handler, context?)` / `off(event, handler, context?)` / `emit(event, ...args)` -- 事件订阅/发布
-- 事件常量定义在 `GameEvents` 中，当前为 **7** 种存活事件（开 Overlay/战斗用 `scene.launch`，不靠空 emit）：
+- 事件常量定义在 `GameEvents` 中，当前为 **6** 种存活事件（开 Overlay/战斗用 `scene.launch`，不靠空 emit）：
 
 | 事件 | 载荷 |
 |------|------|
@@ -47,7 +47,6 @@
 | `MENU_CLOSE` | 无 |
 | `FLAG_SET` | key: string, value: unknown |
 | `QUEST_UPDATE` | questId: string, state: QuestState |
-| `GAME_OVER` | 无 |
 | `SAVE_LOADED` | 无 |
 
 ### AssetLoader
@@ -160,7 +159,7 @@
 | 文件 | 说明 |
 |------|------|
 | `src/core/GameData.ts` | 全局游戏状态单例 |
-| `src/core/EventBus.ts` | 事件总线（7 种存活事件） |
+| `src/core/EventBus.ts` | 事件总线（6 种存活事件） |
 | `src/core/MapEventRuntime.ts` | 地图事件运行时 |
 | `src/core/MapEventState.ts` | 场事件完成标志 |
 | `src/core/EventActionExecutor.ts` | 状态类事件动作 |

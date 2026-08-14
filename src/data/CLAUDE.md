@@ -150,7 +150,7 @@ export interface DialogueScript {
 
 - `trust_huihui/a/congcong/sun` -- 角色信赖度
 - `mercy_score` -- 慈悲值（影响结局）
-- `xiaoai_memory_fragments` -- 记忆碎片（>=3 解锁真结局）
+- `xiaoai_memory_fragments` -- 记忆碎片（>=5 解锁真结局）
 - `rebuild_level` -- 重建等级（0-5）
 - `congcong_joined` / `met_mayor` / `released_four_seals` / `xiaoai_purified` / `true_route_unlocked`
 - `has_millennium_seed` / `has_sacred_water` / `has_divine_laurel` -- 三神器收集
@@ -161,7 +161,7 @@ export interface DialogueScript {
 
 | 指标 | 数值 |
 |------|------|
-| 总地图数 | **27** |
+| 总地图数 | **22** |
 | NPC 位置 | 15 (10 个唯一 NPC) |
 | 事件触发器 | **108** |
 | 地图连接 | 36 |
@@ -210,13 +210,15 @@ export interface DialogueScript {
 
 ## 测试与质量
 
-3 个测试文件覆盖本模块：
+5 个测试文件覆盖本模块：
 
 | 测试文件 | 覆盖内容 |
 |---------|---------|
 | `tests/data/config-database.test.ts` | cloneConfigData 深拷贝、GameConfigDatabase CRUD、持久化、导入导出 |
 | `tests/data/data-integrity.test.ts` | 所有数据表字段完整性、引用有效性（技能/物品/敌人交叉引用） |
 | `tests/data/game-content.test.ts` | 地图几何校验、事件动作 ID 引用验证、对话选择分支解析、遭遇/敌人/任务 ID 一致性 |
+| `tests/data/battle-dialogues.test.ts` | 战斗对话引用与结构 |
+| `tests/data/heart-shadow-battles.test.ts` | 心影战斗配置完整性 |
 
 ## 相关文件清单
 
@@ -237,7 +239,12 @@ export interface DialogueScript {
 | `src/data/spriteCrops.ts` | 精灵裁剪配置 |
 | `src/data/assets.ts` | 图片资源映射 |
 | `src/data/audio.ts` | 音频配置 (BGMConfig/SFXConfig) |
-| `src/data/configDatabase.ts` | 配置数据库 (180 行) |
+| `src/data/configDatabase.ts` | 配置数据库（版本化持久化 + 结构校验） |
+| `src/data/battleDialogues.ts` | 战斗对话表 |
+| `src/data/codex.ts` | 图鉴故事条目 |
+| `src/data/combos.ts` | 连携技能定义 |
+| `src/data/rebuild.ts` | 重建设施与里程碑 |
+| `src/data/dialoguePortraits.ts` | 对话头像映射 |
 
 ## 变更记录 (Changelog)
 
@@ -246,3 +253,4 @@ export interface DialogueScript {
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
 | 2026-05-22 | 深度扫描 | 补充对话系统分析和地图系统分析 |
 | 2026-05-22 15:52:17 | 增量更新 | 修正EventAction为16种、补充DialogueScript.onComplete机制、别名includeOnComplete选项、预定义onComplete动作集、游戏标志详情、3个测试文件覆盖、装备模块createEmptyEquipStats |
+| 2026-07-21 | 全量审核同步 | 地图数修正为22、测试数修正为5（补 battle-dialogues/heart-shadow-battles）、文件清单补全5个、记忆碎片阈值修正为5、configDatabase 版本化持久化 |

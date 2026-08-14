@@ -21,14 +21,15 @@ bun run scripts/<script>.ts
 | 文件 | 说明 |
 |------|------|
 | `constants.ts` | 共享常量：路径、输出格式、图像处理参数、语音采样率(32000Hz)、图标网格(96x96) |
-| `voice-config.ts` | 19 个角色的语音配置：语音 ID、语速、音高（使用 MiniMax 语音合成 API） |
+| `voice-config.ts` | 16 个角色的语音配置：语音 ID、语速、音高（使用 MiniMax 语音合成 API） |
 
 ### 精灵工具链
 
-执行顺序：`repair` -> `refresh`
+执行顺序（`sprites:refresh`）：`generate-runtime-visual-assets` -> `repair` -> `refresh`
 
 | 脚本 | 说明 | 输入 | 输出 |
 |------|------|------|------|
+| `generate-runtime-visual-assets.ts` | 从设计源图生成运行时 UI 面板/物品图标 | `img/` 设计源图 + `src/data/items.ts` | `assets/sprites/ui/*.png`、`assets/sprites/items/*.png` |
 | `repair-sprite-atlases.ts` | 修复图集背景污染和边缘出血 | `img/sprites/*.png+json` | 修改后的 `img/sprites/` |
 | `refresh-sprites.ts` | 将图集拆分为独立 PNG | `img/sprites/` + `pack_manifest.json` | `assets/sprites/<category>/*.png` |
 
@@ -63,8 +64,9 @@ generate_voices <--+   |
 ## 构建流水线完整顺序
 
 **精灵处理**：
-1. `repair-sprite-atlases.ts` -- 清理源图集
-2. `refresh-sprites.ts` -- 拆分单帧到 assets
+1. `generate-runtime-visual-assets.ts` -- 从设计源图生成运行时 UI/物品图标
+2. `repair-sprite-atlases.ts` -- 清理源图集
+3. `refresh-sprites.ts` -- 拆分单帧到 assets
 
 **语音处理**：
 1. 修改 `src/data/dialogues.ts` 添加对话
@@ -84,11 +86,13 @@ generate_voices <--+   |
 | 文件 | 说明 |
 |------|------|
 | `scripts/constants.ts` | 共享常量配置 (61 行) |
-| `scripts/voice-config.ts` | 19 角色语音配置 (30 行) |
+| `scripts/voice-config.ts` | 16 角色语音配置 (30 行) |
 | `scripts/sync-voice-lines.ts` | 语音索引同步 (85 行) |
 | `scripts/generate_voices.ts` | 语音文件生成 (195 行) |
 | `scripts/refresh-sprites.ts` | 精灵拆分 (256 行) |
 | `scripts/repair-sprite-atlases.ts` | 图集修复 (319 行) |
+| `scripts/generate-runtime-visual-assets.ts` | 运行时视觉资产生成 |
+| `scripts/apply-preview-sprite-mapping.ts` | ~~一次性预览映射工具~~（2026-07-21 删除，无引用） |
 
 ## 变更记录
 
@@ -96,3 +100,4 @@ generate_voices <--+   |
 |------|------|------|
 | 2026-05-22 | 新建 | 深度扫描生成模块文档 |
 | 2026-05-22 15:52:17 | 增量更新 | 无代码变更，文档格式统一化 |
+| 2026-07-21 | 全量审核同步 | 补 generate-runtime-visual-assets 至清单与流水线；角色语音数修正为 16；apply-preview-sprite-mapping 已删除；语音键格式与现有 voice_lines.json 对齐（无补零） |

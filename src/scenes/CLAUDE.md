@@ -91,7 +91,7 @@ export interface DialogueScript {
 - Boss AI 含心影与无相等；结算经验/物品/金币/任务进度
 
 ### MenuOverlay
-- 导航：预言之书/队伍/背包/技能/图鉴/地图/存档/设置/返回
+- 导航：预言之书/队伍/背包/技能/图鉴/存读档/设置/返回（世界地图经 M 键或小地图进入）
 - 纯逻辑辅助：`menu/inventoryHelpers.ts`、`codexHelpers.ts`、`saveHelpers.ts`、`settingsHelpers.ts`、`partyHelpers.ts`、`types.ts`
 - 图鉴：怪物/物品/故事三页签（不再使用独立 Codex 场景）
 
@@ -145,3 +145,4 @@ export interface DialogueScript {
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
 | 2026-05-22 15:52:17 | 增量更新 | 补充 DialogueScript.onComplete、队伍 HUD、Menu 游玩时间、Title 菜单、对话头像映射 |
 | 2026-07-20 | 同步架构 | 移除 CodexOverlay；记录 Map/Battle/Menu 子模块拆分、EventBus 精简与 launch 开场景、场事件两阶段 commit 与 QA 入口 |
+| 2026-07-21 | 全量审核同步 | 修正菜单导航为 8 项（无地图页） |

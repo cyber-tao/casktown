@@ -35,8 +35,8 @@ graph TD
     C --> C3["图标生成"]
 
     D --> D1["audio/bgm (19)"]
-    D --> D2["audio/voice (835+)"]
-    D --> D3["sprites (371 PNG)"]
+    D --> D2["audio/voice (883)"]
+    D --> D3["sprites (389 PNG)"]
 
     E --> E1["desiges (8 设计稿)"]
     E --> E2["sprites (8 图集)"]
@@ -44,9 +44,9 @@ graph TD
     F --> F1["GDD v2"]
     F --> F2["完整剧情脚本"]
 
-    T --> T1["core (7)"]
-    T --> T2["data (3)"]
-    T --> T3["utils (2)"]
+    T --> T1["core (15)"]
+    T --> T2["data (5)"]
+    T --> T3["utils (14)"]
 
     click G "./src/scenes/CLAUDE.md" "scenes"
     click H "./src/core/CLAUDE.md" "core"
@@ -63,20 +63,20 @@ graph TD
 
 | 模块路径 | 职责 | 文件数 | CLAUDE.md |
 |---------|------|--------|-----------|
-| `src/scenes` | 13 个 Phaser 场景 | 13 | [有](./src/scenes/CLAUDE.md) |
-| `src/core` | 12 个核心系统 | 12 | [有](./src/core/CLAUDE.md) |
-| `src/data` | 15 张数据表 + 类型 + 配置数据库 | 16 | [有](./src/data/CLAUDE.md) |
-| `src/utils` | 全局常量(130+)、触控、生命周期、语音 | 4 | [有](./src/utils/CLAUDE.md) |
+| `src/scenes` | 12 个注册 Phaser 场景（目录 24 文件含子模块） | 24 | [有](./src/scenes/CLAUDE.md) |
+| `src/core` | 20 个核心系统 | 20 | [有](./src/core/CLAUDE.md) |
+| `src/data` | 15 张数据表 + 类型 + 配置数据库（21 个 .ts） | 21 | [有](./src/data/CLAUDE.md) |
+| `src/utils` | 全局常量(143 导出)、触控、战斗规则、生命周期、语音等 | 20 | [有](./src/utils/CLAUDE.md) |
 | `src/editor` | Web 配置编辑器 | 2 | [有](./src/editor/CLAUDE.md) |
-| `scripts` | 7 个构建/工具脚本 | 7 | [有](./scripts/CLAUDE.md) |
+| `scripts` | 8 个构建/工具脚本 | 8 | [有](./scripts/CLAUDE.md) |
 | `assets` | 1225+ 个资源文件 (BGM/语音/精灵) | 1225+ | [有](./assets/CLAUDE.md) |
 | `img` | 8 设计稿 + 8 精灵图集 | 25 | [有](./img/CLAUDE.md) |
 | `doc` | GDD + 完整剧情脚本 | 2 | [有](./doc/CLAUDE.md) |
-| `tests` | 12 个测试文件 (core/data/utils) | 12 | - |
+| `tests` | 39 个测试文件 (core/data/utils/scenes/qa) | 39 | - |
 
 ## 世界架构概览
 
-### 地图与流程 (27 张地图)
+### 地图与流程 (22 张地图)
 
 ```
 木桶镇 (起点)
@@ -117,8 +117,8 @@ graph TD
 - 13 场 Boss 战（含最终 Boss 无相）
 - 17 个宝箱分布
 - 5 级城镇重建（荒芜->心安）
-- 双结局：普通结局 + 真结局（需慈悲值>=3 + 记忆碎片>=3）
-- 主角初始装备：父亲之剑 + 父亲之甲 + 预言之书
+- 双结局：普通结局 + 真结局（需慈悲值>=5 + 记忆碎片>=5）
+- 初期获得（镇长对话发放）：预言之书 + 父亲之剑 + 父亲之甲 + 七彩木桶（START_INVENTORY_ITEMS 仅为 3 草药+饭团+解毒草）
 
 ## 运行与开发
 
@@ -151,7 +151,7 @@ bun run voices:generate   # 生成语音文件
 ## 测试策略
 
 - 测试框架: Bun 内置测试 (`bun test`)
-- 当前测试文件: **12 个**（新增）
+- 当前测试文件: **39 个**（新增）
 
 | 目录 | 文件 | 覆盖模块 |
 |------|------|----------|
@@ -175,7 +175,7 @@ bun run voices:generate   # 生成语音文件
 - 目标: ES2020
 - 像素艺术渲染: `pixelArt: true`，`roundPixels: true`
 - 游戏分辨率: 1920x1080 (基础 960x540 * 2x 缩放)
-- 常量集中管理: `src/utils/constants.ts` (130 顶级导出，~1256 个常量)，禁止魔法数字
+- 常量集中管理: `src/utils/constants.ts` (143 顶级导出，2854 行)，禁止魔法数字
 - UI 字体: 中文优先字体栈（PingFang SC / Microsoft YaHei / Noto Sans CJK SC）
 - 路径分隔符: 代码中使用 POSIX 风格 (`/`)
 - 精灵资源: 通过图集打包，`img/sprites/pack_manifest.json` 管理清单
@@ -200,3 +200,4 @@ bun run voices:generate   # 生成语音文件
 | 2026-05-22 14:10:48 | 新建 | 初始化架构文档 |
 | 2026-05-22 | 深度扫描 | 补充世界架构、对话规模、常量审计、资产清单、脚本流水线 |
 | 2026-05-22 15:52:17 | 增量更新 | 新增测试策略(12个测试文件)、GameEvents扩展至18事件、DialogueScript.onComplete、playTime同步、初始装备、模块索引修正(editor=2文件)、Mermaid图增加tests节点 |
+| 2026-07-21 | 全量审核同步 | 引擎对齐 phaser@4.1.0；GameEvents 精简为 6 事件（删除 GAME_OVER）；真结局阈值修正为 5/5；模块索引/测试数量/地图数/常量规模按实测修正；新增 typecheck 脚本（覆盖 tests/scripts）；轮回道计时器改为游戏内活跃时间 |

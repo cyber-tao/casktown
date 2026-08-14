@@ -12,9 +12,9 @@
 
 ## 对外接口
 
-### constants.ts (1480+ 行)
+### constants.ts (2854 行)
 
-130 个顶级导出，~1256 个常量（含嵌套属性）。所有像素坐标通过 `scalePx()` 预处理适配 `GAME_SCALE=2`。
+143 个顶级导出（2854 行）。所有像素坐标通过 `scalePx()` 预处理适配 `GAME_SCALE=2`。
 
 #### 基础尺寸与缩放
 
@@ -53,12 +53,12 @@
 | `TRAINING_COST` | 30 | 训练花费 |
 | `TRAINING_EXP_BASE` | 20 | 训练基础经验 |
 | `INITIAL_GOLD` | 100 | 初始金钱 |
-| `COMBO_TP_COST` | 25 | 连击 TP 消耗 |
+| `COMBO_TP_COST` | 50 | 连击 TP 消耗 |
 | `SAVE_SLOTS` | 3 | 存档栏位 |
 | `QUICK_SAVE_SLOT` | 4 | 快速存档栏位 |
 | `SAVE_LOAD_FEEDBACK_DELAY_MS` | 1000 | 存读档反馈延迟 |
-| `TRUE_ROUTE_MIN_MERCY` | 3 | 真结局最低慈悲值 |
-| `TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS` | 3 | 真结局最低记忆碎片 |
+| `TRUE_ROUTE_MIN_MERCY` | 5 | 真结局最低慈悲值 |
+| `TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS` | 5 | 真结局最低记忆碎片 |
 
 #### 元素相克 (ELEMENT_WEAKNESS)
 
@@ -70,13 +70,13 @@
 
 #### CONFIG_EDITOR_* (14+ 个顶级常量)
 
-控制配置编辑器行为：存储键(`casktown.config.database.v1`)、地图预览画布(520x360)、精灵裁剪UI、表标签映射(14种)、资源分组(11类)、事件颜色(5种)、图块颜色(24种)、角色图片键(6种)、回退颜色(7种)
+控制配置编辑器行为：存储键(`casktown.config.database.v2`，持久化格式带版本字段)、地图预览画布(520x360)、精灵裁剪UI、表标签映射(14种)、资源分组(11类)、事件颜色(5种)、图块颜色(24种)、角色图片键(6种)、回退颜色(7种)
 
 #### 菜单与UI标签
 
 | 导出 | 内容 |
 |------|------|
-| `MENU_NAV_LABELS` / `MENU_NAV_INDEX` | 9 项主菜单导航 |
+| `MENU_NAV_LABELS` / `MENU_NAV_INDEX` | 8 项主菜单导航 |
 | `INVENTORY_*` | 5 类背包分类 |
 | `MENU_SETTINGS_OPTIONS` | 15 个设置项(文字/战斗速度、巡逻、难度、预言、音量、全屏、操作模式) |
 | `MENU_CODEX_*` | 3 个图鉴标签 + 10 个故事分支 + 13 个 Boss 发现标志 |
@@ -99,9 +99,9 @@
 
 | 导出 | 内容 |
 |------|------|
-| `MAP_ACCESS_REQUIREMENTS` | 29 个地图访问条件 |
-| `REDESIGNED_MAP_LAYOUTS` | 25 个地图完整布局定义(~500 行) |
-| `WORLD_MAP_LOCATION_POINTS` | 29 个世界地图坐标 |
+| `MAP_ACCESS_REQUIREMENTS` | 20 个地图访问条件 |
+| `REDESIGNED_MAP_LAYOUTS` | 22 个地图完整布局定义 |
+| `WORLD_MAP_LOCATION_POINTS` | 22 个世界地图坐标 |
 | `WORLD_MAP_BACKGROUND_LAYOUT` / `WORLD_MAP_UI` | 世界地图 UI 参数 |
 | `MAP_TILE_KEYS` | 28 种瓦片类型 |
 | `MAP_LAYER_INDEX` | GROUND=0, OBJECTS=1 |
@@ -110,7 +110,7 @@
 
 #### 野外实体 (FIELD_ENTITY_BEHAVIOR)
 
-10 个基础常量 + `FIELD_ENTITY_BEHAVIOR_PRESETS`（8 种预设：idle/wander/guard/chase/ambush 变体）+ `FIELD_ENCOUNTER_SPAWN_COUNTS` + `ROAMING_ENCOUNTER_RESPAWN` + `FIELD_ENCOUNTER_RATE_THRESHOLDS`
+10 个基础常量 + `FIELD_ENTITY_BEHAVIOR_PRESETS`（7 种预设：idle/wander/guard/chase/ambush 变体）+ `FIELD_ENCOUNTER_SPAWN_COUNTS` + `ROAMING_ENCOUNTER_RESPAWN` + `FIELD_ENCOUNTER_RATE_THRESHOLDS`
 
 #### 动画与精灵
 
@@ -184,21 +184,40 @@
 
 ## 测试与质量
 
-2 个测试文件覆盖本模块：
+14 个测试文件覆盖本模块（constants/battle-rules/battle-status-display/combo-rules/control-hints/display-settings/gamepad-navigation/item-effects/save-slots/save-transition/settings-layout/startup/touch/voice-lines）。其中：
 
 | 测试文件 | 覆盖内容 |
 |---------|---------|
 | `tests/utils/constants.test.ts` | 分辨率一致性、初始值合法性、存档槽位、真结局阈值、元素相克、方向向量 |
-| `tests/utils/voice-lines.test.ts` | 语音键解析（越界/空/重复说话者）、路径构造 |
+| `tests/utils/voice-lines.test.ts` | 语音键解析（越界/空/重复说话者）、路径构造、资产存在与时长解码 |
+| `tests/utils/battle-rules.test.ts` | 元素克制、破防量表、逃跑判定、连携目标 |
+| `tests/utils/gamepad-navigation.test.ts` | 手柄输入边沿触发与复位 |
+| `tests/utils/item-effects.test.ts` | 消耗品恢复/解状态判定 |
 
 ## 相关文件清单
 
 | 文件 | 说明 |
 |------|------|
-| `src/utils/constants.ts` | 全局常量与 UI 布局 (1480+ 行, 130 顶级导出) |
+| `src/utils/constants.ts` | 全局常量与 UI 布局 (2854 行, 143 顶级导出) |
 | `src/utils/touch.ts` | 触控适配 |
 | `src/utils/sceneLifecycle.ts` | 场景生命周期 |
 | `src/utils/voiceLines.ts` | 语音线路解析 |
+| `src/utils/battleRules.ts` | 战斗规则纯函数（元素克制/破防/逃跑/心影复制） |
+| `src/utils/battleStatusDisplay.ts` | 战斗状态显示标签 |
+| `src/utils/battleResult.ts` | 战斗结果回退场景判定 |
+| `src/utils/comboRules.ts` | 连携技能可用性判定 |
+| `src/utils/controlHints.ts` | 设施操作提示 |
+| `src/utils/displaySettings.ts` | 像素锐化渲染切换 |
+| `src/utils/fieldGeometry.ts` | 逃跑退避格与精灵包围盒判定 |
+| `src/utils/gamepadNavigation.ts` | 手柄导航控制器 |
+| `src/utils/itemEffects.ts` | 消耗品恢复/解状态判定 |
+| `src/utils/questProgress.ts` | 任务进度显示 |
+| `src/utils/runtimePanels.ts` | 运行时 UI 面板 |
+| `src/utils/saveSlots.ts` | 存档槽展示 |
+| `src/utils/saveTransition.ts` | 读档过渡 |
+| `src/utils/settingsLayout.ts` | 设置页响应式布局 |
+| `src/utils/startup.ts` | 启动就绪状态 |
+| `src/utils/loadingScreen.ts` | 启动加载屏 |
 
 ## 变更记录
 
