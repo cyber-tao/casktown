@@ -23,6 +23,7 @@ import {
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILT_TOWN_MAP_ID,
   REINCARNATION_CORRECT_ANSWER_FLAGS,
+  REINCARNATION_TIMER_ID,
   SIDE_SUN_FLAGS,
   START_MAP_ID,
   START_INVENTORY_ITEMS,
@@ -130,6 +131,8 @@ export class GameData {
   quests: Map<string, QuestState> = new Map()
   flags: GameFlags = {}
   branches: BranchState = createDefaultBranches()
+  /** 游戏内活跃计时器（毫秒累计，仅游戏运行且未暂停时累加，随存档持久化） */
+  activeTimers: Record<string, number> = {}
 
   rebuildLevel: number = 0
   gold: number = INITIAL_GOLD
@@ -247,6 +250,7 @@ export class GameData {
     this.quests = new Map()
     this.flags = preservedKeyBindings ? { [KEY_BINDINGS_FLAG]: preservedKeyBindings } : {}
     this.branches = createDefaultBranches()
+    this.activeTimers = {}
     this.rebuildLevel = REBUILD_LEVEL_LIMITS.MIN
     this.gold = INITIAL_GOLD
     this.unlockedCodex = []
@@ -850,6 +854,7 @@ export class GameData {
       quests: Object.fromEntries(Array.from(this.quests.entries()).map(([id, quest]) => [id, { ...quest }])),
       flags: { ...this.flags },
       branches: { ...this.branches },
+      activeTimers: { ...this.activeTimers },
       rebuildLevel: this.rebuildLevel,
       gold: this.gold,
       unlockedCodex: [...this.unlockedCodex],
@@ -889,8 +894,13 @@ export class GameData {
       .map(([id, quest]) => [id, this.normalizeQuestState(id, quest)]))
     this.flags = { ...((d.flags as GameFlags) ?? {}) }
     this.branches = { ...createDefaultBranches(), ...((d.branches as Partial<BranchState>) ?? {}) }
+    this.activeTimers = { ...((d.activeTimers as Record<string, number> | undefined) ?? {}) }
     this.normalizeBranchNumbers()
     this.migrateLegacyProgressionFlags()
+    if (this.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_TIMER_STARTED_FLAG] !== undefined && !(REINCARNATION_TIMER_ID in this.activeTimers)) {
+      // 旧存档的墙钟计时标志在活跃计时模型下不再适用：删除并重新计时
+      delete this.flags[LEGACY_SAVE_PROGRESS.REINCARNATION_TIMER_STARTED_FLAG]
+    }
     const serializedRebuildLevel = typeof d.rebuildLevel === 'number' ? d.rebuildLevel : this.branches.rebuild_level
     this.rebuildLevel = this.clampRebuildLevel(serializedRebuildLevel)
     this.branches.rebuild_level = this.rebuildLevel
@@ -915,5 +925,19 @@ export class GameData {
     if (elapsedSeconds <= 0) return
     this.playTime += elapsedSeconds
     this.playTimeSyncedAtMs += elapsedSeconds * TIME_MS_PER_SECOND
+  }
+
+  startActiveTimer(timerId: string): void {
+    this.activeTimers[timerId] = 0
+  }
+
+  accumulateActiveTimer(timerId: string, deltaMs: number): void {
+    if (!Number.isFinite(deltaMs) || deltaMs <= 0) return
+    if (!(timerId in this.activeTimers)) return
+    this.activeTimers[timerId] = (this.activeTimers[timerId] ?? 0) + deltaMs
+  }
+
+  getActiveTimerElapsedMs(timerId: string): number | undefined {
+    return this.activeTimers[timerId]
   }
 }

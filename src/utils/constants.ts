@@ -579,6 +579,7 @@ export const BRANCH_VALUE_LIMITS = {
 export const TRUE_ROUTE_MIN_MERCY = 5
 export const TRUE_ROUTE_MIN_XIAOAI_MEMORY_FRAGMENTS = 5
 export const REINCARNATION_TIME_LIMIT_MS = 60_000
+export const REINCARNATION_TIMER_ID = 'reincarnation'
 export const A_RESCUED_FLAG = 'a_rescued'
 export const STORY_BATTLE_FLAGS = {
   NEXT_ATTACK_UP: 'story_next_battle_attack_up',

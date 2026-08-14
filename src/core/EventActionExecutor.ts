@@ -15,10 +15,6 @@ export interface StateEventActionResult {
   failureReason?: string
 }
 
-function getTimerStartedFlag(timerId: string): string {
-  return `timer_${timerId}_started_at_ms`
-}
-
 export function isStateEventAction(action: EventAction): action is StateEventAction {
   return action.type !== 'dialogue'
     && action.type !== 'battle'
@@ -28,7 +24,7 @@ export function isStateEventAction(action: EventAction): action is StateEventAct
     && action.type !== 'rebuildMenu'
 }
 
-export function applyStateEventAction(action: EventAction, nowMs = Date.now()): StateEventActionResult {
+export function applyStateEventAction(action: EventAction): StateEventActionResult {
   if (!isStateEventAction(action)) {
     return { handled: false, partyChanged: false }
   }
@@ -68,11 +64,10 @@ export function applyStateEventAction(action: EventAction, nowMs = Date.now()): 
       SkillGrowth.getInstance().checkAllUnlocks()
       break
     case 'startTimer':
-      gd.setFlag(getTimerStartedFlag(action.timerId), nowMs)
+      gd.startActiveTimer(action.timerId)
       break
     case 'resolveTimer': {
-      const startedAtMs = gd.getFlag(getTimerStartedFlag(action.timerId))
-      const elapsedMs = typeof startedAtMs === 'number' ? nowMs - startedAtMs : Number.POSITIVE_INFINITY
+      const elapsedMs = gd.getActiveTimerElapsedMs(action.timerId) ?? Number.POSITIVE_INFINITY
       const succeeded = action.requiredFlags.length > 0
         && action.requiredFlags.every(flag => gd.getFlag(flag) === true)
         && elapsedMs >= 0

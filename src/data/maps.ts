@@ -1,5 +1,5 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_EPILOGUE, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, REINCARNATION_TIMER_ID, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_EPILOGUE, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
 
 const T = {
@@ -2269,7 +2269,7 @@ function buildMap055(): MapData {
       type: 'trigger', trigger: 'autorun',
       conditions: [{ flag: 'released_four_seals', value: true }],
       actions: [
-        { type: 'startTimer', timerId: 'reincarnation' },
+        { type: 'startTimer', timerId: REINCARNATION_TIMER_ID },
         { type: 'dialogue', dialogueId: 'DIA_551_DREAM_START' },
         { type: 'setFlag', flag: 'dream_active', value: true },
       ],
@@ -2298,7 +2298,7 @@ function buildMap055(): MapData {
       ],
       actions: [
         { type: 'dialogue', dialogueId: 'DIA_554_MEMORY_3' },
-        { type: 'resolveTimer', timerId: 'reincarnation', maxDurationMs: REINCARNATION_TIME_LIMIT_MS, requiredFlags: REINCARNATION_CORRECT_ANSWER_FLAGS, successFlag: 'true_route_reincarnation' },
+        { type: 'resolveTimer', timerId: REINCARNATION_TIMER_ID, maxDurationMs: REINCARNATION_TIME_LIMIT_MS, requiredFlags: REINCARNATION_CORRECT_ANSWER_FLAGS, successFlag: 'true_route_reincarnation' },
       ],
     },
     {

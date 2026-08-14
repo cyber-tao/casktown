@@ -52,7 +52,7 @@ describe('EventActionExecutor', () => {
     expect(GameData.getInstance().party).not.toContain('HUIHUI')
   })
 
-  test('resolves timed story flags against elapsed wall-clock time', () => {
+  test('resolves timed story flags against accumulated active time', () => {
     const gd = GameData.getInstance()
     const resolveAction = {
       type: 'resolveTimer' as const,
@@ -62,16 +62,18 @@ describe('EventActionExecutor', () => {
       successFlag: 'true_route_reincarnation',
     }
 
-    applyStateEventAction({ type: 'startTimer', timerId: 'reincarnation' }, 1_000)
+    applyStateEventAction({ type: 'startTimer', timerId: 'reincarnation' })
     for (const flag of REINCARNATION_CORRECT_ANSWER_FLAGS.slice(0, -1)) gd.setFlag(flag, true)
-    applyStateEventAction(resolveAction, 60_999)
+    gd.accumulateActiveTimer('reincarnation', 30_000)
+    applyStateEventAction(resolveAction)
     expect(gd.getFlag('true_route_reincarnation')).toBe(false)
 
     gd.setFlag(REINCARNATION_CORRECT_ANSWER_FLAGS.at(-1)!, true)
-    applyStateEventAction(resolveAction, 60_999)
+    applyStateEventAction(resolveAction)
     expect(gd.getFlag('true_route_reincarnation')).toBe(true)
 
-    applyStateEventAction(resolveAction, 61_001)
+    gd.accumulateActiveTimer('reincarnation', 30_001)
+    applyStateEventAction(resolveAction)
     expect(gd.getFlag('true_route_reincarnation')).toBe(false)
   })
 })

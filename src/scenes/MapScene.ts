@@ -43,6 +43,7 @@ import {
   PARTY_FIELD_EVENT_CHARACTER_IDS,
   REBUILD_VISUAL_MAP_THRESHOLD,
   REBUILD_TILE_REPLACEMENTS,
+  REINCARNATION_TIMER_ID,
   RUNTIME_UI_ASSET_KEYS,
   REBUILT_TOWN_MAP_ID,
   QUICK_SAVE_SLOT,
@@ -420,6 +421,7 @@ export class MapScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     this.animationTimeMs = time
+    GameData.getInstance().accumulateActiveTimer(REINCARNATION_TIMER_ID, delta)
     this.syncDirectionalActionKeys()
     this.updatePartyHud()
     if (this.inEvent) {
