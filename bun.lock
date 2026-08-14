@@ -11,7 +11,6 @@
       },
       "devDependencies": {
         "@types/bun": "1.3.14",
-        "phaser3spectorjs": "file:stubs/phaser3spectorjs",
         "sharp": "^0.34.5",
       },
       "peerDependencies": {
@@ -155,8 +154,6 @@
     "nanoid": ["nanoid@3.3.12", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ=="],
 
     "phaser": ["phaser@4.1.0", "", { "dependencies": { "eventemitter3": "^5.0.4" } }, "sha512-ZXv5Bhyg2BqJGAAxNI2xvmzGXW9q+TwUG1RLri5ZDBYGGtcma6aWUO/eJ7EbozeqRd5fKdpo4ycNMQt+Bi5iYg=="],
-
-    "phaser3spectorjs": ["phaser3spectorjs@file:stubs/phaser3spectorjs", {}],
 
     "picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
 
