@@ -136,7 +136,7 @@ describe('GameData', () => {
     expect(gd.characters).toBeInstanceOf(Map)
     expect(gd.quests).toBeInstanceOf(Map)
     expect(gd.characters.get('T')!.stats.hp).toBe(originalHp)
-    expect(gd.inventory.items.heal_grass).toBe(originalItems)
+    expect(gd.inventory.items.heal_grass!).toBe(originalItems!)
     expect(gd.party).toEqual([...START_PARTY])
   })
 
