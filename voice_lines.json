@@ -5188,5 +5188,113 @@
     "speaker": "木桶精灵",
     "text": "人心之渊还没有出现。等xiaoai被净化后，再回到这里。",
     "assetKey": "DIA_LOCKED_ABYSS_001"
+  },
+  {
+    "diaId": "DIA_004_FESTIVAL_MID",
+    "speaker": "镇长",
+    "text": "今晚到会场北侧的镇长家门口来。我有东西交给你。",
+    "assetKey": "DIA_004_FESTIVAL_MID_14"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "镇长",
+    "text": "都到会场中央来。盛典马上开始，别在边上磨蹭。",
+    "assetKey": "DIA_004_MAYOR_1"
+  },
+  {
+    "diaId": "DIA_004_MAYOR",
+    "speaker": "木桶精灵",
+    "text": "重要场合，请站在能被命运看见的位置。",
+    "assetKey": "DIA_004_MAYOR_2"
+  },
+  {
+    "diaId": "DIA_BATTLE_BAIHU_70",
+    "speaker": "白虎",
+    "text": "那枚戒指的光……不是魔气。你们到底是什么人？",
+    "assetKey": "DIA_BATTLE_BAIHU_70_1"
+  },
+  {
+    "diaId": "DIA_104_ALTAR_LOCKED",
+    "speaker": "木桶精灵",
+    "text": "祭台还没有回应。先按下三棵刻有种子形状的机关树。",
+    "assetKey": "DIA_104_ALTAR_LOCKED_1"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE",
+    "speaker": "sun",
+    "text": "神之桂冠就在祭台上。若你们已经准备好，就亲手取走它。",
+    "assetKey": "DIA_304_TEMPLE_13"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE_AFTER",
+    "speaker": "sun",
+    "text": "神殿不会替你作答。带走桂冠之后，你要用自己的选择证明那场梦。",
+    "assetKey": "DIA_304_TEMPLE_AFTER_1"
+  },
+  {
+    "diaId": "DIA_304_TEMPLE_AFTER",
+    "speaker": "T",
+    "text": "这次我会醒着走完。",
+    "assetKey": "DIA_304_TEMPLE_AFTER_2"
+  },
+  {
+    "diaId": "DIA_BATTLE_XIAOAI_TRUE_30",
+    "speaker": "xiaoai",
+    "text": "净化？你们连自己的黑暗都看不清，还想碰我？",
+    "assetKey": "DIA_BATTLE_XIAOAI_TRUE_30_1"
+  },
+  {
+    "diaId": "DIA_BATTLE_WUXIANG_70",
+    "speaker": "无相",
+    "text": "看看你们身后的影子，它们比刀更诚实。",
+    "assetKey": "DIA_BATTLE_WUXIANG_70_1"
+  },
+  {
+    "diaId": "DIA_BATTLE_WUXIANG_30",
+    "speaker": "无相",
+    "text": "还不承认吗？所谓守护，不过是害怕失去的另一种名字。",
+    "assetKey": "DIA_BATTLE_WUXIANG_30_1"
+  },
+  {
+    "diaId": "DIA_NPC_REBUILD1_HERB_WAIT",
+    "speaker": "T",
+    "text": "找到之后我会带回来。",
+    "assetKey": "DIA_NPC_REBUILD1_HERB_WAIT_2"
+  },
+  {
+    "diaId": "DIA_602_RECOLLECTION_START",
+    "speaker": "木桶精灵",
+    "text": "戒指留住的不是xiaoai本人，是你没有理解的那部分记忆。",
+    "assetKey": "DIA_602_RECOLLECTION_START_1"
+  },
+  {
+    "diaId": "DIA_602_RECOLLECTION_START",
+    "speaker": "T",
+    "text": "我不想假装过去没发生。",
+    "assetKey": "DIA_602_RECOLLECTION_START_2"
+  },
+  {
+    "diaId": "DIA_602_RECOLLECTION_START",
+    "speaker": "慧慧",
+    "text": "那就别假装。为白虎补上尊重，借水镜说出歉意，再走一次你逃开的轮回。",
+    "assetKey": "DIA_602_RECOLLECTION_START_3"
+  },
+  {
+    "diaId": "DIA_602_RECOLLECTION_COMPLETE",
+    "speaker": "T",
+    "text": "我不能让那些选择消失，但我可以承认它们错在哪里。",
+    "assetKey": "DIA_602_RECOLLECTION_COMPLETE_2"
+  },
+  {
+    "diaId": "DIA_602_RECOLLECTION_COMPLETE",
+    "speaker": "xiaoai",
+    "text": "能回头看见错误的人，才不会永远困在恨里。",
+    "assetKey": "DIA_602_RECOLLECTION_COMPLETE_3"
+  },
+  {
+    "diaId": "DIA_LOCKED_ABYSS",
+    "speaker": "木桶精灵",
+    "text": "人心之渊还没有出现。净化xiaoai后，还需要把散落的真相与善意带回来。",
+    "assetKey": "DIA_LOCKED_ABYSS_1"
   }
 ]
