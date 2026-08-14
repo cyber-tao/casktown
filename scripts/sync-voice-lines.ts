@@ -8,7 +8,6 @@ import {
   PROCESS_SUCCESS_EXIT_CODE,
   PROJECT_ROOT_PARENT_SEGMENT,
   UTF8_FILE_ENCODING,
-  VOICE_ASSET_KEY_INDEX_PAD_LENGTH,
   VOICE_LINES_FILE,
 } from './constants'
 import { VOICE_MAP } from './voice-config'
@@ -33,8 +32,12 @@ function makeTextKey(speaker: string, text: string): string {
   return `${speaker}\n${text}`
 }
 
+// 静默反应行：去除空白与常见标点后无实际文字（如“……”）则不生成配音
+const SILENT_TEXT_PATTERN = /^[\s。，！？…、——~～-]*$/
+
 function makeAssetKey(diaId: string, lineIndex: number, usedAssetKeys: Set<string>): string {
-  const baseKey = `${diaId}_${String(lineIndex + 1).padStart(VOICE_ASSET_KEY_INDEX_PAD_LENGTH, '0')}`
+  // 键格式与现有 voice_lines.json / assets/audio/voice 一致：无补零的行序号
+  const baseKey = `${diaId}_${lineIndex + 1}`
   let assetKey = baseKey
   let suffix = 2
   while (usedAssetKeys.has(assetKey)) {
@@ -55,6 +58,8 @@ async function syncVoiceLines(): Promise<void> {
     for (let lineIndex = 0; lineIndex < script.lines.length; lineIndex++) {
       const line = script.lines[lineIndex]!
       if (!voicedSpeakers.has(line.speaker)) continue
+      // 静默反应行（纯标点/省略号）不配音
+      if (SILENT_TEXT_PATTERN.test(line.text)) continue
 
       const textKey = makeTextKey(line.speaker, line.text)
       if (existingTextKeys.has(textKey)) continue

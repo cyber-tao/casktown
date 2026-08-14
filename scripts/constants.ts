@@ -35,7 +35,6 @@ export const SPRITE_MAPPING_OPAQUE_ALPHA = 255
 export const VOICE_LINES_FILE = 'voice_lines.json'
 export const VOICE_AUDIO_OUTPUT_DIR = 'assets/audio/voice'
 export const VOICE_TEMP_DIR = '.voice-tmp'
-export const VOICE_ASSET_KEY_INDEX_PAD_LENGTH = 3
 export const VOICE_GENERATION_DELAY_MS = 1200
 export const VOICE_GENERATION_RETRY_LIMIT = 2
 export const VOICE_RATE_LIMIT_RETRY_DELAY_MS = 3000
