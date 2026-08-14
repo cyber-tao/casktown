@@ -706,9 +706,9 @@ describe('game content data', () => {
       const choices = DIALOGUES[dialogueId]!.lines.flatMap(line => line.choices ?? [])
       expect(choices.length).toBeGreaterThan(0)
       expect(choices.every(choice => choice.next === undefined)).toBe(true)
-      expect(choices[0]?.actions).toContainEqual({ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[index], value: true })
+      expect(choices[0]!.actions).toContainEqual({ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[index]!, value: true })
       for (const choice of choices.slice(1)) {
-        expect(choice.actions).toContainEqual({ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[index], value: false })
+        expect(choice.actions!).toContainEqual({ type: 'setFlag', flag: REINCARNATION_CORRECT_ANSWER_FLAGS[index]!, value: false })
       }
     }
 

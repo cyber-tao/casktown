@@ -110,7 +110,7 @@ describe('BattleRewards', () => {
         expect(gd.getFlag('released_four_seals')).toBe(allGuardiansDefeated)
         expect(QuestSystem.getInstance().isQuestCompleted('QST_010')).toBe(allGuardiansDefeated)
         expect(display.progress).toBe(index + 1)
-        expect(display.objective).toBe(QUESTS.QST_010!.objectives[nextObjectiveIndex < 0 ? 3 : nextObjectiveIndex])
+        expect(display.objective).toBe(QUESTS.QST_010!.objectives[nextObjectiveIndex < 0 ? 3 : nextObjectiveIndex]!)
       }
 
       expect(gd.getFlag('seal_qinglong_released')).toBe(true)

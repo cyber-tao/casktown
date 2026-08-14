@@ -167,10 +167,10 @@ describe('constants consistency', () => {
 
   test('direction vectors match direction keys', () => {
     for (const dir of Object.values(DIRECTION)) {
-      const vec = DIRECTION_VECTORS[dir as keyof typeof DIRECTION_VECTORS]
+      const vec = DIRECTION_VECTORS[dir as keyof typeof DIRECTION_VECTORS] as { x: number; y: number } | undefined
       expect(vec).toBeDefined()
-      expect(typeof vec.x).toBe('number')
-      expect(typeof vec.y).toBe('number')
+      expect(typeof vec!.x).toBe('number')
+      expect(typeof vec!.y).toBe('number')
     }
   })
 
@@ -196,7 +196,7 @@ describe('constants consistency', () => {
     expect(WORLD_MAP_UI.LOCATION_PIN_STROKE_ALPHA).toBeGreaterThan(0.7)
     expect(WORLD_MAP_UI.LOCATION_PULSE_FILL_ALPHA).toBeLessThanOrEqual(0.1)
     expect(WORLD_MAP_UI.LOCATION_PULSE_ALPHA).toBeLessThan(0.5)
-    expect(WORLD_MAP_LOCATION_POINTS.MAP_070.y).toBeLessThan(WORLD_MAP_UI.LOCATION_LABEL_Y - WORLD_MAP_UI.LOCATION_PULSE_SIZE)
+    expect(WORLD_MAP_LOCATION_POINTS.MAP_070!.y).toBeLessThan(WORLD_MAP_UI.LOCATION_LABEL_Y - WORLD_MAP_UI.LOCATION_PULSE_SIZE)
   })
 
   test('world map title stays readable over the illustrated clock tower', () => {

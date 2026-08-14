@@ -71,13 +71,13 @@ describe('data type integrity', () => {
   })
 
   test('xiaoai boss display names are readable', () => {
-    expect(INITIAL_CHARACTERS.xiaoai.name).toBe('xiaoai')
-    expect(ENEMIES.fake_xiaoai.name).toBe('xiaoai 之影')
-    expect(ENEMIES.xiaoai_true.name).toBe('xiaoai 真身')
-    expect(ENEMIES.fake_xiaoai.name).toContain(' ')
-    expect(ENEMIES.xiaoai_true.name).toContain(' ')
-    expect(ENEMIES.fake_xiaoai.name).not.toMatch(/[·-]/)
-    expect(ENEMIES.xiaoai_true.name).not.toMatch(/[·-]/)
+    expect(INITIAL_CHARACTERS.xiaoai!.name).toBe('xiaoai')
+    expect(ENEMIES.fake_xiaoai!.name).toBe('xiaoai 之影')
+    expect(ENEMIES.xiaoai_true!.name).toBe('xiaoai 真身')
+    expect(ENEMIES.fake_xiaoai!.name).toContain(' ')
+    expect(ENEMIES.xiaoai_true!.name).toContain(' ')
+    expect(ENEMIES.fake_xiaoai!.name).not.toMatch(/[·-]/)
+    expect(ENEMIES.xiaoai_true!.name).not.toMatch(/[·-]/)
   })
 
   test('all characters have required fields with valid references', () => {
@@ -237,7 +237,7 @@ describe('data type integrity', () => {
   test('map tile sprite assets resolve for each tileset', () => {
     const missingOverrides = Object.entries(TILESET_TILE_SPRITES)
       .flatMap(([tileset, overrides]) => Object.entries(overrides)
-        .filter(([, spriteKey]) => !IMAGE_ASSETS[spriteKey])
+        .filter(([, spriteKey]) => !IMAGE_ASSETS[spriteKey!])
         .map(([tileId, spriteKey]) => `${tileset}/${tileId}: ${spriteKey}`))
 
     const missingMapTiles = Object.values(MAPS)

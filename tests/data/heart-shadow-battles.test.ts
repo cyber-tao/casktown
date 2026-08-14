@@ -16,11 +16,11 @@ import {
 
 describe('heart-shadow battles', () => {
   test('BTL701-705 use their authored heart-shadow enemies', () => {
-    expect(ENCOUNTERS.BTL_701.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.T])
-    expect(ENCOUNTERS.BTL_702.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.HUIHUI, HEART_SHADOW_ENEMY_IDS.WORRY_CHAIN])
-    expect(ENCOUNTERS.BTL_703.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.A])
-    expect(ENCOUNTERS.BTL_704.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.CONGCONG])
-    expect(ENCOUNTERS.BTL_705.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.SUN])
+    expect(ENCOUNTERS.BTL_701!.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.T])
+    expect(ENCOUNTERS.BTL_702!.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.HUIHUI, HEART_SHADOW_ENEMY_IDS.WORRY_CHAIN])
+    expect(ENCOUNTERS.BTL_703!.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.A])
+    expect(ENCOUNTERS.BTL_704!.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.CONGCONG])
+    expect(ENCOUNTERS.BTL_705!.enemies).toEqual([HEART_SHADOW_ENEMY_IDS.SUN])
   })
 
   test('heart shadows render as dark counterparts instead of the default rock', () => {
@@ -48,25 +48,25 @@ describe('heart-shadow battles', () => {
   })
 
   test('Huihui mends the living worry chain and stops after it breaks', () => {
-    expect(SKILLS.worry_mend.type).toBe('heal')
+    expect(SKILLS.worry_mend!.type).toBe('heal')
     expect(resolveHeartShadowHuihuiSkill(true)).toBe('worry_mend')
     expect(resolveHeartShadowHuihuiSkill(false)).toBe('shadow_blade')
   })
 
   test('A has high defense but a shortened break threshold', () => {
-    expect(ENEMIES.heart_shadow_a.stats.def).toBeGreaterThanOrEqual(60)
+    expect(ENEMIES.heart_shadow_a!.stats.def).toBeGreaterThanOrEqual(60)
     expect(resolveHeartShadowBreakMax(HEART_SHADOW_ENEMY_IDS.A, 200)).toBe(100)
   })
 
   test('Huihui hidden weapons and sun oracle counter Congcong evasion', () => {
-    expect(ENEMIES.heart_shadow_congcong.skills).toContain('tiefengbu')
+    expect(ENEMIES.heart_shadow_congcong!.skills).toContain('tiefengbu')
     expect(isHeartShadowEvasionCounter(HEART_SHADOW_ENEMY_IDS.CONGCONG, 'HUIHUI', 'xiubiao')).toBe(true)
     expect(isHeartShadowEvasionCounter(HEART_SHADOW_ENEMY_IDS.CONGCONG, 'SUN', 'shenyu')).toBe(true)
     expect(isHeartShadowEvasionCounter(HEART_SHADOW_ENEMY_IDS.CONGCONG, 'T', 'qizhijian')).toBe(false)
   })
 
   test('sun raises a periodic shield that only ring-light purification dispels', () => {
-    expect(ENEMIES.heart_shadow_sun.skills).toContain('shengdun')
+    expect(ENEMIES.heart_shadow_sun!.skills).toContain('shengdun')
     expect(shouldHeartShadowSunCastShield(0, false)).toBe(true)
     expect(shouldHeartShadowSunCastShield(1, false)).toBe(false)
     expect(shouldHeartShadowSunCastShield(3, false)).toBe(true)

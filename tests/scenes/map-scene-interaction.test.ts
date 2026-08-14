@@ -52,6 +52,8 @@ type DirectionalKeysHarness = {
 
 type SyncDirectionalActionKeys = (this: DirectionalKeysHarness, force?: boolean) => void
 
+type HandleFlagSet = (key: string, value: unknown) => void
+
 type HandleFlagSetHarness = {
   mapData: { id: string }
   scene: {
@@ -483,7 +485,7 @@ describe('MapScene responsive touch layout', () => {
 
   test('rebuilds HUD surfaces when resize switches into touch layout', () => {
     const calls: string[] = []
-    const harness = {
+    const harness: TouchLayoutHarness = {
       touchLayoutActive: false,
       touchControls: [],
       shouldShowTouchControls: () => true,
@@ -594,8 +596,9 @@ describe('MapScene deferred visual restart', () => {
       requestMapRestart: () => {},
     }
     const mapScene = Object.assign(new MapSceneClass(), harness)
+    const handleFlagSet = (mapScene as unknown as { handleFlagSet: HandleFlagSet }).handleFlagSet
 
-    mapScene['handleFlagSet']('puzzle_trees_solved', true)
+    handleFlagSet('puzzle_trees_solved', true)
 
     expect(calls).toEqual(['sync-battles', 'refresh-minimap'])
   })
@@ -619,8 +622,9 @@ describe('MapScene deferred visual restart', () => {
       requestMapRestart: mapId => restartCalls.push(mapId),
     }
     const mapScene = Object.assign(new MapSceneClass(), harness)
+    const handleFlagSet = (mapScene as unknown as { handleFlagSet: HandleFlagSet }).handleFlagSet
 
-    mapScene['handleFlagSet']('rebuild_level', 3)
+    handleFlagSet('rebuild_level', 3)
 
     expect(restartCalls).toEqual([])
     expect((mapScene as unknown as HandleFlagSetHarness).pendingMapRestartId).toBe(REBUILT_TOWN_MAP_ID)
@@ -646,8 +650,9 @@ describe('MapScene deferred visual restart', () => {
       requestMapRestart: mapId => restartCalls.push(mapId),
     }
     const mapScene = Object.assign(new MapSceneClass(), harness)
+    const handleFlagSet = (mapScene as unknown as { handleFlagSet: HandleFlagSet }).handleFlagSet
 
-    mapScene['handleFlagSet']('rebuild_level', 3)
+    handleFlagSet('rebuild_level', 3)
 
     expect(restartCalls).toEqual([])
     expect((mapScene as unknown as HandleFlagSetHarness).pendingMapRestartId).toBe(REBUILT_TOWN_MAP_ID)

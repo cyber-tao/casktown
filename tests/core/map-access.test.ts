@@ -58,7 +58,7 @@ describe('MapAccess', () => {
     expect(requirement?.flag).toBe('true_route_unlocked')
 
     const purifiedOnly = (flag: string) => flag === 'xiaoai_purified' ? true : false
-    expect(getBlockedMapDialogueId('MAP_070', purifiedOnly)).toBe(requirement?.blockedDialogueId)
+    expect(getBlockedMapDialogueId('MAP_070', purifiedOnly)).toBe(requirement?.blockedDialogueId ?? null)
 
     const trueRouteUnlocked = (flag: string) => flag === 'true_route_unlocked' ? true : false
     expect(getBlockedMapDialogueId('MAP_070', trueRouteUnlocked)).toBeNull()
@@ -69,10 +69,10 @@ describe('MapAccess', () => {
     expect(MAP_ACCESS_REQUIREMENTS.MAP_062?.flag).toBe('a_captured')
 
     const sealsOnly = (flag: string) => flag === 'released_four_seals'
-    expect(getBlockedMapDialogueId('MAP_055', sealsOnly)).toBe(MAP_ACCESS_REQUIREMENTS.MAP_055?.blockedDialogueId)
+    expect(getBlockedMapDialogueId('MAP_055', sealsOnly)).toBe(MAP_ACCESS_REQUIREMENTS.MAP_055?.blockedDialogueId ?? null)
 
     const chainsOnly = (flag: string) => flag === 'swamp_chains_resolved'
-    expect(getBlockedMapDialogueId('MAP_062', chainsOnly)).toBe(MAP_ACCESS_REQUIREMENTS.MAP_062?.blockedDialogueId)
+    expect(getBlockedMapDialogueId('MAP_062', chainsOnly)).toBe(MAP_ACCESS_REQUIREMENTS.MAP_062?.blockedDialogueId ?? null)
   })
 
   test('all map access requirements reference valid dialogue ids', () => {

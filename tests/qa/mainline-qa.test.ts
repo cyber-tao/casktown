@@ -77,11 +77,7 @@ describe('MainlineQaRunner', () => {
       expect(report.coverage.completedQuestSources[questId]?.length).toBeGreaterThan(0)
     }
     for (const step of MAINLINE_QA_ROUTE) {
-      if (step.kind === 'event') {
-        expect(report.coverage.mapEvents).toContain(`${step.mapId}:${step.eventId}`)
-      } else {
-        expect(report.coverage.dialogueIds).toContain(step.dialogueId)
-      }
+      expect(report.coverage.mapEvents).toContain(`${step.mapId}:${step.eventId}`)
     }
     expect(report.coverage.mapIds).toContain(MAINLINE_QA_REQUIRED_FINAL_MAP)
     expect(report.coverage.encounterIds).toContain(MAINLINE_QA.BATTLE_FINAL_ENCOUNTER_ID)
@@ -112,13 +108,16 @@ describe('MainlineQaRunner', () => {
         },
       },
       getElementById: (id: string) => elements.get(id) ?? null,
-      createElement: () => ({
-        id: '',
-        textContent: '',
-        setAttribute(key: string, value: string) {
-          if (key === 'type') this.type = value
-        },
-      }),
+      createElement: () => {
+        const element: { id: string; textContent: string; type?: string; setAttribute(key: string, value: string): void } = {
+          id: '',
+          textContent: '',
+          setAttribute(key: string, value: string) {
+            if (key === 'type') this.type = value
+          },
+        }
+        return element
+      },
     }
     ;(globalThis as unknown as { document?: unknown }).document = documentStub
 

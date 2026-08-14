@@ -13,19 +13,19 @@ describe('QuestSystem', () => {
 
   test('startQuest creates active quest state', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
 
     const state = qs.getQuestState(questId)
     expect(state).toBeDefined()
     expect(state!.status).toBe('active')
     expect(state!.progress).toBe(0)
-    expect(state!.maxProgress).toBe(QUESTS[questId].objectives.length)
+    expect(state!.maxProgress).toBe(QUESTS[questId]!.objectives.length)
   })
 
   test('startQuest emits QUEST_UPDATE event', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     let emitted = false
     const handler = () => { emitted = true }
     EventBus.on(GameEvents.QUEST_UPDATE, handler)
@@ -36,7 +36,7 @@ describe('QuestSystem', () => {
 
   test('startQuest ignores already active quest', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
     qs.startQuest(questId)
 
@@ -46,8 +46,8 @@ describe('QuestSystem', () => {
 
   test('advanceQuest increments progress', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
-    const quest = QUESTS[questId]
+    const questId = Object.keys(QUESTS)[0]!
+    const quest = QUESTS[questId]!
     qs.startQuest(questId)
 
     if (quest.objectives.length > 1) {
@@ -60,7 +60,7 @@ describe('QuestSystem', () => {
 
   test('advanceQuest ignores non-positive amounts', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
 
     qs.advanceQuest(questId, -1)
@@ -73,18 +73,18 @@ describe('QuestSystem', () => {
 
   test('advanceQuest auto-completes when progress reaches max', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     const quest = QUESTS[questId]
     qs.startQuest(questId)
 
-    qs.advanceQuest(questId, quest.objectives.length)
+    qs.advanceQuest(questId, quest!.objectives.length)
     expect(qs.isQuestCompleted(questId)).toBe(true)
     expect(qs.isQuestActive(questId)).toBe(false)
   })
 
   test('completeQuest sets status to completed', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
     qs.completeQuest(questId)
 
@@ -95,7 +95,7 @@ describe('QuestSystem', () => {
 
   test('completeQuest is idempotent', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
     qs.completeQuest(questId)
     qs.completeQuest(questId)
@@ -161,7 +161,7 @@ describe('QuestSystem', () => {
 
   test('failQuest sets status to failed', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
     qs.failQuest(questId)
 
@@ -171,7 +171,7 @@ describe('QuestSystem', () => {
 
   test('failQuest ignores non-active quest', () => {
     const qs = QuestSystem.getInstance()
-    const questId = Object.keys(QUESTS)[0]
+    const questId = Object.keys(QUESTS)[0]!
     qs.startQuest(questId)
     qs.completeQuest(questId)
     qs.failQuest(questId)
@@ -183,19 +183,19 @@ describe('QuestSystem', () => {
     const qs = QuestSystem.getInstance()
     const ids = Object.keys(QUESTS).slice(0, 3)
     for (const id of ids) qs.startQuest(id)
-    qs.completeQuest(ids[0])
+    qs.completeQuest(ids[0]!)
 
     const active = qs.getActiveQuests()
     expect(active.every(q => q.status === 'active')).toBe(true)
-    expect(active.map(q => q.id)).toContain(ids[1])
-    expect(active.map(q => q.id)).toContain(ids[2])
+    expect(active.map(q => q.id)).toContain(ids[1]!)
+    expect(active.map(q => q.id)).toContain(ids[2]!)
   })
 
   test('getCompletedQuests returns only completed quests', () => {
     const qs = QuestSystem.getInstance()
     const ids = Object.keys(QUESTS).slice(0, 2)
     for (const id of ids) qs.startQuest(id)
-    qs.completeQuest(ids[0])
+    qs.completeQuest(ids[0]!)
 
     const completed = qs.getCompletedQuests()
     expect(completed.length).toBeGreaterThan(0)

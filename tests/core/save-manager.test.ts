@@ -21,7 +21,7 @@ class FailingSetItemStorage extends LocalStorageMock {
     super()
   }
 
-  setItem(key: string, value: string): void {
+  override setItem(key: string, value: string): void {
     if (key === this.failingKey) {
       throw new Error(`Failed to write ${key}`)
     }
@@ -34,7 +34,7 @@ class FailingSetItemStorage extends LocalStorageMock {
 }
 
 class FailingGetItemStorage extends LocalStorageMock {
-  getItem(_key: string): string | null {
+  override getItem(_key: string): string | null {
     throw new Error('Failed to read save storage')
   }
 }
@@ -44,7 +44,7 @@ class FailingRemoveItemStorage extends LocalStorageMock {
     super()
   }
 
-  removeItem(key: string): void {
+  override removeItem(key: string): void {
     if (key === this.failingKey) {
       throw new Error(`Failed to remove ${key}`)
     }
@@ -59,6 +59,7 @@ class FailingRemoveItemStorage extends LocalStorageMock {
 describe('SaveManager', () => {
   let sm: SaveManager
   let mockStorage: LocalStorageMock
+  const originalLocalStorage = (globalThis as { localStorage?: unknown }).localStorage
 
   beforeEach(() => {
     mockStorage = new LocalStorageMock()
@@ -69,6 +70,11 @@ describe('SaveManager', () => {
 
   afterEach(() => {
     mockStorage.clear()
+    if (originalLocalStorage === undefined) {
+      delete (globalThis as Record<string, unknown>).localStorage
+    } else {
+      ;(globalThis as Record<string, unknown>).localStorage = originalLocalStorage
+    }
   })
 
   test('save and load round-trip preserves game data', () => {
@@ -189,8 +195,8 @@ describe('SaveManager', () => {
         characters: {
           ...(validSave.characters as object),
           T: {
-            ...((validSave.characters as Record<string, object>).T),
-            stats: { ...((validSave.characters as Record<string, { stats: object }>).T.stats), hp: 'many' },
+            ...((validSave.characters as Record<string, object>).T!),
+            stats: { ...((validSave.characters as Record<string, { stats: object }>).T!.stats), hp: 'many' },
           },
         },
       },

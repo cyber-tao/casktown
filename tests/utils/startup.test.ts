@@ -22,7 +22,7 @@ describe('startup ready state', () => {
         getAttribute: (key: string) => attributes.get(key) ?? null,
         setAttribute: (key: string, value: string) => attributes.set(key, value),
       },
-    } as Document
+    } as unknown as Document
     globalThis.window = {
       dispatchEvent: (event: Event) => {
         eventTypes.push(event.type)
@@ -33,7 +33,7 @@ describe('startup ready state', () => {
       constructor(type: string) {
         super(type)
       }
-    } as typeof CustomEvent
+    } as unknown as typeof CustomEvent
 
     expect(isStartupReady()).toBe(false)
 
@@ -53,7 +53,7 @@ describe('startup ready state', () => {
         getAttribute: (key: string) => attributes.get(key) ?? null,
         setAttribute: (key: string, value: string) => attributes.set(key, value),
       },
-    } as Document
+    } as unknown as Document
     globalThis.window = undefined as unknown as Window & typeof globalThis
 
     markStartupReady()

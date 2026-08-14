@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "test": "bun test",
     "preview": "vite preview",
     "sprites:repair": "bun run scripts/repair-sprite-atlases.ts",

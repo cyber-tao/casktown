@@ -26,6 +26,7 @@ type RuntimeUiAssetName = RuntimeUiAssetDefinition['name']
 type RuntimeUiSourceDefinition = typeof RUNTIME_UI_IMAGE_SOURCE_DEFINITIONS[RuntimeUiAssetName]
 type CropDefinition = NonNullable<Extract<RuntimeUiSourceDefinition, { crop: unknown }>['crop']>
 type SliceDefinition = NonNullable<Extract<RuntimeUiSourceDefinition, { slice: unknown }>['slice']>
+type CropRect = { left: number; top: number; width: number; height: number }
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(scriptDir, PROJECT_ROOT_PARENT_SEGMENT)
@@ -137,7 +138,7 @@ async function resizeContain(source: Buffer, targetWidth: number, targetHeight: 
     .toBuffer()
 }
 
-async function resizePart(source: Buffer, crop: CropDefinition, width: number, height: number): Promise<Buffer> {
+async function resizePart(source: Buffer, crop: CropRect, width: number, height: number): Promise<Buffer> {
   return sharp(source)
     .extract(crop)
     .resize(width, height, {
