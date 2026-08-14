@@ -1,22 +1,37 @@
 import { describe, expect, test } from 'bun:test'
-import { existsSync, readFileSync } from 'node:fs'
+import { closeSync, existsSync, fstatSync, openSync, readSync } from 'node:fs'
 import { resolveDialogueVoiceKey, getDialogueVoicePath } from '../../src/utils/voiceLines.ts'
 import { VOICE_AUDIO_PATH } from '../../src/utils/constants.ts'
 import type { DialogueLine } from '../../src/data/types.ts'
 import voiceLines from '../../voice_lines.json'
 
 const MIN_VOICE_DURATION_SECONDS = 0.1
+// Ogg 页最大 64KB（含页头）；只读文件头与尾部即可完成时长解析
+const OGG_TAIL_READ_BYTES = 64 * 1024 + 64
+const OGG_HEADER_READ_BYTES = 64
 
 function getOggVorbisDurationSeconds(path: string): number | null {
-  const data = readFileSync(path)
-  const identificationHeader = data.indexOf(Buffer.from([1, 118, 111, 114, 98, 105, 115]))
-  const finalPage = data.lastIndexOf(Buffer.from('OggS'))
-  if (identificationHeader < 0 || finalPage < 0) return null
+  const fd = openSync(path, 'r')
+  try {
+    const head = Buffer.alloc(OGG_HEADER_READ_BYTES)
+    const headRead = readSync(fd, head, 0, OGG_HEADER_READ_BYTES, 0)
+    const identificationHeader = head.indexOf(Buffer.from([1, 118, 111, 114, 98, 105, 115]))
+    if (identificationHeader < 0 || headRead < identificationHeader + 16) return null
+    const sampleRate = head.readUInt32LE(identificationHeader + 12)
+    if (sampleRate <= 0) return null
 
-  const sampleRate = data.readUInt32LE(identificationHeader + 12)
-  const granulePosition = Number(data.readBigUInt64LE(finalPage + 6))
-  if (sampleRate <= 0 || !Number.isSafeInteger(granulePosition)) return null
-  return granulePosition / sampleRate
+    const fileSize = fstatSync(fd).size
+    const tailSize = Math.min(fileSize, OGG_TAIL_READ_BYTES)
+    const tail = Buffer.alloc(tailSize)
+    readSync(fd, tail, 0, tailSize, fileSize - tailSize)
+    const finalPage = tail.lastIndexOf(Buffer.from('OggS'))
+    if (finalPage < 0 || tailSize - finalPage < 22) return null
+    const granulePosition = Number(tail.readBigUInt64LE(finalPage + 6))
+    if (!Number.isSafeInteger(granulePosition)) return null
+    return granulePosition / sampleRate
+  } finally {
+    closeSync(fd)
+  }
 }
 
 describe('resolveDialogueVoiceKey', () => {
@@ -86,5 +101,5 @@ describe('voice line assets', () => {
       })
 
     expect(invalid).toEqual([])
-  })
+  }, { timeout: 30_000 })
 })
