@@ -117,6 +117,7 @@ export function showLoadingScreen(scene: Phaser.Scene, label: string = LOADING_S
     scene.load.off(Phaser.Loader.Events.COMPLETE, cleanup)
     scene.events.off(Phaser.Scenes.Events.CREATE, cleanup)
     scene.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup)
+    scene.tweens.killTweensOf(container)
     container.destroy(true)
   }
 
