@@ -40,8 +40,10 @@ const OUTPUT_DIR = join(PROJECT_ROOT, VOICE_AUDIO_OUTPUT_DIR);
 const TMP_DIR = join(PROJECT_ROOT, VOICE_TEMP_DIR);
 
 function commandExists(command: string): boolean {
+  // Windows 无 which 命令；where 是其等价物
+  const lookupCli = process.platform === 'win32' ? 'where' : COMMAND_LOOKUP_CLI
   try {
-    execFileSync(COMMAND_LOOKUP_CLI, [command], { stdio: 'ignore' });
+    execFileSync(lookupCli, [command], { stdio: 'ignore' });
     return true;
   } catch {
     return false;
@@ -167,17 +169,18 @@ function main() {
   let fail = 0;
 
   for (let i = 0; i < missingLines.length; i++) {
-    let r = generateOne(missingLines[i]);
+    const line = missingLines[i]!;
+    let r = generateOne(line);
     let retries = 0;
     while (!r.ok && retries < VOICE_GENERATION_RETRY_LIMIT && r.err?.includes('rate limit')) {
       retries++;
       console.log(`  [${i + 1}/${missingLines.length}] RETRY ${retries}: ${r.key}`);
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, VOICE_RATE_LIMIT_RETRY_DELAY_MS);
-      r = generateOne(missingLines[i]);
+      r = generateOne(line);
     }
     if (r.ok) {
       ok++;
-      console.log(`  [${i + 1}/${missingLines.length}] OK: ${r.key} (${missingLines[i].speaker})`);
+      console.log(`  [${i + 1}/${missingLines.length}] OK: ${r.key} (${line.speaker})`);
     } else {
       fail++;
       console.error(`  [${i + 1}/${missingLines.length}] FAIL: ${r.key} - ${r.err}`);
