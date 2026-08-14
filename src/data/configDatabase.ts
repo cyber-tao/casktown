@@ -17,6 +17,8 @@ import type { BGMConfig, SFXConfig } from './audio'
 import type { SpriteCropConfig } from './spriteCrops'
 import type { CharacterData, DialogueData, EncounterData, EnemyData, ItemData, MapData, QuestDef, SkillData } from './types'
 
+export const CONFIG_DATABASE_STORAGE_VERSION = 1
+
 export interface GameConfigTables {
   maps: Record<string, MapData>
   characters: Record<string, CharacterData>
@@ -63,17 +65,42 @@ export function cloneConfigData<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
-function canUseLocalStorage(): boolean {
+function getLocalStorage(): Storage | null {
   try {
-    return typeof window !== 'undefined' && Boolean(window.localStorage)
+    if (typeof window !== 'undefined' && window.localStorage) return window.localStorage
+    return (globalThis as { localStorage?: Storage }).localStorage ?? null
   } catch (error) {
     console.warn('Local configuration storage is unavailable', error)
-    return false
+    return null
   }
+}
+
+function canUseLocalStorage(): boolean {
+  return getLocalStorage() !== null
 }
 
 function isRecordTable(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value))
+}
+
+function isPlausibleTablesPayload(value: unknown): value is Partial<GameConfigTables> {
+  if (!isRecordTable(value)) return false
+  for (const key of GAME_CONFIG_TABLE_KEYS) {
+    const table = value[key]
+    if (table === undefined) continue
+    if (key === 'prophecies') {
+      if (!Array.isArray(table)) return false
+      continue
+    }
+    if (!isRecordTable(table)) return false
+  }
+  return true
+}
+
+function isVersionedSnapshot(value: unknown): value is { version: number; tables: unknown } {
+  return isRecordTable(value)
+    && value.version === CONFIG_DATABASE_STORAGE_VERSION
+    && isRecordTable(value.tables)
 }
 
 export class GameConfigDatabase {
@@ -133,9 +160,7 @@ export class GameConfigDatabase {
 
   reset(): void {
     this.tables = cloneConfigData(this.defaults)
-    if (canUseLocalStorage()) {
-      window.localStorage.removeItem(CONFIG_DATABASE_STORAGE_KEY)
-    }
+    getLocalStorage()?.removeItem(CONFIG_DATABASE_STORAGE_KEY)
   }
 
   exportSnapshot(): GameConfigTables {
@@ -151,26 +176,57 @@ export class GameConfigDatabase {
   }
 
   persist(): void {
-    if (!canUseLocalStorage()) return
+    const storage = getLocalStorage()
+    if (!storage) return
     try {
-      window.localStorage.setItem(CONFIG_DATABASE_STORAGE_KEY, JSON.stringify(this.tables))
+      const snapshot = JSON.stringify({ version: CONFIG_DATABASE_STORAGE_VERSION, tables: this.tables })
+      storage.setItem(CONFIG_DATABASE_STORAGE_KEY, snapshot)
     } catch (error) {
       console.error('Failed to persist configuration database', error)
     }
   }
 
-  private applyLocalOverrides(): void {
-    if (!canUseLocalStorage()) return
+  private ignoreCorruptOverride(raw: string): void {
+    console.warn('Ignoring invalid configuration overrides; defaults restored')
     try {
-      const raw = window.localStorage.getItem(CONFIG_DATABASE_STORAGE_KEY)
+      getLocalStorage()?.setItem(`${CONFIG_DATABASE_STORAGE_KEY}_corrupt_backup`, raw)
+    } catch (error) {
+      console.warn('Failed to back up corrupt configuration overrides', error)
+    }
+  }
+
+  private applyLocalOverrides(): void {
+    const storage = getLocalStorage()
+    if (!storage) return
+    let raw: string | null = null
+    try {
+      raw = storage.getItem(CONFIG_DATABASE_STORAGE_KEY)
       if (!raw) return
-      const parsed = JSON.parse(raw) as Partial<GameConfigTables>
+      const parsed: unknown = JSON.parse(raw)
+
+      let candidate: unknown = parsed
+      if (isVersionedSnapshot(parsed)) {
+        candidate = parsed.tables
+      } else if (isRecordTable(parsed) && parsed.version === undefined && isPlausibleTablesPayload(parsed)) {
+        // 旧版裸 tables 格式：接受并在首次加载时迁移为带版本格式
+        candidate = parsed
+        this.persist()
+      } else {
+        this.ignoreCorruptOverride(raw)
+        return
+      }
+
+      if (!isPlausibleTablesPayload(candidate)) {
+        this.ignoreCorruptOverride(raw)
+        return
+      }
       this.tables = {
         ...this.tables,
-        ...parsed,
+        ...candidate,
       } as GameConfigTables
     } catch (error) {
       console.error('Failed to load configuration database overrides', error)
+      if (raw) this.ignoreCorruptOverride(raw)
     }
   }
 }
