@@ -182,7 +182,7 @@ export const ITEMS: Record<string, ItemData> = {
   },
   phoenix_feather: {
     id: 'phoenix_feather', name: '凤凰落羽', type: 'material',
-    effect: 'revive', description: '凤凰遗落的羽毛',
+    effect: 'revive:30', description: '凤凰遗落的羽毛',
     usableInBattle: false, usableInField: false,
   },
 }
