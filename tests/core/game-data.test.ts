@@ -714,4 +714,33 @@ describe('RebuildSystem', () => {
     expect(gd.branches.rebuild_level).toBe(higherLevel)
     expect(gd.flags.rebuild_level).toBe(higherLevel)
   })
+
+  test('setBranch coerces booleans on numeric branches and rejects other non-numbers', () => {
+    const gd = GameData.getInstance()
+
+    gd.setBranch('mercy_score', true)
+    expect(gd.branches.mercy_score).toBe(1)
+
+    gd.setBranch('mercy_score', false)
+    expect(gd.branches.mercy_score).toBe(0)
+
+    gd.setBranch('trust_huihui', '5' as never)
+    expect(gd.branches.trust_huihui).toBe(0)
+
+    // 合法数值仍按 clamp 处理
+    gd.setBranch('mercy_score', 42)
+    expect(gd.branches.mercy_score).toBe(42)
+  })
+
+  test('deserialize normalizes polluted boolean branches to numbers', () => {
+    const gd = GameData.getInstance()
+    const snapshot = gd.serialize() as Record<string, unknown>
+    gd.deserialize({
+      ...snapshot,
+      branches: { ...(snapshot.branches as Record<string, unknown>), mercy_score: true, trust_a: false },
+    } as object)
+
+    expect(gd.branches.mercy_score).toBe(1)
+    expect(gd.branches.trust_a).toBe(0)
+  })
 })

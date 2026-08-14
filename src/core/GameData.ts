@@ -175,6 +175,8 @@ export class GameData {
       const value = this.branches[key]
       if (typeof value === 'number') {
         ;(this.branches as unknown as Record<string, unknown>)[key] = this.clampBranchNumber(key, value)
+      } else if (typeof value === 'boolean') {
+        ;(this.branches as unknown as Record<string, unknown>)[key] = value ? 1 : 0
       }
     }
   }
@@ -316,7 +318,20 @@ export class GameData {
       this.setRebuildLevel(Math.max(this.rebuildLevel, value))
       return
     }
-    const normalizedValue = typeof value === 'number' ? this.clampBranchNumber(key, value) : value
+    let normalizedValue = value
+    if (BRANCH_NUMBER_KEYS.has(key)) {
+      if (typeof value === 'boolean') {
+        normalizedValue = value ? 1 : 0
+        console.warn(`Branch ${String(key)} received boolean ${value}; coerced to ${normalizedValue}`)
+      } else if (typeof value !== 'number' || !Number.isFinite(value)) {
+        console.warn(`Branch ${String(key)} received non-number ${String(value)}; ignoring`)
+        return
+      } else {
+        normalizedValue = this.clampBranchNumber(key, value)
+      }
+    } else if (typeof value === 'number') {
+      normalizedValue = this.clampBranchNumber(key, value)
+    }
     ;(this.branches as unknown as Record<string, unknown>)[key] = normalizedValue
     this.syncFlagFromBranch(key)
     this.syncTrueRouteState()
