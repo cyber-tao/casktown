@@ -56,9 +56,13 @@ bun run dev
 | 命令 | 说明 |
 | --- | --- |
 | `bun run dev` | 启动 Vite 开发服务器 |
+| `bun test` | 运行单元与集成测试套件 |
+| `bun run typecheck` | 执行严格 TypeScript 类型检查（覆盖 src/tests/scripts） |
 | `bun run build` | 执行 TypeScript 类型检查并构建到 `dist` |
 | `bun run preview` | 预览生产构建结果 |
 | `bun run sprites:refresh` | 根据 `img/sprites` 的图集与 JSON 元数据切分刷新 `assets/sprites` |
+| `bun run voices:sync` | 同步对话剧本与语音线路定义 |
+| `bun run voices:generate` | 根据角色设定生成并输出角色语音音频 |
 
 ## 技术栈
 

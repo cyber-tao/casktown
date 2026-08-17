@@ -185,4 +185,4 @@
 |------|------|------|
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
 | 2026-05-22 15:52:17 | 增量更新 | 补充 GameEvents、SaveManager、SkillGrowth、BarrelSystem、RebuildSystem、SFXSynth、GameData playTime |
-| 2026-07-20 | 同步架构 | EventBus 精简为 7 事件；补充 branch/rebuild API、MapEventRuntime、纹理卸载、Audio scene 栈、QuestMutationResult |
+| 2026-07-20 | 同步架构 | EventBus 精简为 6 事件；补充 branch/rebuild API、MapEventRuntime、纹理卸载、Audio scene 栈、QuestMutationResult |
