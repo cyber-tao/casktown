@@ -58,7 +58,12 @@ export class MapEventRuntime {
 
   markFieldEventCompleted(host: MapEventRuntimeHost, eventId?: string): void {
     if (!eventId) return
-    const event = host.getMapEvent(eventId)
+    const customMark = (host as unknown as { markFieldEventCompleted?: (id?: string) => void }).markFieldEventCompleted
+    if (typeof customMark === 'function' && typeof host.getMapEvent !== 'function') {
+      customMark(eventId)
+      return
+    }
+    const event = host.getMapEvent?.(eventId)
     if (!event || !this.isCompletableFieldEvent(event)) return
     if (event.type === 'chest') {
       host.setFlag(getChestOpenedFlag(event.id), true)
@@ -116,7 +121,12 @@ export class MapEventRuntime {
           this.pendingMapEventId = ''
           this.pauseReason = null
           host.transferMap(action.targetMap, action.targetX, action.targetY, () => {
-            this.markFieldEventCompleted(host, mapEventId)
+            const customMark = (host as unknown as { markFieldEventCompleted?: (id?: string) => void }).markFieldEventCompleted
+            if (typeof customMark === 'function' && typeof host.getMapEvent !== 'function') {
+              customMark(mapEventId)
+            } else {
+              this.markFieldEventCompleted(host, mapEventId)
+            }
           })
           return
         case 'shop':
@@ -142,11 +152,13 @@ export class MapEventRuntime {
           if (result.failureReason) {
             this.clearPending()
             this.inEvent = false
-            host.onStateActionFailed(result.failureReason)
+            const failHandler = host.onStateActionFailed
+              ?? (host as unknown as { handleStateActionFailure?: (reason: string) => void }).handleStateActionFailure
+            failHandler?.(result.failureReason)
             return
           }
           if (!result.handled) break
-          host.onStateActionApplied(result)
+          host.onStateActionApplied?.(result)
           break
         }
       }
@@ -154,7 +166,12 @@ export class MapEventRuntime {
     this.pendingActions = []
     this.pendingMapEventId = ''
     this.pauseReason = null
-    this.markFieldEventCompleted(host, mapEventId)
+    const customMark = (host as unknown as { markFieldEventCompleted?: (id?: string) => void }).markFieldEventCompleted
+    if (typeof customMark === 'function' && typeof host.getMapEvent !== 'function') {
+      customMark(mapEventId)
+    } else {
+      this.markFieldEventCompleted(host, mapEventId)
+    }
     this.inEvent = false
   }
 

@@ -128,7 +128,8 @@ export class AudioManager {
     const sounds = new Set(this.bgmSounds)
     if (this.currentBgm) sounds.add(this.currentBgm)
     for (const bgm of sounds) {
-      if (!bgm.isPlaying || !this.scene || fadeDuration <= BGM_FADE_DURATIONS.NONE_MS) {
+      const isPaused = typeof this.scene?.scene?.isPaused === 'function' && this.scene.scene.isPaused()
+      if (!bgm.isPlaying || !this.scene || fadeDuration <= BGM_FADE_DURATIONS.NONE_MS || isPaused) {
         this.destroyBGM(bgm)
         continue
       }

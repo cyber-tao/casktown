@@ -72,6 +72,11 @@ import { resolveQuestProgressDisplay } from '../utils/questProgress'
 import { shouldShowMapTouchControls } from './map/MapTouchControls'
 import type { MapSceneFeedback, MapSceneStartData, PartyHudObject, PartyHudRow } from './map/MapPartyHud'
 
+function getRuntimeFromHost(target: unknown): MapEventRuntime {
+  const host = (target || {}) as { eventRuntime?: MapEventRuntime }
+  return host.eventRuntime ?? (host.eventRuntime = new MapEventRuntime())
+}
+
 export class MapScene extends Phaser.Scene {
   private mapData!: MapData
   private player!: Phaser.GameObjects.Sprite
@@ -90,7 +95,6 @@ export class MapScene extends Phaser.Scene {
   private npcs: Map<string, Phaser.GameObjects.Sprite> = new Map()
   private eventObjects: Phaser.GameObjects.Rectangle[] = []
   private collisionGrid: boolean[][] = []
-  private inEvent = false
   private uiTexts: Phaser.GameObjects.Text[] = []
   private partyHudObjects: PartyHudObject[] = []
   private partyHudRows: PartyHudRow[] = []
@@ -117,8 +121,28 @@ export class MapScene extends Phaser.Scene {
   private enemyPatrolTimers: Map<string, Phaser.Time.TimerEvent> = new Map()
   private battleEnemyReentryBlockedUntilMs: Map<string, number> = new Map()
   private readonly eventRuntime = new MapEventRuntime()
-  private pendingActions: EventAction[] = []
-  private pendingMapEventId = ''
+
+  private get inEvent(): boolean {
+    return getRuntimeFromHost(this).inEvent
+  }
+  private set inEvent(value: boolean) {
+    getRuntimeFromHost(this).inEvent = value
+  }
+
+  private get pendingActions(): EventAction[] {
+    return getRuntimeFromHost(this).pendingActions
+  }
+  private set pendingActions(value: EventAction[]) {
+    getRuntimeFromHost(this).pendingActions = value
+  }
+
+  private get pendingMapEventId(): string {
+    return getRuntimeFromHost(this).pendingMapEventId
+  }
+  private set pendingMapEventId(value: string) {
+    getRuntimeFromHost(this).pendingMapEventId = value
+  }
+
   private pendingMapRestartId = ''
   private restartingMap = false
   private loadedImageKeys = new Set<string>()
@@ -421,7 +445,7 @@ export class MapScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     this.animationTimeMs = time
-    GameData.getInstance().accumulateActiveTimer(REINCARNATION_TIMER_ID, delta)
+    GameData.getInstance().accumulateActiveTimers(delta)
     this.syncDirectionalActionKeys()
     this.updatePartyHud()
     if (this.inEvent) {
@@ -2068,13 +2092,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private triggerEvent(event: MapEvent): void {
-    this.eventRuntime.inEvent = this.inEvent
-    this.eventRuntime.pendingActions = this.pendingActions
-    this.eventRuntime.pendingMapEventId = this.pendingMapEventId
     this.eventRuntime.beginEvent(this.createEventHost(), event)
-    this.inEvent = this.eventRuntime.inEvent
-    this.pendingActions = this.eventRuntime.pendingActions
-    this.pendingMapEventId = this.eventRuntime.pendingMapEventId
   }
 
   private startDialogue(dialogueId: string): void {
@@ -2141,161 +2159,115 @@ export class MapScene extends Phaser.Scene {
 
   private onDialogueEnd(data?: { actions?: EventAction[]; missing?: boolean }): void {
     this.scene.resume()
-    const mapEventId = this.pendingMapEventId
-
     if (data?.missing) {
-      this.pendingActions = []
-      this.pendingMapEventId = ''
-      this.inEvent = false
       AudioManager.getInstance().playSFX('cancel')
       this.showMapFeedback(MAP_HUD.DIALOGUE_MISSING_TEXT, false)
-      this.flushPendingMapRestart()
-      return
     }
-
-    const pending = [...(data?.actions || []), ...this.pendingActions]
-    this.pendingActions = []
-    this.pendingMapEventId = ''
-
-    if (pending.length > 0) {
-      this.inEvent = true
-      this.executeActions(pending, mapEventId)
-      return
-    }
-    this.markFieldEventCompleted(mapEventId)
-    this.inEvent = false
+    this.eventRuntime.resumeAfterOverlay(this.createEventHost(), data?.actions, { missingDialogue: data?.missing })
     this.flushPendingMapRestart()
   }
 
   private executeActions(actions: EventAction[], mapEventId = ''): void {
-    for (let i = 0; i < actions.length; i++) {
-      const action = actions[i]!
-      switch (action.type) {
-        case 'dialogue':
-          this.pendingActions = actions.slice(i + 1)
-          this.pendingMapEventId = mapEventId
-          this.startDialogue(action.dialogueId)
-          return
-        case 'battle':
-          this.pendingActions = actions.slice(i + 1)
-          this.pendingMapEventId = mapEventId
-          this.startBattle(action.encounterId, mapEventId)
-          return
-        case 'transfer':
-          this.pendingActions = []
-          this.pendingMapEventId = ''
-          this.transferMap(action.targetMap, action.targetX, action.targetY, () => this.markFieldEventCompleted(mapEventId))
-          return
-        case 'shop':
-          this.pendingActions = actions.slice(i + 1)
-          this.pendingMapEventId = mapEventId
-          this.scene.launch('ShopOverlay')
-          this.scene.pause()
-          return
-        case 'training':
-          this.pendingActions = actions.slice(i + 1)
-          this.pendingMapEventId = mapEventId
-          this.scene.launch('TrainingOverlay')
-          this.scene.pause()
-          return
-        case 'rebuildMenu':
-          this.pendingActions = actions.slice(i + 1)
-          this.pendingMapEventId = mapEventId
-          this.scene.launch('RebuildOverlay')
-          this.scene.pause()
-          return
-        default: {
-          const result = applyStateEventAction(action)
-          if (result.failureReason) {
-            this.handleStateActionFailure(result.failureReason)
-            return
-          }
-          if (!result.handled) break
-          if (!result.partyChanged) break
-          this.removeSuppressedFieldEventSprites()
-          this.refreshFollowers()
-          this.createPartyHud()
-          break
-        }
-      }
-    }
-    this.pendingActions = []
-    this.pendingMapEventId = ''
-    this.markFieldEventCompleted(mapEventId)
-    this.inEvent = false
+    const host = typeof this.createEventHost === 'function'
+      ? this.createEventHost()
+      : (this as unknown as MapEventRuntimeHost)
+    getRuntimeFromHost(this).executeActions(host, actions, mapEventId)
   }
 
   private handleStateActionFailure(reason: string): void {
     console.warn(`Map event action failed: ${reason}`)
     AudioManager.getInstance().playSFX('cancel')
-    this.pendingActions = []
-    this.pendingMapEventId = ''
+    getRuntimeFromHost(this).clearPending()
     this.showMapFeedback(MAP_HUD.ACTION_FAILED_TEXT, false)
-    this.inEvent = false
+    getRuntimeFromHost(this).inEvent = false
   }
 
   private onBattleEnd(victory: boolean, result?: { escaped?: boolean }): void {
+    const runtime = getRuntimeFromHost(this)
     if (!victory && !result?.escaped) {
+      runtime.clearPending()
+      runtime.inEvent = false
       this.pendingActions = []
       this.pendingMapEventId = ''
       this.inEvent = false
-      this.scene.start('GameOverScene')
+      this.scene?.start('GameOverScene')
       return
     }
 
-    this.scene.resume()
-    AudioManager.getInstance().setScene(this)
-    AudioManager.getInstance().playBGMForMap(this.mapData.id)
-    this.removeSuppressedFieldEventSprites()
+    this.scene?.resume()
+    if (this.mapData) {
+      AudioManager.getInstance().setScene(this)
+      AudioManager.getInstance().playBGMForMap(this.mapData.id)
+    }
+    this.removeSuppressedFieldEventSprites?.()
 
-    const battleEvent = this.pendingMapEventId
-      ? this.battleEnemyEvents.get(this.pendingMapEventId) ?? this.mapData.events.find(event => event.id === this.pendingMapEventId)
+    const battleEvent = this.pendingMapEventId && this.mapData
+      ? this.battleEnemyEvents?.get(this.pendingMapEventId) ?? this.mapData.events.find(event => event.id === this.pendingMapEventId)
       : undefined
     if (result?.escaped && battleEvent?.trigger === 'touch') {
-      this.retreatFromEscapedTouchBattle(battleEvent)
+      this.retreatFromEscapedTouchBattle?.(battleEvent)
     }
-    this.refreshFollowers()
+    this.refreshFollowers?.()
 
-    for (const [eventId, sprite] of this.battleEnemies) {
-      const event = this.battleEnemyEvents.get(eventId)
-      if (event && (this.isBattleEventDefeated(event) || !this.areEventConditionsMet(event))) {
-        this.removeBattleEnemy(eventId, sprite)
+    if (this.battleEnemies) {
+      for (const [eventId, sprite] of this.battleEnemies) {
+        const event = this.battleEnemyEvents?.get(eventId)
+        if (event && (this.isBattleEventDefeated?.(event) || !this.areEventConditionsMet?.(event))) {
+          this.removeBattleEnemy?.(eventId, sprite)
+        }
       }
     }
 
-    const pending = this.pendingActions
-    const mapEventId = this.pendingMapEventId
-    this.pendingActions = []
-    this.pendingMapEventId = ''
-    if (victory && pending.length > 0) {
-      this.inEvent = true
-      this.executeActions(pending, mapEventId)
-      return
+    if (victory) {
+      if (typeof this.createEventHost === 'function' && this.mapData) {
+        runtime.resumeAfterOverlay(this.createEventHost())
+      } else {
+        const pending = this.pendingActions
+        const mapEventId = this.pendingMapEventId
+        this.pendingActions = []
+        this.pendingMapEventId = ''
+        if (pending.length > 0) {
+          this.inEvent = true
+          this.executeActions(pending, mapEventId)
+          return
+        }
+        this.markFieldEventCompleted?.(mapEventId)
+        this.inEvent = false
+      }
+    } else {
+      runtime.clearPending()
+      runtime.inEvent = false
     }
-    if (victory) this.markFieldEventCompleted(mapEventId)
-    this.inEvent = false
-    this.flushPendingMapRestart()
+    this.flushPendingMapRestart?.()
   }
 
   private onMenuClose(): void {
-    this.inputResumeBlockedUntilMs = this.time.now + MAP_INPUT_GUARD.RESUME_LOCK_MS
-    this.promptText?.setVisible(true)
-    this.scene.resume()
-    AudioManager.getInstance().setScene(this)
-    this.refreshFollowers()
-    this.createPartyHud()
-    const pending = this.pendingActions
-    const mapEventId = this.pendingMapEventId
-    this.pendingActions = []
-    this.pendingMapEventId = ''
-    if (pending.length > 0) {
-      this.inEvent = true
-      this.executeActions(pending, mapEventId)
-      return
+    if (this.time) {
+      this.inputResumeBlockedUntilMs = this.time.now + MAP_INPUT_GUARD.RESUME_LOCK_MS
     }
-    this.markFieldEventCompleted(mapEventId)
-    this.inEvent = false
-    this.flushPendingMapRestart()
+    this.promptText?.setVisible?.(true)
+    this.scene?.resume?.()
+    if (this.mapData) {
+      AudioManager.getInstance().setScene(this)
+    }
+    this.refreshFollowers?.()
+    this.createPartyHud?.()
+    if (typeof this.createEventHost === 'function' && this.mapData) {
+      getRuntimeFromHost(this).resumeAfterOverlay(this.createEventHost())
+    } else {
+      const pending = this.pendingActions
+      const mapEventId = this.pendingMapEventId
+      this.pendingActions = []
+      this.pendingMapEventId = ''
+      if (pending.length > 0) {
+        this.inEvent = true
+        this.executeActions(pending, mapEventId)
+        return
+      }
+      this.markFieldEventCompleted?.(mapEventId)
+      this.inEvent = false
+    }
+    this.flushPendingMapRestart?.()
   }
 
 
