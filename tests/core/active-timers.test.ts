@@ -83,4 +83,21 @@ describe('GameData active timers', () => {
     expect(gd.getFlag(legacyFlag)).toBe(1_700_000_000_000)
     expect(gd.getActiveTimerElapsedMs(REINCARNATION_TIMER_ID)).toBe(12_000)
   })
+
+  test('accumulateActiveTimers advances all currently registered active timers', () => {
+    const gd = GameData.getInstance()
+    gd.startActiveTimer('timer_a')
+    gd.startActiveTimer('timer_b')
+
+    gd.accumulateActiveTimers(5_000)
+    expect(gd.getActiveTimerElapsedMs('timer_a')).toBe(5_000)
+    expect(gd.getActiveTimerElapsedMs('timer_b')).toBe(5_000)
+    expect(gd.getActiveTimerElapsedMs('unregistered')).toBeUndefined()
+
+    // 非法增量被安全忽略
+    gd.accumulateActiveTimers(-100)
+    gd.accumulateActiveTimers(Number.NaN)
+    expect(gd.getActiveTimerElapsedMs('timer_a')).toBe(5_000)
+    expect(gd.getActiveTimerElapsedMs('timer_b')).toBe(5_000)
+  })
 })

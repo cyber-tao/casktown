@@ -535,4 +535,20 @@ describe('SaveManager', () => {
     sm.load(2)
     expect(gd.gold).toBe(baseGold + 200)
   })
+
+  test('importSave and load reject saves with invalid activeTimers payload', () => {
+    const gd = GameData.getInstance()
+    const validSave = gd.serialize() as Record<string, unknown>
+
+    // activeTimers 是非对象
+    const invalidSave1 = { ...validSave, activeTimers: 'not-an-object' }
+    expect(sm.importSave(1, JSON.stringify(invalidSave1))).toBe(false)
+
+    // activeTimers 包含非数值或负数
+    const invalidSave2 = { ...validSave, activeTimers: { timer1: 'invalid' } }
+    expect(sm.importSave(1, JSON.stringify(invalidSave2))).toBe(false)
+
+    const invalidSave3 = { ...validSave, activeTimers: { timer1: -500 } }
+    expect(sm.importSave(1, JSON.stringify(invalidSave3))).toBe(false)
+  })
 })

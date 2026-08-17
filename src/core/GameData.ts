@@ -952,6 +952,13 @@ export class GameData {
     this.activeTimers[timerId] = (this.activeTimers[timerId] ?? 0) + deltaMs
   }
 
+  accumulateActiveTimers(deltaMs: number): void {
+    if (!Number.isFinite(deltaMs) || deltaMs <= 0) return
+    for (const timerId of Object.keys(this.activeTimers)) {
+      this.activeTimers[timerId] = (this.activeTimers[timerId] ?? 0) + deltaMs
+    }
+  }
+
   getActiveTimerElapsedMs(timerId: string): number | undefined {
     return this.activeTimers[timerId]
   }

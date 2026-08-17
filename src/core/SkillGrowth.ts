@@ -143,17 +143,25 @@ export class SkillGrowth {
   }
 
   getAvailableSkills(charId: string): string[] {
-    return SKILL_UNLOCKS
-      .filter(c => c.characterId === charId && this.isConditionMet(c))
-      .map(c => c.skillId)
+    const available = new Set<string>()
+    for (const c of SKILL_UNLOCKS) {
+      if (c.characterId === charId && this.isConditionMet(c)) {
+        available.add(c.skillId)
+      }
+    }
+    return Array.from(available)
   }
 
   getNextUnlocks(charId: string): SkillUnlockCondition[] {
     const gd = GameData.getInstance()
     const charData = gd.characters.get(charId)
     const currentSkills = charData?.skills || []
-    return SKILL_UNLOCKS.filter(c =>
-      c.characterId === charId && !currentSkills.includes(c.skillId)
-    )
+    const seenSkillIds = new Set<string>()
+    return SKILL_UNLOCKS.filter(c => {
+      if (c.characterId !== charId || currentSkills.includes(c.skillId)) return false
+      if (seenSkillIds.has(c.skillId)) return false
+      seenSkillIds.add(c.skillId)
+      return true
+    })
   }
 }

@@ -43,6 +43,14 @@ describe('SkillGrowth', () => {
     }
   })
 
+  test('getNextUnlocks and getAvailableSkills return deduplicated skill ids', () => {
+    const sg = SkillGrowth.getInstance()
+    const resultA = sg.getNextUnlocks('A')
+    const skillIds = resultA.map(c => c.skillId)
+    const uniqueSkillIds = new Set(skillIds)
+    expect(skillIds.length).toBe(uniqueSkillIds.size)
+  })
+
   test('checkUnlocksForCharacter does not add skill twice', () => {
     const sg = SkillGrowth.getInstance()
     const gd = GameData.getInstance()

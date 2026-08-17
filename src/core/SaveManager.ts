@@ -110,6 +110,7 @@ function isGameSaveData(data: unknown): data is object {
   if (!hasValidOptionalField(save, 'quests', value => isSaveImportObject(value)
     && Object.values(value as Record<string, unknown>).every(isQuestState))) return false
   if (!hasValidOptionalField(save, 'flags', isSaveImportObject)) return false
+  if (!hasValidOptionalField(save, 'activeTimers', isNumberRecord)) return false
   if (!hasValidOptionalField(save, 'branches', value => {
     if (!isSaveImportObject(value)) return false
     const branches = value as Record<string, unknown>
