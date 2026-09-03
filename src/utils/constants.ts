@@ -490,10 +490,12 @@ export const EDITOR_PAGE_LINK = {
 } as const
 
 export const TILE_TEXTURE_PROCESSING = {
-  TERRAIN_INSET_RATIO: 0.24,
+  TERRAIN_INSET_RATIO: 0.28,
   TERRAIN_SAMPLE_INSET_RATIO: 0.25,
-  TERRAIN_DETAIL_ALPHA: 1,
+  TERRAIN_DETAIL_ALPHA: 0.88,
   OBJECT_MARGIN_PX: 2,
+  WATER_FILL_MIN_PIXELS: 48,
+  WATER_FILL_INSET_RATIO: 0.18,
 } as const
 
 export const TILE_TEXTURE_INSET_OVERRIDES: Record<string, { readonly x: number; readonly y: number }> = {
@@ -529,7 +531,37 @@ export const CONTINUOUS_TERRAIN_TEXTURE_KEYS = [
   'dark_floor_skull_panel',
 ] as const
 
-export const STRETCHED_TILE_TEXTURE_KEYS = ['env_fence_long', 'env_wood_bridge', 'holy_barrier_gold', 'holy_stairs_small', 'dark_chain_hook', 'dark_swamp_bridge'] as const
+export const STRETCHED_TILE_TEXTURE_KEYS = ['env_wood_bridge', 'holy_barrier_gold', 'holy_stairs_small', 'dark_chain_hook', 'dark_swamp_bridge'] as const
+
+export const CONNECTOR_TILE_TEXTURE_KEYS = ['env_fence_long'] as const
+
+export const DENSE_OBJECT_TEXTURE_KEYS = [
+  'env_tree_round',
+  'env_bush_round',
+  'env_flowers_patch_pink',
+  'env_rock_large',
+  'env_grass_clump_01',
+  'env_flowers_patch_white',
+  'env_sapling',
+  'env_wheat',
+  'env_cabbage',
+  'holy_column_plain',
+  'holy_crystal_blue',
+  'holy_crystal_purple',
+  'holy_cloud_small',
+  'dark_cliff_pillar',
+  'dark_thorn_bush',
+  'dark_dead_tree_01',
+  'dark_dead_tree_02',
+  'dark_crystal_cluster',
+  'dark_rocks_crystal',
+] as const
+
+export const FENCE_VISUAL = {
+  THICKNESS_RATIO: 0.48,
+  HORIZONTAL_ANCHOR_Y_RATIO: 0.68,
+  VERTICAL_ANCHOR_X_RATIO: 0.5,
+} as const
 
 export const DIRECTION = {
   UP: 0,
@@ -1096,6 +1128,40 @@ export const CHARACTER_DIRECTION_FRAME_STEMS = ['back_idle', 'side_walk', 'front
 export const CHARACTER_DIRECTION_TEXTURE_PATTERN = /^(.*)_(front_idle|back_idle|side_walk)_0[12]$/
 export const CHARACTER_SIDE_WALK_FLIP_DIRECTION = DIRECTION.RIGHT
 export const SEQUENCE_TEXTURE_FRAME_PATTERN = /^(.*)_0[12]$/
+
+export const MAP_TILE_IDS = {
+  GRASS: 1,
+  DIRT: 2,
+  WATER: 3,
+  TREE: 4,
+  FLOWERS: 5,
+  ROCK: 6,
+  FENCE: 7,
+  BRIDGE: 8,
+  HOUSE: 9,
+  WELL: 10,
+  PATH: 11,
+  BUSH: 12,
+  STUMP: 13,
+  RUIN: 14,
+  SIGN: 15,
+  BARREL: 16,
+  CAMPFIRE: 17,
+  BENCH: 18,
+  LAMP: 19,
+  GRASS_CLUMP: 20,
+  FLOWERS_WHITE: 21,
+  SAPLING: 22,
+  WHEAT: 23,
+  CABBAGE: 24,
+  FARMLAND: 25,
+  FESTIVAL: 26,
+  T_HOUSE: 27,
+  FARMHOUSE: 28,
+  MAYOR_HOUSE: 29,
+  SHOP: 30,
+  CENTRAL_TOWER: 31,
+}
 
 export const MAP_TILE_KEYS = {
   GRASS: 'GRASS',

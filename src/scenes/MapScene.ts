@@ -12,6 +12,18 @@ import { applyStateEventAction } from '../core/EventActionExecutor'
 import { MapEventRuntime, type MapEventRuntimeHost } from '../core/MapEventRuntime'
 import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
+import {
+  buildNeighborMask,
+  collectFootprintCoveredCells,
+  collectSynthesizedWaterFillKey,
+  collectTileRuns,
+  isFenceTileId,
+  isWaterTileId,
+  resolveWaterAutotile,
+  sameTileOrOutOfBounds,
+  shouldSkipDenseStamp,
+  type AutotileVisual,
+} from '../utils/terrainAutotile'
 import { collectMapImageKeys, collectMapTileTextureKeys, processTileTextures, queueImageAssets, unloadUnusedMapTextures } from '../core/AssetLoader'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
@@ -50,6 +62,9 @@ import {
   ROAMING_ENCOUNTER_RESPAWN,
   SEQUENCE_TEXTURE_FRAME_PATTERN,
   RUINED_TOWN_MAP_ID,
+  CONNECTOR_TILE_TEXTURE_KEYS,
+  DENSE_OBJECT_TEXTURE_KEYS,
+  FENCE_VISUAL,
   TILE_SPRITE_FOOTPRINTS,
   TILE_SIZE,
   TIME_MS_PER_SECOND,
@@ -406,6 +421,8 @@ export class MapScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.mapData.width * TILE_SIZE, this.mapData.height * TILE_SIZE)
 
     processTileTextures(this, collectMapTileTextureKeys(this.mapData))
+    const waterFillKey = collectSynthesizedWaterFillKey(this.mapData.tileset)
+    if (this.textures.exists(waterFillKey)) this.loadedImageKeys.add(waterFillKey)
     this.buildCollisionGrid()
     this.renderMap()
     this.spawnPlayer()
@@ -496,38 +513,108 @@ export class MapScene extends Phaser.Scene {
     }
 
     const ground = this.mapData.layers[0]!
+    const resolvedGround = ground.data.map(tileId => resolveTile(tileId ?? 0))
     for (let y = 0; y < this.mapData.height; y++) {
       this.tileSprites[y] = []
       for (let x = 0; x < this.mapData.width; x++) {
-        const idx = resolveTile(ground.data[y * this.mapData.width + x] ?? 0)
-        const spriteKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, idx) || 'env_dirt_plain'
-        const img = this.add.image(x * TILE_SIZE, y * TILE_SIZE, spriteKey)
-        img.setOrigin(0, 0)
+        const idx = resolvedGround[y * this.mapData.width + x] ?? 0
+        const visual = this.resolveGroundTileVisual(tileSprites, resolvedGround, x, y, idx)
+        const angled = Boolean(visual.angle)
+        const img = this.add.image(
+          x * TILE_SIZE + (angled ? TILE_SIZE / 2 : 0),
+          y * TILE_SIZE + (angled ? TILE_SIZE / 2 : 0),
+          this.resolveLoadedTextureKey(visual),
+        )
+        img.setOrigin(angled ? 0.5 : 0, angled ? 0.5 : 0)
         img.setDisplaySize(TILE_SIZE, TILE_SIZE)
+        img.setFlip(Boolean(visual.flipX), Boolean(visual.flipY))
+        if (visual.angle) img.setAngle(visual.angle)
         img.setDepth(0)
         this.tileSprites[y]![x] = img
       }
     }
 
-    // Object layer
     const objects = this.mapData.layers[1]!
+    const resolvedObjects = objects.data.map(tileId => resolveTile(tileId ?? 0))
+    const coveredCells = collectFootprintCoveredCells(
+      resolvedObjects,
+      this.mapData.width,
+      this.mapData.height,
+      tileId => {
+        const spriteKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, tileId)
+        return spriteKey ? TILE_SPRITE_FOOTPRINTS[spriteKey] : undefined
+      },
+    )
+    const denseStamps = new Set<string>(DENSE_OBJECT_TEXTURE_KEYS)
+
     for (let y = 0; y < this.mapData.height; y++) {
       for (let x = 0; x < this.mapData.width; x++) {
-        const raw = objects.data[y * this.mapData.width + x]
-        if (raw && raw > 0) {
-          const idx = resolveTile(raw)
-          const spriteKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, idx)
-          if (spriteKey) {
-            const footprint = TILE_SPRITE_FOOTPRINTS[spriteKey]
-            const widthTiles = footprint?.width ?? 1
-            const heightTiles = footprint?.height ?? 1
-            const img = this.add.image(x * TILE_SIZE, y * TILE_SIZE, spriteKey)
-            img.setOrigin(0, 0)
-            img.setDisplaySize(widthTiles * TILE_SIZE, heightTiles * TILE_SIZE)
-            img.setDepth(1)
-          }
-        }
+        const cellIndex = y * this.mapData.width + x
+        const idx = resolvedObjects[cellIndex] ?? 0
+        if (idx <= 0 || coveredCells.has(cellIndex) || isFenceTileId(idx, this.mapData.tileset)) continue
+        const spriteKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, idx)
+        if (!spriteKey) continue
+        if (denseStamps.has(spriteKey) && shouldSkipDenseStamp(x, y)) continue
+        const footprint = TILE_SPRITE_FOOTPRINTS[spriteKey]
+        const widthTiles = footprint?.width ?? 1
+        const heightTiles = footprint?.height ?? 1
+        const img = this.add.image(x * TILE_SIZE, y * TILE_SIZE, spriteKey)
+        img.setOrigin(0, 0)
+        img.setDisplaySize(widthTiles * TILE_SIZE, heightTiles * TILE_SIZE)
+        img.setDepth(1)
       }
+    }
+
+    this.renderFenceRuns(resolvedObjects)
+  }
+
+  private resolveGroundTileVisual(
+    tileSprites: Record<number, string>,
+    ground: readonly number[],
+    x: number,
+    y: number,
+    tileId: number,
+  ): AutotileVisual {
+    const fallbackKey = resolveTileSpriteKey(tileSprites, this.mapData.tileset, tileId) || 'env_dirt_plain'
+    if (!isWaterTileId(tileId)) return { key: fallbackKey }
+    const mask = buildNeighborMask(
+      this.mapData.width,
+      this.mapData.height,
+      x,
+      y,
+      (neighborX, neighborY) => sameTileOrOutOfBounds(ground, this.mapData.width, this.mapData.height, tileId, neighborX, neighborY),
+    )
+    return resolveWaterAutotile(this.mapData.tileset, mask)
+  }
+
+  private resolveLoadedTextureKey(visual: AutotileVisual): string {
+    if (this.textures.exists(visual.key)) return visual.key
+    if (visual.fallbackKey && this.textures.exists(visual.fallbackKey)) return visual.fallbackKey
+    return 'env_dirt_plain'
+  }
+
+  private renderFenceRuns(objects: readonly number[]): void {
+    const fenceKey = CONNECTOR_TILE_TEXTURE_KEYS[0]
+    if (!fenceKey || !this.textures.exists(fenceKey)) return
+    const runs = collectTileRuns(
+      objects,
+      this.mapData.width,
+      this.mapData.height,
+      tileId => isFenceTileId(tileId, this.mapData.tileset),
+    )
+    for (const run of runs) {
+      const thickness = TILE_SIZE * FENCE_VISUAL.THICKNESS_RATIO
+      const centerX = run.horizontal
+        ? (run.x + run.length / 2) * TILE_SIZE
+        : (run.x + FENCE_VISUAL.VERTICAL_ANCHOR_X_RATIO) * TILE_SIZE
+      const centerY = run.horizontal
+        ? (run.y + FENCE_VISUAL.HORIZONTAL_ANCHOR_Y_RATIO) * TILE_SIZE
+        : (run.y + run.length / 2) * TILE_SIZE
+      const img = this.add.image(centerX, centerY, fenceKey)
+      img.setOrigin(0.5, 0.5)
+      img.setDisplaySize(run.length * TILE_SIZE, thickness)
+      if (!run.horizontal) img.setAngle(90)
+      img.setDepth(1.2)
     }
   }
 

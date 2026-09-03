@@ -3,6 +3,7 @@ import { GAME_CONFIG_DATABASE } from '../data/configDatabase'
 import { resolveTileSpriteKey } from '../data/tileSprites'
 import {
   CHARACTER_SPRITE_BASE_KEYS,
+  CONNECTOR_TILE_TEXTURE_KEYS,
   CONTINUOUS_TERRAIN_TEXTURE_KEYS,
   DEFAULT_BATTLE_BACKGROUND_KEY,
   DEFAULT_CHARACTER_SPRITE_KEY,
@@ -21,6 +22,8 @@ import {
   TILE_TEXTURE_PROCESSING,
   TOWN_MAP_IDS,
 } from '../utils/constants'
+import { collectAutotileTextureKeys, WATER_FILL_SOURCE_KEYS } from '../utils/terrainAutotile'
+import { findWaterPixelBounds, insetRect, isWaterPixel } from '../utils/tileTextureProcessing'
 import type { SpriteCropConfig } from '../data/spriteCrops'
 import type { EncounterData, MapData, MapEvent } from '../data/types'
 
@@ -263,6 +266,9 @@ export function collectMapTileTextureKeys(mapData: MapData): Set<string> {
       addConfiguredKey(keys, resolveTileSpriteKey(tileSprites, mapData.tileset, replacement.targetTileId) ?? '')
     }
   }
+  for (const key of collectAutotileTextureKeys(mapData.tileset)) {
+    addConfiguredKey(keys, key)
+  }
   return keys
 }
 
@@ -345,9 +351,11 @@ export function processTileTextures(scene: Phaser.Scene, keys: Iterable<string>)
   const processed = getProcessedTileSet(scene)
   const groundTiles = new Set<string>(CONTINUOUS_TERRAIN_TEXTURE_KEYS)
   const stretchObjects = new Set<string>(STRETCHED_TILE_TEXTURE_KEYS)
+  const connectorTiles = new Set<string>(CONNECTOR_TILE_TEXTURE_KEYS)
+  synthesizeConfiguredWaterFills(scene, processed)
 
   for (const key of new Set(keys)) {
-    if (processed.has(key) || TILE_SPRITE_FOOTPRINTS[key]) continue
+    if (processed.has(key) || TILE_SPRITE_FOOTPRINTS[key] || connectorTiles.has(key)) continue
 
     const texture = scene.textures.get(key)
     if (!texture || texture.key === '__MISSING') continue
@@ -402,40 +410,18 @@ export function processTileTextures(scene: Phaser.Scene, keys: Iterable<string>)
     const isGround = groundTiles.has(key)
 
     if (isGround) {
-      let r = 0
-      let g = 0
-      let b = 0
-      let count = 0
       const insetOverride = TILE_TEXTURE_INSET_OVERRIDES[key]
-      const terrainInsetX = Math.floor(cropW * (insetOverride?.x ?? TILE_TEXTURE_PROCESSING.TERRAIN_INSET_RATIO))
-      const terrainInsetY = Math.floor(cropH * (insetOverride?.y ?? TILE_TEXTURE_PROCESSING.TERRAIN_INSET_RATIO))
-      const terrainSourceX = minX + terrainInsetX
-      const terrainSourceY = minY + terrainInsetY
-      const terrainSourceW = Math.max(1, cropW - terrainInsetX * 2)
-      const terrainSourceH = Math.max(1, cropH - terrainInsetY * 2)
-      const sampleInsetX = Math.floor(terrainSourceW * TILE_TEXTURE_PROCESSING.TERRAIN_SAMPLE_INSET_RATIO)
-      const sampleInsetY = Math.floor(terrainSourceH * TILE_TEXTURE_PROCESSING.TERRAIN_SAMPLE_INSET_RATIO)
-      const cx = terrainSourceX + sampleInsetX
-      const cy = terrainSourceY + sampleInsetY
-      const cw = Math.max(1, terrainSourceW - sampleInsetX * 2)
-      const ch = Math.max(1, terrainSourceH - sampleInsetY * 2)
-      for (let y = cy; y < cy + ch; y++) {
-        for (let x = cx; x < cx + cw; x++) {
-          const idx = (y * source.width + x) * 4
-          if (data[idx + 3]! > 0) {
-            r += data[idx]!
-            g += data[idx + 1]!
-            b += data[idx + 2]!
-            count++
-          }
-        }
-      }
-      if (count > 0) {
-        ctx.fillStyle = `rgb(${Math.floor(r / count)}, ${Math.floor(g / count)}, ${Math.floor(b / count)})`
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE)
-      }
+      const terrainCrop = insetRect(
+        minX,
+        minY,
+        cropW,
+        cropH,
+        insetOverride?.x ?? TILE_TEXTURE_PROCESSING.TERRAIN_INSET_RATIO,
+        insetOverride?.y ?? TILE_TEXTURE_PROCESSING.TERRAIN_INSET_RATIO,
+      )
+      fillAverageColor(ctx, data, source.width, terrainCrop.x, terrainCrop.y, terrainCrop.width, terrainCrop.height)
       ctx.globalAlpha = TILE_TEXTURE_DETAIL_ALPHA_OVERRIDES[key] ?? TILE_TEXTURE_PROCESSING.TERRAIN_DETAIL_ALPHA
-      ctx.drawImage(source, terrainSourceX, terrainSourceY, terrainSourceW, terrainSourceH, 0, 0, TILE_SIZE, TILE_SIZE)
+      drawMirroredSeamless(ctx, source, terrainCrop.x, terrainCrop.y, terrainCrop.width, terrainCrop.height)
       ctx.globalAlpha = 1
     } else if (stretchObjects.has(key)) {
       ctx.drawImage(source, minX, minY, cropW, cropH, 0, 0, TILE_SIZE, TILE_SIZE)
@@ -465,4 +451,151 @@ export function processTileTextures(scene: Phaser.Scene, keys: Iterable<string>)
     scene.textures.addCanvas(key, canvas)
     processed.add(key)
   }
+}
+
+function synthesizeConfiguredWaterFills(scene: Phaser.Scene, processed: Set<string>): void {
+  for (const sourceKey of Object.values(WATER_FILL_SOURCE_KEYS)) {
+    if (!scene.textures.exists(sourceKey)) continue
+    const texture = scene.textures.get(sourceKey)
+    if (!texture || texture.key === '__MISSING') continue
+    const source = texture.getSourceImage() as HTMLImageElement | undefined
+    if (!source || source.width === 0 || source.height === 0) continue
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = source.width
+    tempCanvas.height = source.height
+    const tempCtx = tempCanvas.getContext('2d')
+    if (!tempCtx) continue
+    tempCtx.drawImage(source, 0, 0)
+    const imageData = tempCtx.getImageData(0, 0, source.width, source.height)
+    synthesizeWaterFillFromSource(scene, processed, sourceKey, source, imageData.data, 0, 0, source.width - 1, source.height - 1)
+  }
+}
+
+function fillAverageColor(
+  ctx: CanvasRenderingContext2D,
+  data: Uint8ClampedArray,
+  sourceWidth: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  predicate: ((red: number, green: number, blue: number, alpha: number) => boolean) | null = null,
+): void {
+  let redTotal = 0
+  let greenTotal = 0
+  let blueTotal = 0
+  let count = 0
+  const sampleInsetX = Math.floor(width * TILE_TEXTURE_PROCESSING.TERRAIN_SAMPLE_INSET_RATIO)
+  const sampleInsetY = Math.floor(height * TILE_TEXTURE_PROCESSING.TERRAIN_SAMPLE_INSET_RATIO)
+  const sampleX = x + sampleInsetX
+  const sampleY = y + sampleInsetY
+  const sampleWidth = Math.max(1, width - sampleInsetX * 2)
+  const sampleHeight = Math.max(1, height - sampleInsetY * 2)
+  for (let py = sampleY; py < sampleY + sampleHeight; py++) {
+    for (let px = sampleX; px < sampleX + sampleWidth; px++) {
+      const index = (py * sourceWidth + px) * 4
+      const red = data[index] ?? 0
+      const green = data[index + 1] ?? 0
+      const blue = data[index + 2] ?? 0
+      const alpha = data[index + 3] ?? 0
+      if (alpha <= 0) continue
+      if (predicate && !predicate(red, green, blue, alpha)) continue
+      redTotal += red
+      greenTotal += green
+      blueTotal += blue
+      count += 1
+    }
+  }
+  if (count <= 0) return
+  ctx.fillStyle = `rgb(${Math.floor(redTotal / count)}, ${Math.floor(greenTotal / count)}, ${Math.floor(blueTotal / count)})`
+  ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE)
+}
+
+function drawMirroredSeamless(
+  ctx: CanvasRenderingContext2D,
+  source: CanvasImageSource,
+  sourceX: number,
+  sourceY: number,
+  sourceWidth: number,
+  sourceHeight: number,
+): void {
+  const half = TILE_SIZE / 2
+  const quadrants = [
+    { x: 0, y: 0, flipX: 1, flipY: 1 },
+    { x: TILE_SIZE, y: 0, flipX: -1, flipY: 1 },
+    { x: 0, y: TILE_SIZE, flipX: 1, flipY: -1 },
+    { x: TILE_SIZE, y: TILE_SIZE, flipX: -1, flipY: -1 },
+  ] as const
+  for (const quadrant of quadrants) {
+    ctx.save()
+    ctx.translate(quadrant.x, quadrant.y)
+    ctx.scale(quadrant.flipX, quadrant.flipY)
+    ctx.drawImage(
+      source,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      quadrant.flipX === -1 ? -half : 0,
+      quadrant.flipY === -1 ? -half : 0,
+      half,
+      half,
+    )
+    ctx.restore()
+  }
+}
+
+function synthesizeWaterFillFromSource(
+  scene: Phaser.Scene,
+  processed: Set<string>,
+  sourceKey: string,
+  source: HTMLImageElement,
+  data: Uint8ClampedArray,
+  minX: number,
+  minY: number,
+  maxX: number,
+  maxY: number,
+): void {
+  const fillKey = Object.entries(WATER_FILL_SOURCE_KEYS).find(([, key]) => key === sourceKey)?.[0]
+  if (!fillKey || processed.has(fillKey) || scene.textures.exists(fillKey)) {
+    if (fillKey) processed.add(fillKey)
+    return
+  }
+
+  const waterBounds = findWaterPixelBounds(data, source.width, minX, minY, maxX, maxY)
+  const useWaterBounds = waterBounds.count >= TILE_TEXTURE_PROCESSING.WATER_FILL_MIN_PIXELS
+  const cropMinX = useWaterBounds ? waterBounds.minX : minX
+  const cropMinY = useWaterBounds ? waterBounds.minY : minY
+  const cropWidth = useWaterBounds ? waterBounds.maxX - waterBounds.minX + 1 : maxX - minX + 1
+  const cropHeight = useWaterBounds ? waterBounds.maxY - waterBounds.minY + 1 : maxY - minY + 1
+  const terrainCrop = insetRect(
+    cropMinX,
+    cropMinY,
+    cropWidth,
+    cropHeight,
+    TILE_TEXTURE_PROCESSING.WATER_FILL_INSET_RATIO,
+    TILE_TEXTURE_PROCESSING.WATER_FILL_INSET_RATIO,
+  )
+
+  const canvas = document.createElement('canvas')
+  canvas.width = TILE_SIZE
+  canvas.height = TILE_SIZE
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  ctx.imageSmoothingEnabled = false
+  fillAverageColor(
+    ctx,
+    data,
+    source.width,
+    terrainCrop.x,
+    terrainCrop.y,
+    terrainCrop.width,
+    terrainCrop.height,
+    useWaterBounds ? isWaterPixel : null,
+  )
+  ctx.globalAlpha = TILE_TEXTURE_PROCESSING.TERRAIN_DETAIL_ALPHA
+  drawMirroredSeamless(ctx, source, terrainCrop.x, terrainCrop.y, terrainCrop.width, terrainCrop.height)
+  ctx.globalAlpha = 1
+  scene.textures.addCanvas(fillKey, canvas)
+  processed.add(fillKey)
 }

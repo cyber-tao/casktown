@@ -24,6 +24,7 @@ import {
   PUBLIC_ASSET_PATHS,
   SPRITE_CROP_DEFAULTS,
 } from '../utils/constants'
+import { resolveTileSpriteKey } from '../data/tileSprites'
 import { getDialogueVoicePath, resolveDialogueVoiceKey } from '../utils/voiceLines'
 import type { SpriteCropConfig } from '../data/spriteCrops'
 import type { CharacterStats, DialogueData, MapData, MapEvent } from '../data/types'
@@ -1604,7 +1605,7 @@ function drawLayer(
     for (let x = 0; x < map.width; x++) {
       const tileId = layer.data[y * map.width + x] ?? 0
       if (tileId <= 0 && layerIndex !== MAP_LAYER_INDEX.GROUND) continue
-      const spriteKey = tileSprites[tileId] ?? ''
+      const spriteKey = resolveTileSpriteKey(tileSprites, map.tileset, tileId) ?? ''
       ctx.fillStyle = CONFIG_EDITOR_TILE_COLORS[spriteKey] ?? (layerIndex === MAP_LAYER_INDEX.GROUND ? CONFIG_EDITOR_FALLBACK_COLORS.mapUnknownTile : CONFIG_EDITOR_FALLBACK_COLORS.mapObject)
       ctx.globalAlpha = layerIndex === MAP_LAYER_INDEX.GROUND ? 1 : 0.82
       ctx.fillRect(offsetX + x * tileSize, offsetY + y * tileSize, tileSize, tileSize)

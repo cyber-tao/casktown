@@ -1,18 +1,9 @@
 import type { MapConnection, MapData, MapEvent, MapLayer } from './types'
-import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, REINCARNATION_TIMER_ID, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_EPILOGUE, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
+import { A_RESCUED_FLAG, BLUE_MINT_SIDE_QUEST, DIRECTION, FIELD_EVENT_FLAGS, MAP_BATTLE_BACKGROUND_KEYS, MAP_EVENT_PLACEHOLDER_BOUNDS, MAP_TILE_IDS, POST_NORMAL_RECOLLECTION, REBUILT_TOWN_MAP_ID, REDESIGNED_MAP_LAYOUTS, REINCARNATION_CORRECT_ANSWER_FLAGS, REINCARNATION_TIME_LIMIT_MS, REINCARNATION_TIMER_ID, SIDE_SUN_FLAGS, STORY_PROGRESS_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_EPILOGUE, TRUE_ENDING_SUPPORT_CHARACTER_ID } from '../utils/constants'
 import { TILE_SPRITES } from './tileSprites'
+import { collectFootprintCoveredCells } from '../utils/terrainAutotile'
 
-const T = {
-  GRASS: 1, DIRT: 2, WATER: 3, TREE: 4, FLOWERS: 5,
-  ROCK: 6, FENCE: 7, BRIDGE: 8, HOUSE: 9, WELL: 10,
-  PATH: 11, BUSH: 12, STUMP: 13, RUIN: 14, SIGN: 15,
-  BARREL: 16, CAMPFIRE: 17, BENCH: 18, LAMP: 19,
-  GRASS_CLUMP: 20, FLOWERS_WHITE: 21, SAPLING: 22,
-  WHEAT: 23, CABBAGE: 24, FARMLAND: 25,
-  FESTIVAL: 26,
-  T_HOUSE: 27, FARMHOUSE: 28, MAYOR_HOUSE: 29, SHOP: 30,
-  CENTRAL_TOWER: 31,
-}
+const T = MAP_TILE_IDS
 
 function createLayer(w: number, h: number, fill: number): MapLayer {
   return { name: 'layer', data: new Array(w * h).fill(fill), visible: true, opacity: 1 }
@@ -77,6 +68,13 @@ function applyFrame(layer: MapLayer, w: number, h: number, frameTile: string | u
 function getTileFootprint(tileId: number): { readonly width: number; readonly height: number } | undefined {
   const spriteKey = TILE_SPRITES[tileId]
   return spriteKey ? TILE_SPRITE_FOOTPRINTS[spriteKey] : undefined
+}
+
+function clearCoveredObjectCells(objects: MapLayer, width: number, height: number): void {
+  const covered = collectFootprintCoveredCells(objects.data, width, height, getTileFootprint)
+  for (const index of covered) {
+    objects.data[index] = 0
+  }
 }
 
 function addCollisionRect(collisions: Set<number>, mapWidth: number, mapHeight: number, x: number, y: number, width: number, height: number): void {
@@ -171,6 +169,7 @@ function applyRedesignedLayout(map: MapData): MapData {
   for (const object of layout.objects ?? []) {
     objects.data[object.y * layout.width + object.x] = tile(object.tile)
   }
+  clearCoveredObjectCells(objects, layout.width, layout.height)
 
   const eventPositions = layout.eventPositions
   const transferById = new Map<string, LayoutTransfer>(layout.transfers.map(transfer => [transfer.id, transfer]))

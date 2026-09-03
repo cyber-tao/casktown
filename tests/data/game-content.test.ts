@@ -13,7 +13,8 @@ import { TILE_SPRITES, resolveTileSpriteKey } from '../../src/data/tileSprites.t
 import { areEventConditionsMet } from '../../src/core/EventConditions.ts'
 import { getBlockedMapDialogueId } from '../../src/core/MapAccess.ts'
 import { getFieldEventDoneFlag } from '../../src/core/MapEventState.ts'
-import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, SIDE_SUN_FLAGS, START_MAP_ID, START_PLAYER_POSITION, STORY_BATTLE_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TRUE_ENDING_EPILOGUE, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { A_RESCUED_FLAG, BATTLE_SKILL_STATUS_EFFECTS, BATTLE_STATUS, BLUE_MINT_SIDE_QUEST, GAME_HEIGHT, GAME_WIDTH, MAP_ACCESS_REQUIREMENTS, MAP_LAYER_INDEX, PARTNER_CALL_AVAILABLE_FLAG, POST_NORMAL_RECOLLECTION, REBUILD_VISUAL_MAP_THRESHOLD, REBUILT_TOWN_MAP_ID, REINCARNATION_CORRECT_ANSWER_FLAGS, RUINED_TOWN_MAP_ID, SIDE_SUN_FLAGS, START_MAP_ID, START_PLAYER_POSITION, STORY_BATTLE_FLAGS, STORY_PROGRESS_FLAGS, STORY_SKILL_UNLOCK_FLAGS, TILE_SPRITE_FOOTPRINTS, TRUE_ENDING_EPILOGUE, WORLD_MAP_LOCATION_POINTS } from '../../src/utils/constants.ts'
+import { collectFootprintCoveredCells } from '../../src/utils/terrainAutotile.ts'
 
 const BRANCH_KEYS = new Set([
   'trust_huihui',
@@ -319,6 +320,24 @@ describe('game content data', () => {
   test('town maps contain dense settlement landmarks', () => {
     expect(countTownBuildings(MAPS['MAP_001']!)).toBeGreaterThanOrEqual(8)
     expect(countTownBuildings(MAPS['MAP_002']!)).toBeGreaterThanOrEqual(9)
+  })
+
+  test('multi-tile objects do not cover other object origins', () => {
+    const errors: string[] = []
+    for (const map of Object.values(MAPS)) {
+      const objects = map.layers[MAP_LAYER_INDEX.OBJECTS]
+      if (!objects) continue
+      const getFootprint = (tileId: number) => {
+        const spriteKey = resolveTileSpriteKey(TILE_SPRITES, map.tileset, tileId)
+        return spriteKey ? TILE_SPRITE_FOOTPRINTS[spriteKey] : undefined
+      }
+      const covered = collectFootprintCoveredCells(objects.data, map.width, map.height, getFootprint)
+      for (const index of covered) {
+        const tileId = objects.data[index] ?? 0
+        if (tileId > 0) errors.push(`${map.id} object ${tileId} remains under a larger footprint at ${index}`)
+      }
+    }
+    expect(errors).toEqual([])
   })
 
   test('story maps use matching visual tilesets', () => {
