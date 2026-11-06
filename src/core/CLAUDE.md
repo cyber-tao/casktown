@@ -77,7 +77,7 @@
 
 ### SaveManager
 
-- `SAVE_KEY = 'casktown_save'`
+- 存储键 `SAVE_STORAGE_KEY = 'casktown_save'`（从 `src/utils/constants.ts` 导入，实际键为 `${SAVE_STORAGE_KEY}_data_${slot}` / `${SAVE_STORAGE_KEY}_meta_${slot}`）
 - `SaveMeta` 接口（含 slot/timestamp/playTime/currentMap/preview）
 - `QUICK_SAVE_SLOT = SAVE_SLOTS + 1 = 4`
 - 浏览器 localStorage 存档
@@ -99,7 +99,7 @@
 
 ### SkillGrowth
 
-- 技能解锁条件管理，5 种触发类型: level / flag / rebuild / trust / quest
+- 技能解锁条件管理，7 种触发类型: level / flag / flagAny / flagMinimum / rebuild / trust / quest
 - `checkUnlocksForCharacter(charId)` / `checkAllUnlocks()`
 - `getAvailableSkills(charId)` / `getNextUnlocks(charId)`
 
@@ -135,7 +135,7 @@
 - `MapAccessFlagReader`: 地图访问标志读取函数类型
 - `SaveMeta`: 存档元数据 (slot/timestamp/playTime/currentMap/preview)
 - `KeyBindings`: 按键绑定接口
-- `SkillUnlockCondition`: 技能解锁条件 (5 种触发类型)
+- `SkillUnlockCondition`: 技能解锁条件 (7 种触发类型)
 
 ## 测试与质量
 
@@ -186,3 +186,4 @@
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
 | 2026-05-22 15:52:17 | 增量更新 | 补充 GameEvents、SaveManager、SkillGrowth、BarrelSystem、RebuildSystem、SFXSynth、GameData playTime |
 | 2026-07-20 | 同步架构 | EventBus 精简为 6 事件；补充 branch/rebuild API、MapEventRuntime、纹理卸载、Audio scene 栈、QuestMutationResult |
+| 2026-11-06 | 文档复核 | SaveManager 存储键更正为从 `src/utils/constants.ts` 导入的 `SAVE_STORAGE_KEY`；SkillGrowth 触发类型由 5 种更正为 7 种（补 flagAny / flagMinimum） |

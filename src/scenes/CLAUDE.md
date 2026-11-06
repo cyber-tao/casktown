@@ -27,12 +27,12 @@ Phaser 游戏场景层，负责游戏各阶段的画面渲染、用户交互和�
 
 ## 对外接口
 
-### DialogueScript 类型定义
+### 对话脚本类型 (DialogueData)
 
-`DialogueOverlay.ts` 导出 `DialogueScript` 接口，被 `src/data/dialogues.ts` 引用：
+`DialogueOverlay.ts` 不定义对话脚本类型，而是直接消费 `src/data/types.ts` 中的 `DialogueData`（`src/data/dialogues.ts` 的 `DIALOGUES` 表同样以它为值类型）：
 
 ```typescript
-export interface DialogueScript {
+export interface DialogueData {
   id: string
   lines: DialogueLine[]
   onComplete?: EventAction[]
@@ -62,7 +62,7 @@ export interface DialogueScript {
 
 ## 数据模型
 
-场景不定义数据模型（除 `DialogueScript`），依赖 `src/data/types.ts` 中的类型。
+场景不定义对话等数据模型，数据模型统一来自 `src/data/types.ts`；本目录只定义视图/辅助类型（见下）。
 
 ### Map / Menu 辅助类型
 
@@ -143,6 +143,7 @@ export interface DialogueScript {
 | 时间 | 操作 | 说明 |
 |------|------|------|
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
-| 2026-05-22 15:52:17 | 增量更新 | 补充 DialogueScript.onComplete、队伍 HUD、Menu 游玩时间、Title 菜单、对话头像映射 |
+| 2026-05-22 15:52:17 | 增量更新 | 补充 DialogueData.onComplete、队伍 HUD、Menu 游玩时间、Title 菜单、对话头像映射 |
 | 2026-07-20 | 同步架构 | 移除 CodexOverlay；记录 Map/Battle/Menu 子模块拆分、EventBus 精简与 launch 开场景、场事件两阶段 commit 与 QA 入口 |
 | 2026-07-21 | 全量审核同步 | 修正菜单导航为 8 项（无地图页） |
+| 2026-11-06 | 文档复核 | 对话脚本类型改为 `src/data/types.ts` 的 `DialogueData`（`DialogueOverlay` 直接消费该类型，不再自行定义） |

@@ -17,7 +17,7 @@
 
 ### 编辑器功能
 
-- **数据表浏览**: 左侧栏列出 15 张配置表（隐藏 tileSprites/mapBgm/spriteCrops），支持搜索过滤
+- **数据表浏览**: 左侧栏列出 12 张可见配置表（`GAME_CONFIG_TABLE_KEYS` 共 15 个表键，隐藏 tileSprites/mapBgm/spriteCrops 3 个），支持搜索过滤
 - **记录 CRUD**: 选择表 -> 浏览记录 -> 编辑/复制/删除
 - **地图预览**: 可视化地图瓦片、事件标记、NPC 位置
 - **精灵裁剪编辑**: 可视化裁剪源图帧，调整 sourceX/Y/Width/Height/offsetX/Y，保存后自动触发 `refresh-sprites`
@@ -86,3 +86,4 @@ A: PUT `/sprite-frame` 会更新 `img/sprites/` 中的 JSON 帧元数据，然�
 |------|------|------|
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
 | 2026-05-22 15:52:17 | 增量更新 | 修正文件数为2、补充 Vite 插件详情(API/构建插件)、精灵帧保存自动刷新流程、路径安全检查、CONFIG_EDITOR_HIDDEN_TABLE_KEYS 说明 |
+| 2026-11-06 | 文档复核 | 左侧栏表格数按实测更正：`GAME_CONFIG_TABLE_KEYS` 共 15 个表键，隐藏 3 个后可见 12 张 |

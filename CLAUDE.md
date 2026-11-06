@@ -39,14 +39,16 @@ graph TD
     D --> D3["sprites (389 PNG)"]
 
     E --> E1["desiges (8 设计稿)"]
-    E --> E2["sprites (8 图集)"]
+    E --> E2["sprites (7 图集)"]
 
     F --> F1["GDD v2"]
     F --> F2["完整剧情脚本"]
 
-    T --> T1["core (15)"]
+    T --> T1["core (16)"]
     T --> T2["data (5)"]
     T --> T3["utils (14)"]
+    T --> T4["scenes (2)"]
+    T --> T5["qa (2)"]
 
     click G "./src/scenes/CLAUDE.md" "scenes"
     click H "./src/core/CLAUDE.md" "core"
@@ -63,14 +65,14 @@ graph TD
 
 | 模块路径 | 职责 | 文件数 | CLAUDE.md |
 |---------|------|--------|-----------|
-| `src/scenes` | 12 个注册 Phaser 场景（目录 24 文件含子模块） | 24 | [有](./src/scenes/CLAUDE.md) |
+| `src/scenes` | 12 个注册 Phaser 场景（目录 23 文件含子模块） | 23 | [有](./src/scenes/CLAUDE.md) |
 | `src/core` | 20 个核心系统 | 20 | [有](./src/core/CLAUDE.md) |
 | `src/data` | 15 张数据表 + 类型 + 配置数据库（21 个 .ts） | 21 | [有](./src/data/CLAUDE.md) |
-| `src/utils` | 全局常量(143 导出)、触控、战斗规则、生命周期、语音等 | 20 | [有](./src/utils/CLAUDE.md) |
+| `src/utils` | 全局常量(236 导出)、触控、战斗规则、生命周期、语音等 | 20 | [有](./src/utils/CLAUDE.md) |
 | `src/editor` | Web 配置编辑器 | 2 | [有](./src/editor/CLAUDE.md) |
-| `scripts` | 8 个构建/工具脚本 | 8 | [有](./scripts/CLAUDE.md) |
-| `assets` | 1225+ 个资源文件 (BGM/语音/精灵) | 1225+ | [有](./assets/CLAUDE.md) |
-| `img` | 8 设计稿 + 8 精灵图集 | 25 | [有](./img/CLAUDE.md) |
+| `scripts` | 7 个构建/工具脚本 | 7 | [有](./scripts/CLAUDE.md) |
+| `assets` | 1334 个资源文件 (BGM/语音/SFX/精灵/背景) | 1334 | [有](./assets/CLAUDE.md) |
+| `img` | 8 设计稿 + 7 精灵图集 | 158 | [有](./img/CLAUDE.md) |
 | `doc` | GDD + 完整剧情脚本 | 2 | [有](./doc/CLAUDE.md) |
 | `tests` | 39 个测试文件 (core/data/utils/scenes/qa) | 39 | - |
 
@@ -107,14 +109,14 @@ graph TD
 
 ### 对话系统规模
 
-- 259+ 个对话条目 (DIALOGUES) + 38 个别名扩展 = ~297 个有效对话节点
-- 36 个角色，35 个分支点，约 110 个选择项
+- 236 个对话条目 (DIALOGUES) + 36 个别名扩展 = 272 个有效对话节点
+- 32 个说话者，26 个分支点，82 个选择项
 - 对话完成动作 (`onComplete`) 支持对话结束自动触发事件链
-- 42 场战斗触发对话，5 个商店入口，10+ 技能解锁事件
+- 49 个对话节点含 battle 动作（引用 35 个不同遭遇），4 个商店入口（另有训练入口），技能解锁条件集中在 `SkillGrowth` 的 `SKILL_UNLOCKS`
 
 ### 战斗与进度
 
-- 13 场 Boss 战（含最终 Boss 无相）
+- 13 场主线 Boss 战（含最终 Boss 无相）
 - 17 个宝箱分布
 - 5 级城镇重建（荒芜->心安）
 - 双结局：普通结局 + 真结局（需慈悲值>=5 + 记忆碎片>=5）
@@ -125,6 +127,7 @@ graph TD
 ```bash
 bun install           # 安装依赖
 bun run dev           # 开发服务器 (端口 5173)
+bun run typecheck     # 类型检查 (含 tests/scripts)
 bun run build         # 类型检查 + 构建
 bun run preview       # 预览构建产物
 bun test              # 运行测试
@@ -151,22 +154,15 @@ bun run voices:generate   # 生成语音文件
 ## 测试策略
 
 - 测试框架: Bun 内置测试 (`bun test`)
-- 当前测试文件: **39 个**（新增）
+- 当前测试文件: **39 个**，`bun test` 共 419 项；下表只列代表性用例，完整清单见 `tests/` 目录
 
-| 目录 | 文件 | 覆盖模块 |
-|------|------|----------|
-| `tests/core` | `game-data.test.ts` | GameData (重置/序列化/真结局/装备/经验) |
-| `tests/core` | `event-bus.test.ts` | EventBus (注册/触发/移除/上下文) |
-| `tests/core` | `quest-system.test.ts` | QuestSystem (开始/推进/完成) |
-| `tests/core` | `barrel-system.test.ts` | BarrelSystem (解锁/能力/战斗使用) |
-| `tests/core` | `save-manager.test.ts` | SaveManager (存档/读档/槽位) |
-| `tests/core` | `skill-growth.test.ts` | SkillGrowth (解锁条件/防重复) |
-| `tests/core` | `map-access.test.ts` | MapAccess (访问限制/数值阈值) |
-| `tests/data` | `config-database.test.ts` | GameConfigDatabase (CRUD/持久化/克隆) |
-| `tests/data` | `data-integrity.test.ts` | 数据完整性 (字段校验/引用校验) |
-| `tests/data` | `game-content.test.ts` | 游戏内容 (地图几何/对话引用/ID一致性) |
-| `tests/utils` | `constants.test.ts` | 常量一致性 (分辨率/阈值/元素相克) |
-| `tests/utils` | `voice-lines.test.ts` | 语音线路解析 (键生成/路径构造) |
+| 目录 | 文件数 | 覆盖模块 |
+|------|--------|----------|
+| `tests/core` | 16 | GameData、EventBus、任务、木桶、存档、技能成长、地图访问、音频、事件动作、地图事件状态、输入、设置、预言条件、计时器、奖励、对话队列 |
+| `tests/data` | 5 | 配置数据库、数据完整性、游戏内容、战斗对话、心影战斗 |
+| `tests/utils` | 14 | 常量、语音线路、战斗规则、连携、物品效果、存读档展示、触控、手柄、启动、设置布局、显示设置、控制提示、战斗状态 |
+| `tests/scenes` | 2 | 战斗场景、地图交互 |
+| `tests/qa` | 2 | 主线校验、普通结局回忆 |
 
 ## 编码规范
 
@@ -175,7 +171,7 @@ bun run voices:generate   # 生成语音文件
 - 目标: ES2020
 - 像素艺术渲染: `pixelArt: true`，`roundPixels: true`
 - 游戏分辨率: 1920x1080 (基础 960x540 * 2x 缩放)
-- 常量集中管理: `src/utils/constants.ts` (143 顶级导出，2854 行)，禁止魔法数字
+- 常量集中管理: `src/utils/constants.ts` (236 顶级导出，2855 行)，禁止魔法数字
 - UI 字体: 中文优先字体栈（PingFang SC / Microsoft YaHei / Noto Sans CJK SC）
 - 路径分隔符: 代码中使用 POSIX 风格 (`/`)
 - 精灵资源: 通过图集打包，`img/sprites/pack_manifest.json` 管理清单
@@ -186,8 +182,8 @@ bun run voices:generate   # 生成语音文件
 - 修改数据表时，优先通过 `GameConfigDatabase` 的 API，而非直接修改 `src/data/` 下的静态数据
 - 场景间通信通过 `EventBus`，不要跨场景直接引用
 - 全局状态由 `GameData` 单例管理，通过 `GameData.getInstance()` 获取
-- 对话脚本 (`DialogueScript`) 定义在 `src/scenes/DialogueOverlay.ts` 中，支持 `onComplete` 完成动作链
-- 精灵资源流程：修改 `img/sprites/` 源文件 -> `repair` -> `refresh` -> 产物到 `assets/sprites/`
+- 对话数据类型 `DialogueData`（含 `onComplete` 动作链）定义在 `src/data/types.ts`，对话表在 `src/data/dialogues.ts`，由 `DialogueOverlay` 播放
+- 精灵资源流程：修改 `img/sprites/` 源文件 -> `bun run sprites:refresh`（生成 UI/图标 -> 修复图集 -> 切分）-> 产物到 `assets/sprites/`
 - 语音流程：修改 `dialogues.ts` -> `sync` -> `generate` -> 产物到 `assets/audio/voice/`
 - 编辑器入口独立于游戏入口，位于 `editor.html`，使用 Vite 插件提供 API
 - `constants.ts` 中 `MAP_HUD.EVENT_COLORS` 与 `CONFIG_EDITOR_EVENT_COLORS` 存在重复定义（格式不同：数值 vs 字符串），修改时需同步更新
@@ -199,5 +195,6 @@ bun run voices:generate   # 生成语音文件
 |------|------|------|
 | 2026-05-22 14:10:48 | 新建 | 初始化架构文档 |
 | 2026-05-22 | 深度扫描 | 补充世界架构、对话规模、常量审计、资产清单、脚本流水线 |
-| 2026-05-22 15:52:17 | 增量更新 | 新增测试策略(12个测试文件)、GameEvents扩展至18事件、DialogueScript.onComplete、playTime同步、初始装备、模块索引修正(editor=2文件)、Mermaid图增加tests节点 |
+| 2026-05-22 15:52:17 | 增量更新 | 新增测试策略(12个测试文件)、GameEvents扩展至18事件、对话 onComplete 机制、playTime同步、初始装备、模块索引修正(editor=2文件)、Mermaid图增加tests节点 |
 | 2026-07-21 | 全量审核同步 | 引擎对齐 phaser@4.1.0；GameEvents 精简为 6 事件（删除 GAME_OVER）；真结局阈值修正为 5/5；模块索引/测试数量/地图数/常量规模按实测修正；新增 typecheck 脚本（覆盖 tests/scripts）；轮回道计时器改为游戏内活跃时间 |
+| 2026-11-06 | 文档复核 | 模块索引、常量规模、对话与地图规模、资产计数按实测重写；不存在的 `DialogueScript` 更正为 `DialogueData`（`src/data/types.ts`）；测试表改为按目录汇总；命令块补 `bun run typecheck` |

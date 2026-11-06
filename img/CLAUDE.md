@@ -11,7 +11,7 @@
 ```
 img/
 |-- desiges/    (8 个 PNG，设计参考原图)
-|-- sprites/    (8 组 PNG+JSON 精灵图集 + pack_manifest.json + README.txt)
+|-- sprites/    (7 组 PNG+JSON 精灵图集 + pack_manifest.json + README.txt)
 ```
 
 ## 设计参考 (desiges/)
@@ -29,19 +29,19 @@ img/
 
 ## 精灵图集 (sprites/)
 
-8 组打包好的精灵图集，每组包含 PNG 图片 + JSON 帧元数据：
+7 组打包好的精灵图集，每组包含 PNG 图片 + JSON 帧元数据：
 
 | 图集 | 分类 | 精灵数 | 网格 | 单元格尺寸 |
 |------|------|--------|------|-----------|
 | `01_characters_main` | characters | 48 | 8x6 | 181x181 |
-| `02_npcs_bosses_creatures` | npcs_bosses | 29 | 8x4 | 181x271 |
+| `02_npcs_bosses_creatures` | npcs_bosses | 30 | 8x4 | 181x271 |
 | `03_monsters` | monsters | 53 | 8x7 | 181x217 |
 | `04_town_world_objects` | world_objects | 24 | 6x4 | 241x271 |
 | `05_nature_environment_tiles` | environment | 80 | 10x8 | 144x135 |
 | `06_holy_temple_tiles` | holy_temple | 55 | 12x5 | 120x181 |
 | `07_dark_fantasy_tiles` | dark_fantasy | 48 | 8x6 | 181x181 |
 
-**总计**: 337 个精灵
+**总计**: 338 个精灵
 
 ### pack_manifest.json
 
@@ -71,4 +71,4 @@ assets/sprites/ (拆分后单文件)
 | 时间 | 操作 | 说明 |
 |------|------|------|
 | 2026-05-22 | 新建 | 深度扫描生成模块文档 |
-| 2026-05-22 15:52:17 | 增量更新 | 精灵总数修正为371、补充 README.txt 说明 |
+| 2026-05-22 15:52:17 | 增量更新 | 补充 README.txt 说明 |

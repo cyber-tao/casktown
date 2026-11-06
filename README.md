@@ -1,22 +1,28 @@
 # 木桶镇 / CaskTown
 
-《木桶镇 / CaskTown》是一个面向浏览器的 2D 顶视角剧情 JRPG。玩家扮演少年 T，与慧慧、A、葱葱、sun 等伙伴从被魔头侵袭的木桶镇出发，寻找三件神物重建家园，进入生命之泉追索 xiaoai 堕魔真相，并在童话外壳与悲悯内核交织的冒险中面对人心深处的黑暗。
+**简体中文** · [English](README.en.md)
 
-项目当前使用 Phaser 4.1.0、TypeScript、Vite 和 Bun，资源由 Vite 的 `assets` 公共目录提供。
+《木桶镇 / CaskTown》是一个面向浏览器的 2D 顶视角剧情 JRPG。玩家扮演少年 T，与慧慧、阿博、葱葱、sun 等伙伴从被魔头侵袭的木桶镇出发，寻找三件神物重建家园，进入生命之泉追索 xiaoai 堕魔真相，并在童话外壳与悲悯内核交织的冒险中面对人心深处的黑暗。
+
+项目使用 Phaser 4.1.0、TypeScript、Vite 8 和 Bun，资源由 Vite 的 `assets` 公共目录提供。
 
 ## 在线体验
 
-- Github: [https://cyber-tao.github.io/casktown](https://cyber-tao.github.io/casktown)
+- GitHub Pages: [https://cyber-tao.github.io/casktown](https://cyber-tao.github.io/casktown)
 - Vercel: [https://casktown.vercel.app](https://casktown.vercel.app)
 - Cloudflare: [https://casktown.pages.dev](https://casktown.pages.dev)
 
-## 游戏预告
+三个地址都是浏览器直接可玩的完整版本，无需下载。
+
+## 游戏画面
+
+下面这段 10 秒静音循环视频同时用作游戏标题画面的动态背景：
 
 <a href="assets/trailer.mp4">
-  <img src="assets/trailer-preview.gif" alt="木桶镇游戏预告" width="100%">
+  <img src="assets/trailer-preview.gif" alt="木桶镇标题画面动态背景" width="100%">
 </a>
 
-[观看高清 MP4 预告片](assets/trailer.mp4)
+[观看高清 MP4](assets/trailer.mp4)
 
 ## 项目起源
 
@@ -31,7 +37,7 @@
 - 剧情探索：顶视角地图移动、调查、NPC 对话和事件触发。
 - 回合制战斗：角色技能、消耗管理、敌人机制和 Boss 战推进剧情。
 - 家园重建：通过主线神物和支线资源让木桶镇从荒芜逐步恢复。
-- 预言之书：整合任务日志、地图线索、怪物图鉴、剧情回顾和分支记录。
+- 菜单系统：预言之书（主线任务与进度）、队伍、背包、技能、图鉴（怪物 / 物品 / 故事与分支记录）、存读档和设置。
 
 ## 世界与设定
 
@@ -41,6 +47,8 @@
 
 ## 快速开始
 
+需要 [Bun](https://bun.sh)：仓库使用 `bun.lock` 锁定依赖，CI 也用 Bun 构建。
+
 ```bash
 bun install
 ```
@@ -49,56 +57,74 @@ bun install
 bun run dev
 ```
 
-开发服务器默认运行在 `http://localhost:5173`。
+开发服务器默认运行在 `http://localhost:5173` 并自动打开浏览器；精灵配置编辑器位于 `/editor.html`。
 
 ## 可用命令
 
 | 命令 | 说明 |
 | --- | --- |
-| `bun run dev` | 启动 Vite 开发服务器 |
-| `bun test` | 运行单元与集成测试套件 |
-| `bun run typecheck` | 执行严格 TypeScript 类型检查（覆盖 src/tests/scripts） |
-| `bun run build` | 执行 TypeScript 类型检查并构建到 `dist` |
+| `bun run dev` | 启动 Vite 开发服务器（端口 5173） |
+| `bun test` | 运行单元与集成测试套件（39 个文件 / 419 项） |
+| `bun run typecheck` | 严格 TypeScript 类型检查，覆盖 `src`、`tests`、`scripts` |
+| `bun run build` | 类型检查并构建到 `dist`（游戏 + 编辑器两个入口） |
 | `bun run preview` | 预览生产构建结果 |
-| `bun run sprites:refresh` | 根据 `img/sprites` 的图集与 JSON 元数据切分刷新 `assets/sprites` |
-| `bun run voices:sync` | 同步对话剧本与语音线路定义 |
-| `bun run voices:generate` | 根据角色设定生成并输出角色语音音频 |
+| `bun run sprites:refresh` | 由设计稿生成 UI/图标，修复图集，并按坐标切分刷新 `assets/sprites` |
+| `bun run sprites:repair` | 只做图集修复：去除每帧连通背景与边缘溢色 |
+| `bun run voices:sync` | 依据对话数据同步语音线路定义（`voice_lines.json`） |
+| `bun run voices:generate` | 调用外部 `mmx` 与 `ffmpeg` 生成角色语音到 `assets/audio/voice` |
+
+`sprites:*` 与 `voices:generate` 会改写仓库内的资源文件，日常游玩和提交代码不需要执行。
 
 ## 技术栈
 
 | 类型 | 使用内容 |
 | --- | --- |
 | 运行时与包管理 | Bun |
-| 游戏引擎 | Phaser 4.1.0 |
-| 语言 | TypeScript |
-| 构建工具 | Vite |
-| 存档 | LocalStorage |
+| 游戏引擎 | Phaser 4.1.0（Canvas 渲染，逻辑分辨率 1920x1080，像素风 `pixelArt`） |
+| 语言 | TypeScript 6（strict，含 `noUncheckedIndexedAccess`） |
+| 构建工具 | Vite 8（双入口：`index.html` 游戏、`editor.html` 编辑器） |
+| 测试 | Bun 内置测试（39 个测试文件） |
+| 存档 | 浏览器 LocalStorage（3 个手动档位 + 快速存档，支持导出/导入 JSON） |
+
+## 操作方式
+
+- 键盘：方向键移动，`Enter` 确认，`Esc` 取消或打开菜单；也可切换为 `WASD` + `Space`，按键可在设置中重绑。
+- 手柄：支持标准手柄的方向键、确认、取消与开始键。
+- 触屏：地图上提供虚拟方向键与动作按钮；手机竖屏时会提示旋转到横屏。
+- 快捷键：`F5` 快速存档，`F9` 快速读档（在地图探索中生效）。
 
 ## 项目结构
 
 ```text
+index.html        游戏入口（启动与加载画面在 HTML 层）
+editor.html       配置编辑器入口
 src/
-  core/      全局系统与管理器
-  data/      角色、任务、地图、敌人、物品、技能、对话和类型数据
-  scenes/    Phaser 场景与 UI Overlay
-  utils/     全局常量等工具定义
-scripts/     开发时使用的脚本，例如刷新运行时 sprite 资源
-assets/
-  audio/     BGM、SFX 和语音资源
-  sprites/   角色、场景、怪物、NPC、世界物件等图像资源
+  main.ts         启动入口（F5/F9 快捷键注册）
+  game.ts         Phaser 游戏配置
+  core/           全局管理器与系统（GameData / EventBus / SaveManager 等）
+  data/           角色、任务、地图、敌人、物品、技能、对话和类型数据
+  scenes/         Phaser 场景与 UI Overlay
+  utils/          全局常量、战斗规则、触控、语音等工具
+  editor/         配置编辑器前端
+  qa/             主线与结局自动校验器（`?qa=mainline` / `?qa=normal`）
+scripts/          精灵切图、图标生成、语音同步等开发脚本
+tests/            Bun 测试文件
+assets/           Vite 公共目录，运行时资源
+  audio/          BGM、SFX 与角色语音
+  sprites/        角色、场景、怪物、NPC、世界物件与 UI 图像
 img/
-  desiges/   美术设计参考图和整合预览图，不作为运行时资源直接加载
-  sprites/   可切分的 sprite sheet、JSON 元数据和资源清单
-doc/         游戏设计、剧情脚本、分支和战斗点文档
+  desiges/        美术设计稿与整合预览（构建期参考，部分 UI 素材由此生成）
+  sprites/        可切分的 sprite sheet、JSON 元数据和资源清单
+doc/              游戏设计与剧情脚本
 ```
 
-[img/sprites](img/sprites) 中的 JSON 采用类似 TexturePacker 的 `frames + meta` 结构，可用于按像素坐标切分图集；实际游戏加载使用 [assets/sprites](assets/sprites) 下的资源。
+[img/sprites](img/sprites) 中的 JSON 采用类似 TexturePacker 的 `frames + meta` 结构，可用于按像素坐标切分图集；游戏运行时通过 `AssetLoader` 按需加载 [assets/sprites](assets/sprites) 下的切分结果，`BootScene` 只预加载标题背景、加载背景与音频等启动资源。
 
 ## 美术设定集
 
 [img/desiges](img/desiges) 收录项目的美术设定集与整合预览图，用于统一角色、敌人、地图和环境美术方向。当前包括主角与伙伴、NPC 与守护者、敌人设计、木桶镇俯视地图、世界地图，以及自然环境、圣殿和暗黑幻想区域的 tiles 参考。
 
-这些图片是开发与重制过程中的设计参考，不会被游戏运行时代码直接加载。运行时可用的切分资源位于 [assets/sprites](assets/sprites)，其来源和切分元数据位于 [img/sprites](img/sprites)。
+这些图片是开发与重制过程中的设计参考，不会被游戏运行时代码直接加载；其中一部分（标题与加载背景、部分 UI 面板和物品图标）会在构建期被脚本处理成运行时素材，输出到 [assets/sprites](assets/sprites)。切分资源的来源与元数据位于 [img/sprites](img/sprites)。
 
 ### 角色、NPC 与敌人
 
@@ -119,18 +145,23 @@ doc/         游戏设计、剧情脚本、分支和战斗点文档
 ## 美术资源流程
 
 1. 根据 [img/desiges](img/desiges) 下的角色、敌人、地图和环境设定集，创建或更新 [img/sprites](img/sprites) 中的图集 PNG 与对应 JSON 文件。
-2. 运行 `bun run sprites:refresh`，脚本会读取 [img/sprites/pack_manifest.json](img/sprites/pack_manifest.json)，按 JSON 中的 frame 坐标切分所有图集。
-3. 切分结果会刷新到 [assets/sprites](assets/sprites)，供 BootScene 和运行时代码加载。
+2. 运行 `bun run sprites:refresh`。脚本先由设计稿生成 UI 面板与物品图标，再读取 [img/sprites/pack_manifest.json](img/sprites/pack_manifest.json)，按 JSON 中的 frame 坐标修复并切分所有图集。
+3. 切分结果刷新到 [assets/sprites](assets/sprites)，由运行时的 `AssetLoader` 按需加载。
 
 ## 关键文档
 
 - [游戏设计文档](doc/CaskTown_Web_JRPG_GDD_v2.md)：产品定位、系统设计、地图结构、战斗节奏和 UI 目标。
 - [剧情与分支文档](doc/CaskTown_Full_Script_Branches_BattlePoints.md)：完整剧情脚本、角色代号、分支变量、真结局条件和战斗触发点。
+- [AGENTS.md](AGENTS.md)：参与开发前必读的架构边界、常用命令与修改路径，供人和 AI 协作者共用。
 
 ## 开发提示
 
 - 入口文件是 [src/main.ts](src/main.ts)，Phaser 4 配置在 [src/game.ts](src/game.ts)。
-- 启动资源加载集中在 [src/scenes/BootScene.ts](src/scenes/BootScene.ts)。
-- 全局游戏状态由 [src/core/GameData.ts](src/core/GameData.ts) 管理。
-- 跨场景通信使用 [src/core/EventBus.ts](src/core/EventBus.ts)。
-- 新增常量统一放在 [src/utils/constants.ts](src/utils/constants.ts)。
+- 启动资源加载集中在 [src/scenes/BootScene.ts](src/scenes/BootScene.ts)，地图/战斗/菜单的贴图由 [src/core/AssetLoader.ts](src/core/AssetLoader.ts) 按需加载。
+- 全局游戏状态由 [src/core/GameData.ts](src/core/GameData.ts) 管理，跨场景通信使用 [src/core/EventBus.ts](src/core/EventBus.ts)。
+- 新增常量统一放在 [src/utils/constants.ts](src/utils/constants.ts)，避免魔法数字。
+- 提交前建议跑一遍 `bun run typecheck` 与 `bun test`。
+
+## 许可
+
+本项目以 [MIT 许可证](LICENSE) 发布，可自由使用、修改和分发，保留版权与许可声明即可。

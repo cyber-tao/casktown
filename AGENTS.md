@@ -11,6 +11,8 @@
 - 安装依赖：`bun install`
 - 本地开发：`bun run dev`
 - 类型检查与构建：`bun run build`
+- 单独类型检查（含 tests/scripts）：`bun run typecheck`
+- 运行测试：`bun test`
 - 预览构建结果：`bun run preview`
 - 切分并刷新运行时 sprite：`bun run sprites:refresh`
 
@@ -28,8 +30,8 @@
 ## 美术资源流程
 
 - 先根据 [img/desiges](img/desiges) 下的设定集创建或更新 [img/sprites](img/sprites) 中的图集 PNG 与对应 JSON 元数据。
-- 再运行 `bun run sprites:refresh`，脚本会读取 [img/sprites/pack_manifest.json](img/sprites/pack_manifest.json)，按 frame 坐标切分并刷新 [assets/sprites](assets/sprites) 下的运行时 PNG。
-- 刷新后检查 BootScene 中的资源 key、文件路径和实际输出文件是否一致。
+- 再运行 `bun run sprites:refresh`，它会先用设计稿生成 UI 面板与物品图标、修复图集，再读取 [img/sprites/pack_manifest.json](img/sprites/pack_manifest.json)，按 frame 坐标切分并刷新 [assets/sprites](assets/sprites) 下的运行时 PNG。
+- 刷新后检查 [src/data/assets.ts](src/data/assets.ts) 的资源 key、文件路径和实际输出文件是否一致；运行时贴图由 `AssetLoader` 按需加载，`BootScene` 只预加载标题/加载背景与音频。
 
 ## 开发规则
 

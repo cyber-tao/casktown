@@ -12,9 +12,9 @@
 
 ## 对外接口
 
-### constants.ts (2854 行)
+### constants.ts (2855 行)
 
-143 个顶级导出（2854 行）。所有像素坐标通过 `scalePx()` 预处理适配 `GAME_SCALE=2`。
+236 个顶级导出（2855 行）。所有像素坐标通过 `scalePx()` 预处理适配 `GAME_SCALE=2`。
 
 #### 基础尺寸与缩放
 
@@ -40,7 +40,7 @@
 
 #### 战斗规则 (BATTLE_RULES)
 
-22 个常量：`MAX_TP=100`, `DAMAGE_VARIANCE_MIN=0.9`, `BREAK_DAMAGE_MULTIPLIER=1.3`, `DEFEND_DAMAGE_MULTIPLIER=0.5`, `ESCAPE_SUCCESS_RATE=0.5`, `PLAYER_ATTACK_TP_GAIN=5`, `DEFEND_TP_GAIN=15`, `WEAK_SKILL_BREAK_GAIN=25`, `PHOENIX_REBIRTH_HP_RATIO=0.3` 等
+92 个常量：`MAX_TP=100`, `DAMAGE_VARIANCE_MIN=0.9`, `BREAK_DAMAGE_MULTIPLIER=1.3`, `DEFEND_DAMAGE_MULTIPLIER=0.5`, `ESCAPE_SUCCESS_RATE=0.5`, `PLAYER_ATTACK_TP_GAIN=5`, `DEFEND_TP_GAIN=15`, `WEAK_SKILL_BREAK_GAIN=25`, `PHOENIX_REBIRTH_HP_RATIO=0.3` 等
 
 #### 角色成长 (LEVEL_GROWTH)
 
@@ -64,13 +64,13 @@
 
 9 种元素 (FIRE/WATER/WIND/EARTH/THUNDER/WOOD/LIGHT/DARK/NONE)，完整相克关系数组
 
-#### MENU_OVERLAY_UI (79+ 个布局参数)
+#### MENU_OVERLAY_UI (140+ 个布局参数)
 
-覆盖层完整 UI 布局：面板位置/尺寸、字体大小、卡片尺寸、颜色定义(COLORS 对象 21 种)、渲染深度(DEPTH=400)、透明度(OVERLAY_ALPHA=0.72)
+覆盖层完整 UI 布局：面板位置/尺寸、字体大小、卡片尺寸、颜色定义(COLORS 对象 18 种)、渲染深度(DEPTH=400)、透明度(OVERLAY_ALPHA=0.9)
 
 #### CONFIG_EDITOR_* (14+ 个顶级常量)
 
-控制配置编辑器行为：存储键(`casktown.config.database.v2`，持久化格式带版本字段)、地图预览画布(520x360)、精灵裁剪UI、表标签映射(14种)、资源分组(11类)、事件颜色(5种)、图块颜色(24种)、角色图片键(6种)、回退颜色(7种)
+控制配置编辑器行为：存储键(`casktown.config.database.v2`，持久化格式带版本字段)、地图预览画布(520x360)、精灵裁剪UI、表标签映射(15种)、资源分组(12类)、事件颜色(5种)、图块颜色(25种)、角色图片键(5种)、回退颜色(8种)
 
 #### 菜单与UI标签
 
@@ -78,7 +78,7 @@
 |------|------|
 | `MENU_NAV_LABELS` / `MENU_NAV_INDEX` | 8 项主菜单导航 |
 | `INVENTORY_*` | 5 类背包分类 |
-| `MENU_SETTINGS_OPTIONS` | 15 个设置项(文字/战斗速度、巡逻、难度、预言、音量、全屏、操作模式) |
+| `MENU_SETTINGS_OPTIONS` | 14 个设置项(文字/战斗速度、巡逻、难度、预言、音量、全屏、操作模式) |
 | `MENU_CODEX_*` | 3 个图鉴标签 + 10 个故事分支 + 13 个 Boss 发现标志 |
 | `EQUIPMENT_SLOT_LABELS` | 3 装备槽(武器/防具/饰品) |
 | `CHARACTER_STAT_LABELS` | 5 属性标签 |
@@ -103,14 +103,14 @@
 | `REDESIGNED_MAP_LAYOUTS` | 22 个地图完整布局定义 |
 | `WORLD_MAP_LOCATION_POINTS` | 22 个世界地图坐标 |
 | `WORLD_MAP_BACKGROUND_LAYOUT` / `WORLD_MAP_UI` | 世界地图 UI 参数 |
-| `MAP_TILE_KEYS` | 28 种瓦片类型 |
+| `MAP_TILE_KEYS` | 31 种瓦片类型 |
 | `MAP_LAYER_INDEX` | GROUND=0, OBJECTS=1 |
 | `MAP_ENCOUNTER_RATES` | NONE/LOW/STANDARD/DENSE/DANGEROUS |
 | `BATTLE_BACKGROUND_KEYS` / `MAP_BATTLE_BACKGROUND_KEYS` | 战斗背景映射 |
 
 #### 野外实体 (FIELD_ENTITY_BEHAVIOR)
 
-10 个基础常量 + `FIELD_ENTITY_BEHAVIOR_PRESETS`（7 种预设：idle/wander/guard/chase/ambush 变体）+ `FIELD_ENCOUNTER_SPAWN_COUNTS` + `ROAMING_ENCOUNTER_RESPAWN` + `FIELD_ENCOUNTER_RATE_THRESHOLDS`
+11 个基础常量 + `FIELD_ENTITY_BEHAVIOR_PRESETS`（7 种预设：idle/wander/guard/chase/ambush 变体）+ `FIELD_ENCOUNTER_SPAWN_COUNTS` + `ROAMING_ENCOUNTER_RESPAWN` + `FIELD_ENCOUNTER_RATE_THRESHOLDS`
 
 #### 动画与精灵
 
@@ -129,7 +129,7 @@
 
 - `VOICE_AUDIO_PATH`: 目录 `audio/voice`，扩展名 `.ogg`
 - `BGM_FADE_DURATIONS`: DEFAULT=1000ms, FAST=500ms, NONE=0
-- `TOUCH_INPUT`: 42+ 个触控参数 (D-pad/动作按钮/深度620/activePointers)
+- `TOUCH_INPUT`: 31 个触控参数 (D-pad/动作按钮/深度620/activePointers)
 - `MAP_INPUT_CODES`: 地图输入码映射
 
 #### 对话UI
@@ -198,7 +198,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `src/utils/constants.ts` | 全局常量与 UI 布局 (2854 行, 143 顶级导出) |
+| `src/utils/constants.ts` | 全局常量与 UI 布局 (2855 行, 236 顶级导出) |
 | `src/utils/touch.ts` | 触控适配 |
 | `src/utils/sceneLifecycle.ts` | 场景生命周期 |
 | `src/utils/voiceLines.ts` | 语音线路解析 |
@@ -226,3 +226,4 @@
 | 2026-05-22 14:10:48 | 新建 | 初始化模块文档 |
 | 2026-05-22 | 深度扫描 | 补充常量完整分类、审计发现、战斗规则/成长/经济参数 |
 | 2026-05-22 15:52:17 | 增量更新 | 顶级导出修正为130、新增时间常量/QUICK_SAVE_SLOT/SAVE_LOAD_FEEDBACK_DELAY_MS/标题画面常量/战斗面板常量/瓦片纹理覆盖/重建瓦片替换/角色帧命名/2个测试文件覆盖 |
+| 2026-11-06 | 文档复核 | constants.ts 实测为 2855 行 / 236 个顶级导出；按实测修正 BATTLE_RULES 92、MENU_OVERLAY_UI 140+（COLORS 18 种、OVERLAY_ALPHA 0.9）、CONFIG_EDITOR_* 各项计数、MENU_SETTINGS_OPTIONS 14、MAP_TILE_KEYS 31、FIELD_ENTITY_BEHAVIOR 11、TOUCH_INPUT 31 |

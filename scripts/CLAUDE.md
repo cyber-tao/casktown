@@ -20,7 +20,7 @@ bun run scripts/<script>.ts
 
 | 文件 | 说明 |
 |------|------|
-| `constants.ts` | 共享常量：路径、输出格式、图像处理参数、语音采样率(32000Hz)、图标网格(96x96) |
+| `constants.ts` | 共享常量：路径、输出格式、图像处理参数、语音采样率(32000Hz)、物品图标画布(80px) |
 | `voice-config.ts` | 16 个角色的语音配置：语音 ID、语速、音高（使用 MiniMax 语音合成 API） |
 
 ### 精灵工具链
@@ -85,14 +85,13 @@ generate_voices <--+   |
 
 | 文件 | 说明 |
 |------|------|
-| `scripts/constants.ts` | 共享常量配置 (61 行) |
-| `scripts/voice-config.ts` | 16 角色语音配置 (30 行) |
-| `scripts/sync-voice-lines.ts` | 语音索引同步 (85 行) |
-| `scripts/generate_voices.ts` | 语音文件生成 (195 行) |
-| `scripts/refresh-sprites.ts` | 精灵拆分 (256 行) |
-| `scripts/repair-sprite-atlases.ts` | 图集修复 (319 行) |
+| `scripts/constants.ts` | 共享常量配置 (181 行) |
+| `scripts/voice-config.ts` | 16 角色语音配置 (29 行) |
+| `scripts/sync-voice-lines.ts` | 语音索引同步 (89 行) |
+| `scripts/generate_voices.ts` | 语音文件生成 (197 行) |
+| `scripts/refresh-sprites.ts` | 精灵拆分 (255 行) |
+| `scripts/repair-sprite-atlases.ts` | 图集修复 (302 行) |
 | `scripts/generate-runtime-visual-assets.ts` | 运行时视觉资产生成 |
-| `scripts/apply-preview-sprite-mapping.ts` | ~~一次性预览映射工具~~（2026-07-21 删除，无引用） |
 
 ## 变更记录
 

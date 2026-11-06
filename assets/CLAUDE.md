@@ -12,6 +12,7 @@
 assets/
 |-- audio/
 |   |-- bgm/          (19 个 OGG)
+|   |-- sfx/          (20 个 OGG)
 |   |-- voice/        (883 个 OGG)
 |-- sprites/
 |   |-- characters/   (6 角色子目录, 48 PNG) -- 可玩角色
@@ -22,8 +23,12 @@ assets/
 |   |-- monsters/     (53 PNG) -- 怪物
 |   |-- npcs_bosses/  (30 PNG) -- NPC 和 Boss
 |   |-- enemies/      (5 PNG) -- 敌人
+|   |-- ui/           (10 PNG) -- UI 面板/按钮
 |   |-- world_objects/(24 PNG) -- 场景物体
 |   |-- map-world.png -- 世界地图
+|   |-- *.jpg         (20 张 1080p) -- 战斗/标题/加载背景
+|-- trailer.mp4 -- 宣传片
+|-- trailer-preview.gif -- 宣传片动图预览
 ```
 
 ## 资产统计
@@ -32,8 +37,12 @@ assets/
 |------|--------|------|----------|
 | BGM 音乐 | 19 | OGG Vorbis | ~30MB |
 | 语音台词 | 883 | OGG Vorbis | ~24MB |
-| 精灵图片 | 389 | PNG | - |
-| **总计** | **1225+** | - | - |
+| 音效 SFX | 20 | OGG Vorbis | ~0.1MB |
+| 精灵图片 | 389 | PNG | ~16.9MB |
+| 背景图片 | 20 | JPG | ~10.2MB |
+| 宣传物料 | 2 | MP4 + GIF | ~7.6MB |
+| 本目录文档 | 1 | Markdown | - |
+| **总计** | **1334** | - | ~89.3MB |
 
 ## BGM 音轨 (19 首)
 
@@ -76,6 +85,9 @@ assets/
 | holy_temple | 55 | 神殿瓦片 | 神殿专用装饰 |
 | dark_fantasy | 48 | 暗黑瓦片 | 魔宫/沼泽装饰 |
 | items | 35 | 物品图标 | 由 generate-runtime-visual-assets 生成 |
+| enemies | 5 | 心影敌人 | heart_shadow_t、heart_shadow_huihui、heart_shadow_sun、heart_shadow_congcong、heart_shadow_a |
+| ui | 10 | UI 面板/按钮 | 由 generate-runtime-visual-assets 生成 |
+| (根目录) map-world.png | 1 | 世界地图 | - |
 
 ## 生成流程
 
